@@ -15,5 +15,6 @@ declare module '@ckeditor/ckeditor5-build-classic' {
 }
 
 declare module 'docx' {
-  export * from 'docx';
+  import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ImageRun } from 'docx';
+  export { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ImageRun };
 }
