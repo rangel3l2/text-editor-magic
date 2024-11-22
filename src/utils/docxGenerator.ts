@@ -12,29 +12,13 @@ interface BannerContent {
   acknowledgments: string;
 }
 
-const extractImages = async (htmlContent: string): Promise<ImageRun[]> => {
+const extractImages = (htmlContent: string): string[] => {
   const imgRegex = /<img[^>]+src="([^">]+)"/g;
-  const images: ImageRun[] = [];
+  const images: string[] = [];
   let match;
   
   while ((match = imgRegex.exec(htmlContent)) !== null) {
-    try {
-      const imageUrl = match[1];
-      const response = await fetch(imageUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      
-      images.push(
-        new ImageRun({
-          data: Buffer.from(arrayBuffer),
-          transformation: {
-            width: 400,
-            height: 300
-          }
-        })
-      );
-    } catch (error) {
-      console.error('Error loading image:', error);
-    }
+    images.push(match[1]);
   }
   
   return images;
@@ -54,45 +38,27 @@ const createSectionTitle = (text: string) => {
       new TextRun({
         text: text,
         bold: true,
-        size: 24,
-        font: 'Times New Roman'
+        size: 24
       })
     ]
   });
 };
 
-const createSectionContent = async (content: string) => {
+const createSectionContent = (content: string) => {
   const cleanContent = cleanHtmlContent(content);
   if (!cleanContent) return [];
 
-  const paragraphs = [];
-  
-  // Add text content
-  paragraphs.push(
+  return [
     new Paragraph({
-      spacing: { before: 200, after: 200 },
+      spacing: { before: 200, after: 400 },
       children: [
         new TextRun({
           text: cleanContent,
-          size: 24,
-          font: 'Times New Roman'
+          size: 24
         })
       ]
     })
-  );
-
-  // Add images if any
-  const images = await extractImages(content);
-  for (const image of images) {
-    paragraphs.push(
-      new Paragraph({
-        spacing: { before: 200, after: 200 },
-        children: [image]
-      })
-    );
-  }
-
-  return paragraphs;
+  ];
 };
 
 export const generateDocx = async (content: BannerContent) => {
@@ -101,7 +67,7 @@ export const generateDocx = async (content: BannerContent) => {
       properties: {
         page: {
           margin: {
-            top: 1440,
+            top: 1440, // 1 inch in twips
             right: 1440,
             bottom: 1440,
             left: 1440
@@ -159,11 +125,11 @@ export const generateDocx = async (content: BannerContent) => {
                   },
                   children: [
                     createSectionTitle("INTRODUÇÃO"),
-                    ...(await createSectionContent(content.introduction)),
+                    ...createSectionContent(content.introduction),
                     createSectionTitle("OBJETIVOS"),
-                    ...(await createSectionContent(content.objectives)),
+                    ...createSectionContent(content.objectives),
                     createSectionTitle("METODOLOGIA"),
-                    ...(await createSectionContent(content.methodology)),
+                    ...createSectionContent(content.methodology),
                   ]
                 }),
                 // Right column
@@ -174,14 +140,14 @@ export const generateDocx = async (content: BannerContent) => {
                   },
                   children: [
                     createSectionTitle("RESULTADOS"),
-                    ...(await createSectionContent(content.results)),
+                    ...createSectionContent(content.results),
                     createSectionTitle("CONCLUSÃO"),
-                    ...(await createSectionContent(content.conclusion)),
+                    ...createSectionContent(content.conclusion),
                     createSectionTitle("REFERÊNCIAS"),
-                    ...(await createSectionContent(content.references)),
+                    ...createSectionContent(content.references),
                     ...(content.acknowledgments.trim() ? [
                       createSectionTitle("AGRADECIMENTOS"),
-                      ...(await createSectionContent(content.acknowledgments))
+                      ...createSectionContent(content.acknowledgments)
                     ] : [])
                   ]
                 })
