@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 import BannerHeaderSection from './banner/BannerHeaderSection';
 import BannerContentSection from './banner/BannerContentSection';
-import { generateDocx } from '@/utils/docxGenerator';
 
 const BannerEditor = () => {
   const [searchParams] = useSearchParams();
@@ -43,30 +42,12 @@ const BannerEditor = () => {
     });
   };
 
-  const handleGenerateDocx = async () => {
-    try {
-      const blob = await generateDocx(bannerContent);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'banner-academico.docx';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Documento gerado",
-        description: "Seu banner acadêmico foi exportado com sucesso",
-        duration: 3000,
-      });
-    } catch (error) {
-      toast({
-        title: "Erro ao gerar documento",
-        description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
-        duration: 3000,
-      });
-    }
+  const handleGenerateDocx = () => {
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "A exportação para DOCX será implementada em breve",
+      duration: 3000,
+    });
   };
 
   if (documentType !== 'banner') {
