@@ -1,6 +1,7 @@
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import editorConfig from '@/config/editorConfig';
 
 interface BannerContentSectionProps {
   content: {
@@ -31,9 +32,8 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
               handleChange('introduction', editor.getData());
             }}
             config={{
-              toolbar: ['bold', 'italic', 'bulletedList', '|', 'undo', 'redo'],
-              placeholder: "Apresente o tema, contexto e problematização do trabalho...",
-              removePlugins: ['Logo']
+              ...editorConfig,
+              placeholder: "Apresente o tema, contexto e problematização do trabalho..."
             }}
           />
         </CardContent>
@@ -52,9 +52,8 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
               handleChange('objectives', editor.getData());
             }}
             config={{
-              toolbar: ['bold', 'italic', 'bulletedList', '|', 'undo', 'redo'],
-              placeholder: "Liste os objetivos gerais e específicos do trabalho...",
-              removePlugins: ['Logo']
+              ...editorConfig,
+              placeholder: "Liste os objetivos gerais e específicos do trabalho..."
             }}
           />
         </CardContent>
@@ -73,9 +72,8 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
               handleChange('methodology', editor.getData());
             }}
             config={{
-              toolbar: ['bold', 'italic', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
-              placeholder: "Descreva os métodos e procedimentos utilizados...",
-              removePlugins: ['Logo']
+              ...editorConfig,
+              placeholder: "Descreva os métodos e procedimentos utilizados..."
             }}
           />
         </CardContent>
@@ -94,9 +92,8 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
               handleChange('results', editor.getData());
             }}
             config={{
-              toolbar: ['bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
-              placeholder: "Apresente os principais resultados obtidos e sua discussão...",
-              removePlugins: ['Logo']
+              ...editorConfig,
+              placeholder: "Apresente os principais resultados obtidos e sua discussão..."
             }}
           />
         </CardContent>
@@ -115,9 +112,8 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
               handleChange('conclusion', editor.getData());
             }}
             config={{
-              toolbar: ['bold', 'italic', '|', 'undo', 'redo'],
-              placeholder: "Apresente as principais conclusões e contribuições do trabalho...",
-              removePlugins: ['Logo']
+              ...editorConfig,
+              placeholder: "Apresente as principais conclusões e contribuições do trabalho..."
             }}
           />
         </CardContent>
@@ -136,9 +132,8 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
               handleChange('references', editor.getData());
             }}
             config={{
-              toolbar: ['bold', 'italic', 'link', '|', 'undo', 'redo'],
-              placeholder: "Liste as referências mais relevantes (ABNT)...",
-              removePlugins: ['Logo']
+              ...editorConfig,
+              placeholder: "Liste as referências mais relevantes (ABNT)..."
             }}
           />
         </CardContent>
@@ -157,9 +152,8 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
               handleChange('acknowledgments', editor.getData());
             }}
             config={{
-              toolbar: ['bold', 'italic', '|', 'undo', 'redo'],
-              placeholder: "Agradeça às instituições e pessoas que contribuíram...",
-              removePlugins: ['Logo']
+              ...editorConfig,
+              placeholder: "Agradeça às instituições e pessoas que contribuíram..."
             }}
           />
         </CardContent>

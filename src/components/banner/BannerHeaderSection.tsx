@@ -1,6 +1,7 @@
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import editorConfig from '@/config/editorConfig';
 
 interface BannerHeaderSectionProps {
   content: {
@@ -26,9 +27,8 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
               handleChange('title', editor.getData());
             }}
             config={{
-              toolbar: ['bold', 'italic', '|', 'undo', 'redo'],
-              placeholder: "Digite um título breve e atrativo que indique o tema principal do trabalho...",
-              removePlugins: ['Logo']
+              ...editorConfig,
+              placeholder: "Digite um título breve e atrativo que indique o tema principal do trabalho..."
             }}
           />
         </CardContent>
@@ -47,9 +47,8 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
               handleChange('authors', editor.getData());
             }}
             config={{
-              toolbar: ['bold', 'italic', 'link', '|', 'undo', 'redo'],
-              placeholder: "Nome dos autores, afiliação institucional e e-mail de contato...",
-              removePlugins: ['Logo']
+              ...editorConfig,
+              placeholder: "Nome dos autores, afiliação institucional e e-mail de contato..."
             }}
           />
         </CardContent>
