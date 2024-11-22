@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 import BannerHeaderSection from './banner/BannerHeaderSection';
 import BannerContentSection from './banner/BannerContentSection';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } from 'docx';
 
 const BannerEditor = () => {
   const [searchParams] = useSearchParams();
@@ -43,12 +44,125 @@ const BannerEditor = () => {
   };
 
   const generateDocx = async () => {
-    // Here we would implement the actual DOCX generation
-    // For now, we'll just show a toast
-    toast({
-      title: "Documento gerado",
-      description: "Seu banner acadêmico foi exportado com sucesso",
-      duration: 3000,
+    // Create a new document
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          // Title
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              new TextRun({
+                text: bannerContent.title.replace(/<[^>]*>/g, ''),
+                bold: true,
+                size: 32
+              })
+            ]
+          }),
+          // Authors
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              new TextRun({
+                text: bannerContent.authors.replace(/<[^>]*>/g, ''),
+                size: 24
+              })
+            ]
+          }),
+          // Main content in two columns using a table
+          new Table({
+            width: {
+              size: 100,
+              type: WidthType.PERCENTAGE,
+            },
+            rows: [
+              new TableRow({
+                children: [
+                  // Left column
+                  new TableCell({
+                    width: {
+                      size: 50,
+                      type: WidthType.PERCENTAGE,
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "Introdução", bold: true, size: 24 }),
+                          new TextRun({ text: "\n" + bannerContent.introduction.replace(/<[^>]*>/g, '') })
+                        ]
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "\nObjetivos", bold: true, size: 24 }),
+                          new TextRun({ text: "\n" + bannerContent.objectives.replace(/<[^>]*>/g, '') })
+                        ]
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "\nMetodologia", bold: true, size: 24 }),
+                          new TextRun({ text: "\n" + bannerContent.methodology.replace(/<[^>]*>/g, '') })
+                        ]
+                      })
+                    ]
+                  }),
+                  // Right column
+                  new TableCell({
+                    width: {
+                      size: 50,
+                      type: WidthType.PERCENTAGE,
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "Resultados", bold: true, size: 24 }),
+                          new TextRun({ text: "\n" + bannerContent.results.replace(/<[^>]*>/g, '') })
+                        ]
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "\nConclusão", bold: true, size: 24 }),
+                          new TextRun({ text: "\n" + bannerContent.conclusion.replace(/<[^>]*>/g, '') })
+                        ]
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "\nReferências", bold: true, size: 24 }),
+                          new TextRun({ text: "\n" + bannerContent.references.replace(/<[^>]*>/g, '') })
+                        ]
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({ text: "\nAgradecimentos", bold: true, size: 24 }),
+                          new TextRun({ text: "\n" + bannerContent.acknowledgments.replace(/<[^>]*>/g, '') })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      }]
+    });
+
+    // Generate and save the document
+    Packer.toBlob(doc).then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'banner-academico.docx';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Documento gerado",
+        description: "Seu banner acadêmico foi exportado com sucesso",
+        duration: 3000,
+      });
     });
   };
 
