@@ -29,8 +29,7 @@ const extractImages = async (htmlContent: string): Promise<ImageRun[]> => {
           transformation: {
             width: 400,
             height: 300
-          },
-          type: 'png'
+          }
         })
       );
     } catch (error) {

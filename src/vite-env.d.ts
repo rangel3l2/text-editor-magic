@@ -13,8 +13,3 @@ declare module '@ckeditor/ckeditor5-build-classic' {
   const ClassicEditor: any;
   export default ClassicEditor;
 }
-
-declare module 'docx' {
-  import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ImageRun } from 'docx';
-  export { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ImageRun };
-}
