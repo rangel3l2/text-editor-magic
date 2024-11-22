@@ -6,8 +6,8 @@ import BannerEditor from "@/components/BannerEditor";
 const Index = () => {
   const navigate = useNavigate();
 
-  const handleBannerClick = () => {
-    navigate("/banner");
+  const handleCardClick = (type: string) => {
+    navigate(`/banner?type=${type}`);
   };
 
   return (
@@ -37,7 +37,7 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <Card 
             className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={handleBannerClick}
+            onClick={() => handleCardClick('banner')}
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -57,7 +57,10 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => handleCardClick('article')}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-6 w-6" />
@@ -76,7 +79,10 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => handleCardClick('thesis')}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <GraduationCap className="h-6 w-6" />

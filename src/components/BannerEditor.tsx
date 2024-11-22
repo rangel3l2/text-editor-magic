@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSearchParams } from 'react-router-dom';
 import BannerHeaderSection from './banner/BannerHeaderSection';
 import BannerContentSection from './banner/BannerContentSection';
 
 const BannerEditor = () => {
+  const [searchParams] = useSearchParams();
   const [documentType, setDocumentType] = useState<string>('');
   const [bannerContent, setBannerContent] = useState({
     title: '',
@@ -20,6 +22,13 @@ const BannerEditor = () => {
   });
   
   const { toast } = useToast();
+
+  useEffect(() => {
+    const typeFromUrl = searchParams.get('type');
+    if (typeFromUrl) {
+      setDocumentType(typeFromUrl);
+    }
+  }, [searchParams]);
   
   const handleChange = (field: string, data: string) => {
     setBannerContent(prev => ({
@@ -33,8 +42,8 @@ const BannerEditor = () => {
     }));
     
     toast({
-      title: "Content saved",
-      description: "Your banner content has been automatically saved",
+      title: "Conteúdo salvo",
+      description: "Seu conteúdo foi salvo automaticamente",
       duration: 2000,
     });
   };
