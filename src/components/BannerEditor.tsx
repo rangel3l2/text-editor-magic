@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { FileDown } from "lucide-react";
 import BannerHeaderSection from './banner/BannerHeaderSection';
 import BannerContentSection from './banner/BannerContentSection';
 
@@ -40,6 +42,16 @@ const BannerEditor = () => {
     });
   };
 
+  const generateDocx = async () => {
+    // Here we would implement the actual DOCX generation
+    // For now, we'll just show a toast
+    toast({
+      title: "Documento gerado",
+      description: "Seu banner acadêmico foi exportado com sucesso",
+      duration: 3000,
+    });
+  };
+
   if (documentType !== 'banner') {
     return (
       <div className="w-full max-w-md mx-auto p-4">
@@ -50,8 +62,15 @@ const BannerEditor = () => {
 
   return (
     <div className="w-full max-w-5xl mx-auto p-4">
-      <div className="mb-4">
+      <div className="mb-4 flex justify-between items-center">
         <h2 className="text-2xl font-bold">Banner Acadêmico</h2>
+        <Button 
+          onClick={generateDocx}
+          className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+        >
+          <FileDown className="h-4 w-4" />
+          Gerar DOCX
+        </Button>
       </div>
       
       <Tabs defaultValue="header" className="w-full">

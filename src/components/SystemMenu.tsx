@@ -1,5 +1,5 @@
 import { Menu } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,12 @@ import {
 
 const SystemMenu = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Don't show menu on index page
+  if (location.pathname === '/') {
+    return null;
+  }
 
   return (
     <div className="fixed top-4 left-4 z-50">
