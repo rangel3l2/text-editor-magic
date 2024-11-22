@@ -1,8 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import BannerEditor from "@/components/BannerEditor";
 import { BookOpen, FileText, PenTool, GraduationCap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import BannerEditor from "@/components/BannerEditor";
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  const handleBannerClick = () => {
+    navigate("/banner");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Hero Section */}
@@ -28,7 +35,10 @@ const Index = () => {
       <div className="container mx-auto px-4 py-16">
         <h2 className="text-3xl font-bold text-center mb-12">Trabalhos Acadêmicos Disponíveis</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card 
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={handleBannerClick}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <PenTool className="h-6 w-6" />
