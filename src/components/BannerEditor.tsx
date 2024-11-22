@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 import BannerHeaderSection from './banner/BannerHeaderSection';
 import BannerContentSection from './banner/BannerContentSection';
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } from 'docx';
 
 const BannerEditor = () => {
   const [searchParams] = useSearchParams();
@@ -44,13 +44,13 @@ const BannerEditor = () => {
   };
 
   const generateDocx = async () => {
-    // Create a new document
     const doc = new Document({
       sections: [{
         properties: {},
         children: [
           // Title
           new Paragraph({
+            spacing: { after: 300 },
             alignment: AlignmentType.CENTER,
             children: [
               new TextRun({
@@ -62,6 +62,7 @@ const BannerEditor = () => {
           }),
           // Authors
           new Paragraph({
+            spacing: { after: 400 },
             alignment: AlignmentType.CENTER,
             children: [
               new TextRun({
@@ -76,6 +77,14 @@ const BannerEditor = () => {
               size: 100,
               type: WidthType.PERCENTAGE,
             },
+            borders: {
+              top: { style: BorderStyle.NONE },
+              bottom: { style: BorderStyle.NONE },
+              left: { style: BorderStyle.NONE },
+              right: { style: BorderStyle.NONE },
+              insideHorizontal: { style: BorderStyle.NONE },
+              insideVertical: { style: BorderStyle.NONE },
+            },
             rows: [
               new TableRow({
                 children: [
@@ -87,21 +96,24 @@ const BannerEditor = () => {
                     },
                     children: [
                       new Paragraph({
+                        spacing: { before: 200, after: 200 },
                         children: [
                           new TextRun({ text: "Introdução", bold: true, size: 24 }),
-                          new TextRun({ text: "\n" + bannerContent.introduction.replace(/<[^>]*>/g, '') })
+                          new TextRun({ text: "\n\n" + bannerContent.introduction.replace(/<[^>]*>/g, '') })
                         ]
                       }),
                       new Paragraph({
+                        spacing: { before: 200, after: 200 },
                         children: [
-                          new TextRun({ text: "\nObjetivos", bold: true, size: 24 }),
-                          new TextRun({ text: "\n" + bannerContent.objectives.replace(/<[^>]*>/g, '') })
+                          new TextRun({ text: "Objetivos", bold: true, size: 24 }),
+                          new TextRun({ text: "\n\n" + bannerContent.objectives.replace(/<[^>]*>/g, '') })
                         ]
                       }),
                       new Paragraph({
+                        spacing: { before: 200, after: 200 },
                         children: [
-                          new TextRun({ text: "\nMetodologia", bold: true, size: 24 }),
-                          new TextRun({ text: "\n" + bannerContent.methodology.replace(/<[^>]*>/g, '') })
+                          new TextRun({ text: "Metodologia", bold: true, size: 24 }),
+                          new TextRun({ text: "\n\n" + bannerContent.methodology.replace(/<[^>]*>/g, '') })
                         ]
                       })
                     ]
@@ -114,27 +126,31 @@ const BannerEditor = () => {
                     },
                     children: [
                       new Paragraph({
+                        spacing: { before: 200, after: 200 },
                         children: [
                           new TextRun({ text: "Resultados", bold: true, size: 24 }),
-                          new TextRun({ text: "\n" + bannerContent.results.replace(/<[^>]*>/g, '') })
+                          new TextRun({ text: "\n\n" + bannerContent.results.replace(/<[^>]*>/g, '') })
                         ]
                       }),
                       new Paragraph({
+                        spacing: { before: 200, after: 200 },
                         children: [
-                          new TextRun({ text: "\nConclusão", bold: true, size: 24 }),
-                          new TextRun({ text: "\n" + bannerContent.conclusion.replace(/<[^>]*>/g, '') })
+                          new TextRun({ text: "Conclusão", bold: true, size: 24 }),
+                          new TextRun({ text: "\n\n" + bannerContent.conclusion.replace(/<[^>]*>/g, '') })
                         ]
                       }),
                       new Paragraph({
+                        spacing: { before: 200, after: 200 },
                         children: [
-                          new TextRun({ text: "\nReferências", bold: true, size: 24 }),
-                          new TextRun({ text: "\n" + bannerContent.references.replace(/<[^>]*>/g, '') })
+                          new TextRun({ text: "Referências", bold: true, size: 24 }),
+                          new TextRun({ text: "\n\n" + bannerContent.references.replace(/<[^>]*>/g, '') })
                         ]
                       }),
                       new Paragraph({
+                        spacing: { before: 200, after: 200 },
                         children: [
-                          new TextRun({ text: "\nAgradecimentos", bold: true, size: 24 }),
-                          new TextRun({ text: "\n" + bannerContent.acknowledgments.replace(/<[^>]*>/g, '') })
+                          new TextRun({ text: "Agradecimentos", bold: true, size: 24 }),
+                          new TextRun({ text: "\n\n" + bannerContent.acknowledgments.replace(/<[^>]*>/g, '') })
                         ]
                       })
                     ]
