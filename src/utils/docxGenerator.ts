@@ -1,33 +1,8 @@
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ImageRun } from 'docx';
-
-interface BannerContent {
-  title: string;
-  authors: string;
-  introduction: string;
-  objectives: string;
-  methodology: string;
-  results: string;
-  conclusion: string;
-  references: string;
-  acknowledgments: string;
-}
-
-const extractImages = (htmlContent: string): string[] => {
-  const imgRegex = /<img[^>]+src="([^">]+)"/g;
-  const images: string[] = [];
-  let match;
-  
-  while ((match = imgRegex.exec(htmlContent)) !== null) {
-    images.push(match[1]);
-  }
-  
-  return images;
-};
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } from 'docx';
 
 const cleanHtmlContent = (content: string): string => {
   return content
-    .replace(/<img[^>]+>/g, '') // Remove img tags
-    .replace(/<[^>]*>/g, '') // Remove other HTML tags
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
     .trim();
 };
 
@@ -38,7 +13,8 @@ const createSectionTitle = (text: string) => {
       new TextRun({
         text: text,
         bold: true,
-        size: 24
+        size: 24,
+        font: 'Times New Roman'
       })
     ]
   });
@@ -54,7 +30,8 @@ const createSectionContent = (content: string) => {
       children: [
         new TextRun({
           text: cleanContent,
-          size: 24
+          size: 24,
+          font: 'Times New Roman'
         })
       ]
     })
@@ -67,7 +44,7 @@ export const generateDocx = async (content: BannerContent) => {
       properties: {
         page: {
           margin: {
-            top: 1440, // 1 inch in twips
+            top: 1440,
             right: 1440,
             bottom: 1440,
             left: 1440
@@ -161,3 +138,15 @@ export const generateDocx = async (content: BannerContent) => {
 
   return Packer.toBlob(doc);
 };
+
+interface BannerContent {
+  title: string;
+  authors: string;
+  introduction: string;
+  objectives: string;
+  methodology: string;
+  results: string;
+  conclusion: string;
+  references: string;
+  acknowledgments: string;
+}
