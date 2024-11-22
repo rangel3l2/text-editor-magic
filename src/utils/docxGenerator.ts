@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, convertInchesToTwip } from 'docx';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, convertInchesToTwip, ImageRun, HeadingLevel, Spacing } from 'docx';
 
 interface BannerContent {
   title: string;
@@ -18,42 +18,86 @@ const stripHtml = (html: string) => {
   return tmp.textContent || tmp.innerText || '';
 };
 
+const extractImagesFromHtml = async (html: string): Promise<ImageRun[]> => {
+  const images: ImageRun[] = [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const imgElements = doc.getElementsByTagName('img');
+
+  for (const img of imgElements) {
+    try {
+      const response = await fetch(img.src);
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      
+      images.push(new ImageRun({
+        data: arrayBuffer,
+        transformation: {
+          width: 200,
+          height: 150
+        }
+      }));
+    } catch (error) {
+      console.error('Error loading image:', error);
+    }
+  }
+
+  return images;
+};
+
 const createHeading = (text: string) => {
   return new Paragraph({
+    heading: HeadingLevel.HEADING_2,
     alignment: AlignmentType.LEFT,
     spacing: {
       before: 400,
       after: 200,
+      line: 360, // 1.5 line spacing (ABNT)
     },
     children: [
       new TextRun({
         text: text.toUpperCase(),
         bold: true,
         size: 28,
-        color: '000000',
+        font: "Times New Roman", // ABNT font
       }),
     ],
   });
 };
 
-const createContent = (text: string) => {
+const createContent = async (text: string) => {
+  const images = await extractImagesFromHtml(text);
+  
   return new Paragraph({
-    alignment: AlignmentType.JUSTIFIED,
+    alignment: AlignmentType.JUSTIFIED, // ABNT requires justified text
     spacing: {
       before: 200,
       after: 200,
+      line: 360, // 1.5 line spacing (ABNT)
     },
     children: [
       new TextRun({
         text: stripHtml(text),
         size: 24,
+        font: "Times New Roman", // ABNT font
       }),
+      ...images,
     ],
   });
 };
 
 export const generateDocx = async (content: BannerContent) => {
   const doc = new Document({
+    styles: {
+      default: {
+        document: {
+          run: {
+            font: "Times New Roman",
+            size: 24,
+          },
+        },
+      },
+    },
     sections: [{
       properties: {
         page: {
@@ -72,13 +116,14 @@ export const generateDocx = async (content: BannerContent) => {
           spacing: {
             before: 400,
             after: 400,
+            line: 360, // 1.5 line spacing (ABNT)
           },
           children: [
             new TextRun({
               text: stripHtml(content.title),
               bold: true,
               size: 36,
-              color: '000000',
+              font: "Times New Roman",
             }),
           ],
         }),
@@ -89,12 +134,13 @@ export const generateDocx = async (content: BannerContent) => {
           spacing: {
             before: 200,
             after: 400,
+            line: 360,
           },
           children: [
             new TextRun({
               text: stripHtml(content.authors),
               size: 24,
-              color: '000000',
+              font: "Times New Roman",
             }),
           ],
         }),
@@ -119,11 +165,11 @@ export const generateDocx = async (content: BannerContent) => {
                   },
                   children: [
                     createHeading('Introdução'),
-                    createContent(content.introduction),
+                    await createContent(content.introduction),
                     createHeading('Objetivos'),
-                    createContent(content.objectives),
+                    await createContent(content.objectives),
                     createHeading('Metodologia'),
-                    createContent(content.methodology),
+                    await createContent(content.methodology),
                   ],
                 }),
                 // Right column
@@ -137,14 +183,14 @@ export const generateDocx = async (content: BannerContent) => {
                   },
                   children: [
                     createHeading('Resultados e Discussão'),
-                    createContent(content.results),
+                    await createContent(content.results),
                     createHeading('Conclusão'),
-                    createContent(content.conclusion),
+                    await createContent(content.conclusion),
                     createHeading('Referências'),
-                    createContent(content.references),
-                    ...(content.acknowledgments ? [
+                    await createContent(content.references),
+                    ...(content.acknowledgments.trim() ? [
                       createHeading('Agradecimentos'),
-                      createContent(content.acknowledgments),
+                      await createContent(content.acknowledgments),
                     ] : []),
                   ],
                 }),
