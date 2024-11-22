@@ -61,6 +61,7 @@ const BannerEditor = () => {
         duration: 3000,
       });
     } catch (error) {
+      console.error('Error generating document:', error);
       toast({
         title: "Erro ao gerar documento",
         description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
