@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 import BannerHeaderSection from './banner/BannerHeaderSection';
 import BannerContentSection from './banner/BannerContentSection';
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } from 'docx';
+import { generateDocx } from '@/utils/docxGenerator';
 
 const BannerEditor = () => {
   const [searchParams] = useSearchParams();
@@ -43,128 +43,9 @@ const BannerEditor = () => {
     });
   };
 
-  const generateDocx = async () => {
-    const doc = new Document({
-      sections: [{
-        properties: {},
-        children: [
-          // Title
-          new Paragraph({
-            spacing: { after: 300 },
-            alignment: AlignmentType.CENTER,
-            children: [
-              new TextRun({
-                text: bannerContent.title.replace(/<[^>]*>/g, ''),
-                bold: true,
-                size: 32
-              })
-            ]
-          }),
-          // Authors
-          new Paragraph({
-            spacing: { after: 400 },
-            alignment: AlignmentType.CENTER,
-            children: [
-              new TextRun({
-                text: bannerContent.authors.replace(/<[^>]*>/g, ''),
-                size: 24
-              })
-            ]
-          }),
-          // Main content in two columns using a table
-          new Table({
-            width: {
-              size: 100,
-              type: WidthType.PERCENTAGE,
-            },
-            borders: {
-              top: { style: BorderStyle.NONE },
-              bottom: { style: BorderStyle.NONE },
-              left: { style: BorderStyle.NONE },
-              right: { style: BorderStyle.NONE },
-              insideHorizontal: { style: BorderStyle.NONE },
-              insideVertical: { style: BorderStyle.NONE },
-            },
-            rows: [
-              new TableRow({
-                children: [
-                  // Left column
-                  new TableCell({
-                    width: {
-                      size: 50,
-                      type: WidthType.PERCENTAGE,
-                    },
-                    children: [
-                      new Paragraph({
-                        spacing: { before: 200, after: 200 },
-                        children: [
-                          new TextRun({ text: "Introdução", bold: true, size: 24 }),
-                          new TextRun({ text: "\n\n" + bannerContent.introduction.replace(/<[^>]*>/g, '') })
-                        ]
-                      }),
-                      new Paragraph({
-                        spacing: { before: 200, after: 200 },
-                        children: [
-                          new TextRun({ text: "Objetivos", bold: true, size: 24 }),
-                          new TextRun({ text: "\n\n" + bannerContent.objectives.replace(/<[^>]*>/g, '') })
-                        ]
-                      }),
-                      new Paragraph({
-                        spacing: { before: 200, after: 200 },
-                        children: [
-                          new TextRun({ text: "Metodologia", bold: true, size: 24 }),
-                          new TextRun({ text: "\n\n" + bannerContent.methodology.replace(/<[^>]*>/g, '') })
-                        ]
-                      })
-                    ]
-                  }),
-                  // Right column
-                  new TableCell({
-                    width: {
-                      size: 50,
-                      type: WidthType.PERCENTAGE,
-                    },
-                    children: [
-                      new Paragraph({
-                        spacing: { before: 200, after: 200 },
-                        children: [
-                          new TextRun({ text: "Resultados", bold: true, size: 24 }),
-                          new TextRun({ text: "\n\n" + bannerContent.results.replace(/<[^>]*>/g, '') })
-                        ]
-                      }),
-                      new Paragraph({
-                        spacing: { before: 200, after: 200 },
-                        children: [
-                          new TextRun({ text: "Conclusão", bold: true, size: 24 }),
-                          new TextRun({ text: "\n\n" + bannerContent.conclusion.replace(/<[^>]*>/g, '') })
-                        ]
-                      }),
-                      new Paragraph({
-                        spacing: { before: 200, after: 200 },
-                        children: [
-                          new TextRun({ text: "Referências", bold: true, size: 24 }),
-                          new TextRun({ text: "\n\n" + bannerContent.references.replace(/<[^>]*>/g, '') })
-                        ]
-                      }),
-                      new Paragraph({
-                        spacing: { before: 200, after: 200 },
-                        children: [
-                          new TextRun({ text: "Agradecimentos", bold: true, size: 24 }),
-                          new TextRun({ text: "\n\n" + bannerContent.acknowledgments.replace(/<[^>]*>/g, '') })
-                        ]
-                      })
-                    ]
-                  })
-                ]
-              })
-            ]
-          })
-        ]
-      }]
-    });
-
-    // Generate and save the document
-    Packer.toBlob(doc).then(blob => {
+  const handleGenerateDocx = async () => {
+    try {
+      const blob = await generateDocx(bannerContent);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -179,7 +60,13 @@ const BannerEditor = () => {
         description: "Seu banner acadêmico foi exportado com sucesso",
         duration: 3000,
       });
-    });
+    } catch (error) {
+      toast({
+        title: "Erro ao gerar documento",
+        description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
+        duration: 3000,
+      });
+    }
   };
 
   if (documentType !== 'banner') {
@@ -195,7 +82,7 @@ const BannerEditor = () => {
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-2xl font-bold">Banner Acadêmico</h2>
         <Button 
-          onClick={generateDocx}
+          onClick={handleGenerateDocx}
           className="flex items-center gap-2 bg-primary hover:bg-primary/90"
         >
           <FileDown className="h-4 w-4" />
