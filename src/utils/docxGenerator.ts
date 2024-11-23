@@ -1,37 +1,18 @@
 import { Document, Packer, Paragraph, TextRun, ImageRun } from "docx";
 
-const addImageToDoc = async (doc: Document, imageUrl: string) => {
-  if (!imageUrl) return;
+interface BannerContent {
+  title: string;
+  authors: string;
+  introduction: string;
+  objectives: string;
+  methodology: string;
+  results: string;
+  conclusion: string;
+  references: string;
+  acknowledgments: string;
+}
 
-  try {
-    const response = await fetch(imageUrl);
-    const arrayBuffer = await response.arrayBuffer();
-
-    doc.addSection({
-      children: [
-        new Paragraph({
-          children: [
-            new ImageRun({
-              data: arrayBuffer,
-              transformation: {
-                width: 200,
-                height: 150
-              }
-            })
-          ],
-        }),
-      ],
-    });
-  } catch (error) {
-    console.error("Error adding image to document:", error);
-  }
-};
-
-export const generateDocument = async (
-  title: string,
-  content: string,
-  imageUrl?: string
-) => {
+export const generateDocx = async (content: BannerContent): Promise<Blob> => {
   const doc = new Document({
     sections: [{
       properties: {},
@@ -39,7 +20,7 @@ export const generateDocument = async (
         new Paragraph({
           children: [
             new TextRun({
-              text: title,
+              text: content.title,
               bold: true,
               size: 32,
             }),
@@ -48,18 +29,32 @@ export const generateDocument = async (
         new Paragraph({
           children: [
             new TextRun({
-              text: content,
+              text: content.authors,
               size: 24,
             }),
           ],
         }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Introdução",
+              bold: true,
+              size: 28,
+            }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: content.introduction,
+              size: 24,
+            }),
+          ],
+        }),
+        // ... Add other sections similarly
       ],
     }],
   });
-
-  if (imageUrl) {
-    await addImageToDoc(doc, imageUrl);
-  }
 
   return await Packer.toBlob(doc);
 };
