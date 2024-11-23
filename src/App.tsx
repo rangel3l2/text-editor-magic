@@ -9,6 +9,7 @@ import BannerEditor from "./components/BannerEditor";
 import SystemMenu from "./components/SystemMenu";
 import { LoginButton } from "./components/LoginButton";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/banner" element={<BannerEditor />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
