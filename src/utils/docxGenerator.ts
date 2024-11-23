@@ -35,6 +35,11 @@ const extractImagesFromHtml = async (html: string): Promise<ImageRun[]> => {
         transformation: {
           width: 200,
           height: 150
+        },
+        type: 'png', // Add required type property
+        fallback: { // Add required fallback property
+          data: arrayBuffer,
+          type: 'png'
         }
       }));
     } catch (error) {
