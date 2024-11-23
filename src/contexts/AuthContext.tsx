@@ -41,27 +41,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        scopes: 'https://www.googleapis.com/auth/generative-ai',
-        redirectTo: window.location.origin
-      },
-    });
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          scopes: 'https://www.googleapis.com/auth/generative-ai',
+          redirectTo: window.location.origin
+        },
+      });
 
-    if (error) {
+      if (error) {
+        if (error.message.includes('provider is not enabled')) {
+          toast.error('O login com Google não está habilitado. Por favor, contate o administrador do sistema.');
+        } else {
+          toast.error('Erro ao fazer login com Google');
+        }
+        console.error('Error signing in:', error);
+      }
+    } catch (error) {
       toast.error('Erro ao fazer login com Google');
       console.error('Error signing in:', error);
     }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error('Erro ao fazer logout');
+        console.error('Error signing out:', error);
+      } else {
+        toast.success('Logout realizado com sucesso!');
+      }
+    } catch (error) {
       toast.error('Erro ao fazer logout');
       console.error('Error signing out:', error);
-    } else {
-      toast.success('Logout realizado com sucesso!');
     }
   };
 
