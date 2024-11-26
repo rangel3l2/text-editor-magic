@@ -1,14 +1,29 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, FileText, PenTool, GraduationCap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import BannerEditor from "@/components/BannerEditor";
+import { useState, useEffect } from "react";
+import LoadingScreen from "@/components/LoadingScreen";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading time (you can remove this setTimeout if you have real data loading)
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleCardClick = (type: string) => {
     navigate(`/banner?type=${type}`);
   };
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
