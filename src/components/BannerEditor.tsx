@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { FileDown } from "lucide-react";
+import { FileDown, RotateCcw } from "lucide-react";
 import BannerHeaderSection from './banner/BannerHeaderSection';
 import BannerContentSection from './banner/BannerContentSection';
 import { generateDocx } from '@/utils/docxGenerator';
 import Header from './Header';
+import { useAuth } from "@/contexts/AuthContext";
 
 const BannerEditor = () => {
   const [searchParams] = useSearchParams();
@@ -26,6 +27,15 @@ const BannerEditor = () => {
   });
   
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    // Try to load saved content when component mounts
+    const savedContent = localStorage.getItem('bannerContent');
+    if (savedContent) {
+      setBannerContent(JSON.parse(savedContent));
+    }
+  }, []);
   
   const handleChange = (field: string, data: string) => {
     setBannerContent(prev => ({
@@ -72,6 +82,25 @@ const BannerEditor = () => {
     }
   };
 
+  const handleLoadSavedContent = () => {
+    const savedContent = localStorage.getItem('bannerContent');
+    if (savedContent) {
+      setBannerContent(JSON.parse(savedContent));
+      toast({
+        title: "Conteúdo recuperado",
+        description: "Seu conteúdo foi carregado com sucesso",
+        duration: 3000,
+      });
+    } else {
+      toast({
+        title: "Nenhum conteúdo encontrado",
+        description: "Não há conteúdo salvo anteriormente",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
   if (documentType !== 'banner') {
     return (
       <div className="w-full max-w-md mx-auto p-4">
@@ -87,13 +116,25 @@ const BannerEditor = () => {
         <div className="container mx-auto max-w-5xl">
           <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 className="text-2xl font-bold">Banner Acadêmico</h2>
-            <Button 
-              onClick={handleGenerateDocx}
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90 w-full sm:w-auto"
-            >
-              <FileDown className="h-4 w-4" />
-              Gerar DOCX
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              {user && (
+                <Button 
+                  onClick={handleLoadSavedContent}
+                  variant="outline"
+                  className="flex items-center gap-2 w-full sm:w-auto"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Recuperar Dados Salvos
+                </Button>
+              )}
+              <Button 
+                onClick={handleGenerateDocx}
+                className="flex items-center gap-2 bg-primary hover:bg-primary/90 w-full sm:w-auto"
+              >
+                <FileDown className="h-4 w-4" />
+                Gerar DOCX
+              </Button>
+            </div>
           </div>
           
           <Tabs defaultValue="header" className="w-full">
