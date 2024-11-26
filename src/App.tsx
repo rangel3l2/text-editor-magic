@@ -7,8 +7,6 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import BannerEditor from "./components/BannerEditor";
-import SystemMenu from "./components/SystemMenu";
-import { LoginButton } from "./components/LoginButton";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 
@@ -21,8 +19,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <LoginButton />
-          <SystemMenu />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/profile" element={<Profile />} />
