@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -35,7 +34,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         toast.success('Login realizado com sucesso!');
-        window.location.href = '/profile';
       }
     });
 
@@ -47,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: window.location.href.split('#')[0]
         },
       });
 
@@ -73,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Error signing out:', error);
       } else {
         toast.success('Logout realizado com sucesso!');
-        window.location.href = '/';
       }
     } catch (error) {
       toast.error('Erro ao fazer logout');
