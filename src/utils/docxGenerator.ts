@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun, ImageRun } from "docx";
+import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, SectionType, IStylesOptions } from "docx";
 
 interface BannerContent {
   title: string;
@@ -12,48 +12,133 @@ interface BannerContent {
   acknowledgments: string;
 }
 
+const styles: IStylesOptions = {
+  default: {
+    document: {
+      run: {
+        font: "Times New Roman",
+        size: 24,
+      },
+      paragraph: {
+        spacing: {
+          after: 120,
+          line: 276,
+        },
+      },
+    },
+  },
+  paragraphStyles: [
+    {
+      id: "title",
+      name: "Title",
+      basedOn: "Normal",
+      next: "Normal",
+      quickFormat: true,
+      run: {
+        size: 32,
+        bold: true,
+      },
+      paragraph: {
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 240 },
+      },
+    },
+    {
+      id: "heading",
+      name: "Heading",
+      basedOn: "Normal",
+      next: "Normal",
+      quickFormat: true,
+      run: {
+        size: 28,
+        bold: true,
+      },
+      paragraph: {
+        spacing: { before: 240, after: 120 },
+      },
+    },
+  ],
+};
+
 export const generateDocx = async (content: BannerContent): Promise<Blob> => {
   const doc = new Document({
-    sections: [{
-      properties: {},
-      children: [
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: content.title,
-              bold: true,
-              size: 32,
-            }),
-          ],
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: content.authors,
-              size: 24,
-            }),
-          ],
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: "Introdução",
-              bold: true,
-              size: 28,
-            }),
-          ],
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: content.introduction,
-              size: 24,
-            }),
-          ],
-        }),
-        // ... Add other sections similarly
-      ],
-    }],
+    styles,
+    sections: [
+      {
+        properties: {
+          type: SectionType.CONTINUOUS,
+          column: {
+            space: 708,
+            count: 2,
+          },
+        },
+        children: [
+          new Paragraph({
+            style: "title",
+            children: [new TextRun(content.title)],
+          }),
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [new TextRun(content.authors)],
+            spacing: { after: 480 },
+          }),
+          new Paragraph({
+            style: "heading",
+            children: [new TextRun("1. INTRODUÇÃO")],
+          }),
+          new Paragraph({
+            children: [new TextRun(content.introduction)],
+          }),
+          new Paragraph({
+            style: "heading",
+            children: [new TextRun("2. OBJETIVOS")],
+          }),
+          new Paragraph({
+            children: [new TextRun(content.objectives)],
+          }),
+          new Paragraph({
+            style: "heading",
+            children: [new TextRun("3. METODOLOGIA")],
+          }),
+          new Paragraph({
+            children: [new TextRun(content.methodology)],
+          }),
+          new Paragraph({
+            style: "heading",
+            children: [new TextRun("4. RESULTADOS E DISCUSSÃO")],
+          }),
+          new Paragraph({
+            children: [new TextRun(content.results)],
+          }),
+          new Paragraph({
+            style: "heading",
+            children: [new TextRun("5. CONCLUSÃO")],
+          }),
+          new Paragraph({
+            children: [new TextRun(content.conclusion)],
+          }),
+          new Paragraph({
+            style: "heading",
+            children: [new TextRun("REFERÊNCIAS")],
+          }),
+          new Paragraph({
+            children: [new TextRun(content.references)],
+          }),
+        ].concat(
+          content.acknowledgments
+            ? [
+                new Paragraph({
+                  style: "heading",
+                  children: [new TextRun("AGRADECIMENTOS")],
+                }),
+                new Paragraph({
+                  children: [new TextRun(content.acknowledgments)],
+                }),
+              ]
+            : []
+        ),
+      },
+    ],
   });
 
   return await Packer.toBlob(doc);
