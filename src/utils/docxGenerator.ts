@@ -60,6 +60,13 @@ const styles: IStylesOptions = {
   ],
 };
 
+const cleanHtmlContent = (content: string): string => {
+  return content
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+    .trim();
+};
+
 export const generateDocx = async (content: BannerContent): Promise<Blob> => {
   const doc = new Document({
     styles,
@@ -75,11 +82,11 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
         children: [
           new Paragraph({
             style: "title",
-            children: [new TextRun(content.title)],
+            children: [new TextRun(cleanHtmlContent(content.title))],
           }),
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            children: [new TextRun(content.authors)],
+            children: [new TextRun(cleanHtmlContent(content.authors))],
             spacing: { after: 480 },
           }),
           new Paragraph({
@@ -87,42 +94,42 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
             children: [new TextRun("1. INTRODUÇÃO")],
           }),
           new Paragraph({
-            children: [new TextRun(content.introduction)],
+            children: [new TextRun(cleanHtmlContent(content.introduction))],
           }),
           new Paragraph({
             style: "heading",
             children: [new TextRun("2. OBJETIVOS")],
           }),
           new Paragraph({
-            children: [new TextRun(content.objectives)],
+            children: [new TextRun(cleanHtmlContent(content.objectives))],
           }),
           new Paragraph({
             style: "heading",
             children: [new TextRun("3. METODOLOGIA")],
           }),
           new Paragraph({
-            children: [new TextRun(content.methodology)],
+            children: [new TextRun(cleanHtmlContent(content.methodology))],
           }),
           new Paragraph({
             style: "heading",
             children: [new TextRun("4. RESULTADOS E DISCUSSÃO")],
           }),
           new Paragraph({
-            children: [new TextRun(content.results)],
+            children: [new TextRun(cleanHtmlContent(content.results))],
           }),
           new Paragraph({
             style: "heading",
             children: [new TextRun("5. CONCLUSÃO")],
           }),
           new Paragraph({
-            children: [new TextRun(content.conclusion)],
+            children: [new TextRun(cleanHtmlContent(content.conclusion))],
           }),
           new Paragraph({
             style: "heading",
             children: [new TextRun("REFERÊNCIAS")],
           }),
           new Paragraph({
-            children: [new TextRun(content.references)],
+            children: [new TextRun(cleanHtmlContent(content.references))],
           }),
         ].concat(
           content.acknowledgments
@@ -132,7 +139,7 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
                   children: [new TextRun("AGRADECIMENTOS")],
                 }),
                 new Paragraph({
-                  children: [new TextRun(content.acknowledgments)],
+                  children: [new TextRun(cleanHtmlContent(content.acknowledgments))],
                 }),
               ]
             : []
