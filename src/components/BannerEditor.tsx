@@ -88,6 +88,7 @@ const BannerEditor = () => {
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
       });
 
+      // Verifica se o navegador suporta compartilhamento nativo
       if (navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
@@ -101,12 +102,19 @@ const BannerEditor = () => {
           duration: 3000,
         });
       } else {
+        // No Windows, vamos criar um link temporário para download
         const url = window.URL.createObjectURL(blob);
-        await navigator.clipboard.writeText(url);
+        const tempLink = document.createElement('a');
+        tempLink.href = url;
+        tempLink.download = 'banner-academico.docx';
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        document.body.removeChild(tempLink);
+        window.URL.revokeObjectURL(url);
         
         toast({
-          title: "Link copiado",
-          description: "O link do documento foi copiado para sua área de transferência",
+          title: "Download iniciado",
+          description: "O arquivo foi preparado para download no seu computador",
           duration: 3000,
         });
       }
