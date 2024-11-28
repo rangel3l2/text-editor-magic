@@ -84,9 +84,11 @@ const BannerEditor = () => {
   const handleShare = async () => {
     try {
       const blob = await generateDocx(bannerContent);
-      const file = new File([blob], 'banner-academico.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-      
-      if (navigator.share) {
+      const file = new File([blob], 'banner-academico.docx', { 
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      });
+
+      if (navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
           title: 'Banner Acadêmico',
@@ -99,7 +101,6 @@ const BannerEditor = () => {
           duration: 3000,
         });
       } else {
-        // Fallback for browsers that don't support Web Share API
         const url = window.URL.createObjectURL(blob);
         await navigator.clipboard.writeText(url);
         
@@ -111,9 +112,16 @@ const BannerEditor = () => {
       }
     } catch (error) {
       console.error('Error sharing document:', error);
+      
+      let errorMessage = "Ocorreu um erro ao compartilhar o documento.";
+      if (error instanceof Error) {
+        errorMessage += ` ${error.message}`;
+      }
+      
       toast({
         title: "Erro ao compartilhar",
-        description: "Ocorreu um erro ao compartilhar o documento. Tente novamente.",
+        description: errorMessage,
+        variant: "destructive",
         duration: 3000,
       });
     }
