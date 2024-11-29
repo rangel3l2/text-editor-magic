@@ -1,6 +1,4 @@
 const editorConfig = {
-  removePlugins: ['Logo'],
-  language: 'pt-br',
   toolbar: [
     'heading',
     '|',
@@ -13,11 +11,22 @@ const editorConfig = {
     'outdent',
     'indent',
     '|',
+    'imageUpload',
     'blockQuote',
     'insertTable',
     'undo',
     'redo'
-  ]
+  ],
+  image: {
+    toolbar: [
+      'imageStyle:inline',
+      'imageStyle:block',
+      'imageStyle:side',
+      '|',
+      'toggleImageCaption',
+      'imageTextAlternative'
+    ]
+  }
 };
 
 export default editorConfig;

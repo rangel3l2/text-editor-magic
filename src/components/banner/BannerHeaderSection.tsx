@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import ProgressEditor from '../ProgressEditor';
+import RichTextEditor from '../RichTextEditor';
 import editorConfig from '@/config/editorConfig';
 
 interface BannerHeaderSectionProps {
@@ -19,7 +19,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
           <CardDescription>Deve ser breve, claro e atrativo, indicando o tema principal do trabalho. (2 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProgressEditor
+          <RichTextEditor
             value={content.title}
             onChange={(data) => handleChange('title', data)}
             maxLines={2}
@@ -35,7 +35,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
           <CardDescription>Liste os nomes dos autores, seguidos da afiliação institucional e e-mail de contato do autor principal. (3 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProgressEditor
+          <RichTextEditor
             value={content.authors}
             onChange={(data) => handleChange('authors', data)}
             maxLines={3}

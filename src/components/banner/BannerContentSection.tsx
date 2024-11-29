@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import ProgressEditor from '../ProgressEditor';
+import RichTextEditor from '../RichTextEditor';
 import editorConfig from '@/config/editorConfig';
 
 interface BannerContentSectionProps {
@@ -24,7 +24,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
           <CardDescription>Apresente uma visão geral do tema, incluindo problematização e objetivos gerais. (8-10 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProgressEditor
+          <RichTextEditor
             value={content.introduction}
             onChange={(data) => handleChange('introduction', data)}
             maxLines={10}
@@ -40,7 +40,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
           <CardDescription>Informe os objetivos gerais e específicos do trabalho. Use frases curtas e diretas. (3-4 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProgressEditor
+          <RichTextEditor
             value={content.objectives}
             onChange={(data) => handleChange('objectives', data)}
             maxLines={4}
@@ -56,7 +56,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
           <CardDescription>Explique o método utilizado, destacando as etapas principais. (6-8 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProgressEditor
+          <RichTextEditor
             value={content.methodology}
             onChange={(data) => handleChange('methodology', data)}
             maxLines={8}
@@ -72,7 +72,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
           <CardDescription>Apresente os principais resultados e compare com a literatura. Use gráficos ou tabelas. (4-6 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProgressEditor
+          <RichTextEditor
             value={content.results}
             onChange={(data) => handleChange('results', data)}
             maxLines={6}
@@ -88,7 +88,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
           <CardDescription>Resuma as principais descobertas e contribuições do trabalho. (4-6 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProgressEditor
+          <RichTextEditor
             value={content.conclusion}
             onChange={(data) => handleChange('conclusion', data)}
             maxLines={6}
@@ -104,7 +104,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
           <CardDescription>Liste 2-3 referências mais relevantes, seguindo as normas ABNT. (2-3 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProgressEditor
+          <RichTextEditor
             value={content.references}
             onChange={(data) => handleChange('references', data)}
             maxLines={3}
@@ -120,7 +120,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
           <CardDescription>Mencione instituições ou pessoas que contribuíram para o trabalho. (2 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
-          <ProgressEditor
+          <RichTextEditor
             value={content.acknowledgments}
             onChange={(data) => handleChange('acknowledgments', data)}
             maxLines={2}
