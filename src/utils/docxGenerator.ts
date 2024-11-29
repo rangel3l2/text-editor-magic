@@ -109,6 +109,18 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
               width: 400,
               height: 300,
             },
+            floating: {
+              horizontalPosition: {
+                offset: 1014400, // 1 inch
+              },
+              verticalPosition: {
+                offset: 1014400,
+              },
+            },
+            altText: {
+              title: "Image",
+              description: "Document image",
+            }
           })
         );
       } catch (error) {
