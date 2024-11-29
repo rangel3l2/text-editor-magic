@@ -111,7 +111,7 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
             },
             floating: {
               horizontalPosition: {
-                offset: 1014400, // 1 inch
+                offset: 1014400,
               },
               verticalPosition: {
                 offset: 1014400,
@@ -120,7 +120,12 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
             altText: {
               title: "Image",
               description: "Document image",
-              name: "Document image" // Added the required 'name' property
+              name: "Document image"
+            },
+            type: "image",
+            fallback: {
+              data: imageBuffer,
+              type: "image"
             }
           })
         );
