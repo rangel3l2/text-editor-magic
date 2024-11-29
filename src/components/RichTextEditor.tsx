@@ -3,6 +3,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { Progress } from "@/components/ui/progress";
 import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
+import { uploadAdapterPlugin } from '@/utils/uploadAdapter';
 
 interface RichTextEditorProps {
   value: string;
@@ -35,7 +36,6 @@ const RichTextEditor = ({
 
   const handleImageUpload = async (file: File) => {
     try {
-      // Verificar o tamanho do arquivo (máximo 2MB)
       if (file.size > 2 * 1024 * 1024) {
         toast({
           title: "Arquivo muito grande",
@@ -46,17 +46,8 @@ const RichTextEditor = ({
         return null;
       }
 
-      // Criar uma URL temporária para a imagem
       const imageUrl = URL.createObjectURL(file);
-
-      // Converter a imagem para base64 para salvar no documento
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          resolve(imageUrl);
-        };
-        reader.readAsDataURL(file);
-      });
+      return imageUrl;
     } catch (error) {
       toast({
         title: "Erro ao fazer upload da imagem",
@@ -71,6 +62,7 @@ const RichTextEditor = ({
   const editorConfig = {
     ...config,
     placeholder: placeholder || `Digite aqui (máximo ${maxLines} linhas)...`,
+    extraPlugins: [uploadAdapterPlugin],
     image: {
       ...config.image,
       toolbar: [
@@ -84,9 +76,7 @@ const RichTextEditor = ({
         'resizeImage:25',
         'resizeImage:50',
         'resizeImage:75',
-        'resizeImage:original',
-        '|',
-        'imageCrop'
+        'resizeImage:original'
       ],
       resizeOptions: [
         {
