@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FileDown, RotateCcw, Share2, Broom } from "lucide-react";
+import { FileDown, RotateCcw, Share2, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface BannerActionsProps {
@@ -49,7 +49,7 @@ const BannerActions = ({
         variant="destructive"
         className="flex items-center gap-2 w-full sm:w-auto"
       >
-        <Broom className="h-4 w-4" />
+        <Trash2 className="h-4 w-4" />
         Limpar Campos
       </Button>
     </div>
