@@ -3,13 +3,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { FileDown, RotateCcw, Share2 } from "lucide-react";
-import BannerHeaderSection from './banner/BannerHeaderSection';
-import BannerContentSection from './banner/BannerContentSection';
 import { generateDocx } from '@/utils/docxGenerator';
 import Header from './Header';
 import { useAuth } from "@/contexts/AuthContext";
+import BannerHeaderSection from './banner/BannerHeaderSection';
+import BannerContentSection from './banner/BannerContentSection';
+import BannerActions from './banner/BannerActions';
+import BannerHeader from './banner/BannerHeader';
 
 const BannerEditor = () => {
   const [searchParams] = useSearchParams();
@@ -88,7 +88,6 @@ const BannerEditor = () => {
         type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
       });
 
-      // Verifica se o navegador suporta compartilhamento nativo
       if (navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
@@ -102,7 +101,6 @@ const BannerEditor = () => {
           duration: 3000,
         });
       } else {
-        // No Windows, vamos criar um link temporário para download
         const url = window.URL.createObjectURL(blob);
         const tempLink = document.createElement('a');
         tempLink.href = url;
@@ -154,6 +152,28 @@ const BannerEditor = () => {
     }
   };
 
+  const handleClearFields = () => {
+    setBannerContent({
+      title: '',
+      authors: '',
+      introduction: '',
+      objectives: '',
+      methodology: '',
+      results: '',
+      conclusion: '',
+      references: '',
+      acknowledgments: ''
+    });
+    
+    localStorage.removeItem('bannerContent');
+    
+    toast({
+      title: "Campos limpos",
+      description: "Todos os campos foram limpos com sucesso",
+      duration: 3000,
+    });
+  };
+
   if (documentType !== 'banner') {
     return (
       <div className="w-full max-w-md mx-auto p-4">
@@ -168,34 +188,14 @@ const BannerEditor = () => {
       <main className="pt-20 pb-8 px-4">
         <div className="container mx-auto max-w-5xl">
           <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h2 className="text-2xl font-bold">Banner Acadêmico</h2>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              {user && (
-                <Button 
-                  onClick={handleLoadSavedContent}
-                  variant="outline"
-                  className="flex items-center gap-2 w-full sm:w-auto"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  Recuperar Dados Salvos
-                </Button>
-              )}
-              <Button 
-                onClick={handleGenerateDocx}
-                className="flex items-center gap-2 bg-primary hover:bg-primary/90 w-full sm:w-auto"
-              >
-                <FileDown className="h-4 w-4" />
-                Baixar DOCX
-              </Button>
-              <Button 
-                onClick={handleShare}
-                variant="secondary"
-                className="flex items-center gap-2 w-full sm:w-auto"
-              >
-                <Share2 className="h-4 w-4" />
-                Compartilhar
-              </Button>
-            </div>
+            <BannerHeader title="Banner Acadêmico" />
+            <BannerActions 
+              onGenerateDocx={handleGenerateDocx}
+              onShare={handleShare}
+              onLoadSavedContent={handleLoadSavedContent}
+              onClearFields={handleClearFields}
+              isAuthenticated={!!user}
+            />
           </div>
           
           <Tabs defaultValue="header" className="w-full">
