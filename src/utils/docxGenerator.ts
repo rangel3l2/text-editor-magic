@@ -120,6 +120,7 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
             altText: {
               title: "Image",
               description: "Document image",
+              name: "Document image" // Added the required 'name' property
             }
           })
         );
