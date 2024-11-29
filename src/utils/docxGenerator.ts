@@ -64,7 +64,7 @@ const cleanHtmlContent = (content: string): { text: string; images: string[] } =
   const images: string[] = [];
   const imgRegex = /<img[^>]+src="([^">]+)"/g;
   let match;
-  
+
   while ((match = imgRegex.exec(content)) !== null) {
     images.push(match[1]);
   }
@@ -122,11 +122,7 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
               description: "Document image",
               name: "Document image"
             },
-            type: "png",
-            fallback: {
-              data: imageBuffer,
-              type: "png"
-            }
+            type: "png"
           })
         );
       } catch (error) {
