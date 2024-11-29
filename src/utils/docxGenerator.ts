@@ -122,10 +122,10 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
               description: "Document image",
               name: "Document image"
             },
-            type: "image",
+            type: "png",
             fallback: {
               data: imageBuffer,
-              type: "image"
+              type: "png"
             }
           })
         );
