@@ -35,10 +35,28 @@ const RichTextEditor = ({
 
   const handleImageUpload = async (file: File) => {
     try {
-      // Aqui você pode implementar o upload da imagem para seu servidor
-      // Por enquanto, vamos criar uma URL local para a imagem
+      // Verificar o tamanho do arquivo (máximo 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast({
+          title: "Arquivo muito grande",
+          description: "A imagem deve ter no máximo 2MB",
+          variant: "destructive",
+          duration: 3000,
+        });
+        return null;
+      }
+
+      // Criar uma URL temporária para a imagem
       const imageUrl = URL.createObjectURL(file);
-      return imageUrl;
+
+      // Converter a imagem para base64 para salvar no documento
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          resolve(imageUrl);
+        };
+        reader.readAsDataURL(file);
+      });
     } catch (error) {
       toast({
         title: "Erro ao fazer upload da imagem",
@@ -47,6 +65,55 @@ const RichTextEditor = ({
         duration: 3000,
       });
       return null;
+    }
+  };
+
+  const editorConfig = {
+    ...config,
+    placeholder: placeholder || `Digite aqui (máximo ${maxLines} linhas)...`,
+    image: {
+      ...config.image,
+      toolbar: [
+        'imageStyle:inline',
+        'imageStyle:block',
+        'imageStyle:side',
+        '|',
+        'toggleImageCaption',
+        'imageTextAlternative',
+        '|',
+        'resizeImage:25',
+        'resizeImage:50',
+        'resizeImage:75',
+        'resizeImage:original',
+        '|',
+        'imageCrop'
+      ],
+      resizeOptions: [
+        {
+          name: '25',
+          value: '25',
+          label: '25%'
+        },
+        {
+          name: '50',
+          value: '50',
+          label: '50%'
+        },
+        {
+          name: '75',
+          value: '75',
+          label: '75%'
+        },
+        {
+          name: 'original',
+          value: null,
+          label: 'Original'
+        }
+      ],
+      upload: {
+        types: ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff'],
+        handler: handleImageUpload
+      }
     }
   };
 
@@ -63,17 +130,7 @@ const RichTextEditor = ({
           }}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          config={{
-            ...config,
-            placeholder: placeholder || `Digite aqui (máximo ${maxLines} linhas)...`,
-            image: {
-              ...config.image,
-              upload: {
-                types: ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff'],
-                handler: handleImageUpload
-              }
-            }
-          }}
+          config={editorConfig}
         />
       </div>
       {isFocused && (

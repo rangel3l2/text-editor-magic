@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, SectionType, IStylesOptions } from "docx";
+import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, SectionType, IStylesOptions, ImageRun } from "docx";
 
 interface BannerContent {
   title: string;
@@ -60,14 +60,70 @@ const styles: IStylesOptions = {
   ],
 };
 
-const cleanHtmlContent = (content: string): string => {
-  return content
-    .replace(/<[^>]*>/g, '') // Remove HTML tags
+const cleanHtmlContent = (content: string): { text: string; images: string[] } => {
+  const images: string[] = [];
+  const imgRegex = /<img[^>]+src="([^">]+)"/g;
+  let match;
+  
+  while ((match = imgRegex.exec(content)) !== null) {
+    images.push(match[1]);
+  }
+
+  const textContent = content
+    .replace(/<img[^>]*>/g, '') // Remove image tags
+    .replace(/<[^>]*>/g, '') // Remove other HTML tags
     .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
     .trim();
+
+  return { text: textContent, images };
+};
+
+const fetchImageAsBuffer = async (url: string): Promise<Buffer> => {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  return Buffer.from(arrayBuffer);
 };
 
 export const generateDocx = async (content: BannerContent): Promise<Blob> => {
+  const sections = [];
+
+  for (const [key, value] of Object.entries(content)) {
+    if (!value) continue;
+
+    const { text, images } = cleanHtmlContent(value);
+    const children: any[] = [];
+
+    // Add text content
+    if (text) {
+      children.push(new TextRun(text));
+    }
+
+    // Add images
+    for (const imageUrl of images) {
+      try {
+        const imageBuffer = await fetchImageAsBuffer(imageUrl);
+        children.push(
+          new ImageRun({
+            data: imageBuffer,
+            transformation: {
+              width: 400,
+              height: 300,
+            },
+          })
+        );
+      } catch (error) {
+        console.error('Error processing image:', error);
+      }
+    }
+
+    sections.push(
+      new Paragraph({
+        children,
+        spacing: { after: 200 },
+      })
+    );
+  }
+
   const doc = new Document({
     styles,
     sections: [
@@ -79,71 +135,7 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
             count: 2,
           },
         },
-        children: [
-          new Paragraph({
-            style: "title",
-            children: [new TextRun(cleanHtmlContent(content.title))],
-          }),
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [new TextRun(cleanHtmlContent(content.authors))],
-            spacing: { after: 480 },
-          }),
-          new Paragraph({
-            style: "heading",
-            children: [new TextRun("1. INTRODUÇÃO")],
-          }),
-          new Paragraph({
-            children: [new TextRun(cleanHtmlContent(content.introduction))],
-          }),
-          new Paragraph({
-            style: "heading",
-            children: [new TextRun("2. OBJETIVOS")],
-          }),
-          new Paragraph({
-            children: [new TextRun(cleanHtmlContent(content.objectives))],
-          }),
-          new Paragraph({
-            style: "heading",
-            children: [new TextRun("3. METODOLOGIA")],
-          }),
-          new Paragraph({
-            children: [new TextRun(cleanHtmlContent(content.methodology))],
-          }),
-          new Paragraph({
-            style: "heading",
-            children: [new TextRun("4. RESULTADOS E DISCUSSÃO")],
-          }),
-          new Paragraph({
-            children: [new TextRun(cleanHtmlContent(content.results))],
-          }),
-          new Paragraph({
-            style: "heading",
-            children: [new TextRun("5. CONCLUSÃO")],
-          }),
-          new Paragraph({
-            children: [new TextRun(cleanHtmlContent(content.conclusion))],
-          }),
-          new Paragraph({
-            style: "heading",
-            children: [new TextRun("REFERÊNCIAS")],
-          }),
-          new Paragraph({
-            children: [new TextRun(cleanHtmlContent(content.references))],
-          }),
-        ].concat(
-          content.acknowledgments
-            ? [
-                new Paragraph({
-                  style: "heading",
-                  children: [new TextRun("AGRADECIMENTOS")],
-                }),
-                new Paragraph({
-                  children: [new TextRun(cleanHtmlContent(content.acknowledgments))],
-                }),
-              ]
-            : []
-        ),
+        children: sections,
       },
     ],
   });
