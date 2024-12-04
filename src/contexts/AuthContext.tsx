@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -13,6 +14,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const navigate = useNavigate();
+  
   const supabase = createClient(
     'https://xevbmqbwdaqdfexhmbmu.supabase.co',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhldmJtcWJ3ZGFxZGZleGhtYm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIzODk0MTMsImV4cCI6MjA0Nzk2NTQxM30.rB31otfyrrahIGI7lmBcEH4QPENqbX59q0Flpm6E_mY'
@@ -23,7 +26,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user);
-        toast.success('Bem-vindo de volta!');
+        // Remove hash from URL if present
+        if (window.location.hash) {
+          const cleanUrl = window.location.href.split('#')[0];
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
       }
     });
 
@@ -33,6 +40,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
+        // Remove hash from URL if present
+        if (window.location.hash) {
+          const cleanUrl = window.location.href.split('#')[0];
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
         toast.success('Login realizado com sucesso!');
       }
     });
@@ -45,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + window.location.pathname,
+          redirectTo: window.location.origin,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -75,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Error signing out:', error);
       } else {
         toast.success('Logout realizado com sucesso!');
+        navigate('/');
       }
     } catch (error) {
       toast.error('Erro ao fazer logout');
