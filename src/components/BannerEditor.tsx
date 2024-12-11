@@ -11,47 +11,82 @@ import BannerContentSection from './banner/BannerContentSection';
 import BannerActions from './banner/BannerActions';
 import BannerHeader from './banner/BannerHeader';
 
+const STORAGE_KEY = 'bannerContent';
+
+const initialBannerContent = {
+  title: '',
+  authors: '',
+  introduction: '',
+  objectives: '',
+  methodology: '',
+  results: '',
+  conclusion: '',
+  references: '',
+  acknowledgments: ''
+};
+
 const BannerEditor = () => {
   const [searchParams] = useSearchParams();
   const [documentType] = useState(searchParams.get('type') || 'banner');
-  const [bannerContent, setBannerContent] = useState({
-    title: '',
-    authors: '',
-    introduction: '',
-    objectives: '',
-    methodology: '',
-    results: '',
-    conclusion: '',
-    references: '',
-    acknowledgments: ''
-  });
+  const [bannerContent, setBannerContent] = useState(initialBannerContent);
   
   const { toast } = useToast();
   const { user } = useAuth();
   
+  // Load saved content on component mount
   useEffect(() => {
-    const savedContent = localStorage.getItem('bannerContent');
-    if (savedContent) {
-      setBannerContent(JSON.parse(savedContent));
+    try {
+      const savedContent = localStorage.getItem(STORAGE_KEY);
+      if (savedContent) {
+        const parsedContent = JSON.parse(savedContent);
+        // Verify if all required fields exist in saved content
+        const updatedContent = {
+          ...initialBannerContent,
+          ...parsedContent
+        };
+        setBannerContent(updatedContent);
+        
+        toast({
+          title: "Conteúdo carregado",
+          description: "Seu conteúdo anterior foi recuperado com sucesso",
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading saved content:', error);
+      toast({
+        title: "Erro ao carregar conteúdo",
+        description: "Não foi possível recuperar o conteúdo salvo",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
-  }, []);
+  }, [toast]);
   
   const handleChange = (field: string, data: string) => {
-    setBannerContent(prev => ({
-      ...prev,
-      [field]: data
-    }));
-    
-    localStorage.setItem('bannerContent', JSON.stringify({
+    const updatedContent = {
       ...bannerContent,
       [field]: data
-    }));
+    };
     
-    toast({
-      title: "Conteúdo salvo",
-      description: "Seu conteúdo foi salvo automaticamente",
-      duration: 2000,
-    });
+    setBannerContent(updatedContent);
+    
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedContent));
+      toast({
+        title: "Conteúdo salvo",
+        description: "Seu conteúdo foi salvo automaticamente",
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Error saving content:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o conteúdo automaticamente",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
   };
 
   const handleGenerateDocx = async () => {
@@ -134,18 +169,32 @@ const BannerEditor = () => {
   };
 
   const handleLoadSavedContent = () => {
-    const savedContent = localStorage.getItem('bannerContent');
-    if (savedContent) {
-      setBannerContent(JSON.parse(savedContent));
+    try {
+      const savedContent = localStorage.getItem(STORAGE_KEY);
+      if (savedContent) {
+        const parsedContent = JSON.parse(savedContent);
+        setBannerContent({
+          ...initialBannerContent,
+          ...parsedContent
+        });
+        toast({
+          title: "Conteúdo recuperado",
+          description: "Seu conteúdo foi carregado com sucesso",
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "Nenhum conteúdo encontrado",
+          description: "Não há conteúdo salvo anteriormente",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading saved content:', error);
       toast({
-        title: "Conteúdo recuperado",
-        description: "Seu conteúdo foi carregado com sucesso",
-        duration: 3000,
-      });
-    } else {
-      toast({
-        title: "Nenhum conteúdo encontrado",
-        description: "Não há conteúdo salvo anteriormente",
+        title: "Erro ao carregar",
+        description: "Não foi possível carregar o conteúdo salvo",
         variant: "destructive",
         duration: 3000,
       });
@@ -153,19 +202,8 @@ const BannerEditor = () => {
   };
 
   const handleClearFields = () => {
-    setBannerContent({
-      title: '',
-      authors: '',
-      introduction: '',
-      objectives: '',
-      methodology: '',
-      results: '',
-      conclusion: '',
-      references: '',
-      acknowledgments: ''
-    });
-    
-    localStorage.removeItem('bannerContent');
+    setBannerContent(initialBannerContent);
+    localStorage.removeItem(STORAGE_KEY);
     
     toast({
       title: "Campos limpos",
