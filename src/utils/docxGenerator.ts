@@ -61,28 +61,61 @@ const styles: IStylesOptions = {
   ],
 };
 
-const cleanHtmlContent = (content: string): { text: string; images: string[] } => {
-  const images: string[] = [];
-  const imgRegex = /<img[^>]+src="([^">]+)"/g;
-  let match;
+const processHtmlContent = (content: string) => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(content, 'text/html');
+  const elements = Array.from(doc.body.childNodes);
+  const result: { type: string; content: string; src?: string; style?: any }[] = [];
 
-  while ((match = imgRegex.exec(content)) !== null) {
-    images.push(match[1]);
-  }
+  elements.forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent?.trim();
+      if (text) {
+        result.push({ type: 'text', content: text });
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as Element;
+      
+      if (element.tagName === 'P') {
+        const text = element.textContent?.trim();
+        if (text) {
+          result.push({ 
+            type: 'paragraph', 
+            content: text,
+            style: {
+              bold: element.style.fontWeight === 'bold' || element.querySelector('strong') !== null,
+              italic: element.style.fontStyle === 'italic' || element.querySelector('em') !== null,
+              alignment: element.style.textAlign || 'justify'
+            }
+          });
+        }
+      } else if (element.tagName === 'IMG') {
+        const src = element.getAttribute('src');
+        if (src) {
+          result.push({ type: 'image', content: '', src });
+        }
+      } else if (element.tagName === 'BR') {
+        result.push({ type: 'linebreak', content: '' });
+      }
+    }
+  });
 
-  const textContent = content
-    .replace(/<img[^>]*>/g, '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .trim();
-
-  return { text: textContent, images };
+  return result;
 };
 
 const fetchImageAsBuffer = async (url: string): Promise<Buffer> => {
   const response = await fetch(url);
   const arrayBuffer = await response.arrayBuffer();
   return Buffer.from(arrayBuffer);
+};
+
+const createTextRun = (text: string, style?: any) => {
+  return new TextRun({
+    text,
+    bold: style?.bold || false,
+    italic: style?.italic || false,
+    size: 24,
+  });
 };
 
 const createSectionWithTitle = async (title: string, content: string): Promise<Paragraph[]> => {
@@ -98,45 +131,54 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
   );
 
   if (content) {
-    const { text, images } = cleanHtmlContent(content);
+    const elements = processHtmlContent(content);
     
-    paragraphs.push(
-      new Paragraph({
-        children: [new TextRun(text)],
-        spacing: { after: 200 },
-        alignment: AlignmentType.JUSTIFIED,
-      })
-    );
-
-    for (const imageUrl of images) {
-      try {
-        const imageBuffer = await fetchImageAsBuffer(imageUrl);
+    for (const element of elements) {
+      if (element.type === 'paragraph' || element.type === 'text') {
         paragraphs.push(
           new Paragraph({
-            children: [
-              new ImageRun({
-                data: imageBuffer,
-                transformation: {
-                  width: 400,
-                  height: 300,
-                },
-                floating: {
-                  horizontalPosition: {
-                    offset: 1014400,
-                  },
-                  verticalPosition: {
-                    offset: 1014400,
-                  },
-                },
-                type: 'png', // Adicionando o tipo da imagem
-              }),
-            ],
-            spacing: { before: 120, after: 120 },
-            alignment: AlignmentType.CENTER,
+            children: [createTextRun(element.content, element.style)],
+            spacing: { after: 200 },
+            alignment: AlignmentType.JUSTIFIED,
           })
         );
-      } catch (error) {
-        console.error('Error processing image:', error);
+      } else if (element.type === 'image' && element.src) {
+        try {
+          const imageBuffer = await fetchImageAsBuffer(element.src);
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new ImageRun({
+                  data: imageBuffer,
+                  transformation: {
+                    width: 400,
+                    height: 300,
+                  },
+                  floating: {
+                    horizontalPosition: {
+                      offset: 1014400,
+                    },
+                    verticalPosition: {
+                      offset: 1014400,
+                    },
+                  },
+                  type: 'png',
+                }),
+              ],
+              spacing: { before: 120, after: 120 },
+              alignment: AlignmentType.CENTER,
+            })
+          );
+        } catch (error) {
+          console.error('Error processing image:', error);
+        }
+      } else if (element.type === 'linebreak') {
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun('')],
+            spacing: { after: 200 },
+          })
+        );
       }
     }
   }
@@ -149,7 +191,7 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
 
   sections.push(
     new Paragraph({
-      text: cleanHtmlContent(content.title).text,
+      text: processHtmlContent(content.title)[0]?.content || '',
       style: "title",
       alignment: AlignmentType.CENTER,
     })
@@ -157,7 +199,7 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
 
   sections.push(
     new Paragraph({
-      text: cleanHtmlContent(content.authors).text,
+      text: processHtmlContent(content.authors)[0]?.content || '',
       alignment: AlignmentType.CENTER,
       spacing: { after: 400 },
     })
