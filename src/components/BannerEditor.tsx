@@ -10,14 +10,47 @@ import BannerContentSection from './banner/BannerContentSection';
 import BannerActions from './banner/BannerActions';
 import BannerHeader from './banner/BannerHeader';
 import { useBannerContent, initialBannerContent } from './banner/useBannerContent';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const BannerEditor = () => {
   const [searchParams] = useSearchParams();
   const [documentType] = useState(searchParams.get('type') || 'banner');
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { bannerContent, setBannerContent, handleChange, STORAGE_KEY } = useBannerContent();
   
   const { toast } = useToast();
   const { user } = useAuth();
+
+  const handlePreview = async () => {
+    try {
+      const blob = await generateDocx(bannerContent);
+      const url = window.URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      setPreviewOpen(true);
+      
+      toast({
+        title: "Previsão gerada",
+        description: "A previsão do seu banner foi gerada com sucesso",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error generating preview:', error);
+      toast({
+        title: "Erro ao gerar previsão",
+        description: "Ocorreu um erro ao gerar a previsão. Tente novamente.",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleClosePreview = () => {
+    if (previewUrl) {
+      window.URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    setPreviewOpen(false);
+  };
 
   const handleGenerateDocx = async () => {
     try {
@@ -169,6 +202,7 @@ const BannerEditor = () => {
               onShare={handleShare}
               onLoadSavedContent={handleLoadSavedContent}
               onClearFields={handleClearFields}
+              onPreview={handlePreview}
               isAuthenticated={!!user}
             />
           </div>
@@ -187,6 +221,18 @@ const BannerEditor = () => {
           </Tabs>
         </div>
       </main>
+
+      <Dialog open={previewOpen} onOpenChange={handleClosePreview}>
+        <DialogContent className="max-w-4xl h-[80vh]">
+          {previewUrl && (
+            <iframe
+              src={previewUrl}
+              className="w-full h-full border-0"
+              title="Preview do Banner"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

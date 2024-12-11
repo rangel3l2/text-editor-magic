@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FileDown, RotateCcw, Share2, Trash2 } from "lucide-react";
+import { FileDown, RotateCcw, Share2, Trash2, Eye } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface BannerActionsProps {
@@ -7,6 +7,7 @@ interface BannerActionsProps {
   onShare: () => void;
   onLoadSavedContent: () => void;
   onClearFields: () => void;
+  onPreview: () => void;
   isAuthenticated: boolean;
 }
 
@@ -15,6 +16,7 @@ const BannerActions = ({
   onShare, 
   onLoadSavedContent, 
   onClearFields,
+  onPreview,
   isAuthenticated 
 }: BannerActionsProps) => {
   return (
@@ -29,6 +31,14 @@ const BannerActions = ({
           Recuperar Dados Salvos
         </Button>
       )}
+      <Button 
+        onClick={onPreview}
+        variant="outline"
+        className="flex items-center gap-2 w-full sm:w-auto"
+      >
+        <Eye className="h-4 w-4" />
+        Previsão
+      </Button>
       <Button 
         onClick={onGenerateDocx}
         className="flex items-center gap-2 bg-primary hover:bg-primary/90 w-full sm:w-auto"
