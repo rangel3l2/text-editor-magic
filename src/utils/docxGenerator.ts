@@ -62,6 +62,8 @@ const styles: IStylesOptions = {
 };
 
 const processHtmlContent = (content: string) => {
+  if (!content) return [{ type: 'text', content: '' }];
+  
   const parser = new DOMParser();
   const doc = parser.parseFromString(content, 'text/html');
   const elements = Array.from(doc.body.childNodes);
@@ -74,7 +76,7 @@ const processHtmlContent = (content: string) => {
         result.push({ type: 'text', content: text });
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const element = node as HTMLElement; // Changed from Element to HTMLElement
+      const element = node as HTMLElement;
       
       if (element.tagName === 'P') {
         const text = element.textContent?.trim();
@@ -84,7 +86,7 @@ const processHtmlContent = (content: string) => {
             content: text,
             style: {
               bold: element.style.fontWeight === 'bold' || element.querySelector('strong') !== null,
-              italics: element.style.fontStyle === 'italic' || element.querySelector('em') !== null, // Changed from italic to italics
+              italics: element.style.fontStyle === 'italic' || element.querySelector('em') !== null,
               alignment: element.style.textAlign || 'justify'
             }
           });
@@ -96,11 +98,26 @@ const processHtmlContent = (content: string) => {
         }
       } else if (element.tagName === 'BR') {
         result.push({ type: 'linebreak', content: '' });
+      } else if (element.tagName === 'UL' || element.tagName === 'OL') {
+        Array.from(element.children).forEach(li => {
+          const text = li.textContent?.trim();
+          if (text) {
+            result.push({
+              type: 'paragraph',
+              content: `• ${text}`,
+              style: {
+                bold: li.style.fontWeight === 'bold' || li.querySelector('strong') !== null,
+                italics: li.style.fontStyle === 'italic' || li.querySelector('em') !== null,
+                alignment: 'left'
+              }
+            });
+          }
+        });
       }
     }
   });
 
-  return result;
+  return result.length > 0 ? result : [{ type: 'text', content: '' }];
 };
 
 const fetchImageAsBuffer = async (url: string): Promise<Buffer> => {
@@ -113,7 +130,7 @@ const createTextRun = (text: string, style?: any) => {
   return new TextRun({
     text,
     bold: style?.bold || false,
-    italics: style?.italics || false, // Changed from italic to italics
+    italics: style?.italics || false,
     size: 24,
   });
 };
@@ -121,6 +138,7 @@ const createTextRun = (text: string, style?: any) => {
 const createSectionWithTitle = async (title: string, content: string): Promise<Paragraph[]> => {
   const paragraphs: Paragraph[] = [];
   
+  // Add section title
   paragraphs.push(
     new Paragraph({
       text: title,
@@ -130,6 +148,7 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
     })
   );
 
+  // Process content if it exists
   if (content) {
     const elements = processHtmlContent(content);
     
@@ -139,7 +158,9 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
           new Paragraph({
             children: [createTextRun(element.content, element.style)],
             spacing: { after: 200 },
-            alignment: AlignmentType.JUSTIFIED,
+            alignment: element.style?.alignment === 'center' ? AlignmentType.CENTER : 
+                      element.style?.alignment === 'right' ? AlignmentType.RIGHT : 
+                      AlignmentType.JUSTIFIED,
           })
         );
       } else if (element.type === 'image' && element.src) {
@@ -187,8 +208,10 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
 };
 
 export const generateDocx = async (content: BannerContent): Promise<Blob> => {
+  console.log('Generating DOCX with content:', content);
   const sections = [];
 
+  // Title Section
   sections.push(
     new Paragraph({
       text: processHtmlContent(content.title)[0]?.content || '',
@@ -197,6 +220,7 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
     })
   );
 
+  // Authors Section
   sections.push(
     new Paragraph({
       text: processHtmlContent(content.authors)[0]?.content || '',
@@ -205,6 +229,7 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
     })
   );
 
+  // Content Sections
   sections.push(...await createSectionWithTitle("1. Introdução", content.introduction));
   sections.push(...await createSectionWithTitle("2. Objetivos", content.objectives));
   sections.push(...await createSectionWithTitle("3. Metodologia", content.methodology));
