@@ -50,6 +50,8 @@ const RichTextEditor = ({
         duration: 3000,
       });
     }
+
+    return percentage >= 100;
   };
 
   const handleImageUpload = async (file: File) => {
@@ -109,13 +111,21 @@ const RichTextEditor = ({
     extraPlugins: [uploadAdapterPlugin],
     image: {
       ...config.image,
+      resizeOptions: {
+        manualResize: true,
+      },
       toolbar: [
         'imageStyle:inline',
         'imageStyle:block',
         'imageStyle:side',
         '|',
         'toggleImageCaption',
-        'imageTextAlternative'
+        'imageTextAlternative',
+        '|',
+        'resizeImage:25',
+        'resizeImage:50',
+        'resizeImage:75',
+        'resizeImage:original'
       ],
       upload: {
         types: ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff'],
@@ -136,8 +146,20 @@ const RichTextEditor = ({
           data={value}
           onChange={(_event, editor) => {
             const data = editor.getData();
-            onChange(data);
-            calculateProgress(data);
+            const isOverLimit = calculateProgress(data);
+            
+            if (!isOverLimit) {
+              onChange(data);
+            } else {
+              // Prevent content change if over limit
+              editor.setData(value);
+              toast({
+                title: "Limite excedido",
+                description: "Não é possível adicionar mais conteúdo nesta seção",
+                variant: "destructive",
+                duration: 3000,
+              });
+            }
           }}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
