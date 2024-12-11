@@ -74,7 +74,7 @@ const processHtmlContent = (content: string) => {
         result.push({ type: 'text', content: text });
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const element = node as Element;
+      const element = node as HTMLElement; // Changed from Element to HTMLElement
       
       if (element.tagName === 'P') {
         const text = element.textContent?.trim();
@@ -84,7 +84,7 @@ const processHtmlContent = (content: string) => {
             content: text,
             style: {
               bold: element.style.fontWeight === 'bold' || element.querySelector('strong') !== null,
-              italic: element.style.fontStyle === 'italic' || element.querySelector('em') !== null,
+              italics: element.style.fontStyle === 'italic' || element.querySelector('em') !== null, // Changed from italic to italics
               alignment: element.style.textAlign || 'justify'
             }
           });
@@ -113,7 +113,7 @@ const createTextRun = (text: string, style?: any) => {
   return new TextRun({
     text,
     bold: style?.bold || false,
-    italic: style?.italic || false,
+    italics: style?.italics || false, // Changed from italic to italics
     size: 24,
   });
 };
