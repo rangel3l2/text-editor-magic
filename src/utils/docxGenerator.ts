@@ -84,58 +84,64 @@ const fetchImageAsBuffer = async (url: string): Promise<Buffer> => {
   return Buffer.from(arrayBuffer);
 };
 
-export const generateDocx = async (content: BannerContent): Promise<Blob> => {
-  const sections = [];
+const createSectionWithTitle = (title: string, content: string): Paragraph[] => {
+  const paragraphs: Paragraph[] = [];
+  
+  // Add section title
+  paragraphs.push(
+    new Paragraph({
+      text: title,
+      heading: HeadingLevel.HEADING_1,
+      spacing: { before: 240, after: 120 },
+      style: "heading",
+    })
+  );
 
-  for (const [key, value] of Object.entries(content)) {
-    if (!value) continue;
-
-    const { text, images } = cleanHtmlContent(value);
-    const children: any[] = [];
-
-    // Add text content
-    if (text) {
-      children.push(new TextRun(text));
-    }
-
-    // Add images
-    for (const imageUrl of images) {
-      try {
-        const imageBuffer = await fetchImageAsBuffer(imageUrl);
-        children.push(
-          new ImageRun({
-            data: imageBuffer,
-            transformation: {
-              width: 400,
-              height: 300,
-            },
-            floating: {
-              horizontalPosition: {
-                offset: 1014400,
-              },
-              verticalPosition: {
-                offset: 1014400,
-              },
-            },
-            altText: {
-              title: "Image",
-              description: "Document image",
-              name: "Document image"
-            },
-            type: "png"
-          })
-        );
-      } catch (error) {
-        console.error('Error processing image:', error);
-      }
-    }
-
-    sections.push(
+  // Add section content
+  if (content) {
+    const { text, images } = cleanHtmlContent(content);
+    paragraphs.push(
       new Paragraph({
-        children,
+        children: [new TextRun(text)],
         spacing: { after: 200 },
       })
     );
+  }
+
+  return paragraphs;
+};
+
+export const generateDocx = async (content: BannerContent): Promise<Blob> => {
+  const sections = [];
+
+  // Title
+  sections.push(
+    new Paragraph({
+      text: cleanHtmlContent(content.title).text,
+      style: "title",
+      alignment: AlignmentType.CENTER,
+    })
+  );
+
+  // Authors
+  sections.push(
+    new Paragraph({
+      text: cleanHtmlContent(content.authors).text,
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 400 },
+    })
+  );
+
+  // Add each section with its title
+  sections.push(...createSectionWithTitle("1. Introdução", content.introduction));
+  sections.push(...createSectionWithTitle("2. Objetivos", content.objectives));
+  sections.push(...createSectionWithTitle("3. Metodologia", content.methodology));
+  sections.push(...createSectionWithTitle("4. Resultados e Discussão", content.results));
+  sections.push(...createSectionWithTitle("5. Conclusão", content.conclusion));
+  sections.push(...createSectionWithTitle("6. Referências", content.references));
+  
+  if (content.acknowledgments) {
+    sections.push(...createSectionWithTitle("7. Agradecimentos", content.acknowledgments));
   }
 
   const doc = new Document({
