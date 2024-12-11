@@ -223,14 +223,28 @@ const BannerEditor = () => {
       </main>
 
       <Dialog open={previewOpen} onOpenChange={handleClosePreview}>
-        <DialogContent className="max-w-4xl h-[80vh]">
-          {previewUrl && (
-            <iframe
-              src={previewUrl}
-              className="w-full h-full border-0"
-              title="Preview do Banner"
-            />
-          )}
+        <DialogContent className="max-w-4xl h-[90vh] p-0 bg-white shadow-2xl">
+          <div className="w-full h-full overflow-hidden bg-white rounded-lg">
+            <div className="h-full overflow-auto">
+              <div className="min-h-full p-8 bg-white shadow-inner" 
+                   style={{
+                     backgroundImage: `
+                       linear-gradient(#e5e7eb 1px, transparent 1px),
+                       linear-gradient(90deg, #e5e7eb 1px, transparent 1px)
+                     `,
+                     backgroundSize: '20px 20px',
+                     backgroundPosition: '-1px -1px'
+                   }}>
+                {previewUrl && (
+                  <iframe
+                    src={previewUrl}
+                    className="w-full h-full border-0 bg-transparent"
+                    title="Preview do Banner"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>
