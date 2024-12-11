@@ -19,6 +19,6 @@ export interface ProcessedElement {
   style?: {
     bold?: boolean;
     italics?: boolean;
-    alignment?: AlignmentType;
+    alignment?: typeof AlignmentType[keyof typeof AlignmentType];
   };
 }

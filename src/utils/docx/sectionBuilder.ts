@@ -47,7 +47,8 @@ export const createSectionWithTitle = async (title: string, content: string): Pr
                     width: 400,
                     height: 300,
                   },
-                }),
+                  type: 'png',
+                })
               ],
               spacing: { before: 120, after: 120 },
               alignment: AlignmentType.CENTER,

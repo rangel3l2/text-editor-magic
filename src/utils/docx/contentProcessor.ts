@@ -28,7 +28,7 @@ export const processHtmlContent = (content: string): ProcessedElement[] => {
             style: {
               bold: element.style.fontWeight === 'bold' || element.querySelector('strong') !== null,
               italics: element.style.fontStyle === 'italic' || element.querySelector('em') !== null,
-              alignment: element.style.textAlign as AlignmentType || 'justify'
+              alignment: element.style.textAlign as typeof AlignmentType[keyof typeof AlignmentType] || 'justify'
             }
           });
         }
@@ -50,7 +50,7 @@ export const processHtmlContent = (content: string): ProcessedElement[] => {
               style: {
                 bold: listItem.style.fontWeight === 'bold' || listItem.querySelector('strong') !== null,
                 italics: listItem.style.fontStyle === 'italic' || listItem.querySelector('em') !== null,
-                alignment: 'left'
+                alignment: 'left' as typeof AlignmentType[keyof typeof AlignmentType]
               }
             });
           }
