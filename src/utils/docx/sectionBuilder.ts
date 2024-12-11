@@ -77,6 +77,14 @@ export const createSectionWithTitle = async (title: string, content: string): Pr
           // Calculate dimensions maintaining aspect ratio
           const dimensions = calculateAspectRatio(img.width, img.height);
 
+          // Add spacing before image
+          paragraphs.push(
+            new Paragraph({
+              children: [],
+              spacing: { before: 240 },
+            })
+          );
+
           // Add the image with calculated dimensions
           paragraphs.push(
             new Paragraph({
@@ -111,6 +119,14 @@ export const createSectionWithTitle = async (title: string, content: string): Pr
               })
             );
           }
+
+          // Add spacing after image
+          paragraphs.push(
+            new Paragraph({
+              children: [],
+              spacing: { after: 240 },
+            })
+          );
 
           console.log('Image processed successfully');
         } catch (error) {

@@ -9,7 +9,7 @@ export const processHtmlContent = (content: string): ProcessedElement[] => {
   const elements = Array.from(doc.body.childNodes);
   const result: ProcessedElement[] = [];
 
-  elements.forEach(node => {
+  const processNode = (node: Node) => {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent?.trim();
       if (text) {
@@ -52,25 +52,13 @@ export const processHtmlContent = (content: string): ProcessedElement[] => {
         }
       } else if (element.tagName === 'BR') {
         result.push({ type: 'linebreak', content: '' });
-      } else if (element.tagName === 'UL' || element.tagName === 'OL') {
-        Array.from(element.children).forEach(li => {
-          const listItem = li as HTMLElement;
-          const text = listItem.textContent?.trim();
-          if (text) {
-            result.push({
-              type: 'paragraph',
-              content: `• ${text}`,
-              style: {
-                bold: listItem.style.fontWeight === 'bold' || listItem.querySelector('strong') !== null,
-                italics: listItem.style.fontStyle === 'italic' || listItem.querySelector('em') !== null,
-                alignment: 'left' as typeof AlignmentType[keyof typeof AlignmentType]
-              }
-            });
-          }
-        });
+      } else {
+        // Recursively process child nodes
+        element.childNodes.forEach(child => processNode(child));
       }
     }
-  });
+  };
 
+  elements.forEach(node => processNode(node));
   return result.length > 0 ? result : [{ type: 'text', content: '' }];
 };
