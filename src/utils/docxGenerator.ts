@@ -24,6 +24,7 @@ const styles: IStylesOptions = {
           after: 120,
           line: 276,
         },
+        alignment: AlignmentType.JUSTIFIED,
       },
     },
   },
@@ -84,7 +85,7 @@ const fetchImageAsBuffer = async (url: string): Promise<Buffer> => {
   return Buffer.from(arrayBuffer);
 };
 
-const createSectionWithTitle = (title: string, content: string): Paragraph[] => {
+const createSectionWithTitle = async (title: string, content: string): Promise<Paragraph[]> => {
   const paragraphs: Paragraph[] = [];
   
   // Add section title
@@ -100,12 +101,47 @@ const createSectionWithTitle = (title: string, content: string): Paragraph[] => 
   // Add section content
   if (content) {
     const { text, images } = cleanHtmlContent(content);
+    
+    // Add text content
     paragraphs.push(
       new Paragraph({
         children: [new TextRun(text)],
         spacing: { after: 200 },
+        alignment: AlignmentType.JUSTIFIED,
       })
     );
+
+    // Add images
+    for (const imageUrl of images) {
+      try {
+        const imageBuffer = await fetchImageAsBuffer(imageUrl);
+        paragraphs.push(
+          new Paragraph({
+            children: [
+              new ImageRun({
+                data: imageBuffer,
+                transformation: {
+                  width: 400,
+                  height: 300,
+                },
+                floating: {
+                  horizontalPosition: {
+                    offset: 1014400,
+                  },
+                  verticalPosition: {
+                    offset: 1014400,
+                  },
+                },
+              }),
+            ],
+            spacing: { before: 120, after: 120 },
+            alignment: AlignmentType.CENTER,
+          })
+        );
+      } catch (error) {
+        console.error('Error processing image:', error);
+      }
+    }
   }
 
   return paragraphs;
@@ -133,15 +169,15 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
   );
 
   // Add each section with its title
-  sections.push(...createSectionWithTitle("1. Introdução", content.introduction));
-  sections.push(...createSectionWithTitle("2. Objetivos", content.objectives));
-  sections.push(...createSectionWithTitle("3. Metodologia", content.methodology));
-  sections.push(...createSectionWithTitle("4. Resultados e Discussão", content.results));
-  sections.push(...createSectionWithTitle("5. Conclusão", content.conclusion));
-  sections.push(...createSectionWithTitle("6. Referências", content.references));
+  sections.push(...await createSectionWithTitle("1. Introdução", content.introduction));
+  sections.push(...await createSectionWithTitle("2. Objetivos", content.objectives));
+  sections.push(...await createSectionWithTitle("3. Metodologia", content.methodology));
+  sections.push(...await createSectionWithTitle("4. Resultados e Discussão", content.results));
+  sections.push(...await createSectionWithTitle("5. Conclusão", content.conclusion));
+  sections.push(...await createSectionWithTitle("6. Referências", content.references));
   
   if (content.acknowledgments) {
-    sections.push(...createSectionWithTitle("7. Agradecimentos", content.acknowledgments));
+    sections.push(...await createSectionWithTitle("7. Agradecimentos", content.acknowledgments));
   }
 
   const doc = new Document({
