@@ -40,6 +40,11 @@ export const createSectionWithTitle = async (title: string, content: string): Pr
         try {
           console.log('Processing image:', element.src.substring(0, 50) + '...');
           const imageBuffer = await processBase64Image(element.src);
+          
+          if (!imageBuffer || imageBuffer.length === 0) {
+            throw new Error('Invalid image data');
+          }
+
           paragraphs.push(
             new Paragraph({
               children: [
@@ -59,11 +64,12 @@ export const createSectionWithTitle = async (title: string, content: string): Pr
           console.log('Image processed successfully');
         } catch (error) {
           console.error('Error processing image:', error);
+          // Add a visible error message in the document
           paragraphs.push(
             new Paragraph({
               children: [
                 new TextRun({
-                  text: '[Error: Unable to process image]',
+                  text: '[Erro ao processar imagem. Por favor, tente novamente com outra imagem.]',
                   color: "FF0000",
                   italics: true,
                 })
