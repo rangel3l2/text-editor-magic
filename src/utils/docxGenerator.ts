@@ -171,11 +171,7 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
                     width: 400,
                     height: 300,
                   },
-                  type: 'png', // Add required type property
-                  fallback: { // Add required fallback property
-                    data: imageBuffer,
-                    type: 'png',
-                  }
+                  type: 'png',
                 }),
               ],
               spacing: { before: 120, after: 120 },
