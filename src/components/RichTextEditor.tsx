@@ -14,7 +14,7 @@ interface RichTextEditorProps {
   isObjectives?: boolean;
 }
 
-const OBJECTIVES_MAX_LENGTH = 200; // Approximate length of the example text
+const OBJECTIVES_MAX_LENGTH = 200;
 
 const RichTextEditor = ({ 
   value, 
@@ -29,7 +29,6 @@ const RichTextEditor = ({
   const { toast } = useToast();
 
   const calculateProgress = (text: string) => {
-    // Remove HTML tags for accurate character count
     const plainText = text.replace(/<[^>]*>/g, '');
     const chars = plainText.length;
     
@@ -46,7 +45,6 @@ const RichTextEditor = ({
     
     setProgress(percentage);
 
-    // Warn user when approaching the limit
     if (percentage >= 90 && percentage < 100) {
       toast({
         title: "Atenção",
@@ -72,7 +70,7 @@ const RichTextEditor = ({
   const handleImageUpload = async (file: File) => {
     try {
       const maxSizeMB = 2;
-      const maxWidthPx = 800; // ~7.5cm at 300dpi
+      const maxWidthPx = 800;
       
       if (file.size > maxSizeMB * 1024 * 1024) {
         toast({
@@ -84,7 +82,6 @@ const RichTextEditor = ({
         return null;
       }
 
-      // Check image dimensions before upload
       return new Promise((resolve) => {
         const img = new Image();
         img.onload = () => {
@@ -162,19 +159,28 @@ const RichTextEditor = ({
           editor={ClassicEditor}
           data={value}
           onChange={(_event, editor) => {
-            const data = editor.getData();
-            const isOverLimit = calculateProgress(data);
-            
-            if (!isOverLimit) {
-              onChange(data);
-            } else {
-              // Prevent content change if over limit
-              editor.setData(value);
+            try {
+              const data = editor.getData();
+              const isOverLimit = calculateProgress(data);
+              
+              if (!isOverLimit) {
+                onChange(data);
+              } else {
+                editor.setData(value);
+                toast({
+                  title: "Limite excedido",
+                  description: isObjectives
+                    ? "Não é possível adicionar mais caracteres nos objetivos"
+                    : "Não é possível adicionar mais conteúdo nesta seção",
+                  variant: "destructive",
+                  duration: 3000,
+                });
+              }
+            } catch (error) {
+              console.error('Error in editor onChange:', error);
               toast({
-                title: "Limite excedido",
-                description: isObjectives
-                  ? "Não é possível adicionar mais caracteres nos objetivos"
-                  : "Não é possível adicionar mais conteúdo nesta seção",
+                title: "Erro no editor",
+                description: "Ocorreu um erro ao processar as alterações. Tente novamente.",
                 variant: "destructive",
                 duration: 3000,
               });
@@ -183,6 +189,15 @@ const RichTextEditor = ({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           config={editorConfig}
+          onError={(error) => {
+            console.error('CKEditor error:', error);
+            toast({
+              title: "Erro no editor",
+              description: "Ocorreu um erro no editor. Tente novamente.",
+              variant: "destructive",
+              duration: 3000,
+            });
+          }}
         />
       </div>
       {isFocused && (
