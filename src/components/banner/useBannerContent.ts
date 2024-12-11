@@ -14,7 +14,7 @@ export interface BannerContent {
 }
 
 const STORAGE_KEY = 'bannerContent';
-const TITLE_COOKIE_KEY = 'bannerTitle';
+const COOKIE_PREFIX = 'banner_';
 
 export const initialBannerContent: BannerContent = {
   title: '',
@@ -55,30 +55,32 @@ export const useBannerContent = () => {
     try {
       // Load from localStorage
       const savedContent = localStorage.getItem(STORAGE_KEY);
-      // Load title from cookie
-      const savedTitle = getCookie(TITLE_COOKIE_KEY);
-      
+      let updatedContent = { ...initialBannerContent };
+
+      // Load from cookies
+      Object.keys(initialBannerContent).forEach((key) => {
+        const cookieValue = getCookie(`${COOKIE_PREFIX}${key}`);
+        if (cookieValue) {
+          updatedContent[key as keyof BannerContent] = cookieValue;
+        }
+      });
+
+      // If there's content in localStorage, merge it with cookie values
       if (savedContent) {
         const parsedContent = JSON.parse(savedContent);
-        // Verify if all required fields exist in saved content
-        const updatedContent = {
-          ...initialBannerContent,
+        updatedContent = {
+          ...updatedContent,
           ...parsedContent
         };
-        
-        // If there's a title in cookie, use it
-        if (savedTitle) {
-          updatedContent.title = savedTitle;
-        }
-        
-        setBannerContent(updatedContent);
-        
-        toast({
-          title: "Conteúdo carregado",
-          description: "Seu conteúdo anterior foi recuperado com sucesso",
-          duration: 2000,
-        });
       }
+
+      setBannerContent(updatedContent);
+
+      toast({
+        title: "Conteúdo carregado",
+        description: "Seu conteúdo anterior foi recuperado com sucesso",
+        duration: 2000,
+      });
     } catch (error) {
       console.error('Error loading saved content:', error);
       toast({
@@ -102,10 +104,8 @@ export const useBannerContent = () => {
       // Save all content to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedContent));
       
-      // Additionally save title to cookie if that's what changed
-      if (field === 'title') {
-        setCookie(TITLE_COOKIE_KEY, data);
-      }
+      // Save field to cookie
+      setCookie(`${COOKIE_PREFIX}${field}`, data);
       
       console.log('Saved content:', updatedContent); // Debug log
       toast({
