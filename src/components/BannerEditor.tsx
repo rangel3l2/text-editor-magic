@@ -1,93 +1,23 @@
-import { useState, useEffect } from "react";
-import { Toaster } from "@/components/ui/toaster";
+import { useState } from "react";
+import { useSearchParams } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSearchParams } from 'react-router-dom';
 import { generateDocx } from '@/utils/docxGenerator';
-import Header from './Header';
 import { useAuth } from "@/contexts/AuthContext";
+import Header from './Header';
 import BannerHeaderSection from './banner/BannerHeaderSection';
 import BannerContentSection from './banner/BannerContentSection';
 import BannerActions from './banner/BannerActions';
 import BannerHeader from './banner/BannerHeader';
-
-const STORAGE_KEY = 'bannerContent';
-
-const initialBannerContent = {
-  title: '',
-  authors: '',
-  introduction: '',
-  objectives: '',
-  methodology: '',
-  results: '',
-  conclusion: '',
-  references: '',
-  acknowledgments: ''
-};
+import { useBannerContent, initialBannerContent } from './banner/useBannerContent';
 
 const BannerEditor = () => {
   const [searchParams] = useSearchParams();
   const [documentType] = useState(searchParams.get('type') || 'banner');
-  const [bannerContent, setBannerContent] = useState(initialBannerContent);
+  const { bannerContent, setBannerContent, handleChange, STORAGE_KEY } = useBannerContent();
   
   const { toast } = useToast();
   const { user } = useAuth();
-  
-  // Load saved content on component mount
-  useEffect(() => {
-    try {
-      const savedContent = localStorage.getItem(STORAGE_KEY);
-      if (savedContent) {
-        const parsedContent = JSON.parse(savedContent);
-        // Verify if all required fields exist in saved content
-        const updatedContent = {
-          ...initialBannerContent,
-          ...parsedContent
-        };
-        setBannerContent(updatedContent);
-        
-        toast({
-          title: "Conteúdo carregado",
-          description: "Seu conteúdo anterior foi recuperado com sucesso",
-          duration: 2000,
-        });
-      }
-    } catch (error) {
-      console.error('Error loading saved content:', error);
-      toast({
-        title: "Erro ao carregar conteúdo",
-        description: "Não foi possível recuperar o conteúdo salvo",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  }, [toast]);
-  
-  const handleChange = (field: string, data: string) => {
-    const updatedContent = {
-      ...bannerContent,
-      [field]: data
-    };
-    
-    setBannerContent(updatedContent);
-    
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedContent));
-      toast({
-        title: "Conteúdo salvo",
-        description: "Seu conteúdo foi salvo automaticamente",
-        duration: 2000,
-      });
-    } catch (error) {
-      console.error('Error saving content:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar o conteúdo automaticamente",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  };
 
   const handleGenerateDocx = async () => {
     try {
@@ -153,15 +83,9 @@ const BannerEditor = () => {
       }
     } catch (error) {
       console.error('Error sharing document:', error);
-      
-      let errorMessage = "Ocorreu um erro ao compartilhar o documento.";
-      if (error instanceof Error) {
-        errorMessage += ` ${error.message}`;
-      }
-      
       toast({
         title: "Erro ao compartilhar",
-        description: errorMessage,
+        description: "Ocorreu um erro ao compartilhar o documento",
         variant: "destructive",
         duration: 3000,
       });
