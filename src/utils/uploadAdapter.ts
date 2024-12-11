@@ -1,44 +1,43 @@
 class UploadAdapter {
   private loader: any;
-  private controller: AbortController;
+  private abortController: AbortController;
 
   constructor(loader: any) {
     this.loader = loader;
-    this.controller = new AbortController();
+    this.abortController = new AbortController();
   }
 
   upload(): Promise<{ default: string }> {
-    return new Promise((resolve, reject) => {
-      try {
+    return this.loader.file.then((file: File) => {
+      return new Promise((resolve, reject) => {
         const reader = new FileReader();
         
         reader.addEventListener('load', () => {
           resolve({ default: reader.result as string });
         });
         
-        reader.addEventListener('error', err => {
-          reject(err);
+        reader.addEventListener('error', () => {
+          reject(new Error('Error reading file'));
         });
         
         reader.addEventListener('abort', () => {
-          reject(new Error('Upload aborted'));
+          reject(new Error('File reading aborted'));
         });
-        
-        this.loader.file.then((file: File) => {
+
+        try {
           reader.readAsDataURL(file);
-        }).catch((error: Error) => {
+        } catch (error) {
           reject(error);
-        });
-      } catch (error) {
-        reject(error);
-      }
+        }
+      });
     });
   }
 
   abort(): void {
-    if (this.controller) {
-      this.controller.abort();
+    if (this.abortController.signal.aborted) {
+      return;
     }
+    this.abortController.abort();
   }
 }
 

@@ -1,7 +1,7 @@
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { Progress } from "@/components/ui/progress";
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { uploadAdapterPlugin } from '@/utils/uploadAdapter';
 
@@ -27,6 +27,7 @@ const RichTextEditor = ({
   const [isFocused, setIsFocused] = useState(false);
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
+  const editorRef = useRef<any>(null);
 
   const calculateProgress = (text: string) => {
     const plainText = text.replace(/<[^>]*>/g, '');
@@ -125,22 +126,6 @@ const RichTextEditor = ({
     extraPlugins: [uploadAdapterPlugin],
     image: {
       ...config.image,
-      resizeOptions: {
-        manualResize: true,
-      },
-      toolbar: [
-        'imageStyle:inline',
-        'imageStyle:block',
-        'imageStyle:side',
-        '|',
-        'toggleImageCaption',
-        'imageTextAlternative',
-        '|',
-        'resizeImage:25',
-        'resizeImage:50',
-        'resizeImage:75',
-        'resizeImage:original'
-      ],
       upload: {
         types: ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff'],
         handler: handleImageUpload
@@ -156,6 +141,7 @@ const RichTextEditor = ({
     <div className="space-y-2">
       <div className="border border-gray-200 rounded-lg">
         <CKEditor
+          ref={editorRef}
           editor={ClassicEditor}
           data={value}
           onChange={(_event, editor) => {
@@ -185,6 +171,9 @@ const RichTextEditor = ({
                 duration: 3000,
               });
             }
+          }}
+          onReady={(editor) => {
+            editorRef.current = editor;
           }}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
