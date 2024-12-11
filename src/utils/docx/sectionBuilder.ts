@@ -2,6 +2,27 @@ import { Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun } from "docx"
 import { processHtmlContent } from './contentProcessor';
 import { processBase64Image } from './imageProcessor';
 
+const MAX_IMAGE_WIDTH = 300; // ~7.5cm at 100dpi
+const MAX_IMAGE_HEIGHT = 400; // ~10cm at 100dpi
+
+const calculateAspectRatio = (width: number, height: number) => {
+  if (width > MAX_IMAGE_WIDTH) {
+    const ratio = MAX_IMAGE_WIDTH / width;
+    return {
+      width: MAX_IMAGE_WIDTH,
+      height: Math.round(height * ratio)
+    };
+  }
+  if (height > MAX_IMAGE_HEIGHT) {
+    const ratio = MAX_IMAGE_HEIGHT / height;
+    return {
+      width: Math.round(width * ratio),
+      height: MAX_IMAGE_HEIGHT
+    };
+  }
+  return { width, height };
+};
+
 export const createSectionWithTitle = async (title: string, content: string): Promise<Paragraph[]> => {
   const paragraphs: Paragraph[] = [];
   
@@ -45,14 +66,26 @@ export const createSectionWithTitle = async (title: string, content: string): Pr
             throw new Error('Invalid image data');
           }
 
+          // Create an Image object to get dimensions
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = element.src;
+          });
+
+          // Calculate dimensions maintaining aspect ratio
+          const dimensions = calculateAspectRatio(img.width, img.height);
+
+          // Add the image with calculated dimensions
           paragraphs.push(
             new Paragraph({
               children: [
                 new ImageRun({
                   data: imageBuffer,
                   transformation: {
-                    width: 400,
-                    height: 300,
+                    width: dimensions.width,
+                    height: dimensions.height,
                   },
                   type: 'png'
                 })
@@ -61,15 +94,32 @@ export const createSectionWithTitle = async (title: string, content: string): Pr
               alignment: AlignmentType.CENTER,
             })
           );
+
+          // Add caption if present
+          if (element.caption) {
+            paragraphs.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: element.caption,
+                    size: 20, // Smaller font size for captions
+                    italics: true,
+                  })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 240 },
+              })
+            );
+          }
+
           console.log('Image processed successfully');
         } catch (error) {
           console.error('Error processing image:', error);
-          // Add a visible error message in the document
           paragraphs.push(
             new Paragraph({
               children: [
                 new TextRun({
-                  text: '[Erro ao processar imagem. Por favor, tente novamente com outra imagem.]',
+                  text: '[Erro ao processar imagem. Por favor, verifique se a imagem está no formato correto e tente novamente.]',
                   color: "FF0000",
                   italics: true,
                 })

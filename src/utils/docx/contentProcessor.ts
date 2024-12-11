@@ -1,6 +1,5 @@
+import { AlignmentType } from "docx";
 import { ProcessedElement } from './types';
-import { AlignmentType } from 'docx';
-import { isValidBase64Image } from './imageProcessor';
 
 export const processHtmlContent = (content: string): ProcessedElement[] => {
   if (!content) return [{ type: 'text', content: '' }];
@@ -34,10 +33,16 @@ export const processHtmlContent = (content: string): ProcessedElement[] => {
         }
       } else if (element.tagName === 'FIGURE' && element.classList.contains('image')) {
         const img = element.querySelector('img');
+        const figcaption = element.querySelector('figcaption');
         if (img) {
           const src = img.getAttribute('src');
           if (src) {
-            result.push({ type: 'image', content: '', src });
+            result.push({ 
+              type: 'image', 
+              content: '', 
+              src,
+              caption: figcaption?.textContent?.trim() || ''
+            });
           }
         }
       } else if (element.tagName === 'IMG') {

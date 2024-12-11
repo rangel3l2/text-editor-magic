@@ -16,6 +16,7 @@ export interface ProcessedElement {
   type: 'text' | 'paragraph' | 'image' | 'linebreak';
   content: string;
   src?: string;
+  caption?: string;
   style?: {
     bold?: boolean;
     italics?: boolean;
