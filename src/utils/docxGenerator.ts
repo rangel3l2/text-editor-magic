@@ -71,9 +71,9 @@ const cleanHtmlContent = (content: string): { text: string; images: string[] } =
   }
 
   const textContent = content
-    .replace(/<img[^>]*>/g, '') // Remove image tags
-    .replace(/<[^>]*>/g, '') // Remove other HTML tags
-    .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+    .replace(/<img[^>]*>/g, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
     .trim();
 
   return { text: textContent, images };
@@ -88,7 +88,6 @@ const fetchImageAsBuffer = async (url: string): Promise<Buffer> => {
 const createSectionWithTitle = async (title: string, content: string): Promise<Paragraph[]> => {
   const paragraphs: Paragraph[] = [];
   
-  // Add section title
   paragraphs.push(
     new Paragraph({
       text: title,
@@ -98,11 +97,9 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
     })
   );
 
-  // Add section content
   if (content) {
     const { text, images } = cleanHtmlContent(content);
     
-    // Add text content
     paragraphs.push(
       new Paragraph({
         children: [new TextRun(text)],
@@ -111,7 +108,6 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
       })
     );
 
-    // Add images
     for (const imageUrl of images) {
       try {
         const imageBuffer = await fetchImageAsBuffer(imageUrl);
@@ -132,6 +128,7 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
                     offset: 1014400,
                   },
                 },
+                type: 'png', // Adicionando o tipo da imagem
               }),
             ],
             spacing: { before: 120, after: 120 },
@@ -150,7 +147,6 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
 export const generateDocx = async (content: BannerContent): Promise<Blob> => {
   const sections = [];
 
-  // Title
   sections.push(
     new Paragraph({
       text: cleanHtmlContent(content.title).text,
@@ -159,7 +155,6 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
     })
   );
 
-  // Authors
   sections.push(
     new Paragraph({
       text: cleanHtmlContent(content.authors).text,
@@ -168,7 +163,6 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
     })
   );
 
-  // Add each section with its title
   sections.push(...await createSectionWithTitle("1. Introdução", content.introduction));
   sections.push(...await createSectionWithTitle("2. Objetivos", content.objectives));
   sections.push(...await createSectionWithTitle("3. Metodologia", content.methodology));
