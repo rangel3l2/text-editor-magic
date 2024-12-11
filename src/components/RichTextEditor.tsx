@@ -2,7 +2,7 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { Progress } from "@/components/ui/progress";
 import { useState } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { uploadAdapterPlugin } from '@/utils/uploadAdapter';
 
 interface RichTextEditorProps {
@@ -11,14 +11,18 @@ interface RichTextEditorProps {
   maxLines?: number;
   config?: any;
   placeholder?: string;
+  isObjectives?: boolean;
 }
+
+const OBJECTIVES_MAX_LENGTH = 200; // Approximate length of the example text
 
 const RichTextEditor = ({ 
   value, 
   onChange, 
   maxLines = 10, 
   config = {}, 
-  placeholder 
+  placeholder,
+  isObjectives = false
 }: RichTextEditorProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -28,24 +32,35 @@ const RichTextEditor = ({
     // Remove HTML tags for accurate character count
     const plainText = text.replace(/<[^>]*>/g, '');
     const chars = plainText.length;
-    const lines = plainText.split('\n').length;
-    const avgCharsPerLine = 80; // Aproximadamente 80 caracteres por linha
-    const estimatedLines = Math.ceil(chars / avgCharsPerLine);
-    const actualLines = Math.max(lines, estimatedLines);
-    const percentage = Math.min((actualLines / maxLines) * 100, 100);
+    
+    let percentage;
+    if (isObjectives) {
+      percentage = Math.min((chars / OBJECTIVES_MAX_LENGTH) * 100, 100);
+    } else {
+      const lines = plainText.split('\n').length;
+      const avgCharsPerLine = 80;
+      const estimatedLines = Math.ceil(chars / avgCharsPerLine);
+      const actualLines = Math.max(lines, estimatedLines);
+      percentage = Math.min((actualLines / maxLines) * 100, 100);
+    }
+    
     setProgress(percentage);
 
     // Warn user when approaching the limit
     if (percentage >= 90 && percentage < 100) {
       toast({
         title: "Atenção",
-        description: "Você está próximo do limite de texto para esta seção",
+        description: isObjectives 
+          ? "Você está próximo do limite de caracteres para os objetivos"
+          : "Você está próximo do limite de texto para esta seção",
         duration: 3000,
       });
     } else if (percentage >= 100) {
       toast({
         title: "Limite atingido",
-        description: "Você atingiu o limite de texto para esta seção",
+        description: isObjectives
+          ? "Você atingiu o limite de caracteres para os objetivos"
+          : "Você atingiu o limite de texto para esta seção",
         variant: "destructive",
         duration: 3000,
       });
@@ -107,7 +122,9 @@ const RichTextEditor = ({
 
   const editorConfig = {
     ...config,
-    placeholder: placeholder || `Digite aqui (máximo ${maxLines} linhas)...`,
+    placeholder: placeholder || (isObjectives 
+      ? `Digite aqui (máximo ${OBJECTIVES_MAX_LENGTH} caracteres)...`
+      : `Digite aqui (máximo ${maxLines} linhas)...`),
     extraPlugins: [uploadAdapterPlugin],
     image: {
       ...config.image,
@@ -155,7 +172,9 @@ const RichTextEditor = ({
               editor.setData(value);
               toast({
                 title: "Limite excedido",
-                description: "Não é possível adicionar mais conteúdo nesta seção",
+                description: isObjectives
+                  ? "Não é possível adicionar mais caracteres nos objetivos"
+                  : "Não é possível adicionar mais conteúdo nesta seção",
                 variant: "destructive",
                 duration: 3000,
               });

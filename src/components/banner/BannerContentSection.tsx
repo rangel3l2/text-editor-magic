@@ -37,7 +37,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
       <Card>
         <CardHeader>
           <CardTitle>4. Objetivos</CardTitle>
-          <CardDescription>Informe os objetivos gerais e específicos do trabalho. Use frases curtas e diretas. (2-3 linhas)</CardDescription>
+          <CardDescription>Informe os objetivos gerais e específicos do trabalho. Use frases curtas e diretas.</CardDescription>
         </CardHeader>
         <CardContent>
           <RichTextEditor
@@ -46,6 +46,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
             maxLines={3}
             config={editorConfig}
             placeholder="Liste os objetivos gerais e específicos do trabalho..."
+            isObjectives={true}
           />
         </CardContent>
       </Card>
