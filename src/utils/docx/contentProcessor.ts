@@ -32,9 +32,17 @@ export const processHtmlContent = (content: string): ProcessedElement[] => {
             }
           });
         }
+      } else if (element.tagName === 'FIGURE' && element.classList.contains('image')) {
+        const img = element.querySelector('img');
+        if (img) {
+          const src = img.getAttribute('src');
+          if (src) {
+            result.push({ type: 'image', content: '', src });
+          }
+        }
       } else if (element.tagName === 'IMG') {
         const src = element.getAttribute('src');
-        if (src && isValidBase64Image(src)) {
+        if (src) {
           result.push({ type: 'image', content: '', src });
         }
       } else if (element.tagName === 'BR') {

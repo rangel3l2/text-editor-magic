@@ -5,6 +5,7 @@ import { processBase64Image } from './imageProcessor';
 export const createSectionWithTitle = async (title: string, content: string): Promise<Paragraph[]> => {
   const paragraphs: Paragraph[] = [];
   
+  // Add section title
   paragraphs.push(
     new Paragraph({
       text: title,
@@ -32,11 +33,12 @@ export const createSectionWithTitle = async (title: string, content: string): Pr
             spacing: { after: 200 },
             alignment: element.style?.alignment === 'center' ? AlignmentType.CENTER : 
                       element.style?.alignment === 'right' ? AlignmentType.RIGHT : 
-                      AlignmentType.JUSTIFIED,
+                      AlignmentType.LEFT,
           })
         );
       } else if (element.type === 'image' && element.src) {
         try {
+          console.log('Processing image:', element.src.substring(0, 50) + '...');
           const imageBuffer = await processBase64Image(element.src);
           paragraphs.push(
             new Paragraph({
@@ -47,13 +49,14 @@ export const createSectionWithTitle = async (title: string, content: string): Pr
                     width: 400,
                     height: 300,
                   },
-                  type: 'png',
+                  type: 'png'
                 })
               ],
               spacing: { before: 120, after: 120 },
               alignment: AlignmentType.CENTER,
             })
           );
+          console.log('Image processed successfully');
         } catch (error) {
           console.error('Error processing image:', error);
           paragraphs.push(
