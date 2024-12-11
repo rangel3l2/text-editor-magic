@@ -1,7 +1,7 @@
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { Progress } from "@/components/ui/progress";
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { uploadAdapterPlugin } from '@/utils/uploadAdapter';
 
@@ -28,6 +28,16 @@ const RichTextEditor = ({
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
   const editorRef = useRef<any>(null);
+  const [editorInstance, setEditorInstance] = useState<any>(null);
+
+  useEffect(() => {
+    return () => {
+      if (editorInstance) {
+        editorInstance.destroy()
+          .catch((error: any) => console.error('Editor cleanup error:', error));
+      }
+    };
+  }, [editorInstance]);
 
   const calculateProgress = (text: string) => {
     const plainText = text.replace(/<[^>]*>/g, '');
@@ -174,10 +184,8 @@ const RichTextEditor = ({
           }}
           onReady={(editor) => {
             editorRef.current = editor;
+            setEditorInstance(editor);
           }}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          config={editorConfig}
           onError={(error) => {
             console.error('CKEditor error:', error);
             toast({
@@ -187,6 +195,9 @@ const RichTextEditor = ({
               duration: 3000,
             });
           }}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          config={editorConfig}
         />
       </div>
       {isFocused && (
