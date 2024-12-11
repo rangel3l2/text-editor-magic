@@ -46,9 +46,19 @@ const RichTextEditor = ({
         return null;
       }
 
+      // Create a blob URL for the image
       const imageUrl = URL.createObjectURL(file);
+      
+      // Show success toast
+      toast({
+        title: "Imagem adicionada",
+        description: "A imagem foi inserida com sucesso",
+        duration: 2000,
+      });
+
       return imageUrl;
     } catch (error) {
+      console.error('Error handling image upload:', error);
       toast({
         title: "Erro ao fazer upload da imagem",
         description: "Não foi possível fazer o upload da imagem. Tente novamente.",
@@ -71,39 +81,16 @@ const RichTextEditor = ({
         'imageStyle:side',
         '|',
         'toggleImageCaption',
-        'imageTextAlternative',
-        '|',
-        'resizeImage:25',
-        'resizeImage:50',
-        'resizeImage:75',
-        'resizeImage:original'
-      ],
-      resizeOptions: [
-        {
-          name: '25',
-          value: '25',
-          label: '25%'
-        },
-        {
-          name: '50',
-          value: '50',
-          label: '50%'
-        },
-        {
-          name: '75',
-          value: '75',
-          label: '75%'
-        },
-        {
-          name: 'original',
-          value: null,
-          label: 'Original'
-        }
+        'imageTextAlternative'
       ],
       upload: {
         types: ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff'],
         handler: handleImageUpload
       }
+    },
+    clipboard: {
+      ...config.clipboard,
+      handleImages: true
     }
   };
 
