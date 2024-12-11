@@ -61,6 +61,11 @@ const styles: IStylesOptions = {
   ],
 };
 
+const processBase64Image = async (base64String: string): Promise<Buffer> => {
+  const base64Data = base64String.replace(/^data:image\/\w+;base64,/, '');
+  return Buffer.from(base64Data, 'base64');
+};
+
 const processHtmlContent = (content: string) => {
   if (!content) return [{ type: 'text', content: '' }];
   
@@ -100,7 +105,7 @@ const processHtmlContent = (content: string) => {
         result.push({ type: 'linebreak', content: '' });
       } else if (element.tagName === 'UL' || element.tagName === 'OL') {
         Array.from(element.children).forEach(li => {
-          const listItem = li as HTMLElement; // Cast to HTMLElement to access style properties
+          const listItem = li as HTMLElement;
           const text = listItem.textContent?.trim();
           if (text) {
             result.push({
@@ -121,25 +126,9 @@ const processHtmlContent = (content: string) => {
   return result.length > 0 ? result : [{ type: 'text', content: '' }];
 };
 
-const fetchImageAsBuffer = async (url: string): Promise<Buffer> => {
-  const response = await fetch(url);
-  const arrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer);
-};
-
-const createTextRun = (text: string, style?: any) => {
-  return new TextRun({
-    text,
-    bold: style?.bold || false,
-    italics: style?.italics || false,
-    size: 24,
-  });
-};
-
 const createSectionWithTitle = async (title: string, content: string): Promise<Paragraph[]> => {
   const paragraphs: Paragraph[] = [];
   
-  // Add section title
   paragraphs.push(
     new Paragraph({
       text: title,
@@ -149,7 +138,6 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
     })
   );
 
-  // Process content if it exists
   if (content) {
     const elements = processHtmlContent(content);
     
@@ -157,7 +145,14 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
       if (element.type === 'paragraph' || element.type === 'text') {
         paragraphs.push(
           new Paragraph({
-            children: [createTextRun(element.content, element.style)],
+            children: [
+              new TextRun({
+                text: element.content,
+                bold: element.style?.bold || false,
+                italics: element.style?.italics || false,
+                size: 24,
+              })
+            ],
             spacing: { after: 200 },
             alignment: element.style?.alignment === 'center' ? AlignmentType.CENTER : 
                       element.style?.alignment === 'right' ? AlignmentType.RIGHT : 
@@ -166,7 +161,7 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
         );
       } else if (element.type === 'image' && element.src) {
         try {
-          const imageBuffer = await fetchImageAsBuffer(element.src);
+          const imageBuffer = await processBase64Image(element.src);
           paragraphs.push(
             new Paragraph({
               children: [
@@ -176,15 +171,6 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
                     width: 400,
                     height: 300,
                   },
-                  floating: {
-                    horizontalPosition: {
-                      offset: 1014400,
-                    },
-                    verticalPosition: {
-                      offset: 1014400,
-                    },
-                  },
-                  type: 'png',
                 }),
               ],
               spacing: { before: 120, after: 120 },
@@ -193,6 +179,19 @@ const createSectionWithTitle = async (title: string, content: string): Promise<P
           );
         } catch (error) {
           console.error('Error processing image:', error);
+          paragraphs.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: '[Error: Unable to process image]',
+                  color: "FF0000",
+                  italics: true,
+                })
+              ],
+              spacing: { after: 200 },
+              alignment: AlignmentType.CENTER,
+            })
+          );
         }
       } else if (element.type === 'linebreak') {
         paragraphs.push(
@@ -212,7 +211,6 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
   console.log('Generating DOCX with content:', content);
   const sections = [];
 
-  // Title Section
   sections.push(
     new Paragraph({
       text: processHtmlContent(content.title)[0]?.content || '',
@@ -221,7 +219,6 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
     })
   );
 
-  // Authors Section
   sections.push(
     new Paragraph({
       text: processHtmlContent(content.authors)[0]?.content || '',
@@ -230,7 +227,6 @@ export const generateDocx = async (content: BannerContent): Promise<Blob> => {
     })
   );
 
-  // Content Sections
   sections.push(...await createSectionWithTitle("1. Introdução", content.introduction));
   sections.push(...await createSectionWithTitle("2. Objetivos", content.objectives));
   sections.push(...await createSectionWithTitle("3. Metodologia", content.methodology));
