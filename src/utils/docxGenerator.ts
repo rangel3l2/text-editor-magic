@@ -100,14 +100,15 @@ const processHtmlContent = (content: string) => {
         result.push({ type: 'linebreak', content: '' });
       } else if (element.tagName === 'UL' || element.tagName === 'OL') {
         Array.from(element.children).forEach(li => {
-          const text = li.textContent?.trim();
+          const listItem = li as HTMLElement; // Cast to HTMLElement to access style properties
+          const text = listItem.textContent?.trim();
           if (text) {
             result.push({
               type: 'paragraph',
               content: `• ${text}`,
               style: {
-                bold: li.style.fontWeight === 'bold' || li.querySelector('strong') !== null,
-                italics: li.style.fontStyle === 'italic' || li.querySelector('em') !== null,
+                bold: listItem.style.fontWeight === 'bold' || listItem.querySelector('strong') !== null,
+                italics: listItem.style.fontStyle === 'italic' || listItem.querySelector('em') !== null,
                 alignment: 'left'
               }
             });
