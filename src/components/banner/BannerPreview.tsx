@@ -20,6 +20,7 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 \\usepackage[utf8]{inputenc}
 \\usepackage[portuguese]{babel}
 \\usepackage{geometry}
+\\usepackage{multicol}
 \\geometry{
   a4paper,
   total={170mm,257mm},
@@ -30,14 +31,17 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 }
 
 \\begin{document}
+\\begin{multicols}{2}
 
 \\begin{center}
 \\Large\\textbf{${content.title || ''}}
+
+\\vspace{1cm}
+
+${content.authors || ''}
 \\end{center}
 
-\\begin{flushleft}
-${content.authors || ''}
-\\end{flushleft}
+\\columnbreak
 
 \\textbf{1. INTRODUÇÃO}
 ${content.introduction || ''}
@@ -60,6 +64,7 @@ ${content.references || ''}
 \\textbf{AGRADECIMENTOS}
 ${content.acknowledgments || ''}
 
+\\end{multicols}
 \\end{document}
 `;
 
@@ -90,15 +95,18 @@ ${content.acknowledgments || ''}
 
   return (
     <Card className="p-4 h-full max-h-[85vh] bg-white">
-      <div className="relative w-full h-full overflow-hidden">
+      <div className="relative w-full" style={{ paddingTop: '141.4%' }}> {/* A4 aspect ratio (1:√2) */}
         <div 
           className="absolute top-0 left-0 w-full h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 transition-colors"
           style={{
             scrollbarWidth: 'thin',
             scrollbarColor: 'rgb(209 213 219) transparent',
           }}
-          dangerouslySetInnerHTML={{ __html: previewHtml }}
-        />
+        >
+          <div className="mx-auto max-w-[210mm] h-[297mm] bg-white shadow-lg p-[25mm]">
+            <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+          </div>
+        </div>
       </div>
     </Card>
   );
