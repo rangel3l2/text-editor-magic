@@ -32,38 +32,41 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 
 \\begin{center}
 \\Large\\textbf{${content.title || ''}}
-
-\\vspace{0.5cm}
-\\normalsize
-${content.authors || ''}
 \\end{center}
 
+\\vspace{0.5cm}
+\\begin{flushleft}
+${content.authors || ''}
+\\end{flushleft}
+
 \\vspace{1cm}
-\\section*{Introdução}
+\\section*{\\textbf{1. INTRODUÇÃO}}
 ${content.introduction || ''}
 
 \\vspace{0.5cm}
-\\section*{Objetivos}
+\\section*{\\textbf{2. OBJETIVOS}}
 ${content.objectives || ''}
 
 \\vspace{0.5cm}
-\\section*{Metodologia}
+\\section*{\\textbf{3. METODOLOGIA}}
 ${content.methodology || ''}
 
 \\vspace{0.5cm}
-\\section*{Resultados e Discussão}
+\\section*{\\textbf{4. RESULTADOS E DISCUSSÃO}}
 ${content.results || ''}
 
 \\vspace{0.5cm}
-\\section*{Conclusão}
+\\section*{\\textbf{5. CONCLUSÃO}}
 ${content.conclusion || ''}
 
 \\vspace{0.5cm}
-\\section*{Referências}
+\\begin{center}
+\\section*{\\textbf{6. REFERÊNCIAS}}
+\\end{center}
 ${content.references || ''}
 
 \\vspace{0.5cm}
-\\section*{Agradecimentos}
+\\section*{\\textbf{AGRADECIMENTOS}}
 ${content.acknowledgments || ''}
 
 \\end{document}

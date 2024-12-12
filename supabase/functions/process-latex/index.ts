@@ -23,20 +23,31 @@ serve(async (req) => {
       )
     }
 
-    // Here we would normally send the LaTeX to a service for rendering
-    // For now, we'll create a simple HTML representation
     const html = `
-      <div style="font-family: 'Times New Roman', Times, serif; padding: 20px;">
+      <div style="font-family: 'Times New Roman', Times, serif; padding: 20px; text-align: justify;">
         ${latex
-          .replace(/\\section\*{([^}]+)}/g, '<h2 style="font-size: 1.2em; margin: 1em 0;">$1</h2>')
+          // Handle title and authors
           .replace(/\\begin{center}([\s\S]*?)\\end{center}/g, '<div style="text-align: center;">$1</div>')
-          .replace(/\\Large\\textbf{([^}]*)}/g, '<h1 style="font-size: 1.5em; font-weight: bold;">$1</h1>')
-          .replace(/\\normalsize/g, '<div style="font-size: 1em;">')
+          .replace(/\\Large\\textbf{([^}]*)}/g, '<h1 style="font-size: 1.8em; font-weight: bold; margin-bottom: 0.5em; text-align: center;">$1</h1>')
+          .replace(/\\begin{flushleft}([\s\S]*?)\\end{flushleft}/g, '<div style="text-align: left;">$1</div>')
+          
+          // Handle sections
+          .replace(/\\section\*{\\textbf{([^}]+)}}/g, '<h2 style="font-size: 1.4em; font-weight: bold; margin: 1em 0 0.5em 0;">$1</h2>')
+          
+          // Handle spacing
           .replace(/\\vspace{[^}]+}/g, '<div style="margin: 1em 0;"></div>')
+          
+          // Remove LaTeX document structure
           .replace(/\\documentclass.*?\\begin{document}/s, '')
           .replace(/\\end{document}/, '')
           .replace(/\\usepackage.*?\n/g, '')
           .replace(/\\geometry{.*?}/s, '')
+          
+          // Handle text formatting
+          .replace(/\\textbf{([^}]+)}/g, '<strong>$1</strong>')
+          .replace(/\\textit{([^}]+)}/g, '<em>$1</em>')
+          .replace(/\\normalsize/g, '<div style="font-size: 1em;">')
+          
           .trim()}
       </div>
     `;
