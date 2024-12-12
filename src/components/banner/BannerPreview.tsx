@@ -33,6 +33,7 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 \\usepackage[portuguese]{babel}
 \\usepackage{geometry}
 \\usepackage{multicol}
+\\usepackage{setspace}
 \\geometry{
   a4paper,
   total={170mm,257mm},
@@ -46,48 +47,53 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 \\begin{multicols}{2}
 
 \\begin{center}
-${processedTitle}
+{\\fontsize{14pt}{16pt}\\selectfont\\textbf{${processedTitle}}}
 
 \\vspace{1cm}
 
-${processedAuthors}
+{\\fontsize{12pt}{14pt}\\selectfont
+${processedAuthors.split('\n').map(line => 
+  line.toLowerCase().includes('universidade') ? 
+  `\\textit{${line}}` : 
+  line
+).join('\n\\\\')}}
 \\end{center}
 
-\\vspace{1cm}
+\\vspace{2cm}
 
-\\textbf{1. INTRODUÇÃO}
+\\noindent\\textbf{1. INTRODUÇÃO}
 \\vspace{0.5cm}
-${cleanLatexCommands(content.introduction)}
+\\noindent ${cleanLatexCommands(content.introduction)}
 
-\\vspace{1cm}
-\\textbf{2. OBJETIVOS}
+\\vspace{1.5cm}
+\\noindent\\textbf{2. OBJETIVOS}
 \\vspace{0.5cm}
-${cleanLatexCommands(content.objectives)}
+\\noindent ${cleanLatexCommands(content.objectives)}
 
-\\vspace{1cm}
-\\textbf{3. METODOLOGIA}
+\\vspace{1.5cm}
+\\noindent\\textbf{3. METODOLOGIA}
 \\vspace{0.5cm}
-${cleanLatexCommands(content.methodology)}
+\\noindent ${cleanLatexCommands(content.methodology)}
 
-\\vspace{1cm}
-\\textbf{4. RESULTADOS E DISCUSSÃO}
+\\vspace{1.5cm}
+\\noindent\\textbf{4. RESULTADOS E DISCUSSÃO}
 \\vspace{0.5cm}
-${cleanLatexCommands(content.results)}
+\\noindent ${cleanLatexCommands(content.results)}
 
-\\vspace{1cm}
-\\textbf{5. CONCLUSÃO}
+\\vspace{1.5cm}
+\\noindent\\textbf{5. CONCLUSÃO}
 \\vspace{0.5cm}
-${cleanLatexCommands(content.conclusion)}
+\\noindent ${cleanLatexCommands(content.conclusion)}
 
-\\vspace{1cm}
-\\textbf{6. REFERÊNCIAS}
+\\vspace{1.5cm}
+\\noindent\\textbf{6. REFERÊNCIAS}
 \\vspace{0.5cm}
-${cleanLatexCommands(content.references)}
+\\noindent ${cleanLatexCommands(content.references)}
 
-\\vspace{1cm}
-\\textbf{AGRADECIMENTOS}
+\\vspace{1.5cm}
+\\noindent\\textbf{AGRADECIMENTOS}
 \\vspace{0.5cm}
-${cleanLatexCommands(content.acknowledgments)}
+\\noindent ${cleanLatexCommands(content.acknowledgments)}
 
 \\end{multicols}
 \\end{document}
