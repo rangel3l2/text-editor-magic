@@ -12,7 +12,6 @@ import BannerHeader from './banner/BannerHeader';
 import BannerPreview from './banner/BannerPreview';
 import ImageEditor from './banner/ImageEditor';
 import { useBannerContent } from './banner/useBannerContent';
-import { generateDocx } from "@/utils/docx/docxGenerator";
 import { supabase } from "@/integrations/supabase/client";
 
 const BannerEditor = () => {
@@ -53,27 +52,36 @@ const BannerEditor = () => {
     }
   };
 
-  const handleGenerateDocx = async () => {
+  const handleGeneratePDF = async () => {
     try {
-      const blob = await generateDocx(bannerContent);
-      const url = window.URL.createObjectURL(blob);
+      const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
+        body: { content: bannerContent }
+      });
+
+      if (error) throw error;
+
+      // Create a blob from the base64 PDF data
+      const pdfBlob = new Blob([Buffer.from(data.pdf, 'base64')], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(pdfBlob);
+      
+      // Download the PDF
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'banner-academico.docx';
+      link.download = 'banner-academico.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
       toast({
-        title: "DOCX gerado",
+        title: "PDF gerado",
         description: "Seu banner acadêmico foi exportado com sucesso",
         duration: 3000,
       });
     } catch (error) {
-      console.error('Error generating DOCX:', error);
+      console.error('Error generating PDF:', error);
       toast({
-        title: "Erro ao gerar DOCX",
+        title: "Erro ao gerar PDF",
         description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
         duration: 3000,
       });
@@ -82,10 +90,14 @@ const BannerEditor = () => {
 
   const handleShare = async () => {
     try {
-      const blob = await generateDocx(bannerContent);
-      const file = new File([blob], 'banner-academico.docx', { 
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+      const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
+        body: { content: bannerContent }
       });
+
+      if (error) throw error;
+
+      const pdfBlob = new Blob([Buffer.from(data.pdf, 'base64')], { type: 'application/pdf' });
+      const file = new File([pdfBlob], 'banner-academico.pdf', { type: 'application/pdf' });
 
       if (navigator.share && navigator.canShare({ files: [file] })) {
         await navigator.share({
@@ -100,10 +112,10 @@ const BannerEditor = () => {
           duration: 3000,
         });
       } else {
-        const url = window.URL.createObjectURL(blob);
+        const url = window.URL.createObjectURL(pdfBlob);
         const tempLink = document.createElement('a');
         tempLink.href = url;
-        tempLink.download = 'banner-academico.docx';
+        tempLink.download = 'banner-academico.pdf';
         document.body.appendChild(tempLink);
         tempLink.click();
         document.body.removeChild(tempLink);
@@ -194,7 +206,7 @@ const BannerEditor = () => {
           <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <BannerHeader title="Banner Acadêmico" />
             <BannerActions 
-              onGenerateDocx={handleGenerateDocx}
+              onGeneratePDF={handleGeneratePDF}
               onShare={handleShare}
               onLoadSavedContent={handleLoadSavedContent}
               onClearFields={handleClearFields}

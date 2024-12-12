@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { FileDown, RotateCcw, Share2, Trash2, Eye } from "lucide-react";
+import { FileDown, RotateCcw, Share2, Trash2 } from "lucide-react";
 
 interface BannerActionsProps {
-  onGenerateDocx: () => void;
+  onGeneratePDF: () => void;
   onShare: () => void;
   onLoadSavedContent: () => void;
   onClearFields: () => void;
@@ -10,7 +10,7 @@ interface BannerActionsProps {
 }
 
 const BannerActions = ({ 
-  onGenerateDocx, 
+  onGeneratePDF, 
   onShare, 
   onLoadSavedContent, 
   onClearFields,
@@ -29,11 +29,11 @@ const BannerActions = ({
         </Button>
       )}
       <Button 
-        onClick={onGenerateDocx}
+        onClick={onGeneratePDF}
         className="flex items-center gap-2 bg-primary hover:bg-primary/90 w-full sm:w-auto"
       >
         <FileDown className="h-4 w-4" />
-        Baixar DOCX
+        Baixar PDF
       </Button>
       <Button 
         onClick={onShare}
