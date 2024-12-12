@@ -12,13 +12,14 @@ import BannerHeader from './banner/BannerHeader';
 import BannerPreview from './banner/BannerPreview';
 import ImageEditor from './banner/ImageEditor';
 import { useBannerContent } from './banner/useBannerContent';
+import { generateDocx } from "@/utils/docx/docxGenerator";
 import { supabase } from "@/integrations/supabase/client";
 
 const BannerEditor = () => {
   const [searchParams] = useSearchParams();
   const [documentType] = useState(searchParams.get('type') || 'banner');
   const [previewOpen, setPreviewOpen] = useState(false);
-  const { bannerContent, setBannerContent, handleChange, STORAGE_KEY } = useBannerContent();
+  const { bannerContent, setBannerContent, handleChange, initialBannerContent, STORAGE_KEY } = useBannerContent();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   const { toast } = useToast();
@@ -52,36 +53,27 @@ const BannerEditor = () => {
     }
   };
 
-  const handleGeneratePDF = async () => {
+  const handleGenerateDocx = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
-        body: { content: bannerContent }
-      });
-
-      if (error) throw error;
-
-      // Create blob from PDF data
-      const blob = new Blob([data], { type: 'application/pdf' });
+      const blob = await generateDocx(bannerContent);
       const url = window.URL.createObjectURL(blob);
-      
-      // Download PDF
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'banner-academico.pdf';
+      link.download = 'banner-academico.docx';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
       toast({
-        title: "PDF gerado",
+        title: "DOCX gerado",
         description: "Seu banner acadêmico foi exportado com sucesso",
         duration: 3000,
       });
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('Error generating DOCX:', error);
       toast({
-        title: "Erro ao gerar PDF",
+        title: "Erro ao gerar DOCX",
         description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
         duration: 3000,
       });
@@ -168,15 +160,10 @@ const BannerEditor = () => {
   };
 
   const handleClearFields = () => {
-    // Clear form state
     setBannerContent(initialBannerContent);
-    
-    // Clear localStorage
     localStorage.removeItem(STORAGE_KEY);
     
-    // Clear all cookies
     const cookies = document.cookie.split(';');
-    
     for (let i = 0; i < cookies.length; i++) {
       const cookie = cookies[i];
       const eqPos = cookie.indexOf('=');
@@ -207,7 +194,7 @@ const BannerEditor = () => {
           <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <BannerHeader title="Banner Acadêmico" />
             <BannerActions 
-              onGeneratePDF={handleGeneratePDF}
+              onGenerateDocx={handleGenerateDocx}
               onShare={handleShare}
               onLoadSavedContent={handleLoadSavedContent}
               onClearFields={handleClearFields}

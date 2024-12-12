@@ -1,22 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { corsHeaders } from "../_shared/cors.ts"
 
-const mathjaxTypeset = async (latex: string) => {
-  const MathJax = await import('https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js');
-  
-  try {
-    const svg = MathJax.tex2svg(latex, {
-      display: true,
-      em: 16,
-      ex: 8,
-      containerWidth: 800
-    });
-    
-    return svg.outerHTML;
-  } catch (error) {
-    console.error('Error processing LaTeX:', error);
-    throw new Error('Failed to process LaTeX');
-  }
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
@@ -25,9 +11,9 @@ serve(async (req) => {
   }
 
   try {
-    const { latex } = await req.json()
+    const { content } = await req.json()
     
-    if (!latex) {
+    if (!content) {
       return new Response(
         JSON.stringify({ error: 'LaTeX content is required' }),
         { 
@@ -37,10 +23,24 @@ serve(async (req) => {
       )
     }
 
-    const svg = await mathjaxTypeset(latex)
+    // Placeholder: Convert content to HTML preview
+    // In a real implementation, this would use a LaTeX to HTML converter
+    const html = `
+      <div class="preview">
+        <h1>${content.title || ''}</h1>
+        <p>${content.authors || ''}</p>
+        <div>${content.introduction || ''}</div>
+        <div>${content.objectives || ''}</div>
+        <div>${content.methodology || ''}</div>
+        <div>${content.results || ''}</div>
+        <div>${content.conclusion || ''}</div>
+        <div>${content.references || ''}</div>
+        <div>${content.acknowledgments || ''}</div>
+      </div>
+    `;
     
     return new Response(
-      JSON.stringify({ svg }),
+      JSON.stringify({ html }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 

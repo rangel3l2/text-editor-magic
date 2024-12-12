@@ -13,7 +13,7 @@ export interface BannerContent {
   acknowledgments: string;
 }
 
-const STORAGE_KEY = 'bannerContent';
+export const STORAGE_KEY = 'bannerContent';
 const COOKIE_PREFIX = 'banner_';
 
 export const initialBannerContent: BannerContent = {
@@ -128,6 +128,7 @@ export const useBannerContent = () => {
     bannerContent,
     setBannerContent,
     handleChange,
+    initialBannerContent,
     STORAGE_KEY,
   };
 };

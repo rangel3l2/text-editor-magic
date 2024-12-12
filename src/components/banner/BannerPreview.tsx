@@ -16,7 +16,6 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
   useEffect(() => {
     const generatePreview = async () => {
       try {
-        // Convert content to LaTeX and generate preview HTML
         const { data, error } = await supabase.functions.invoke('process-latex', {
           body: { content }
         });
