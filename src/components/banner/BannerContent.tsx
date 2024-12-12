@@ -1,4 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 import BannerHeaderSection from './BannerHeaderSection';
 import BannerContentSection from './BannerContentSection';
 import BannerPreview from './BannerPreview';
@@ -9,13 +11,15 @@ interface BannerContentProps {
   handleChange: (field: string, value: string) => void;
   selectedImage: string | null;
   onImageConfigChange: (imageId: string, config: any) => void;
+  onOpenPreview: () => void;
 }
 
 const BannerContent = ({ 
   content, 
   handleChange, 
   selectedImage, 
-  onImageConfigChange 
+  onImageConfigChange,
+  onOpenPreview
 }: BannerContentProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -35,10 +39,15 @@ const BannerContent = ({
       </div>
       
       <div className="space-y-6">
-        <BannerPreview 
-          content={content}
-          onImageConfigChange={onImageConfigChange}
-        />
+        <Button 
+          onClick={onOpenPreview}
+          className="w-full"
+          variant="outline"
+        >
+          <Eye className="mr-2 h-4 w-4" />
+          Visualizar Banner
+        </Button>
+        
         {selectedImage && (
           <ImageEditor
             imageUrl={selectedImage}

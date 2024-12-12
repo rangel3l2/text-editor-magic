@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -98,13 +97,13 @@ ${content.acknowledgments || ''}
   }, [content, toast]);
 
   return (
-    <Card className="p-4">
-      <AspectRatio ratio={16/9}>
+    <Card className="p-4 h-full">
+      <div className="relative w-full" style={{ paddingTop: '141.4%' }}> {/* A4 aspect ratio (1:√2) */}
         <div 
-          className="w-full h-full bg-white rounded-lg shadow-inner overflow-auto p-4"
+          className="absolute top-0 left-0 w-full h-full bg-white rounded-lg shadow-inner overflow-auto p-4"
           dangerouslySetInnerHTML={{ __html: previewHtml }}
         />
-      </AspectRatio>
+      </div>
     </Card>
   );
 };

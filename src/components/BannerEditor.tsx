@@ -85,6 +85,7 @@ const BannerEditor = () => {
         handleChange={handleChange}
         selectedImage={selectedImage}
         onImageConfigChange={handleImageConfigChange}
+        onOpenPreview={() => setPreviewOpen(true)}
       />
     </BannerLayout>
   );
