@@ -11,9 +11,9 @@ serve(async (req) => {
   }
 
   try {
-    const { content } = await req.json()
+    const { latexContent } = await req.json()
     
-    if (!content) {
+    if (!latexContent) {
       return new Response(
         JSON.stringify({ error: 'LaTeX content is required' }),
         { 
@@ -23,19 +23,22 @@ serve(async (req) => {
       )
     }
 
-    // Placeholder: Convert content to HTML preview
-    // In a real implementation, this would use a LaTeX to HTML converter
+    console.log('Received LaTeX content:', latexContent);
+
+    // For now, we'll create a simple HTML preview
+    // Later this can be replaced with actual LaTeX to HTML conversion
     const html = `
-      <div class="preview">
-        <h1>${content.title || ''}</h1>
-        <p>${content.authors || ''}</p>
-        <div>${content.introduction || ''}</div>
-        <div>${content.objectives || ''}</div>
-        <div>${content.methodology || ''}</div>
-        <div>${content.results || ''}</div>
-        <div>${content.conclusion || ''}</div>
-        <div>${content.references || ''}</div>
-        <div>${content.acknowledgments || ''}</div>
+      <div style="padding: 20px; font-family: 'Times New Roman', serif;">
+        ${latexContent
+          .replace(/\\title{(.*?)}/, '<h1>$1</h1>')
+          .replace(/\\author{(.*?)}/, '<p class="author">$1</p>')
+          .replace(/\\section{(.*?)}/g, '<h2>$1</h2>')
+          .replace(/\\section\*{(.*?)}/g, '<h2>$1</h2>')
+          .replace(/\\begin{document}/, '')
+          .replace(/\\end{document}/, '')
+          .replace(/\\maketitle/, '')
+          .replace(/\\documentclass{article}/, '')
+        }
       </div>
     `;
     

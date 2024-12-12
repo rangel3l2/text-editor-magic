@@ -16,8 +16,39 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
   useEffect(() => {
     const generatePreview = async () => {
       try {
+        // Convert content object to LaTeX string
+        const latexContent = `
+\\documentclass{article}
+\\begin{document}
+\\title{${content.title || ''}}
+\\author{${content.authors || ''}}
+\\maketitle
+
+\\section{Introduction}
+${content.introduction || ''}
+
+\\section{Objectives}
+${content.objectives || ''}
+
+\\section{Methodology}
+${content.methodology || ''}
+
+\\section{Results}
+${content.results || ''}
+
+\\section{Conclusion}
+${content.conclusion || ''}
+
+\\section{References}
+${content.references || ''}
+
+\\section*{Acknowledgments}
+${content.acknowledgments || ''}
+\\end{document}
+`;
+
         const { data, error } = await supabase.functions.invoke('process-latex', {
-          body: { content }
+          body: { latexContent }
         });
 
         if (error) throw error;
