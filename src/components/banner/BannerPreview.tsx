@@ -15,6 +15,11 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
   useEffect(() => {
     const generatePreview = async () => {
       try {
+        // Process authors content to remove LaTeX commands
+        const processedAuthors = content.authors?.replace(/\\begin{.*?}|\\end{.*?}|\\columnbreak/g, '')
+          .replace(/\\textbf{(.*?)}/g, '$1')
+          .trim() || '';
+
         const latexContent = `
 \\documentclass[12pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
@@ -38,7 +43,7 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 
 \\vspace{1cm}
 
-${content.authors || ''}
+${processedAuthors}
 \\end{center}
 
 \\columnbreak
@@ -75,7 +80,10 @@ ${content.acknowledgments || ''}
         if (error) throw error;
         
         if (data?.html) {
-          setPreviewHtml(data.html);
+          // Clean up any remaining LaTeX commands from the HTML output
+          const cleanHtml = data.html.replace(/\\begin{.*?}|\\end{.*?}|\\columnbreak/g, '')
+            .replace(/\\textbf{(.*?)}/g, '$1');
+          setPreviewHtml(cleanHtml);
         } else {
           throw new Error('No HTML content received from LaTeX processing');
         }
