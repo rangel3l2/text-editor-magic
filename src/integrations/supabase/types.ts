@@ -19,6 +19,7 @@ export type Database = {
           image_url: string
           position_data: Json | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           aspect_ratio?: string | null
@@ -29,6 +30,7 @@ export type Database = {
           image_url: string
           position_data?: Json | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           aspect_ratio?: string | null
@@ -39,6 +41,7 @@ export type Database = {
           image_url?: string
           position_data?: Json | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
