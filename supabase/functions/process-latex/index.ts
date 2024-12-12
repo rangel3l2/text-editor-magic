@@ -11,9 +11,9 @@ serve(async (req) => {
   }
 
   try {
-    const { latexContent } = await req.json()
+    const { latex } = await req.json()
     
-    if (!latexContent) {
+    if (!latex) {
       return new Response(
         JSON.stringify({ error: 'LaTeX content is required' }),
         { 
@@ -23,25 +23,24 @@ serve(async (req) => {
       )
     }
 
-    console.log('Received LaTeX content:', latexContent);
-
-    // For now, we'll create a simple HTML preview
-    // Later this can be replaced with actual LaTeX to HTML conversion
+    // Here we would normally send the LaTeX to a service for rendering
+    // For now, we'll create a simple HTML representation
     const html = `
-      <div style="padding: 20px; font-family: 'Times New Roman', serif;">
-        ${latexContent
-          .replace(/\\title{(.*?)}/, '<h1>$1</h1>')
-          .replace(/\\author{(.*?)}/, '<p class="author">$1</p>')
-          .replace(/\\section{(.*?)}/g, '<h2>$1</h2>')
-          .replace(/\\section\*{(.*?)}/g, '<h2>$1</h2>')
-          .replace(/\\begin{document}/, '')
+      <div style="font-family: 'Times New Roman', Times, serif; padding: 20px;">
+        ${latex
+          .replace(/\\section\*{([^}]+)}/g, '<h2 style="font-size: 1.2em; margin: 1em 0;">$1</h2>')
+          .replace(/\\begin{center}([\s\S]*?)\\end{center}/g, '<div style="text-align: center;">$1</div>')
+          .replace(/\\Large\\textbf{([^}]*)}/g, '<h1 style="font-size: 1.5em; font-weight: bold;">$1</h1>')
+          .replace(/\\normalsize/g, '<div style="font-size: 1em;">')
+          .replace(/\\vspace{[^}]+}/g, '<div style="margin: 1em 0;"></div>')
+          .replace(/\\documentclass.*?\\begin{document}/s, '')
           .replace(/\\end{document}/, '')
-          .replace(/\\maketitle/, '')
-          .replace(/\\documentclass{article}/, '')
-        }
+          .replace(/\\usepackage.*?\n/g, '')
+          .replace(/\\geometry{.*?}/s, '')
+          .trim()}
       </div>
     `;
-    
+
     return new Response(
       JSON.stringify({ html }),
       { 

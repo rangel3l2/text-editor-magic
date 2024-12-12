@@ -16,7 +16,6 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
   useEffect(() => {
     const generatePreview = async () => {
       try {
-        // Convert content object to LaTeX string with Portuguese headings and proper spacing
         const latexContent = `
 \\documentclass[12pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
@@ -71,17 +70,23 @@ ${content.acknowledgments || ''}
 `;
 
         const { data, error } = await supabase.functions.invoke('process-latex', {
-          body: { latexContent }
+          body: { latex: latexContent }
         });
 
         if (error) throw error;
-        setPreviewHtml(data.html);
+        
+        if (data?.html) {
+          setPreviewHtml(data.html);
+        } else {
+          throw new Error('No HTML content received from LaTeX processing');
+        }
       } catch (error) {
         console.error('Error generating preview:', error);
         toast({
           title: "Erro na previsão",
           description: "Não foi possível gerar a previsão do banner",
           variant: "destructive",
+          duration: 3000,
         });
       }
     };
@@ -93,7 +98,7 @@ ${content.acknowledgments || ''}
     <Card className="p-4">
       <AspectRatio ratio={16/9}>
         <div 
-          className="w-full h-full bg-white rounded-lg shadow-inner overflow-auto"
+          className="w-full h-full bg-white rounded-lg shadow-inner overflow-auto p-4"
           dangerouslySetInnerHTML={{ __html: previewHtml }}
         />
       </AspectRatio>
