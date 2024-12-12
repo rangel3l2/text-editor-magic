@@ -14,6 +14,7 @@ const editorConfig = {
     'imageUpload',
     'blockQuote',
     'insertTable',
+    'mathText',
     'undo',
     'redo'
   ],
@@ -26,6 +27,12 @@ const editorConfig = {
       'toggleImageCaption',
       'imageTextAlternative'
     ]
+  },
+  math: {
+    engine: 'mathjax',
+    outputType: 'svg',
+    forceOutputType: true,
+    enablePreview: true
   }
 };
 
