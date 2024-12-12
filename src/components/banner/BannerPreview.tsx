@@ -89,8 +89,8 @@ ${content.acknowledgments || ''}
   }, [content, toast]);
 
   return (
-    <Card className="p-4 h-full bg-white">
-      <div className="relative w-full" style={{ paddingTop: '141.4%' }}> {/* A4 aspect ratio (1:√2) */}
+    <Card className="p-4 h-full max-h-[85vh] bg-white">
+      <div className="relative w-full h-full overflow-hidden">
         <div 
           className="absolute top-0 left-0 w-full h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 transition-colors"
           style={{
