@@ -14,7 +14,7 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 
   const cleanLatexCommands = (text: string) => {
     return text
-      ?.replace(/\\begin{.*?}|\\end{.*?}|\\columnbreak/g, '')
+      ?.replace(/\\begin{.*?}|\\end{.*?}|\\columnbreak|\{[0-9]+\}/g, '')
       .replace(/\\textbf{(.*?)}/g, '$1')
       .replace(/\\vspace{.*?}/g, '')
       .replace(/\\Large/g, '')
@@ -53,27 +53,40 @@ ${processedTitle}
 ${processedAuthors}
 \\end{center}
 
-\\columnbreak
+\\vspace{1cm}
 
 \\textbf{1. INTRODUÇÃO}
+\\vspace{0.5cm}
 ${cleanLatexCommands(content.introduction)}
 
+\\vspace{1cm}
 \\textbf{2. OBJETIVOS}
+\\vspace{0.5cm}
 ${cleanLatexCommands(content.objectives)}
 
+\\vspace{1cm}
 \\textbf{3. METODOLOGIA}
+\\vspace{0.5cm}
 ${cleanLatexCommands(content.methodology)}
 
+\\vspace{1cm}
 \\textbf{4. RESULTADOS E DISCUSSÃO}
+\\vspace{0.5cm}
 ${cleanLatexCommands(content.results)}
 
+\\vspace{1cm}
 \\textbf{5. CONCLUSÃO}
+\\vspace{0.5cm}
 ${cleanLatexCommands(content.conclusion)}
 
+\\vspace{1cm}
 \\textbf{6. REFERÊNCIAS}
+\\vspace{0.5cm}
 ${cleanLatexCommands(content.references)}
 
+\\vspace{1cm}
 \\textbf{AGRADECIMENTOS}
+\\vspace{0.5cm}
 ${cleanLatexCommands(content.acknowledgments)}
 
 \\end{multicols}
