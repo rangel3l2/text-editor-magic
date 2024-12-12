@@ -23,8 +23,10 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 \\geometry{
   a4paper,
   total={170mm,257mm},
-  left=20mm,
-  top=20mm,
+  left=25mm,
+  top=25mm,
+  right=25mm,
+  bottom=25mm,
 }
 
 \\begin{document}
@@ -33,38 +35,28 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 \\Large\\textbf{${content.title || ''}}
 \\end{center}
 
-\\vspace{0.5cm}
 \\begin{flushleft}
-\\textit{${content.authors || ''}}
+${content.authors || ''}
 \\end{flushleft}
 
-\\vspace{1cm}
 \\textbf{1. INTRODUÇÃO}
 ${content.introduction || ''}
 
-\\vspace{0.5cm}
 \\textbf{2. OBJETIVOS}
 ${content.objectives || ''}
 
-\\vspace{0.5cm}
 \\textbf{3. METODOLOGIA}
 ${content.methodology || ''}
 
-\\vspace{0.5cm}
 \\textbf{4. RESULTADOS E DISCUSSÃO}
 ${content.results || ''}
 
-\\vspace{0.5cm}
 \\textbf{5. CONCLUSÃO}
 ${content.conclusion || ''}
 
-\\vspace{0.5cm}
-\\begin{center}
 \\textbf{6. REFERÊNCIAS}
-\\end{center}
 ${content.references || ''}
 
-\\vspace{0.5cm}
 \\textbf{AGRADECIMENTOS}
 ${content.acknowledgments || ''}
 
@@ -97,10 +89,10 @@ ${content.acknowledgments || ''}
   }, [content, toast]);
 
   return (
-    <Card className="p-4 h-full">
+    <Card className="p-4 h-full bg-white">
       <div className="relative w-full" style={{ paddingTop: '141.4%' }}> {/* A4 aspect ratio (1:√2) */}
         <div 
-          className="absolute top-0 left-0 w-full h-full bg-white rounded-lg shadow-inner overflow-auto p-4"
+          className="absolute top-0 left-0 w-full h-full overflow-auto"
           dangerouslySetInnerHTML={{ __html: previewHtml }}
         />
       </div>
