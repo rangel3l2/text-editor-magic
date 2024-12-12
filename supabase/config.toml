@@ -1,3 +1,5 @@
 project_id = "xevbmqbwdaqdfexhmbmu"
 [functions.process-latex]
 verify_jwt = false
+[functions.generate-latex-pdf]
+verify_jwt = false

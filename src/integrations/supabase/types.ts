@@ -9,7 +9,77 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      banner_images: {
+        Row: {
+          aspect_ratio: string | null
+          banner_id: string | null
+          created_at: string | null
+          crop_data: Json | null
+          id: string
+          image_url: string
+          position_data: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          aspect_ratio?: string | null
+          banner_id?: string | null
+          created_at?: string | null
+          crop_data?: Json | null
+          id?: string
+          image_url: string
+          position_data?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          aspect_ratio?: string | null
+          banner_id?: string | null
+          created_at?: string | null
+          crop_data?: Json | null
+          id?: string
+          image_url?: string
+          position_data?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banner_images_banner_id_fkey"
+            columns: ["banner_id"]
+            isOneToOne: false
+            referencedRelation: "banner_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      banner_templates: {
+        Row: {
+          content: Json
+          created_at: string | null
+          id: string
+          latex_template: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: Json
+          created_at?: string | null
+          id?: string
+          latex_template: string
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          id?: string
+          latex_template?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

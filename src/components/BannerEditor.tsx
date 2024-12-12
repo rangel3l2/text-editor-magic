@@ -2,77 +2,86 @@ import { useState } from "react";
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { generateDocx } from '@/utils/docxGenerator';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from './Header';
 import BannerHeaderSection from './banner/BannerHeaderSection';
 import BannerContentSection from './banner/BannerContentSection';
 import BannerActions from './banner/BannerActions';
 import BannerHeader from './banner/BannerHeader';
-import { useBannerContent, initialBannerContent } from './banner/useBannerContent';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import BannerPreview from './banner/BannerPreview';
+import ImageEditor from './banner/ImageEditor';
+import { useBannerContent } from './banner/useBannerContent';
+import { supabase } from "@/integrations/supabase/client";
 
 const BannerEditor = () => {
   const [searchParams] = useSearchParams();
   const [documentType] = useState(searchParams.get('type') || 'banner');
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { bannerContent, setBannerContent, handleChange, STORAGE_KEY } = useBannerContent();
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const handlePreview = async () => {
+  const handleImageConfigChange = async (imageId: string, config: any) => {
     try {
-      const blob = await generateDocx(bannerContent);
-      const url = window.URL.createObjectURL(blob);
-      setPreviewUrl(url);
-      setPreviewOpen(true);
-      
+      const { error } = await supabase
+        .from('banner_images')
+        .update({
+          crop_data: config.crop,
+          position_data: config.position
+        })
+        .eq('id', imageId);
+
+      if (error) throw error;
+
       toast({
-        title: "Previsão gerada",
-        description: "A previsão do seu banner foi gerada com sucesso",
+        title: "Configurações salvas",
+        description: "As configurações da imagem foram atualizadas",
         duration: 3000,
       });
     } catch (error) {
-      console.error('Error generating preview:', error);
+      console.error('Error updating image config:', error);
       toast({
-        title: "Erro ao gerar previsão",
-        description: "Ocorreu um erro ao gerar a previsão. Tente novamente.",
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as configurações da imagem",
+        variant: "destructive",
         duration: 3000,
       });
     }
   };
 
-  const handleClosePreview = () => {
-    if (previewUrl) {
-      window.URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-    }
-    setPreviewOpen(false);
-  };
-
-  const handleGenerateDocx = async () => {
+  const handleGeneratePDF = async () => {
     try {
-      const blob = await generateDocx(bannerContent);
+      const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
+        body: { content: bannerContent }
+      });
+
+      if (error) throw error;
+
+      // Create blob from PDF data
+      const blob = new Blob([data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
+      
+      // Download PDF
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'banner-academico.docx';
+      link.download = 'banner-academico.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
       toast({
-        title: "Documento gerado",
+        title: "PDF gerado",
         description: "Seu banner acadêmico foi exportado com sucesso",
         duration: 3000,
       });
     } catch (error) {
-      console.error('Error generating document:', error);
+      console.error('Error generating PDF:', error);
       toast({
-        title: "Erro ao gerar documento",
+        title: "Erro ao gerar PDF",
         description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
         duration: 3000,
       });
@@ -198,53 +207,55 @@ const BannerEditor = () => {
           <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <BannerHeader title="Banner Acadêmico" />
             <BannerActions 
-              onGenerateDocx={handleGenerateDocx}
+              onGeneratePDF={handleGeneratePDF}
               onShare={handleShare}
               onLoadSavedContent={handleLoadSavedContent}
               onClearFields={handleClearFields}
-              onPreview={handlePreview}
               isAuthenticated={!!user}
             />
           </div>
           
-          <Tabs defaultValue="header" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="header">Cabeçalho do Banner</TabsTrigger>
-              <TabsTrigger value="content">Conteúdo do Banner</TabsTrigger>
-            </TabsList>
-            <TabsContent value="header">
-              <BannerHeaderSection content={bannerContent} handleChange={handleChange} />
-            </TabsContent>
-            <TabsContent value="content">
-              <BannerContentSection content={bannerContent} handleChange={handleChange} />
-            </TabsContent>
-          </Tabs>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <Tabs defaultValue="header" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="header">Cabeçalho do Banner</TabsTrigger>
+                  <TabsTrigger value="content">Conteúdo do Banner</TabsTrigger>
+                </TabsList>
+                <TabsContent value="header">
+                  <BannerHeaderSection content={bannerContent} handleChange={handleChange} />
+                </TabsContent>
+                <TabsContent value="content">
+                  <BannerContentSection content={bannerContent} handleChange={handleChange} />
+                </TabsContent>
+              </Tabs>
+            </div>
+            
+            <div className="space-y-6">
+              <BannerPreview 
+                content={bannerContent}
+                onImageConfigChange={handleImageConfigChange}
+              />
+              {selectedImage && (
+                <ImageEditor
+                  imageUrl={selectedImage}
+                  config={{}}
+                  onConfigChange={(config) => {
+                    handleImageConfigChange(selectedImage, config);
+                  }}
+                />
+              )}
+            </div>
+          </div>
         </div>
       </main>
 
-      <Dialog open={previewOpen} onOpenChange={handleClosePreview}>
-        <DialogContent className="max-w-4xl h-[90vh] p-0 bg-white shadow-2xl">
-          <div className="w-full h-full overflow-hidden bg-white rounded-lg">
-            <div className="h-full overflow-auto">
-              <div className="min-h-full p-8 bg-white shadow-inner" 
-                   style={{
-                     backgroundImage: `
-                       linear-gradient(#e5e7eb 1px, transparent 1px),
-                       linear-gradient(90deg, #e5e7eb 1px, transparent 1px)
-                     `,
-                     backgroundSize: '20px 20px',
-                     backgroundPosition: '-1px -1px'
-                   }}>
-                {previewUrl && (
-                  <iframe
-                    src={previewUrl}
-                    className="w-full h-full border-0 bg-transparent"
-                    title="Preview do Banner"
-                  />
-                )}
-              </div>
-            </div>
-          </div>
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl h-[90vh]">
+          <BannerPreview 
+            content={bannerContent}
+            onImageConfigChange={handleImageConfigChange}
+          />
         </DialogContent>
       </Dialog>
     </>
