@@ -92,7 +92,11 @@ ${content.acknowledgments || ''}
     <Card className="p-4 h-full bg-white">
       <div className="relative w-full" style={{ paddingTop: '141.4%' }}> {/* A4 aspect ratio (1:√2) */}
         <div 
-          className="absolute top-0 left-0 w-full h-full overflow-auto"
+          className="absolute top-0 left-0 w-full h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 transition-colors"
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgb(209 213 219) transparent',
+          }}
           dangerouslySetInnerHTML={{ __html: previewHtml }}
         />
       </div>
