@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { FileDown, RotateCcw, Share2, Trash2 } from "lucide-react";
+import { FileDown, RotateCcw, Share2, Trash2, Eye } from "lucide-react";
 
 interface BannerActionsProps {
   onGeneratePDF: () => void;
   onShare: () => void;
   onLoadSavedContent: () => void;
   onClearFields: () => void;
+  onOpenPreview: () => void;
   isAuthenticated: boolean;
 }
 
@@ -14,6 +15,7 @@ const BannerActions = ({
   onShare, 
   onLoadSavedContent, 
   onClearFields,
+  onOpenPreview,
   isAuthenticated 
 }: BannerActionsProps) => {
   return (
@@ -34,6 +36,14 @@ const BannerActions = ({
       >
         <FileDown className="h-4 w-4" />
         Baixar PDF
+      </Button>
+      <Button 
+        onClick={onOpenPreview}
+        variant="outline"
+        className="flex items-center gap-2 w-full sm:w-auto"
+      >
+        <Eye className="h-4 w-4" />
+        Visualizar Banner
       </Button>
       <Button 
         onClick={onShare}

@@ -76,6 +76,7 @@ const BannerEditor = () => {
           onShare={handleShare}
           onLoadSavedContent={handleLoadSavedContent}
           onClearFields={handleClearFields}
+          onOpenPreview={() => setPreviewOpen(true)}
           isAuthenticated={!!user}
         />
       </div>
@@ -85,7 +86,6 @@ const BannerEditor = () => {
         handleChange={handleChange}
         selectedImage={selectedImage}
         onImageConfigChange={handleImageConfigChange}
-        onOpenPreview={() => setPreviewOpen(true)}
       />
     </BannerLayout>
   );
