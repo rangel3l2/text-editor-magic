@@ -18,6 +18,7 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
       .replace(/\\textbf{(.*?)}/g, '$1')
       .replace(/\\vspace{.*?}/g, '')
       .replace(/\\Large/g, '')
+      .replace(/\\noindent/g, '')
       .trim() || '';
   };
 
@@ -34,19 +35,22 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 \\usepackage{geometry}
 \\usepackage{multicol}
 \\usepackage{setspace}
+\\usepackage{indentfirst}
 \\geometry{
   a4paper,
   total={170mm,257mm},
-  left=25mm,
-  top=25mm,
-  right=25mm,
-  bottom=25mm,
+  left=30mm,
+  top=30mm,
+  right=20mm,
+  bottom=20mm,
 }
+\\setlength{\\parindent}{1.25cm}
+\\onehalfspacing
 
 \\begin{document}
 \\begin{multicols}{2}
 
-\\begin{center}
+\\begin{flushleft}
 {\\fontsize{14pt}{16pt}\\selectfont\\textbf{${processedTitle}}}
 
 \\vspace{1cm}
@@ -57,43 +61,50 @@ ${processedAuthors.split('\n').map(line =>
   `\\textit{${line}}` : 
   line
 ).join('\n\\\\')}}
-\\end{center}
+\\end{flushleft}
 
 \\vspace{2cm}
 
-\\noindent\\textbf{1. INTRODUÇÃO}
-\\vspace{0.5cm}
-\\noindent ${cleanLatexCommands(content.introduction)}
+\\textbf{1. INTRODUÇÃO}
+\\vspace{0.3cm}
 
-\\vspace{1.5cm}
-\\noindent\\textbf{2. OBJETIVOS}
-\\vspace{0.5cm}
-\\noindent ${cleanLatexCommands(content.objectives)}
+${cleanLatexCommands(content.introduction)}
 
-\\vspace{1.5cm}
-\\noindent\\textbf{3. METODOLOGIA}
-\\vspace{0.5cm}
-\\noindent ${cleanLatexCommands(content.methodology)}
+\\vspace{1cm}
+\\textbf{2. OBJETIVOS}
+\\vspace{0.3cm}
 
-\\vspace{1.5cm}
-\\noindent\\textbf{4. RESULTADOS E DISCUSSÃO}
-\\vspace{0.5cm}
-\\noindent ${cleanLatexCommands(content.results)}
+${cleanLatexCommands(content.objectives)}
 
-\\vspace{1.5cm}
-\\noindent\\textbf{5. CONCLUSÃO}
-\\vspace{0.5cm}
-\\noindent ${cleanLatexCommands(content.conclusion)}
+\\vspace{1cm}
+\\textbf{3. METODOLOGIA}
+\\vspace{0.3cm}
 
-\\vspace{1.5cm}
-\\noindent\\textbf{6. REFERÊNCIAS}
-\\vspace{0.5cm}
-\\noindent ${cleanLatexCommands(content.references)}
+${cleanLatexCommands(content.methodology)}
 
-\\vspace{1.5cm}
-\\noindent\\textbf{AGRADECIMENTOS}
-\\vspace{0.5cm}
-\\noindent ${cleanLatexCommands(content.acknowledgments)}
+\\vspace{1cm}
+\\textbf{4. RESULTADOS E DISCUSSÃO}
+\\vspace{0.3cm}
+
+${cleanLatexCommands(content.results)}
+
+\\vspace{1cm}
+\\textbf{5. CONCLUSÃO}
+\\vspace{0.3cm}
+
+${cleanLatexCommands(content.conclusion)}
+
+\\vspace{1cm}
+\\textbf{6. REFERÊNCIAS}
+\\vspace{0.3cm}
+
+${cleanLatexCommands(content.references)}
+
+\\vspace{1cm}
+\\textbf{AGRADECIMENTOS}
+\\vspace{0.3cm}
+
+${cleanLatexCommands(content.acknowledgments)}
 
 \\end{multicols}
 \\end{document}
@@ -135,7 +146,7 @@ ${processedAuthors.split('\n').map(line =>
             scrollbarColor: 'rgb(209 213 219) transparent',
           }}
         >
-          <div className="mx-auto max-w-[210mm] h-[297mm] bg-white shadow-lg p-[25mm]">
+          <div className="mx-auto max-w-[210mm] h-[297mm] bg-white shadow-lg p-[30mm_20mm_20mm_30mm]">
             <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
           </div>
         </div>
