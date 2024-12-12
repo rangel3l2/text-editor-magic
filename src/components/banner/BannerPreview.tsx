@@ -16,34 +16,57 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
   useEffect(() => {
     const generatePreview = async () => {
       try {
-        // Convert content object to LaTeX string
+        // Convert content object to LaTeX string with Portuguese headings and proper spacing
         const latexContent = `
-\\documentclass{article}
-\\begin{document}
-\\title{${content.title || ''}}
-\\author{${content.authors || ''}}
-\\maketitle
+\\documentclass[12pt,a4paper]{article}
+\\usepackage[utf8]{inputenc}
+\\usepackage[portuguese]{babel}
+\\usepackage{geometry}
+\\geometry{
+  a4paper,
+  total={170mm,257mm},
+  left=20mm,
+  top=20mm,
+}
 
-\\section{Introduction}
+\\begin{document}
+
+\\begin{center}
+\\Large\\textbf{${content.title || ''}}
+
+\\vspace{0.5cm}
+\\normalsize
+${content.authors || ''}
+\\end{center}
+
+\\vspace{1cm}
+\\section*{Introdução}
 ${content.introduction || ''}
 
-\\section{Objectives}
+\\vspace{0.5cm}
+\\section*{Objetivos}
 ${content.objectives || ''}
 
-\\section{Methodology}
+\\vspace{0.5cm}
+\\section*{Metodologia}
 ${content.methodology || ''}
 
-\\section{Results}
+\\vspace{0.5cm}
+\\section*{Resultados e Discussão}
 ${content.results || ''}
 
-\\section{Conclusion}
+\\vspace{0.5cm}
+\\section*{Conclusão}
 ${content.conclusion || ''}
 
-\\section{References}
+\\vspace{0.5cm}
+\\section*{Referências}
 ${content.references || ''}
 
-\\section*{Acknowledgments}
+\\vspace{0.5cm}
+\\section*{Agradecimentos}
 ${content.acknowledgments || ''}
+
 \\end{document}
 `;
 
