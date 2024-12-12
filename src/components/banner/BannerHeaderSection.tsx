@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import RichTextEditor from '../RichTextEditor';
 import editorConfig from '@/config/editorConfig';
 
@@ -19,9 +20,20 @@ interface BannerHeaderSectionProps {
 const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps) => {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
+      if (!user) {
+        toast({
+          title: "Erro ao enviar logo",
+          description: "Você precisa estar logado para fazer upload de imagens",
+          variant: "destructive",
+          duration: 3000,
+        });
+        return;
+      }
+
       setUploading(true);
       const file = event.target.files?.[0];
       if (!file) return;
@@ -41,11 +53,12 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
         .from('banner_images')
         .getPublicUrl(filePath);
 
-      // Create a record in the banner_images table
+      // Create a record in the banner_images table with user_id
       const { error: dbError } = await supabase
         .from('banner_images')
         .insert({
           image_url: publicUrl,
+          user_id: user.id
         });
 
       if (dbError) {
