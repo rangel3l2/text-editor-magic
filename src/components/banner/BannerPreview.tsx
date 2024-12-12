@@ -12,13 +12,20 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const { toast } = useToast();
 
+  const cleanLatexCommands = (text: string) => {
+    return text
+      ?.replace(/\\begin{.*?}|\\end{.*?}|\\columnbreak/g, '')
+      .replace(/\\textbf{(.*?)}/g, '$1')
+      .replace(/\\vspace{.*?}/g, '')
+      .replace(/\\Large/g, '')
+      .trim() || '';
+  };
+
   useEffect(() => {
     const generatePreview = async () => {
       try {
-        // Process authors content to remove LaTeX commands
-        const processedAuthors = content.authors?.replace(/\\begin{.*?}|\\end{.*?}|\\columnbreak/g, '')
-          .replace(/\\textbf{(.*?)}/g, '$1')
-          .trim() || '';
+        const processedAuthors = cleanLatexCommands(content.authors);
+        const processedTitle = cleanLatexCommands(content.title);
 
         const latexContent = `
 \\documentclass[12pt,a4paper]{article}
@@ -39,7 +46,7 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 \\begin{multicols}{2}
 
 \\begin{center}
-\\Large\\textbf{${content.title || ''}}
+${processedTitle}
 
 \\vspace{1cm}
 
@@ -49,25 +56,25 @@ ${processedAuthors}
 \\columnbreak
 
 \\textbf{1. INTRODUÇÃO}
-${content.introduction || ''}
+${cleanLatexCommands(content.introduction)}
 
 \\textbf{2. OBJETIVOS}
-${content.objectives || ''}
+${cleanLatexCommands(content.objectives)}
 
 \\textbf{3. METODOLOGIA}
-${content.methodology || ''}
+${cleanLatexCommands(content.methodology)}
 
 \\textbf{4. RESULTADOS E DISCUSSÃO}
-${content.results || ''}
+${cleanLatexCommands(content.results)}
 
 \\textbf{5. CONCLUSÃO}
-${content.conclusion || ''}
+${cleanLatexCommands(content.conclusion)}
 
 \\textbf{6. REFERÊNCIAS}
-${content.references || ''}
+${cleanLatexCommands(content.references)}
 
 \\textbf{AGRADECIMENTOS}
-${content.acknowledgments || ''}
+${cleanLatexCommands(content.acknowledgments)}
 
 \\end{multicols}
 \\end{document}
@@ -80,9 +87,7 @@ ${content.acknowledgments || ''}
         if (error) throw error;
         
         if (data?.html) {
-          // Clean up any remaining LaTeX commands from the HTML output
-          const cleanHtml = data.html.replace(/\\begin{.*?}|\\end{.*?}|\\columnbreak/g, '')
-            .replace(/\\textbf{(.*?)}/g, '$1');
+          const cleanHtml = cleanLatexCommands(data.html);
           setPreviewHtml(cleanHtml);
         } else {
           throw new Error('No HTML content received from LaTeX processing');
