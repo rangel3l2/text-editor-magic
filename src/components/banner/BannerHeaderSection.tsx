@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,11 +33,24 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
         .from('banner_images')
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('banner_images')
         .getPublicUrl(filePath);
+
+      // Create a record in the banner_images table
+      const { error: dbError } = await supabase
+        .from('banner_images')
+        .insert({
+          image_url: publicUrl,
+        });
+
+      if (dbError) {
+        throw dbError;
+      }
 
       handleChange('institutionLogo', publicUrl);
 
