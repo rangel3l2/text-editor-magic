@@ -27,6 +27,7 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
       try {
         const processedAuthors = cleanLatexCommands(content.authors);
         const processedTitle = cleanLatexCommands(content.title);
+        const processedInstitution = cleanLatexCommands(content.institution);
 
         const latexContent = `
 \\documentclass[12pt,a4paper]{article}
@@ -34,74 +35,85 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 \\usepackage[portuguese]{babel}
 \\usepackage{geometry}
 \\usepackage{multicol}
+\\usepackage{graphicx}
 \\usepackage{setspace}
 \\usepackage{indentfirst}
+
 \\geometry{
   a4paper,
-  total={170mm,257mm},
-  left=30mm,
-  top=30mm,
-  right=20mm,
-  bottom=20mm,
+  left=3cm,
+  right=2cm,
+  top=3cm,
+  bottom=2cm
 }
+
 \\setlength{\\parindent}{1.25cm}
 \\onehalfspacing
 
 \\begin{document}
-\\begin{multicols}{2}
 
-\\begin{flushleft}
-{\\fontsize{14pt}{16pt}\\selectfont\\textbf{${processedTitle}}}
+% Institution Logo and Name
+\\begin{center}
+${content.institutionLogo ? `\\includegraphics[width=0.3\\textwidth]{${content.institutionLogo}}` : ''}
+\\vspace{0.5cm}
 
-\\vspace{1cm}
-
-{\\fontsize{12pt}{14pt}\\selectfont
-${processedAuthors.split('\n').map(line => 
-  line.toLowerCase().includes('universidade') ? 
-  `\\textit{${line}}` : 
-  line
-).join('\n\\\\')}}
-\\end{flushleft}
+{\\large\\textbf{${processedInstitution}}}
+\\end{center}
 
 \\vspace{2cm}
 
-\\textbf{1. INTRODUÇÃO}
+% Title
+\\begin{center}
+{\\Large\\textbf{${processedTitle}}}
+\\end{center}
+
+\\vspace{2cm}
+
+% Authors
+\\begin{center}
+${processedAuthors.split('\n').join('\\\\[0.5cm]\n')}
+\\end{center}
+
+\\vspace{2cm}
+
+\\begin{multicols}{2}
+\\noindent\\textbf{1. INTRODUÇÃO}
 \\vspace{0.3cm}
 
 ${cleanLatexCommands(content.introduction)}
 
 \\vspace{1cm}
-\\textbf{2. OBJETIVOS}
+\\noindent\\textbf{2. OBJETIVOS}
 \\vspace{0.3cm}
 
 ${cleanLatexCommands(content.objectives)}
 
 \\vspace{1cm}
-\\textbf{3. METODOLOGIA}
+\\noindent\\textbf{3. METODOLOGIA}
 \\vspace{0.3cm}
 
 ${cleanLatexCommands(content.methodology)}
 
 \\vspace{1cm}
-\\textbf{4. RESULTADOS E DISCUSSÃO}
+\\noindent\\textbf{4. RESULTADOS E DISCUSSÃO}
 \\vspace{0.3cm}
 
 ${cleanLatexCommands(content.results)}
 
 \\vspace{1cm}
-\\textbf{5. CONCLUSÃO}
+\\noindent\\textbf{5. CONCLUSÃO}
 \\vspace{0.3cm}
 
 ${cleanLatexCommands(content.conclusion)}
 
 \\vspace{1cm}
-\\textbf{6. REFERÊNCIAS}
+\\noindent\\textbf{6. REFERÊNCIAS}
 \\vspace{0.3cm}
 
 ${cleanLatexCommands(content.references)}
 
 \\vspace{1cm}
-\\textbf{AGRADECIMENTOS}
+\\noindent\\textbf{AGRADECIMENTOS}
 \\vspace{0.3cm}
 
 ${cleanLatexCommands(content.acknowledgments)}
@@ -147,7 +159,10 @@ ${cleanLatexCommands(content.acknowledgments)}
           }}
         >
           <div className="mx-auto max-w-[210mm] h-[297mm] bg-white shadow-lg p-[30mm_20mm_20mm_30mm]">
-            <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+            <div 
+              dangerouslySetInnerHTML={{ __html: previewHtml }} 
+              className="prose max-w-none"
+            />
           </div>
         </div>
       </div>
