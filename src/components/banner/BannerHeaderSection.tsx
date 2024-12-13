@@ -27,9 +27,9 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       if (!user) {
         toast({
           title: "Erro ao enviar logo",
-          description: "Você precisa estar logado para fazer upload de imagens",
+          description: "Você precisa estar logado para fazer upload de imagens. Por favor, faça login primeiro.",
           variant: "destructive",
-          duration: 3000,
+          duration: 5000,
         });
         return;
       }
@@ -76,9 +76,9 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       console.error('Error uploading file:', error);
       toast({
         title: "Erro ao enviar logo",
-        description: "Não foi possível enviar o logo da instituição",
+        description: "Não foi possível enviar o logo da instituição. Por favor, tente novamente.",
         variant: "destructive",
-        duration: 3000,
+        duration: 5000,
       });
     } finally {
       setUploading(false);
@@ -90,7 +90,11 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       <Card>
         <CardHeader>
           <CardTitle>1. Logo da Instituição</CardTitle>
-          <CardDescription>Faça upload do logo da sua instituição (formato PNG ou JPG recomendado)</CardDescription>
+          <CardDescription>
+            {user 
+              ? "Faça upload do logo da sua instituição (formato PNG ou JPG recomendado)"
+              : "Faça login para poder fazer upload do logo da sua instituição"}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {content.institutionLogo && (
@@ -107,7 +111,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
               type="file"
               accept="image/*"
               onChange={handleFileUpload}
-              disabled={uploading}
+              disabled={uploading || !user}
             />
             {uploading && <span className="text-sm text-muted-foreground">Enviando...</span>}
           </div>
