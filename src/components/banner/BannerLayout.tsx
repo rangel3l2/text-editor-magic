@@ -27,7 +27,7 @@ const BannerLayout = ({
       </main>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl h-[90vh]">
+        <DialogContent className="max-w-[95vw] w-[1200px] h-[95vh] p-6">
           <BannerPreview 
             content={content}
             onImageConfigChange={onImageConfigChange}

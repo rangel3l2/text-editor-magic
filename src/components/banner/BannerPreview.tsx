@@ -172,20 +172,21 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
   }, [content, toast]);
 
   return (
-    <Card className="p-4 h-full max-h-[85vh] bg-white">
-      <div className="relative w-full" style={{ paddingTop: '141.4%' }}> {/* A4 aspect ratio (1:√2) */}
+    <Card className="w-full h-full bg-white overflow-hidden">
+      <div className="relative w-full h-full flex items-center justify-center p-4">
         <div 
-          className="absolute top-0 left-0 w-full h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 transition-colors"
+          className="w-[210mm] h-[297mm] bg-white shadow-lg rounded-sm overflow-hidden flex-shrink-0 transform scale-[0.75] origin-center"
           style={{
-            scrollbarWidth: 'thin',
-            scrollbarColor: 'rgb(209 213 219) transparent',
+            boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
           }}
         >
-          <div className="mx-auto max-w-[210mm] h-[297mm] bg-white shadow-lg p-[30mm_20mm_20mm_30mm]">
-            <div 
-              dangerouslySetInnerHTML={{ __html: previewHtml }} 
-              className="prose max-w-none"
-            />
+          <div className="w-full h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            <div className="p-[30mm_20mm_20mm_30mm]">
+              <div 
+                dangerouslySetInnerHTML={{ __html: previewHtml }} 
+                className="prose max-w-none"
+              />
+            </div>
           </div>
         </div>
       </div>
