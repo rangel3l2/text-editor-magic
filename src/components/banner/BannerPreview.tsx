@@ -29,98 +29,121 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
         const processedTitle = cleanLatexCommands(content.title);
         const processedInstitution = cleanLatexCommands(content.institution);
 
-        const latexContent = `
-\\documentclass[12pt,a4paper]{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage[portuguese]{babel}
-\\usepackage{geometry}
-\\usepackage{multicol}
-\\usepackage{graphicx}
-\\usepackage{setspace}
-\\usepackage{indentfirst}
+        let latexContent = '\\documentclass[12pt,a4paper]{article}\n';
+        latexContent += '\\usepackage[utf8]{inputenc}\n';
+        latexContent += '\\usepackage[portuguese]{babel}\n';
+        latexContent += '\\usepackage{geometry}\n';
+        latexContent += '\\usepackage{multicol}\n';
+        latexContent += '\\usepackage{graphicx}\n';
+        latexContent += '\\usepackage{setspace}\n';
+        latexContent += '\\usepackage{indentfirst}\n\n';
 
-\\geometry{
-  a4paper,
-  left=3cm,
-  right=2cm,
-  top=3cm,
-  bottom=2cm
-}
+        latexContent += '\\geometry{\n';
+        latexContent += '  a4paper,\n';
+        latexContent += '  left=3cm,\n';
+        latexContent += '  right=2cm,\n';
+        latexContent += '  top=3cm,\n';
+        latexContent += '  bottom=2cm\n';
+        latexContent += '}\n\n';
 
-\\setlength{\\parindent}{1.25cm}
-\\onehalfspacing
+        latexContent += '\\setlength{\\parindent}{1.25cm}\n';
+        latexContent += '\\onehalfspacing\n\n';
+        latexContent += '\\begin{document}\n\n';
 
-\\begin{document}
+        // Institution Logo and Name (only if they exist)
+        if (content.institutionLogo || processedInstitution) {
+          latexContent += '\\begin{center}\n';
+          if (content.institutionLogo) {
+            latexContent += `\\includegraphics[width=0.3\\textwidth]{${content.institutionLogo}}\n`;
+            latexContent += '\\vspace{0.5cm}\n\n';
+          }
+          if (processedInstitution) {
+            latexContent += `{\\large\\textbf{${processedInstitution}}}\n`;
+          }
+          latexContent += '\\end{center}\n\n';
+          latexContent += '\\vspace{2cm}\n\n';
+        }
 
-% Institution Logo and Name
-\\begin{center}
-${content.institutionLogo ? `\\includegraphics[width=0.3\\textwidth]{${content.institutionLogo}}` : ''}
-\\vspace{0.5cm}
+        // Title (only if it exists)
+        if (processedTitle) {
+          latexContent += '\\begin{center}\n';
+          latexContent += `{\\Large\\textbf{${processedTitle}}}\n`;
+          latexContent += '\\end{center}\n\n';
+          latexContent += '\\vspace{2cm}\n\n';
+        }
 
-{\\large\\textbf{${processedInstitution}}}
-\\end{center}
+        // Authors (only if they exist)
+        if (processedAuthors) {
+          latexContent += '\\begin{center}\n';
+          latexContent += processedAuthors.split('\n').join('\\\\[0.5cm]\n');
+          latexContent += '\\end{center}\n\n';
+          latexContent += '\\vspace{2cm}\n\n';
+        }
 
-\\vspace{2cm}
+        // Only start multicols if there's any content
+        if (content.introduction || content.objectives || content.methodology || 
+            content.results || content.conclusion || content.references || content.acknowledgments) {
+          latexContent += '\\begin{multicols}{2}\n';
 
-% Title
-\\begin{center}
-{\\Large\\textbf{${processedTitle}}}
-\\end{center}
+          // Introduction
+          if (content.introduction) {
+            latexContent += '\\noindent\\textbf{1. INTRODUÇÃO}\n';
+            latexContent += '\\vspace{0.3cm}\n\n';
+            latexContent += `${cleanLatexCommands(content.introduction)}\n\n`;
+            latexContent += '\\vspace{1cm}\n';
+          }
 
-\\vspace{2cm}
+          // Objectives
+          if (content.objectives) {
+            latexContent += '\\noindent\\textbf{2. OBJETIVOS}\n';
+            latexContent += '\\vspace{0.3cm}\n\n';
+            latexContent += `${cleanLatexCommands(content.objectives)}\n\n`;
+            latexContent += '\\vspace{1cm}\n';
+          }
 
-% Authors
-\\begin{center}
-${processedAuthors.split('\n').join('\\\\[0.5cm]\n')}
-\\end{center}
+          // Methodology
+          if (content.methodology) {
+            latexContent += '\\noindent\\textbf{3. METODOLOGIA}\n';
+            latexContent += '\\vspace{0.3cm}\n\n';
+            latexContent += `${cleanLatexCommands(content.methodology)}\n\n`;
+            latexContent += '\\vspace{1cm}\n';
+          }
 
-\\vspace{2cm}
+          // Results
+          if (content.results) {
+            latexContent += '\\noindent\\textbf{4. RESULTADOS E DISCUSSÃO}\n';
+            latexContent += '\\vspace{0.3cm}\n\n';
+            latexContent += `${cleanLatexCommands(content.results)}\n\n`;
+            latexContent += '\\vspace{1cm}\n';
+          }
 
-\\begin{multicols}{2}
-\\noindent\\textbf{1. INTRODUÇÃO}
-\\vspace{0.3cm}
+          // Conclusion
+          if (content.conclusion) {
+            latexContent += '\\noindent\\textbf{5. CONCLUSÃO}\n';
+            latexContent += '\\vspace{0.3cm}\n\n';
+            latexContent += `${cleanLatexCommands(content.conclusion)}\n\n`;
+            latexContent += '\\vspace{1cm}\n';
+          }
 
-${cleanLatexCommands(content.introduction)}
+          // References
+          if (content.references) {
+            latexContent += '\\noindent\\textbf{6. REFERÊNCIAS}\n';
+            latexContent += '\\vspace{0.3cm}\n\n';
+            latexContent += `${cleanLatexCommands(content.references)}\n\n`;
+            latexContent += '\\vspace{1cm}\n';
+          }
 
-\\vspace{1cm}
-\\noindent\\textbf{2. OBJETIVOS}
-\\vspace{0.3cm}
+          // Acknowledgments
+          if (content.acknowledgments) {
+            latexContent += '\\noindent\\textbf{AGRADECIMENTOS}\n';
+            latexContent += '\\vspace{0.3cm}\n\n';
+            latexContent += `${cleanLatexCommands(content.acknowledgments)}\n\n`;
+          }
 
-${cleanLatexCommands(content.objectives)}
+          latexContent += '\\end{multicols}\n';
+        }
 
-\\vspace{1cm}
-\\noindent\\textbf{3. METODOLOGIA}
-\\vspace{0.3cm}
-
-${cleanLatexCommands(content.methodology)}
-
-\\vspace{1cm}
-\\noindent\\textbf{4. RESULTADOS E DISCUSSÃO}
-\\vspace{0.3cm}
-
-${cleanLatexCommands(content.results)}
-
-\\vspace{1cm}
-\\noindent\\textbf{5. CONCLUSÃO}
-\\vspace{0.3cm}
-
-${cleanLatexCommands(content.conclusion)}
-
-\\vspace{1cm}
-\\noindent\\textbf{6. REFERÊNCIAS}
-\\vspace{0.3cm}
-
-${cleanLatexCommands(content.references)}
-
-\\vspace{1cm}
-\\noindent\\textbf{AGRADECIMENTOS}
-\\vspace{0.3cm}
-
-${cleanLatexCommands(content.acknowledgments)}
-
-\\end{multicols}
-\\end{document}
-`;
+        latexContent += '\\end{document}';
 
         const { data, error } = await supabase.functions.invoke('process-latex', {
           body: { latex: latexContent }
