@@ -26,33 +26,29 @@ serve(async (req) => {
     const html = `
       <div style="
         font-family: 'Times New Roman', Times, serif; 
-        padding: 2.5cm; 
+        padding: 0; 
         text-align: justify; 
-        column-count: 2; 
-        column-gap: 1cm; 
-        line-height: 1.5;
         font-size: 12pt;
+        line-height: 1.5;
       ">
         ${latex
-          // Handle title
-          .replace(/\\begin{center}([\s\S]*?)\\end{center}/g, '<h1 style="text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 1em; column-span: all;">$1</h1>')
-          .replace(/\\Large\\textbf{([^}]*)}/g, '<h1 style="text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 1em; column-span: all;">$1</h1>')
+          // Handle title and institution
+          .replace(/\\begin{center}([\s\S]*?)\\end{center}/g, '<div style="text-align: center; margin-bottom: 1em;">$1</div>')
+          .replace(/\\Large\s*{([^}]*)}/g, '<h1 style="font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 1em;">$1</h1>')
+          .replace(/\\large\s*{([^}]*)}/g, '<h2 style="font-size: 14pt; text-align: center; margin-bottom: 1em;">$1</h2>')
           
-          // Handle authors and affiliation
-          .replace(/\\begin{flushleft}([\s\S]*?)\\end{flushleft}/g, '<div style="text-align: left; margin-bottom: 2em; column-span: all;">$1</div>')
-          .replace(/\\textit{([^}]+)}/g, '<em>$1</em>')
+          // Handle sections
+          .replace(/\\noindent\\textbf{([^}]+)}/g, '<h3 style="font-size: 12pt; font-weight: bold; margin: 1em 0 0.5em 0;">$1</h3>')
           
-          // Handle section titles
-          .replace(/\\textbf{([0-9]+\.\s*[^}]+)}/g, '<h2 style="font-size: 12pt; font-weight: bold; margin: 1em 0 0.5em 0; text-transform: uppercase;">$1</h2>')
+          // Handle spacing and structure
+          .replace(/\\vspace{[^}]+}/g, '<div style="margin: 0.5em 0;"></div>')
+          .replace(/\\begin{multicols}{2}[\s\S]*?\\end{multicols}/g, '$1')
+          .replace(/\\setlength{\\columnsep}{[^}]+}/g, '')
           
-          // Handle spacing
-          .replace(/\\vspace{[^}]+}/g, '<div style="margin: 1em 0;"></div>')
-          
-          // Remove LaTeX document structure
-          .replace(/\\documentclass.*?\\begin{document}/s, '')
-          .replace(/\\end{document}/, '')
-          .replace(/\\usepackage.*?\n/g, '')
-          .replace(/\\geometry{.*?}/s, '')
+          // Remove remaining LaTeX commands
+          .replace(/\\[a-zA-Z]+(\[[^\]]*\])?{([^}]*)}/g, '$2')
+          .replace(/\\[a-zA-Z]+/g, '')
+          .replace(/[{}]/g, '')
           
           .trim()}
       </div>

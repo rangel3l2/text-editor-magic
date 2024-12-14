@@ -12,10 +12,15 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         }}
       >
         <div className="w-full h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-          <div className="p-[30mm_20mm_20mm_30mm]">
+          <div className="p-[20mm_20mm_20mm_20mm]">
             <div 
               dangerouslySetInnerHTML={{ __html: previewHtml }} 
-              className="prose max-w-none columns-2 gap-8"
+              className="prose max-w-none"
+              style={{
+                columnCount: 2,
+                columnGap: '10mm',
+                textAlign: 'justify',
+              }}
             />
           </div>
         </div>
