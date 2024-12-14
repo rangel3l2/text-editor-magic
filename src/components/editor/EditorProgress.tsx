@@ -16,7 +16,7 @@ const EditorProgress = ({ progress, currentLines, maxLines, minLines }: EditorPr
           Mínimo: {minLines} linhas
         </span>
         <span className={`${progress >= 100 ? 'text-red-500' : 'text-gray-500'}`}>
-          {currentLines} de {maxLines} linhas ({Math.min(Math.round(progress), 100)}%)
+          {currentLines} de {maxLines} linhas ({Math.round(progress)}%)
         </span>
       </div>
     </div>
