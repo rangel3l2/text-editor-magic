@@ -23,17 +23,12 @@ serve(async (req) => {
       )
     }
 
-    // First cleanup pass - remove all LaTeX structure and commands
+    // First cleanup pass - remove document structure
     let cleanedLatex = latex
       .replace(/\\documentclass.*?\\begin{document}/s, '')
       .replace(/\\end{document}/, '')
       .replace(/\\usepackage.*?\n/g, '')
       .replace(/\\geometry{.*?}/s, '')
-      .replace(/\\begin{multicols}{2}/g, '')
-      .replace(/\\end{multicols}/g, '')
-      .replace(/\\setlength{\\columnsep}{[^}]+}/g, '')
-      .replace(/\\columnbreak/g, '')
-      .replace(/\\noindent/g, '')
 
     // Process content formatting while maintaining structure
     const html = `
@@ -43,8 +38,6 @@ serve(async (req) => {
         text-align: justify; 
         font-size: 12pt;
         line-height: 1.5;
-        column-count: 2;
-        column-gap: 2em;
       ">
         ${cleanedLatex
           // Handle title and institution
@@ -53,7 +46,18 @@ serve(async (req) => {
           .replace(/\\large\s*{([^}]*)}/g, '<h2 style="font-size: 14pt; text-align: center; margin-bottom: 1em;">$1</h2>')
           
           // Handle sections and formatting
-          .replace(/\\textbf{([^}]+)}/g, '<strong>$1</strong>')
+          .replace(/\\noindent\\textbf{([^}]+)}/g, '<h3 style="font-size: 12pt; font-weight: bold; margin: 1em 0 0.5em 0;">$1</h3>')
+          
+          // Clean multicols environment completely
+          .replace(/\\begin{multicols}{2}[\s\S]*?\\end{multicols}/g, (match) => {
+            return match
+              .replace(/\\begin{multicols}{2}/g, '')
+              .replace(/\\setlength{\\columnsep}{[^}]+}/g, '')
+              .replace(/\\columnbreak/g, '')
+              .replace(/\\end{multicols}/g, '')
+              .replace(/\\noindent/g, '')
+              .trim();
+          })
           
           // Remove all remaining LaTeX commands and clean up
           .replace(/\\[a-zA-Z]+(\[[^\]]*\])?{([^}]*)}/g, '$2')
