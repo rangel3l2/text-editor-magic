@@ -23,7 +23,7 @@ serve(async (req) => {
       )
     }
 
-    // Remove LaTeX document structure and packages
+    // First cleanup pass - remove document structure
     let cleanedLatex = latex
       .replace(/\\documentclass.*?\\begin{document}/s, '')
       .replace(/\\end{document}/, '')
@@ -47,19 +47,23 @@ serve(async (req) => {
           
           // Handle sections and formatting
           .replace(/\\noindent\\textbf{([^}]+)}/g, '<h3 style="font-size: 12pt; font-weight: bold; margin: 1em 0 0.5em 0;">$1</h3>')
+          
+          // Clean multicols environment completely
           .replace(/\\begin{multicols}{2}[\s\S]*?\\end{multicols}/g, (match) => {
             return match
               .replace(/\\begin{multicols}{2}/g, '')
               .replace(/\\setlength{\\columnsep}{[^}]+}/g, '')
+              .replace(/\\columnbreak/g, '')
               .replace(/\\end{multicols}/g, '')
+              .replace(/\\noindent/g, '')
               .trim();
           })
           
-          // Remove remaining LaTeX commands and clean up
+          // Remove all remaining LaTeX commands and clean up
           .replace(/\\[a-zA-Z]+(\[[^\]]*\])?{([^}]*)}/g, '$2')
           .replace(/\\[a-zA-Z]+/g, '')
           .replace(/[{}]/g, '')
-          
+          .replace(/\s+/g, ' ')
           .trim()}
       </div>
     `;
