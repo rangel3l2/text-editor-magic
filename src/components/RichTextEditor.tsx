@@ -41,20 +41,10 @@ const RichTextEditor = ({
   }, [editorInstance]);
 
   const handleContentChange = (data: string) => {
-    const { percentage, actualLines, isOverLimit, isBelowMinimum } = calculateTextProgress(data, maxLines, minLines);
+    const { percentage, actualLines, isOverLimit } = calculateTextProgress(data, maxLines, minLines);
     
     setProgress(percentage);
     setCurrentLines(actualLines);
-
-    if (isBelowMinimum) {
-      toast({
-        title: "Conteúdo insuficiente",
-        description: `É necessário pelo menos ${minLines} linhas nesta seção`,
-        variant: "destructive",
-        duration: 3000,
-      });
-      return false;
-    }
 
     if (percentage >= 90 && percentage < 100) {
       toast({
@@ -77,7 +67,6 @@ const RichTextEditor = ({
 
   const { handleImageUpload } = ImageUploadHandler({
     onSuccess: (imageUrl) => {
-      // Callback quando a imagem é carregada com sucesso
       console.log('Image uploaded:', imageUrl);
     }
   });

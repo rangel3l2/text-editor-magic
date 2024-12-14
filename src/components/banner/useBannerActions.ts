@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BannerContent } from './useBannerContent';
+import { calculateTextProgress } from '@/utils/textProgress';
 
 export const useBannerActions = (
   bannerContent: BannerContent,
@@ -11,7 +12,37 @@ export const useBannerActions = (
 ) => {
   const { toast } = useToast();
 
+  const validateContent = () => {
+    const sections = [
+      { name: 'Autores e Instituição', content: bannerContent.authors + bannerContent.institution, min: 2, max: 3 },
+      { name: 'Introdução', content: bannerContent.introduction, min: 7, max: 10 },
+      { name: 'Objetivos', content: bannerContent.objectives, min: 3, max: 4 },
+      { name: 'Metodologia', content: bannerContent.methodology, min: 6, max: 8 },
+      { name: 'Resultados', content: bannerContent.results, min: 5, max: 7 },
+      { name: 'Conclusão', content: bannerContent.conclusion, min: 4, max: 6 },
+      { name: 'Referências', content: bannerContent.references, min: 2, max: 3 },
+    ];
+
+    for (const section of sections) {
+      const { isBelowMinimum } = calculateTextProgress(section.content, section.max, section.min);
+      if (isBelowMinimum) {
+        toast({
+          title: "Conteúdo insuficiente",
+          description: `A seção "${section.name}" precisa ter no mínimo ${section.min} linhas`,
+          variant: "destructive",
+          duration: 5000,
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleGeneratePDF = async () => {
+    if (!validateContent()) {
+      return;
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
         body: { content: bannerContent }
@@ -46,6 +77,10 @@ export const useBannerActions = (
   };
 
   const handleShare = async () => {
+    if (!validateContent()) {
+      return;
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
         body: { content: bannerContent }
