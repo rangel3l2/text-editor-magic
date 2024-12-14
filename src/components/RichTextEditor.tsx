@@ -9,23 +9,22 @@ interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   maxLines?: number;
+  minLines?: number;
   config?: any;
   placeholder?: string;
-  isObjectives?: boolean;
 }
-
-const OBJECTIVES_MAX_LENGTH = 200;
 
 const RichTextEditor = ({ 
   value, 
   onChange, 
-  maxLines = 10, 
+  maxLines = 10,
+  minLines = 0, 
   config = {}, 
-  placeholder,
-  isObjectives = false
+  placeholder
 }: RichTextEditorProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [currentLines, setCurrentLines] = useState(0);
   const { toast } = useToast();
   const editorRef = useRef<any>(null);
   const [editorInstance, setEditorInstance] = useState<any>(null);
@@ -41,41 +40,43 @@ const RichTextEditor = ({
 
   const calculateProgress = (text: string) => {
     const plainText = text.replace(/<[^>]*>/g, '');
+    const lines = plainText.split('\n').length;
     const chars = plainText.length;
+    const avgCharsPerLine = 80;
+    const estimatedLines = Math.ceil(chars / avgCharsPerLine);
+    const actualLines = Math.max(lines, estimatedLines);
+    setCurrentLines(actualLines);
     
-    let percentage;
-    if (isObjectives) {
-      percentage = Math.min((chars / OBJECTIVES_MAX_LENGTH) * 100, 100);
-    } else {
-      const lines = plainText.split('\n').length;
-      const avgCharsPerLine = 80;
-      const estimatedLines = Math.ceil(chars / avgCharsPerLine);
-      const actualLines = Math.max(lines, estimatedLines);
-      percentage = Math.min((actualLines / maxLines) * 100, 100);
-    }
-    
+    let percentage = Math.min((actualLines / maxLines) * 100, 100);
     setProgress(percentage);
+
+    if (actualLines < minLines) {
+      toast({
+        title: "Conteúdo insuficiente",
+        description: `É necessário pelo menos ${minLines} linhas nesta seção`,
+        variant: "destructive",
+        duration: 3000,
+      });
+      return false;
+    }
 
     if (percentage >= 90 && percentage < 100) {
       toast({
         title: "Atenção",
-        description: isObjectives 
-          ? "Você está próximo do limite de caracteres para os objetivos"
-          : "Você está próximo do limite de texto para esta seção",
+        description: "Você está próximo do limite de texto para esta seção",
         duration: 3000,
       });
     } else if (percentage >= 100) {
       toast({
         title: "Limite atingido",
-        description: isObjectives
-          ? "Você atingiu o limite de caracteres para os objetivos"
-          : "Você atingiu o limite de texto para esta seção",
+        description: "Você atingiu o limite de texto para esta seção",
         variant: "destructive",
         duration: 3000,
       });
+      return true;
     }
 
-    return percentage >= 100;
+    return false;
   };
 
   const handleImageUpload = async (file: File) => {
@@ -130,9 +131,7 @@ const RichTextEditor = ({
 
   const editorConfig = {
     ...config,
-    placeholder: placeholder || (isObjectives 
-      ? `Digite aqui (máximo ${OBJECTIVES_MAX_LENGTH} caracteres)...`
-      : `Digite aqui (máximo ${maxLines} linhas)...`),
+    placeholder: placeholder || `Digite aqui (${minLines}-${maxLines} linhas)...`,
     extraPlugins: [uploadAdapterPlugin],
     image: {
       ...config.image,
@@ -165,9 +164,7 @@ const RichTextEditor = ({
                 editor.setData(value);
                 toast({
                   title: "Limite excedido",
-                  description: isObjectives
-                    ? "Não é possível adicionar mais caracteres nos objetivos"
-                    : "Não é possível adicionar mais conteúdo nesta seção",
+                  description: "Não é possível adicionar mais conteúdo nesta seção",
                   variant: "destructive",
                   duration: 3000,
                 });
@@ -203,9 +200,14 @@ const RichTextEditor = ({
       {isFocused && (
         <div className="space-y-1">
           <Progress value={progress} className="h-2" />
-          <p className={`text-xs ${progress >= 100 ? 'text-red-500' : 'text-gray-500'} text-right`}>
-            {Math.min(Math.round(progress), 100)}% do limite
-          </p>
+          <div className="flex justify-between items-center text-xs">
+            <span className={`${currentLines < minLines ? 'text-red-500' : 'text-gray-500'}`}>
+              Mínimo: {minLines} linhas
+            </span>
+            <span className={`${progress >= 100 ? 'text-red-500' : 'text-gray-500'}`}>
+              {currentLines} de {maxLines} linhas ({Math.min(Math.round(progress), 100)}%)
+            </span>
+          </div>
         </div>
       )}
     </div>

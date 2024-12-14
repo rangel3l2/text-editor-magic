@@ -121,13 +121,14 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       <Card>
         <CardHeader>
           <CardTitle>2. Nome da Instituição</CardTitle>
-          <CardDescription>Digite o nome completo da instituição</CardDescription>
+          <CardDescription>Digite o nome completo da instituição (2-3 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
           <RichTextEditor
             value={content.institution}
             onChange={(data) => handleChange('institution', data)}
-            maxLines={2}
+            maxLines={3}
+            minLines={2}
             config={editorConfig}
             placeholder="Digite o nome completo da instituição..."
           />
@@ -137,13 +138,14 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       <Card>
         <CardHeader>
           <CardTitle>3. Título do Trabalho</CardTitle>
-          <CardDescription>Deve ser breve, claro e atrativo, indicando o tema principal do trabalho. (2 linhas)</CardDescription>
+          <CardDescription>Deve ser breve, claro e atrativo, indicando o tema principal do trabalho. (2-3 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
           <RichTextEditor
             value={content.title}
             onChange={(data) => handleChange('title', data)}
-            maxLines={2}
+            maxLines={3}
+            minLines={2}
             config={editorConfig}
             placeholder="Digite um título breve e atrativo que indique o tema principal do trabalho..."
           />
@@ -153,13 +155,14 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       <Card>
         <CardHeader>
           <CardTitle>4. Autores</CardTitle>
-          <CardDescription>Liste os nomes dos autores, seguidos da afiliação institucional e e-mail de contato do autor principal. (3 linhas)</CardDescription>
+          <CardDescription>Liste os nomes dos autores, seguidos da afiliação institucional e e-mail de contato do autor principal. (2-3 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
           <RichTextEditor
             value={content.authors}
             onChange={(data) => handleChange('authors', data)}
             maxLines={3}
+            minLines={2}
             config={editorConfig}
             placeholder="Nome dos autores, afiliação institucional e e-mail de contato..."
           />
