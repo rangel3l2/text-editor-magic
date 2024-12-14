@@ -13,13 +13,28 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
   const { toast } = useToast();
 
   const cleanLatexCommands = (text: string) => {
+    if (!text) return '';
+    
     return text
-      ?.replace(/\\begin{.*?}|\\end{.*?}|\\columnbreak|\{[0-9]+\}/g, '')
-      .replace(/\\textbf{(.*?)}/g, '$1')
-      .replace(/\\vspace{.*?}/g, '')
+      // Remove LaTeX document structure commands
+      .replace(/\\documentclass.*?\\begin{document}/s, '')
+      .replace(/\\end{document}/, '')
+      .replace(/\\usepackage.*?\n/g, '')
+      .replace(/\\geometry{.*?}/s, '')
+      
+      // Remove specific LaTeX formatting commands
+      .replace(/\\large/g, '')
       .replace(/\\Large/g, '')
+      .replace(/\\textbf{([^}]*)}/g, '$1')
+      .replace(/\\textit{([^}]*)}/g, '$1')
+      .replace(/\\begin{center}([\s\S]*?)\\end{center}/g, '$1')
+      .replace(/\\begin{flushleft}([\s\S]*?)\\end{flushleft}/g, '$1')
+      .replace(/\\vspace{[^}]+}/g, '')
       .replace(/\\noindent/g, '')
-      .trim() || '';
+      .replace(/\\columnbreak/g, '')
+      .replace(/\\{|\\}/g, '')
+      .replace(/\{|\}/g, '')
+      .trim();
   };
 
   useEffect(() => {
@@ -50,7 +65,7 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
         latexContent += '\\onehalfspacing\n\n';
         latexContent += '\\begin{document}\n\n';
 
-        // Institution Logo and Name (only if they exist)
+        // Institution Logo and Name
         if (content.institutionLogo || processedInstitution) {
           latexContent += '\\begin{center}\n';
           if (content.institutionLogo) {
@@ -58,21 +73,21 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
             latexContent += '\\vspace{0.5cm}\n\n';
           }
           if (processedInstitution) {
-            latexContent += `{\\large\\textbf{${processedInstitution}}}\n`;
+            latexContent += `{\\large ${processedInstitution}}\n`;
           }
           latexContent += '\\end{center}\n\n';
           latexContent += '\\vspace{2cm}\n\n';
         }
 
-        // Title (only if it exists)
+        // Title
         if (processedTitle) {
           latexContent += '\\begin{center}\n';
-          latexContent += `{\\Large\\textbf{${processedTitle}}}\n`;
+          latexContent += `{\\Large ${processedTitle}}\n`;
           latexContent += '\\end{center}\n\n';
           latexContent += '\\vspace{2cm}\n\n';
         }
 
-        // Authors (only if they exist)
+        // Authors
         if (processedAuthors) {
           latexContent += '\\begin{center}\n';
           latexContent += processedAuthors.split('\n').join('\\\\[0.5cm]\n');
@@ -80,7 +95,7 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
           latexContent += '\\vspace{2cm}\n\n';
         }
 
-        // Only start multicols if there's any content
+        // Content sections
         if (content.introduction || content.objectives || content.methodology || 
             content.results || content.conclusion || content.references || content.acknowledgments) {
           latexContent += '\\begin{multicols}{2}\n';
