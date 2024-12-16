@@ -43,18 +43,18 @@ serve(async (req) => {
           // Handle institution name with less prominence
           .replace(/\\begin{center}([\s\S]*?)\\end{center}/g, (match, content) => {
             if (content.includes('\\includegraphics')) {
-              return `<div style="text-align: center; margin-bottom: 1em;">${content}</div>`;
+              return `<div style="text-align: center; margin-bottom: 0.5em;">${content}</div>`;
             }
             // Institution name with reduced prominence
             if (!content.includes('\\Large')) {
-              return `<div style="text-align: center; font-size: 12pt; margin-bottom: 1em;">${content}</div>`;
+              return `<div style="text-align: center; font-size: 11pt; margin-bottom: 0.5em;">${content}</div>`;
             }
-            return `<div style="text-align: center; margin-bottom: 1em;">${content}</div>`;
+            return `<div style="text-align: center; margin-bottom: 0.5em;">${content}</div>`;
           })
           // Handle title with proper prominence
-          .replace(/\\Large\s*{([^}]*)}/g, '<h1 style="font-size: 16pt; font-weight: bold; text-align: center; margin: 2em 0 1em 0;">$1</h1>')
+          .replace(/\\Large\s*{([^}]*)}/g, '<h1 style="font-size: 14pt; font-weight: bold; text-align: center; margin: 1em 0 0.5em 0;">$1</h1>')
           // Handle authors with reduced spacing
-          .replace(/\\large\s*{([^}]*)}/g, '<h2 style="font-size: 12pt; text-align: center; margin: 1em 0;">$1</h2>')
+          .replace(/\\large\s*{([^}]*)}/g, '<h2 style="font-size: 11pt; text-align: center; margin: 0.5em 0;">$1</h2>')
           
           // Handle sections and formatting
           .replace(/\\noindent\\textbf{([^}]+)}/g, '<h3 style="font-size: 12pt; font-weight: bold; margin: 1em 0 0.5em 0;">$1</h3>')
