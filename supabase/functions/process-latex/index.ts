@@ -30,50 +30,43 @@ serve(async (req) => {
       .replace(/\\usepackage.*?\n/g, '')
       .replace(/\\geometry{.*?}/s, '')
 
-    // Process content formatting while maintaining structure
-    const html = `
-      <div style="
-        font-family: 'Times New Roman', Times, serif; 
-        padding: 3cm 3cm 2cm 3cm; 
-        text-align: justify; 
-        font-size: 12pt;
-        line-height: 1.5;
-      ">
-        ${cleanedLatex
-          // Handle institution name with less prominence
-          .replace(/\\begin{center}([\s\S]*?)\\end{center}/g, (match, content) => {
-            if (content.includes('\\includegraphics')) {
-              return `<div style="text-align: center; margin-bottom: 0.5em;">${content}</div>`;
-            }
-            // Institution name with reduced prominence
-            if (!content.includes('\\Large')) {
-              return `<div style="text-align: center; font-size: 11pt; margin-bottom: 0.5em;">${content}</div>`;
-            }
-            return `<div style="text-align: center; margin-bottom: 0.5em;">${content}</div>`;
-          })
-          // Handle title with proper prominence
-          .replace(/\\Large\s*{([^}]*)}/g, '<h1 style="font-size: 14pt; font-weight: bold; text-align: center; margin: 1em 0 0.5em 0;">$1</h1>')
-          // Handle authors with reduced spacing
-          .replace(/\\large\s*{([^}]*)}/g, '<h2 style="font-size: 11pt; text-align: center; margin: 0.5em 0;">$1</h2>')
-          
-          // Handle sections and formatting
-          .replace(/\\noindent\\textbf{([^}]+)}/g, '<h3 style="font-size: 12pt; font-weight: bold; margin: 1em 0 0.5em 0;">$1</h3>')
-          .replace(/\\begin{multicols}{2}[\s\S]*?\\end{multicols}/g, (match) => {
-            return match
-              .replace(/\\begin{multicols}{2}/g, '')
-              .replace(/\\setlength{\\columnsep}{[^}]+}/g, '')
-              .replace(/\\end{multicols}/g, '')
-              .trim();
-          })
-          
-          // Remove remaining LaTeX commands and clean up
-          .replace(/\\[a-zA-Z]+(\[[^\]]*\])?{([^}]*)}/g, '$2')
-          .replace(/\\[a-zA-Z]+/g, '')
-          .replace(/[{}]/g, '')
-          
-          .trim()}
-      </div>
-    `;
+    // Only show content if it's not empty
+    const contentSections = {
+      institution: cleanedLatex.match(/\\begin{center}([\s\S]*?)\\end{center}/),
+      title: cleanedLatex.match(/\\Large\s*{([^}]*)}/),
+      authors: cleanedLatex.match(/\\large\s*{([^}]*)}/),
+      content: cleanedLatex.match(/\\begin{multicols}{2}([\s\S]*?)\\end{multicols}/)
+    };
+
+    let html = '<div style="font-family: \'Times New Roman\', Times, serif; padding: 3cm 3cm 2cm 3cm; text-align: justify; font-size: 12pt; line-height: 1.5;">';
+
+    // Only add sections that have content
+    if (contentSections.institution?.[1]?.trim()) {
+      html += `<div style="text-align: center; font-size: 11pt; margin-bottom: 0.5em;">${contentSections.institution[1]}</div>`;
+    }
+
+    if (contentSections.title?.[1]?.trim()) {
+      html += `<h1 style="font-size: 14pt; font-weight: bold; text-align: center; margin: 1em 0 0.5em 0;">${contentSections.title[1]}</h1>`;
+    }
+
+    if (contentSections.authors?.[1]?.trim()) {
+      html += `<h2 style="font-size: 11pt; text-align: center; margin: 0.5em 0;">${contentSections.authors[1]}</h2>`;
+    }
+
+    if (contentSections.content?.[1]?.trim()) {
+      const cleanContent = contentSections.content[1]
+        .replace(/\\noindent\\textbf{([^}]+)}/g, '<h3 style="font-size: 12pt; font-weight: bold; margin: 1em 0 0.5em 0;">$1</h3>')
+        .replace(/\\[a-zA-Z]+(\[[^\]]*\])?{([^}]*)}/g, '$2')
+        .replace(/\\[a-zA-Z]+/g, '')
+        .replace(/[{}]/g, '')
+        .trim();
+
+      if (cleanContent) {
+        html += `<div style="column-count: 2; column-gap: 1cm;">${cleanContent}</div>`;
+      }
+    }
+
+    html += '</div>';
 
     return new Response(
       JSON.stringify({ html }),
