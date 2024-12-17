@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check current session
+    // Check current session without showing toast
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user);
@@ -32,9 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const previousUser = user;
+      const currentUser = session?.user;
+      
+      setUser(currentUser);
+
+      // Only show login success toast when actually logging in
+      if (event === 'SIGNED_IN' && !previousUser && currentUser) {
         // Remove hash from URL if present
         if (window.location.hash) {
           const cleanUrl = window.location.href.split('#')[0];
@@ -45,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [user]); // Add user to dependency array to track previous state
 
   const signInWithGoogle = async () => {
     try {
