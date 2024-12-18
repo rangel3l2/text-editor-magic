@@ -13,11 +13,8 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
       >
         <div 
           dangerouslySetInnerHTML={{ __html: previewHtml }} 
-          className="w-full h-full overflow-y-auto"
+          className="banner-preview w-full h-full p-8 overflow-y-auto"
           style={{
-            padding: '2cm',
-            columnCount: 2,
-            columnGap: '1cm',
             fontFamily: 'Times New Roman, serif',
             fontSize: '12pt',
             lineHeight: 1.5,

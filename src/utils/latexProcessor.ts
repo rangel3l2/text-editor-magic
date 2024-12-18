@@ -27,11 +27,14 @@ export const generateLatexContent = (content: any) => {
   const processedTitle = cleanLatexCommands(content.title);
   const processedInstitution = cleanLatexCommands(content.institution);
 
-  let previewHtml = '<div class="banner-content" style="height: 100%;">';
+  let previewHtml = `
+    <div class="banner-content" style="height: 100%;">
+      <header style="margin-bottom: 2cm; text-align: center;">
+  `;
   
   // Header section with logo and institution
   if (content.institutionLogo || processedInstitution) {
-    previewHtml += '<header style="display: flex; align-items: center; margin-bottom: 2cm; gap: 1cm;">';
+    previewHtml += '<div style="display: flex; align-items: center; justify-content: center; gap: 1cm; margin-bottom: 1cm;">';
     if (content.institutionLogo) {
       previewHtml += `
         <img 
@@ -42,17 +45,17 @@ export const generateLatexContent = (content: any) => {
     }
     if (processedInstitution) {
       previewHtml += `
-        <div style="font-size: 12pt; flex: 1;">
+        <div style="font-size: 14pt; font-weight: bold;">
           ${processedInstitution}
         </div>`;
     }
-    previewHtml += '</header>';
+    previewHtml += '</div>';
   }
 
   // Title section
   if (processedTitle) {
     previewHtml += `
-      <div style="margin-bottom: 1.5cm;">
+      <div style="margin-bottom: 1cm;">
         <h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.5cm; text-align: center;">
           ${processedTitle}
         </h1>`;
@@ -65,22 +68,25 @@ export const generateLatexContent = (content: any) => {
     }
     previewHtml += '</div>';
   }
+  previewHtml += '</header>';
 
-  // Main content sections
+  // Main content sections in two columns
+  previewHtml += '<div style="column-count: 2; column-gap: 1cm; text-align: justify;">';
+
   const sections = [
-    { title: '1. INTRODUÇÃO', content: content.introduction },
-    { title: '2. OBJETIVOS', content: content.objectives },
-    { title: '3. METODOLOGIA', content: content.methodology },
-    { title: '4. RESULTADOS E DISCUSSÃO', content: content.results },
-    { title: '5. CONCLUSÃO', content: content.conclusion },
-    { title: '6. REFERÊNCIAS', content: content.references }
+    { title: 'INTRODUÇÃO', content: content.introduction },
+    { title: 'OBJETIVOS', content: content.objectives },
+    { title: 'METODOLOGIA', content: content.methodology },
+    { title: 'RESULTADOS E DISCUSSÃO', content: content.results },
+    { title: 'CONCLUSÃO', content: content.conclusion },
+    { title: 'REFERÊNCIAS', content: content.references }
   ];
 
   sections.forEach(({ title, content: sectionContent }) => {
     if (sectionContent) {
       const cleanContent = cleanLatexCommands(sectionContent);
       previewHtml += `
-        <section style="margin-bottom: 1.5cm;">
+        <section style="margin-bottom: 1cm; break-inside: avoid;">
           <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5cm;">
             ${title}
           </h2>
@@ -95,7 +101,7 @@ export const generateLatexContent = (content: any) => {
   if (content.acknowledgments) {
     const cleanAcknowledgments = cleanLatexCommands(content.acknowledgments);
     previewHtml += `
-      <section style="margin-bottom: 1.5cm;">
+      <section style="margin-bottom: 1cm; break-inside: avoid;">
         <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5cm;">
           AGRADECIMENTOS
         </h2>
@@ -105,7 +111,7 @@ export const generateLatexContent = (content: any) => {
       </section>`;
   }
 
-  previewHtml += '</div>';
+  previewHtml += '</div></div>';
 
   // Generate LaTeX content for PDF
   let latexContent = '\\documentclass[12pt,a4paper]{article}\n';
@@ -165,5 +171,5 @@ export const generateLatexContent = (content: any) => {
   latexContent += '\\end{multicols}\n';
   latexContent += '\\end{document}';
 
-  return latexContent;
+  return previewHtml;
 };
