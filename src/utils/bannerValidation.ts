@@ -11,7 +11,8 @@ interface ValidationSection {
 
 export const validateBannerContent = (bannerContent: BannerContent): boolean => {
   const sections: ValidationSection[] = [
-    { name: 'Autores e Instituição', content: bannerContent.authors + bannerContent.institution, min: 2, max: 3 },
+    { name: 'Instituição', content: bannerContent.institution, min: 2, max: 3 },
+    { name: 'Autores', content: bannerContent.authors, min: 2, max: 3 },
     { name: 'Introdução', content: bannerContent.introduction, min: 7, max: 10 },
     { name: 'Objetivos', content: bannerContent.objectives, min: 3, max: 4 },
     { name: 'Metodologia', content: bannerContent.methodology, min: 6, max: 8 },
