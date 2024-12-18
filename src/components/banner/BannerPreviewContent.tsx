@@ -13,7 +13,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
       >
         <div 
           dangerouslySetInnerHTML={{ __html: previewHtml }} 
-          className="w-full h-full overflow-y-auto prose max-w-none"
+          className="w-full h-full overflow-y-auto"
           style={{
             padding: '2cm',
             columnCount: 2,
@@ -24,7 +24,6 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
             textAlign: 'justify',
             color: '#000000',
             backgroundColor: '#FFFFFF',
-            userSelect: 'text',
           }}
         />
       </div>
