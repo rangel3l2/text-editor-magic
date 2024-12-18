@@ -4,7 +4,7 @@ interface BannerPreviewContentProps {
 
 const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   return (
-    <div className="w-full h-full flex items-center justify-center p-4 bg-gray-100 select-none">
+    <div className="w-full h-full flex items-center justify-center p-4 bg-gray-100">
       <div 
         className="w-[210mm] h-[297mm] bg-white shadow-lg overflow-hidden flex-shrink-0"
         style={{
@@ -13,7 +13,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
       >
         <div 
           dangerouslySetInnerHTML={{ __html: previewHtml }} 
-          className="w-full h-full overflow-y-auto prose max-w-none select-text"
+          className="w-full h-full overflow-y-auto prose max-w-none"
           style={{
             padding: '2cm',
             columnCount: 2,
@@ -24,6 +24,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
             textAlign: 'justify',
             color: '#000000',
             backgroundColor: '#FFFFFF',
+            userSelect: 'text',
           }}
         />
       </div>

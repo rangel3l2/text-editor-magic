@@ -2,13 +2,10 @@ export const cleanLatexCommands = (text: string) => {
   if (!text) return '';
   
   return text
-    // Remove LaTeX document structure commands
     .replace(/\\documentclass.*?\\begin{document}/s, '')
     .replace(/\\end{document}/, '')
     .replace(/\\usepackage.*?\n/g, '')
     .replace(/\\geometry{.*?}/s, '')
-    
-    // Remove specific LaTeX formatting commands while keeping content
     .replace(/\\large\s*{([^}]*)}/g, '$1')
     .replace(/\\Large\s*{([^}]*)}/g, '$1')
     .replace(/\\textbf{([^}]*)}/g, '$1')
@@ -31,23 +28,23 @@ export const generateLatexContent = (content: any) => {
   const processedInstitution = cleanLatexCommands(content.institution);
 
   // Generate clean HTML for preview
-  let previewHtml = '<div class="banner-content">';
+  let previewHtml = '<div class="banner-preview">';
   
   // Institution Logo and Name
   if (content.institutionLogo || processedInstitution) {
-    previewHtml += '<div style="text-align: center; margin-bottom: 1cm;">';
+    previewHtml += '<header style="text-align: center; margin-bottom: 1cm;">';
     if (content.institutionLogo) {
       previewHtml += `<img src="${content.institutionLogo}" style="height: 2cm; margin: 0 auto 0.5cm;" alt="Logo da Instituição" />`;
     }
     if (processedInstitution) {
       previewHtml += `<div style="font-size: 12pt;">${processedInstitution}</div>`;
     }
-    previewHtml += '</div>';
+    previewHtml += '</header>';
   }
 
   // Title
   if (processedTitle) {
-    previewHtml += `<div style="text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 0.5cm;">${processedTitle}</div>`;
+    previewHtml += `<h1 style="text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 0.5cm;">${processedTitle}</h1>`;
   }
 
   // Authors
@@ -69,10 +66,10 @@ export const generateLatexContent = (content: any) => {
     if (sectionContent) {
       const cleanContent = cleanLatexCommands(sectionContent);
       previewHtml += `
-        <div style="margin-bottom: 1em;">
-          <div style="font-size: 14pt; font-weight: bold;">${title}</div>
+        <section style="margin-bottom: 1em;">
+          <h2 style="font-size: 14pt; font-weight: bold;">${title}</h2>
           <div style="font-size: 12pt;">${cleanContent}</div>
-        </div>`;
+        </section>`;
     }
   });
 
@@ -80,10 +77,10 @@ export const generateLatexContent = (content: any) => {
   if (content.acknowledgments) {
     const cleanAcknowledgments = cleanLatexCommands(content.acknowledgments);
     previewHtml += `
-      <div style="margin-bottom: 1em;">
-        <div style="font-size: 14pt; font-weight: bold;">AGRADECIMENTOS</div>
+      <section style="margin-bottom: 1em;">
+        <h2 style="font-size: 14pt; font-weight: bold;">AGRADECIMENTOS</h2>
         <div style="font-size: 12pt;">${cleanAcknowledgments}</div>
-      </div>`;
+      </section>`;
   }
 
   previewHtml += '</div>';
