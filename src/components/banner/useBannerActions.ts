@@ -2,7 +2,30 @@ import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BannerContent } from './useBannerContent';
-import { calculateTextProgress } from '@/utils/textProgress';
+
+const countLines = (content: string): number => {
+  if (!content) return 0;
+  
+  // Remove HTML tags
+  const textWithoutTags = content.replace(/<[^>]*>/g, '');
+  
+  // Split by line breaks and filter out empty lines
+  const lines = textWithoutTags
+    .split(/\r\n|\r|\n/)
+    .filter(line => line.trim().length > 0);
+
+  // Calculate additional lines based on character count per line
+  const charsPerLine = 90; // Aproximadamente 90 caracteres por linha em fonte 12pt
+  let totalLines = 0;
+
+  lines.forEach(line => {
+    const lineLength = line.trim().length;
+    const additionalLines = Math.ceil(lineLength / charsPerLine);
+    totalLines += additionalLines;
+  });
+
+  return totalLines;
+};
 
 export const useBannerActions = (
   bannerContent: BannerContent,
@@ -24,11 +47,23 @@ export const useBannerActions = (
     ];
 
     for (const section of sections) {
-      const { isBelowMinimum } = calculateTextProgress(section.content, section.max, section.min);
-      if (isBelowMinimum) {
+      const lineCount = countLines(section.content);
+      console.log(`Seção ${section.name}: ${lineCount} linhas`);
+      
+      if (lineCount < section.min) {
         toast({
           title: "Conteúdo insuficiente",
-          description: `A seção "${section.name}" precisa ter no mínimo ${section.min} linhas`,
+          description: `A seção "${section.name}" precisa ter no mínimo ${section.min} linhas. Atualmente tem ${lineCount} linhas.`,
+          variant: "destructive",
+          duration: 5000,
+        });
+        return false;
+      }
+      
+      if (lineCount > section.max) {
+        toast({
+          title: "Conteúdo excede o limite",
+          description: `A seção "${section.name}" deve ter no máximo ${section.max} linhas. Atualmente tem ${lineCount} linhas.`,
           variant: "destructive",
           duration: 5000,
         });
