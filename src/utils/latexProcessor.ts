@@ -27,52 +27,38 @@ export const generateLatexContent = (content: any) => {
   const processedTitle = cleanLatexCommands(content.title);
   const processedInstitution = cleanLatexCommands(content.institution);
 
-  let previewHtml = `
-    <div class="banner-content" style="height: 100%;">
-      <header style="margin-bottom: 2cm; text-align: center;">
-  `;
+  let html = '<div style="height: 100%; padding: 2cm;">';
   
-  // Header section with logo and institution
+  // Header section
+  html += '<div style="text-align: center; margin-bottom: 2cm;">';
+  
+  // Institution logo and name
   if (content.institutionLogo || processedInstitution) {
-    previewHtml += '<div style="display: flex; align-items: center; justify-content: center; gap: 1cm; margin-bottom: 1cm;">';
+    html += '<div style="display: flex; align-items: center; justify-content: center; gap: 1cm; margin-bottom: 1cm;">';
     if (content.institutionLogo) {
-      previewHtml += `
-        <img 
-          src="${content.institutionLogo}" 
-          style="height: 2cm; object-fit: contain;" 
-          alt="Logo da Instituição"
-        />`;
+      html += `<img src="${content.institutionLogo}" style="height: 2cm; object-fit: contain;" alt="Logo da Instituição" />`;
     }
     if (processedInstitution) {
-      previewHtml += `
-        <div style="font-size: 14pt; font-weight: bold;">
-          ${processedInstitution}
-        </div>`;
+      html += `<div style="font-size: 14pt; font-weight: bold;">${processedInstitution}</div>`;
     }
-    previewHtml += '</div>';
+    html += '</div>';
   }
 
-  // Title section
+  // Title
   if (processedTitle) {
-    previewHtml += `
-      <div style="margin-bottom: 1cm;">
-        <h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.5cm; text-align: center;">
-          ${processedTitle}
-        </h1>`;
-    
-    if (processedAuthors) {
-      previewHtml += `
-        <div style="font-size: 12pt; text-align: center;">
-          ${processedAuthors}
-        </div>`;
-    }
-    previewHtml += '</div>';
+    html += `<h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.5cm;">${processedTitle}</h1>`;
   }
-  previewHtml += '</header>';
 
-  // Main content sections in two columns
-  previewHtml += '<div style="column-count: 2; column-gap: 1cm; text-align: justify;">';
+  // Authors
+  if (processedAuthors) {
+    html += `<div style="font-size: 12pt; margin-bottom: 1cm;">${processedAuthors}</div>`;
+  }
+  html += '</div>';
 
+  // Content sections in two columns
+  html += '<div style="column-count: 2; column-gap: 1cm;">';
+
+  // Sections
   const sections = [
     { title: 'INTRODUÇÃO', content: content.introduction },
     { title: 'OBJETIVOS', content: content.objectives },
@@ -85,91 +71,27 @@ export const generateLatexContent = (content: any) => {
   sections.forEach(({ title, content: sectionContent }) => {
     if (sectionContent) {
       const cleanContent = cleanLatexCommands(sectionContent);
-      previewHtml += `
-        <section style="margin-bottom: 1cm; break-inside: avoid;">
-          <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5cm;">
-            ${title}
-          </h2>
-          <div style="font-size: 12pt;">
-            ${cleanContent}
-          </div>
-        </section>`;
+      html += `
+        <div style="break-inside: avoid; margin-bottom: 1cm;">
+          <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5cm;">${title}</h2>
+          <div style="font-size: 12pt;">${cleanContent}</div>
+        </div>
+      `;
     }
   });
 
-  // Acknowledgments section (if present)
+  // Acknowledgments section
   if (content.acknowledgments) {
     const cleanAcknowledgments = cleanLatexCommands(content.acknowledgments);
-    previewHtml += `
-      <section style="margin-bottom: 1cm; break-inside: avoid;">
-        <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5cm;">
-          AGRADECIMENTOS
-        </h2>
-        <div style="font-size: 12pt;">
-          ${cleanAcknowledgments}
-        </div>
-      </section>`;
+    html += `
+      <div style="break-inside: avoid; margin-bottom: 1cm;">
+        <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5cm;">AGRADECIMENTOS</h2>
+        <div style="font-size: 12pt;">${cleanAcknowledgments}</div>
+      </div>
+    `;
   }
 
-  previewHtml += '</div></div>';
+  html += '</div></div>';
 
-  // Generate LaTeX content for PDF
-  let latexContent = '\\documentclass[12pt,a4paper]{article}\n';
-  latexContent += '\\usepackage[utf8]{inputenc}\n';
-  latexContent += '\\usepackage[portuguese]{babel}\n';
-  latexContent += '\\usepackage[a4paper,margin=2cm]{geometry}\n';
-  latexContent += '\\usepackage{multicol}\n';
-  latexContent += '\\usepackage{graphicx}\n';
-  latexContent += '\\usepackage{setspace}\n';
-  latexContent += '\\usepackage{times}\n';
-  latexContent += '\\usepackage{enumitem}\n';
-  latexContent += '\\setlength{\\parindent}{0pt}\n';
-  latexContent += '\\setlength{\\parskip}{6pt}\n';
-  latexContent += '\\pagestyle{empty}\n\n';
-  latexContent += '\\begin{document}\n\n';
-
-  // Add the same content structure for LaTeX
-  if (content.institutionLogo || processedInstitution) {
-    latexContent += '\\begin{flushleft}\n';
-    if (content.institutionLogo) {
-      latexContent += `\\includegraphics[height=2cm]{${content.institutionLogo}}\\hspace{1cm}\n`;
-    }
-    if (processedInstitution) {
-      latexContent += `{\\fontsize{12pt}{14pt}\\selectfont ${processedInstitution}}\n`;
-    }
-    latexContent += '\\end{flushleft}\n\n';
-    latexContent += '\\vspace{2cm}\n\n';
-  }
-
-  if (processedTitle) {
-    latexContent += '\\begin{center}\n';
-    latexContent += `{\\fontsize{16pt}{19pt}\\selectfont\\textbf{${processedTitle}}}\n\n`;
-    if (processedAuthors) {
-      latexContent += '\\vspace{0.5cm}\n\n';
-      latexContent += `{\\fontsize{12pt}{14pt}\\selectfont ${processedAuthors}}\n`;
-    }
-    latexContent += '\\end{center}\n\n';
-    latexContent += '\\vspace{1.5cm}\n\n';
-  }
-
-  latexContent += '\\begin{multicols}{2}\n';
-  latexContent += '\\setlength{\\columnsep}{1cm}\n\n';
-
-  sections.forEach(({ title, content: sectionContent }) => {
-    if (sectionContent) {
-      latexContent += `\\noindent{\\fontsize{14pt}{16pt}\\selectfont\\textbf{${title}}}\n\n`;
-      latexContent += `{\\fontsize{12pt}{14pt}\\selectfont ${cleanLatexCommands(sectionContent)}}\n\n`;
-      latexContent += '\\vspace{1.5cm}\n\n';
-    }
-  });
-
-  if (content.acknowledgments) {
-    latexContent += '\\noindent{\\fontsize{14pt}{16pt}\\selectfont\\textbf{AGRADECIMENTOS}}\n\n';
-    latexContent += `{\\fontsize{12pt}{14pt}\\selectfont ${cleanLatexCommands(content.acknowledgments)}}\n\n`;
-  }
-
-  latexContent += '\\end{multicols}\n';
-  latexContent += '\\end{document}';
-
-  return previewHtml;
+  return html;
 };

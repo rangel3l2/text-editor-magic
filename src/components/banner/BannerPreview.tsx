@@ -17,19 +17,8 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
   useEffect(() => {
     const generatePreview = async () => {
       try {
-        const latexContent = generateLatexContent(content);
-
-        const { data, error } = await supabase.functions.invoke('process-latex', {
-          body: { latex: latexContent }
-        });
-
-        if (error) throw error;
-        
-        if (data?.html) {
-          setPreviewHtml(data.html);
-        } else {
-          throw new Error('No HTML content received from LaTeX processing');
-        }
+        const html = generateLatexContent(content);
+        setPreviewHtml(html);
       } catch (error) {
         console.error('Error generating preview:', error);
         toast({
