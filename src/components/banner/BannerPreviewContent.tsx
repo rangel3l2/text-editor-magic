@@ -4,16 +4,16 @@ interface BannerPreviewContentProps {
 
 const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   return (
-    <div className="w-full h-full flex items-center justify-center p-4 bg-gray-100">
+    <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
       <div 
-        className="w-[210mm] h-[297mm] bg-white shadow-lg overflow-hidden flex-shrink-0"
+        className="w-[210mm] min-h-[297mm] bg-white shadow-lg"
         style={{
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         }}
       >
         <div 
           dangerouslySetInnerHTML={{ __html: previewHtml }} 
-          className="w-full h-full p-8 overflow-y-auto"
+          className="w-full h-full p-8"
           style={{
             fontFamily: 'Times New Roman, serif',
             fontSize: '12pt',
