@@ -1,8 +1,59 @@
+import { useState } from 'react';
+import { useToast } from "@/components/ui/use-toast";
+
 interface BannerPreviewContentProps {
   previewHtml: string;
 }
 
 const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
+  const { toast } = useToast();
+  const [sections, setSections] = useState<HTMLElement[]>([]);
+  const [draggedSection, setDraggedSection] = useState<number | null>(null);
+
+  const parseSections = (html: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const sectionElements = doc.querySelectorAll('.banner-section');
+    return Array.from(sectionElements);
+  };
+
+  useState(() => {
+    setSections(parseSections(previewHtml));
+  }, [previewHtml]);
+
+  const handleDragStart = (index: number) => {
+    setDraggedSection(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('bg-gray-100');
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.currentTarget.classList.remove('bg-gray-100');
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('bg-gray-100');
+
+    if (draggedSection === null || draggedSection === targetIndex) return;
+
+    const newSections = [...sections];
+    const [movedSection] = newSections.splice(draggedSection, 1);
+    newSections.splice(targetIndex, 0, movedSection);
+
+    setSections(newSections);
+    setDraggedSection(null);
+
+    toast({
+      title: "Seção movida",
+      description: "A ordem das seções foi atualizada com sucesso",
+      duration: 2000,
+    });
+  };
+
   return (
     <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
       <div 
@@ -11,18 +62,27 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         }}
       >
-        <div 
-          dangerouslySetInnerHTML={{ __html: previewHtml }} 
-          className="w-full h-full p-8"
-          style={{
-            fontFamily: 'Times New Roman, serif',
-            fontSize: '12pt',
-            lineHeight: 1.5,
-            textAlign: 'justify',
-            color: '#000000',
-            backgroundColor: '#FFFFFF',
-          }}
-        />
+        <div className="w-full h-full p-8">
+          {sections.map((section, index) => (
+            <div
+              key={index}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, index)}
+              className="banner-section cursor-move hover:bg-gray-50 transition-colors p-2 rounded"
+              style={{
+                fontFamily: 'Times New Roman, serif',
+                fontSize: '12pt',
+                lineHeight: 1.5,
+                textAlign: 'justify',
+                color: '#000000',
+              }}
+              dangerouslySetInnerHTML={{ __html: section.outerHTML }}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

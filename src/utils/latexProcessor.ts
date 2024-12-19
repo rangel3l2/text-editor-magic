@@ -34,7 +34,7 @@ export const generateLatexContent = (content: any) => {
   
   // Institution logo and name
   if (content.institutionLogo || processedInstitution) {
-    html += '<div style="display: flex; align-items: center; justify-content: center; gap: 1cm; margin-bottom: 1cm;">';
+    html += '<div class="banner-section" style="display: flex; align-items: center; justify-content: center; gap: 1cm; margin-bottom: 1cm;">';
     if (content.institutionLogo) {
       html += `<img src="${content.institutionLogo}" style="height: 2cm; object-fit: contain;" alt="Logo da Instituição" />`;
     }
@@ -46,12 +46,12 @@ export const generateLatexContent = (content: any) => {
 
   // Title
   if (processedTitle) {
-    html += `<h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.5cm;">${processedTitle}</h1>`;
+    html += `<div class="banner-section"><h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.5cm;">${processedTitle}</h1></div>`;
   }
 
   // Authors
   if (processedAuthors) {
-    html += `<div style="font-size: 12pt; margin-bottom: 1cm;">${processedAuthors}</div>`;
+    html += `<div class="banner-section" style="font-size: 12pt; margin-bottom: 1cm;">${processedAuthors}</div>`;
   }
   html += '</div>';
 
@@ -72,7 +72,7 @@ export const generateLatexContent = (content: any) => {
     if (sectionContent) {
       const cleanContent = cleanLatexCommands(sectionContent);
       html += `
-        <div style="break-inside: avoid; margin-bottom: 1cm;">
+        <div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">
           <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5cm;">${title}</h2>
           <div style="font-size: 12pt;">${cleanContent}</div>
         </div>
@@ -84,7 +84,7 @@ export const generateLatexContent = (content: any) => {
   if (content.acknowledgments) {
     const cleanAcknowledgments = cleanLatexCommands(content.acknowledgments);
     html += `
-      <div style="break-inside: avoid; margin-bottom: 1cm;">
+      <div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">
         <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5cm;">AGRADECIMENTOS</h2>
         <div style="font-size: 12pt;">${cleanAcknowledgments}</div>
       </div>
