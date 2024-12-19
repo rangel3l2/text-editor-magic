@@ -87,16 +87,24 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
 
   const formatAuthors = async (authorsText: string) => {
     try {
+      console.log('Formatting authors:', authorsText);
+      
       const { data, error } = await supabase.functions.invoke('format-authors', {
         body: { authors: authorsText }
       });
 
       if (error) {
-        throw error;
+        console.error('Supabase function error:', error);
+        throw new Error(`Failed to format authors: ${error.message}`);
       }
 
-      const { formattedAuthors } = data;
-      handleChange('authors', formattedAuthors);
+      if (!data?.formattedAuthors) {
+        console.error('Invalid response format:', data);
+        throw new Error('Invalid response from formatting service');
+      }
+
+      console.log('Formatted authors:', data.formattedAuthors);
+      handleChange('authors', data.formattedAuthors);
 
       toast({
         title: "Autores formatados",
@@ -107,7 +115,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       console.error('Error formatting authors:', error);
       toast({
         title: "Erro ao formatar autores",
-        description: "Não foi possível formatar os nomes dos autores automaticamente",
+        description: error.message || "Não foi possível formatar os nomes dos autores automaticamente",
         variant: "destructive",
         duration: 5000,
       });

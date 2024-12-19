@@ -24,22 +24,31 @@ serve(async (req) => {
       );
     }
 
-    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
+    const apiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!apiKey) {
+      console.error('GEMINI_API_KEY not configured');
+      throw new Error('API key not configured');
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
-      Formate os nomes dos autores de acordo com as normas ABNT:
-      - Se houver mais de 2 autores, use "et al." após o primeiro autor
-      - Mantenha as informações de afiliação e e-mail
-      - Não altere outras informações além dos nomes dos autores
-      - Retorne apenas o texto formatado, sem explicações
-
-      Texto original dos autores:
+      Format the following author names according to ABNT standards:
+      - If there are more than 2 authors, use "et al." after the first author
+      - Keep affiliation and email information unchanged
+      - Return only the formatted text, no explanations
+      - Preserve HTML formatting if present
+      - Example: "John Smith, Mary Johnson, Peter Parker" becomes "John Smith et al."
+      
+      Authors to format:
       "${authors}"
     `;
 
     const result = await model.generateContent(prompt);
     const formattedAuthors = result.response.text().trim();
+
+    console.log('Formatted authors:', formattedAuthors);
 
     return new Response(
       JSON.stringify({ formattedAuthors }),
@@ -49,9 +58,13 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error formatting authors:', error);
+    
     return new Response(
-      JSON.stringify({ error: 'Failed to format authors' }),
+      JSON.stringify({ 
+        error: 'Failed to format authors',
+        details: error.message 
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
