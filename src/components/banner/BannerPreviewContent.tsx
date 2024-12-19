@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -8,15 +8,20 @@ interface BannerPreviewContentProps {
 
 const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   const { toast } = useToast();
-  const [sections, setSections] = useState(() => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(previewHtml, 'text/html');
-    const sectionElements = Array.from(doc.querySelectorAll('section'));
-    return sectionElements.map((section, index) => ({
-      id: `section-${index}`,
-      content: section.outerHTML
-    }));
-  });
+  const [sections, setSections] = useState<Array<{ id: string; content: string }>>([]);
+
+  useEffect(() => {
+    if (previewHtml) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(previewHtml, 'text/html');
+      const sectionElements = Array.from(doc.body.children);
+      const newSections = sectionElements.map((section, index) => ({
+        id: `section-${index}`,
+        content: section.outerHTML
+      }));
+      setSections(newSections);
+    }
+  }, [previewHtml]);
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
