@@ -78,17 +78,19 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
       <div 
         className="bg-white shadow-lg"
         style={{
-          width: '210mm', // A4 width
-          minHeight: '297mm', // A4 height
-          padding: '20mm', // Adjusted padding for A4
+          width: '210mm',
+          height: '297mm',
+          padding: '15mm',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           margin: '0 auto',
-          transform: 'scale(0.8)', // Adjusted scale for A4 size
+          transform: 'scale(0.9)',
           transformOrigin: 'top center',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <div className="banner-content">
-          <div className="col-span-2 w-full mb-8">
+        <div className="banner-content flex-1">
+          <div className="col-span-2 w-full mb-6">
             <div 
               className="text-center"
               dangerouslySetInnerHTML={{ 
@@ -97,7 +99,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-2 gap-6">
             {sections.map((section, index) => (
               <div
                 key={index}
@@ -109,8 +111,8 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                 className="banner-section relative cursor-move transition-colors"
                 style={{
                   fontFamily: 'Times New Roman, serif',
-                  fontSize: '12pt', // Standard font size for A4
-                  lineHeight: 1.5,
+                  fontSize: '11pt',
+                  lineHeight: '1.15',
                   textAlign: 'justify',
                   color: '#000000',
                 }}
@@ -144,7 +146,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                   `}
                 </style>
                 <div 
-                  className="p-3 rounded"
+                  className="p-2 rounded"
                   dangerouslySetInnerHTML={{ __html: section.outerHTML }} 
                 />
               </div>
