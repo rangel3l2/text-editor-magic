@@ -31,6 +31,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
             minLines={7}
             config={editorConfig}
             placeholder="Apresente o tema, contexto e problematização do trabalho..."
+            sectionName="Introdução"
           />
         </CardContent>
       </Card>
@@ -48,6 +49,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
             minLines={3}
             config={editorConfig}
             placeholder="Liste os objetivos gerais e específicos do trabalho..."
+            sectionName="Objetivos"
           />
         </CardContent>
       </Card>
@@ -65,6 +67,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
             minLines={6}
             config={editorConfig}
             placeholder="Descreva os métodos e procedimentos utilizados..."
+            sectionName="Metodologia"
           />
         </CardContent>
       </Card>
@@ -82,6 +85,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
             minLines={5}
             config={editorConfig}
             placeholder="Apresente os principais resultados obtidos e sua discussão..."
+            sectionName="Resultados"
           />
         </CardContent>
       </Card>
@@ -99,6 +103,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
             minLines={4}
             config={editorConfig}
             placeholder="Apresente as principais conclusões e contribuições do trabalho..."
+            sectionName="Conclusão"
           />
         </CardContent>
       </Card>
@@ -116,6 +121,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
             minLines={2}
             config={editorConfig}
             placeholder="Liste as referências mais relevantes (ABNT)..."
+            sectionName="Referências"
           />
         </CardContent>
       </Card>
@@ -133,6 +139,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
             minLines={0}
             config={editorConfig}
             placeholder="Agradeça às instituições e pessoas que contribuíram..."
+            sectionName="Agradecimentos"
           />
         </CardContent>
       </Card>
