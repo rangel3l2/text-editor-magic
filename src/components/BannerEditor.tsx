@@ -47,6 +47,7 @@ const BannerEditor = () => {
             onGeneratePDF={handleGeneratePDF}
             onShare={handleShare}
             onOpenPreview={() => setPreviewOpen(true)}
+            onClearFields={handleClearFields}
           />
           <BannerContent
             content={content}
