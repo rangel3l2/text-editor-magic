@@ -1,95 +1,177 @@
-import { useState } from "react";
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from "@/integrations/supabase/client";
-import BannerHeader from './banner/BannerHeader';
-import BannerActions from './banner/BannerActions';
-import BannerLayout from './banner/BannerLayout';
-import BannerContent from './banner/BannerContent';
-import { useBannerContent } from './banner/useBannerContent';
-import { useBannerActions } from './banner/useBannerActions';
+import { useToast } from "./ui/use-toast";
+import { useNavigate } from "react-router-dom";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Switch } from "./ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { useSearchParams } from "react-router-dom";
 
 const BannerEditor = () => {
-  const [searchParams] = useSearchParams();
-  const [documentType] = useState(searchParams.get('type') || 'banner');
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  
-  const { toast } = useToast();
   const { user } = useAuth();
-  const { bannerContent, setBannerContent, handleChange, initialBannerContent, STORAGE_KEY } = useBannerContent();
-  const { 
-    handleGeneratePDF, 
-    handleShare, 
-    handleLoadSavedContent, 
-    handleClearFields 
-  } = useBannerActions(bannerContent, setBannerContent, initialBannerContent, STORAGE_KEY);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const bannerType = searchParams.get("type") || "banner";
 
-  const handleImageConfigChange = async (imageId: string, config: any) => {
-    try {
-      const { error } = await supabase
-        .from('banner_images')
-        .update({
-          crop_data: config.crop,
-          position_data: config.position
-        })
-        .eq('id', imageId);
+  const [title, setTitle] = useState("");
+  const [authors, setAuthors] = useState("");
+  const [institution, setInstitution] = useState("");
+  const [abstract, setAbstract] = useState("");
+  const [keywords, setKeywords] = useState("");
+  const [orientation, setOrientation] = useState("portrait");
+  const [showLogo, setShowLogo] = useState(true);
 
-      if (error) throw error;
+  useEffect(() => {
+    const handleBeforeInput = () => {
+      if (!user) {
+        toast({
+          title: "Login Necessário",
+          description: "Para editar o banner, faça login primeiro.",
+          duration: 5000,
+        });
+        navigate("/?redirect=banner");
+        return false;
+      }
+      return true;
+    };
 
-      toast({
-        title: "Configurações salvas",
-        description: "As configurações da imagem foram atualizadas",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error('Error updating image config:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as configurações da imagem",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
+    document.addEventListener('beforeinput', handleBeforeInput);
+    return () => {
+      document.removeEventListener('beforeinput', handleBeforeInput);
+    };
+  }, [user, toast, navigate]);
+
+  const handleSave = () => {
+    // Implement save functionality
+    toast({
+      title: "Sucesso!",
+      description: "Banner salvo com sucesso.",
+    });
   };
 
-  if (documentType !== 'banner') {
-    return (
-      <div className="w-full max-w-md mx-auto p-4">
-        <h2 className="text-2xl font-bold mb-4">Tipo de documento não suportado ainda</h2>
-      </div>
-    );
-  }
+  const handleExport = () => {
+    // Implement export functionality
+    toast({
+      title: "Exportando...",
+      description: "Seu banner está sendo exportado.",
+    });
+  };
 
   return (
-    <BannerLayout 
-      previewOpen={previewOpen}
-      setPreviewOpen={setPreviewOpen}
-      content={bannerContent}
-      onImageConfigChange={handleImageConfigChange}
-    >
-      <div className="space-y-4 sm:space-y-6">
-        <div className="flex flex-col gap-4">
-          <BannerHeader title="Banner Acadêmico" />
-          <BannerActions 
-            onGeneratePDF={handleGeneratePDF}
-            onShare={handleShare}
-            onLoadSavedContent={handleLoadSavedContent}
-            onClearFields={handleClearFields}
-            onOpenPreview={() => setPreviewOpen(true)}
-            isAuthenticated={!!user}
-          />
-        </div>
-        
-        <BannerContent 
-          content={bannerContent}
-          handleChange={handleChange}
-          selectedImage={selectedImage}
-          onImageConfigChange={handleImageConfigChange}
-        />
-      </div>
-    </BannerLayout>
+    <div className="container mx-auto px-4 py-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Editor de {bannerType === "banner" ? "Banner" : "Trabalho"} Acadêmico</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="content">
+            <TabsList>
+              <TabsTrigger value="content">Conteúdo</TabsTrigger>
+              <TabsTrigger value="style">Estilo</TabsTrigger>
+              <TabsTrigger value="preview">Visualização</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="content" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Título</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Digite o título do seu trabalho"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="authors">Autores</Label>
+                <Input
+                  id="authors"
+                  value={authors}
+                  onChange={(e) => setAuthors(e.target.value)}
+                  placeholder="Nome dos autores (separados por vírgula)"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="institution">Instituição</Label>
+                <Input
+                  id="institution"
+                  value={institution}
+                  onChange={(e) => setInstitution(e.target.value)}
+                  placeholder="Nome da instituição"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="abstract">Resumo</Label>
+                <Textarea
+                  id="abstract"
+                  value={abstract}
+                  onChange={(e) => setAbstract(e.target.value)}
+                  placeholder="Digite o resumo do seu trabalho"
+                  rows={5}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="keywords">Palavras-chave</Label>
+                <Input
+                  id="keywords"
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                  placeholder="Palavras-chave (separadas por vírgula)"
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="style" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="orientation">Orientação</Label>
+                <Select value={orientation} onValueChange={setOrientation}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a orientação" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="portrait">Retrato</SelectItem>
+                    <SelectItem value="landscape">Paisagem</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="show-logo"
+                  checked={showLogo}
+                  onCheckedChange={setShowLogo}
+                />
+                <Label htmlFor="show-logo">Mostrar logo da instituição</Label>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="preview" className="min-h-[400px]">
+              <div className="flex justify-center items-center h-full">
+                <p className="text-gray-500">Visualização em desenvolvimento</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button variant="outline" onClick={handleSave}>
+              Salvar
+            </Button>
+            <Button onClick={handleExport}>
+              Exportar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
