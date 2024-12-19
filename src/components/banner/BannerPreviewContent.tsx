@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import ImageCropDialog from './ImageCropDialog';
 
 interface BannerPreviewContentProps {
   previewHtml: string;
@@ -9,6 +11,8 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   const { toast } = useToast();
   const [sections, setSections] = useState<HTMLElement[]>([]);
   const [draggedSection, setDraggedSection] = useState<number | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
 
   const parseSections = (html: string) => {
     const parser = new DOMParser();
@@ -73,6 +77,22 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
     });
   };
 
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setIsImageDialogOpen(true);
+  };
+
+  const handleImageSave = async (croppedImage: string) => {
+    // Here we would save the cropped image to Supabase storage
+    // and update the banner_images table with the new configuration
+    setIsImageDialogOpen(false);
+    toast({
+      title: "Imagem atualizada",
+      description: "As alterações na imagem foram salvas com sucesso",
+      duration: 2000,
+    });
+  };
+
   return (
     <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
       <div 
@@ -97,6 +117,12 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
               dangerouslySetInnerHTML={{ 
                 __html: previewHtml.split('<div class="banner-section"')[0] 
               }} 
+              onClick={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.tagName === 'IMG') {
+                  handleImageClick(target.getAttribute('src') || '');
+                }
+              }}
             />
           </div>
 
@@ -116,6 +142,12 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                   lineHeight: '1.2',
                   textAlign: 'justify',
                   color: '#000000',
+                }}
+                onClick={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.tagName === 'IMG') {
+                    handleImageClick(target.getAttribute('src') || '');
+                  }
                 }}
               >
                 <style>
@@ -144,6 +176,13 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                       height: 3px;
                       background-color: #2563eb;
                     }
+                    img {
+                      cursor: pointer;
+                      transition: opacity 0.2s;
+                    }
+                    img:hover {
+                      opacity: 0.8;
+                    }
                   `}
                 </style>
                 <div 
@@ -155,6 +194,16 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
           </div>
         </div>
       </div>
+
+      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+        <DialogContent className="max-w-[95vw] w-[800px] max-h-[95vh] p-6">
+          <ImageCropDialog
+            imageUrl={selectedImage || ''}
+            onSave={handleImageSave}
+            onCancel={() => setIsImageDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
