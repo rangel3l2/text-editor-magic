@@ -78,12 +78,12 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
       <div 
         className="bg-white shadow-lg"
         style={{
-          width: '841mm', // A0 width
-          minHeight: '1189mm', // A0 height
-          padding: '50mm', // Increased padding for better content distribution
+          width: '210mm', // A4 width
+          minHeight: '297mm', // A4 height
+          padding: '20mm', // Adjusted padding for A4
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           margin: '0 auto',
-          transform: 'scale(0.25)', // Adjusted scale to show more content while maintaining proportions
+          transform: 'scale(0.8)', // Adjusted scale for A4 size
           transformOrigin: 'top center',
         }}
       >
@@ -97,7 +97,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-12">
+          <div className="grid grid-cols-2 gap-8">
             {sections.map((section, index) => (
               <div
                 key={index}
@@ -109,7 +109,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                 className="banner-section relative cursor-move transition-colors"
                 style={{
                   fontFamily: 'Times New Roman, serif',
-                  fontSize: '16pt', // Increased font size for better readability
+                  fontSize: '12pt', // Standard font size for A4
                   lineHeight: 1.5,
                   textAlign: 'justify',
                   color: '#000000',
@@ -144,7 +144,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                   `}
                 </style>
                 <div 
-                  className="p-4 rounded"
+                  className="p-3 rounded"
                   dangerouslySetInnerHTML={{ __html: section.outerHTML }} 
                 />
               </div>
