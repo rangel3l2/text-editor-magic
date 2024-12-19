@@ -8,10 +8,9 @@ import BannerPreviewContent from './BannerPreviewContent';
 interface BannerPreviewProps {
   content: any;
   onImageConfigChange: (imageId: string, config: any) => void;
-  onSectionsReorder?: (sections: Array<{ id: string; content: string }>) => void;
 }
 
-const BannerPreview = ({ content, onImageConfigChange, onSectionsReorder }: BannerPreviewProps) => {
+const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => {
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const { toast } = useToast();
 
@@ -36,10 +35,7 @@ const BannerPreview = ({ content, onImageConfigChange, onSectionsReorder }: Bann
 
   return (
     <Card className="w-full h-full bg-white overflow-hidden">
-      <BannerPreviewContent 
-        previewHtml={previewHtml} 
-        onSectionsReorder={onSectionsReorder}
-      />
+      <BannerPreviewContent previewHtml={previewHtml} />
     </Card>
   );
 };
