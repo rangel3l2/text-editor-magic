@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.2.0";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,26 +15,19 @@ serve(async (req) => {
     const { authors } = await req.json();
 
     if (!authors) {
-      return new Response(
-        JSON.stringify({ error: 'Authors text is required' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+      throw new Error('Authors text is required');
     }
 
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!apiKey) {
-      console.error('GEMINI_API_KEY not configured');
-      throw new Error('API key not configured');
+      throw new Error('GEMINI_API_KEY is not set');
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
-      Format the following author names according to ABNT standards following these exact rules:
+      Format the following text according to ABNT standards following these exact rules:
 
       1. For a single author:
       Format: SOBRENOME, Nome.
@@ -51,6 +44,8 @@ serve(async (req) => {
       Important:
       - Keep any HTML formatting if present
       - Keep affiliation and email information unchanged
+      - Replace "Autores:" with "Discente:" for student authors and "Docente:" for professor authors
+      - Format each section separately following the ABNT rules
       - Only format the author names, not other information
       - Return only the formatted text, no explanations
       
@@ -67,20 +62,23 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ formattedAuthors }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     );
+
   } catch (error) {
     console.error('Error formatting authors:', error);
     
     return new Response(
-      JSON.stringify({ 
-        error: 'Failed to format authors',
-        details: error.message 
-      }),
+      JSON.stringify({ error: 'Failed to format authors' }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        },
         status: 500
       }
     );
