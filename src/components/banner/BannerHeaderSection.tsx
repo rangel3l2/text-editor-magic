@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -13,12 +13,14 @@ interface BannerHeaderSectionProps {
     authors: string;
     institution: string;
     institutionLogo?: string;
+    advisors?: string;
   };
   handleChange: (field: string, data: string) => void;
 }
 
 const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps) => {
   const [uploading, setUploading] = useState(false);
+  const [isFormatting, setIsFormatting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -84,8 +86,11 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     }
   };
 
-  const formatAuthors = async (authorsText: string) => {
+  const formatAuthors = useCallback(async (authorsText: string) => {
+    if (isFormatting) return;
+    
     try {
+      setIsFormatting(true);
       console.log('Formatting authors:', authorsText);
       
       const { data, error } = await supabase.functions.invoke('format-authors', {
@@ -118,15 +123,17 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
         variant: "destructive",
         duration: 5000,
       });
+    } finally {
+      setIsFormatting(false);
     }
-  };
+  }, [handleChange, toast, isFormatting]);
 
-  const handleAuthorsChange = async (value: string) => {
+  const handleAuthorsChange = useCallback(async (value: string) => {
     handleChange('authors', value);
     if (value && value.replace(/<[^>]*>/g, '').trim()) {
       await formatAuthors(value);
     }
-  };
+  }, [handleChange, formatAuthors]);
 
   return (
     <div className="space-y-6">
