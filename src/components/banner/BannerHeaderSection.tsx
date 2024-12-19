@@ -85,6 +85,51 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     }
   };
 
+  const formatAuthors = async (authorsText: string) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/format-authors`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ authors: authorsText }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to format authors');
+      }
+
+      const { formattedAuthors } = await response.json();
+      handleChange('authors', formattedAuthors);
+
+      toast({
+        title: "Autores formatados",
+        description: "Os nomes dos autores foram formatados de acordo com as normas ABNT",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error formatting authors:', error);
+      toast({
+        title: "Erro ao formatar autores",
+        description: "Não foi possível formatar os nomes dos autores automaticamente",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  };
+
+  const handleAuthorsChange = async (value: string) => {
+    handleChange('authors', value);
+    // Only format if there's actual content and it's not just HTML tags
+    if (value && value.replace(/<[^>]*>/g, '').trim()) {
+      await formatAuthors(value);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -155,12 +200,12 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       <Card>
         <CardHeader>
           <CardTitle>4. Autores</CardTitle>
-          <CardDescription>Liste os nomes dos autores, seguidos da afiliação institucional e e-mail de contato do autor principal. (2-3 linhas)</CardDescription>
+          <CardDescription>Liste os nomes dos autores, seguidos da afiliação institucional e e-mail de contato do autor principal. Os nomes serão automaticamente formatados de acordo com as normas ABNT. (2-3 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
           <RichTextEditor
             value={content.authors}
-            onChange={(data) => handleChange('authors', data)}
+            onChange={handleAuthorsChange}
             maxLines={3}
             minLines={2}
             config={editorConfig}
