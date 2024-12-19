@@ -14,7 +14,9 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
     if (previewHtml) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(previewHtml, 'text/html');
-      const sectionElements = Array.from(doc.body.children);
+      
+      // Get all sections with class 'banner-section'
+      const sectionElements = Array.from(doc.querySelectorAll('.banner-section'));
       const newSections = sectionElements.map((section, index) => ({
         id: `section-${index}`,
         content: section.outerHTML
@@ -68,7 +70,9 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className={`mb-4 p-2 rounded ${snapshot.isDragging ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                        className={`mb-4 p-2 rounded cursor-move ${
+                          snapshot.isDragging ? 'bg-gray-100 dark:bg-gray-700' : ''
+                        }`}
                         dangerouslySetInnerHTML={{ __html: section.content }}
                       />
                     )}
