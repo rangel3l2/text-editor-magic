@@ -19,7 +19,7 @@ const BannerActions = ({
   isAuthenticated 
 }: BannerActionsProps) => {
   return (
-    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+    <div className="hidden sm:flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
       {isAuthenticated && (
         <Button 
           onClick={onLoadSavedContent}
@@ -27,7 +27,8 @@ const BannerActions = ({
           className="flex items-center gap-2 w-full sm:w-auto"
         >
           <RotateCcw className="h-4 w-4" />
-          Recuperar Dados Salvos
+          <span className="hidden sm:inline">Recuperar Dados Salvos</span>
+          <span className="sm:hidden">Recuperar</span>
         </Button>
       )}
       <Button 
@@ -35,7 +36,8 @@ const BannerActions = ({
         className="flex items-center gap-2 bg-primary hover:bg-primary/90 w-full sm:w-auto"
       >
         <FileDown className="h-4 w-4" />
-        Baixar PDF
+        <span className="hidden sm:inline">Baixar PDF</span>
+        <span className="sm:hidden">Baixar</span>
       </Button>
       <Button 
         onClick={onOpenPreview}
@@ -43,7 +45,8 @@ const BannerActions = ({
         className="flex items-center gap-2 w-full sm:w-auto"
       >
         <Eye className="h-4 w-4" />
-        Visualizar Banner
+        <span className="hidden sm:inline">Visualizar Banner</span>
+        <span className="sm:hidden">Visualizar</span>
       </Button>
       <Button 
         onClick={onShare}
@@ -51,7 +54,8 @@ const BannerActions = ({
         className="flex items-center gap-2 w-full sm:w-auto"
       >
         <Share2 className="h-4 w-4" />
-        Compartilhar
+        <span className="hidden sm:inline">Compartilhar</span>
+        <span className="sm:hidden">Compartilhar</span>
       </Button>
       <Button
         onClick={onClearFields}
@@ -59,7 +63,8 @@ const BannerActions = ({
         className="flex items-center gap-2 w-full sm:w-auto"
       >
         <Trash2 className="h-4 w-4" />
-        Limpar Campos
+        <span className="hidden sm:inline">Limpar Campos</span>
+        <span className="sm:hidden">Limpar</span>
       </Button>
     </div>
   );

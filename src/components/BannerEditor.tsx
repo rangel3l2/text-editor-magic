@@ -69,24 +69,26 @@ const BannerEditor = () => {
       content={bannerContent}
       onImageConfigChange={handleImageConfigChange}
     >
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <BannerHeader title="Banner Acadêmico" />
-        <BannerActions 
-          onGeneratePDF={handleGeneratePDF}
-          onShare={handleShare}
-          onLoadSavedContent={handleLoadSavedContent}
-          onClearFields={handleClearFields}
-          onOpenPreview={() => setPreviewOpen(true)}
-          isAuthenticated={!!user}
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-4">
+          <BannerHeader title="Banner Acadêmico" />
+          <BannerActions 
+            onGeneratePDF={handleGeneratePDF}
+            onShare={handleShare}
+            onLoadSavedContent={handleLoadSavedContent}
+            onClearFields={handleClearFields}
+            onOpenPreview={() => setPreviewOpen(true)}
+            isAuthenticated={!!user}
+          />
+        </div>
+        
+        <BannerContent 
+          content={bannerContent}
+          handleChange={handleChange}
+          selectedImage={selectedImage}
+          onImageConfigChange={handleImageConfigChange}
         />
       </div>
-      
-      <BannerContent 
-        content={bannerContent}
-        handleChange={handleChange}
-        selectedImage={selectedImage}
-        onImageConfigChange={handleImageConfigChange}
-      />
     </BannerLayout>
   );
 };
