@@ -15,7 +15,6 @@ serve(async (req) => {
   try {
     const { content, section } = await req.json();
 
-    // Validar se o conteúdo e a seção foram fornecidos
     if (!content || !section) {
       console.error('Conteúdo ou seção não fornecidos');
       throw new Error('Conteúdo e seção são obrigatórios');
@@ -23,7 +22,6 @@ serve(async (req) => {
 
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     
-    // Verificar se a chave API está configurada
     if (!Deno.env.get('GEMINI_API_KEY')) {
       console.error('GEMINI_API_KEY não configurada');
       throw new Error('Chave API do Gemini não configurada');
@@ -32,48 +30,15 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
-      Analise o seguinte texto para a seção "${section}" de um banner acadêmico e avalie:
-      1. Erros gramaticais
-      2. Coesão e coerência
-      3. Adequação ao tipo de seção (${section})
-      4. Sugestões de melhoria
-
+      Você é um assistente especializado em análise de textos acadêmicos.
+      Analise o seguinte texto para a seção "${section}" de um banner acadêmico.
+      
       Texto a ser analisado:
       "${content}"
 
-      Forneça uma análise detalhada seguindo estes critérios específicos para cada tipo de seção:
-
-      Para Introdução:
-      - Deve apresentar o tema/problema
-      - Deve contextualizar o assunto
-      - Deve indicar a relevância do estudo
-      - Deve apresentar o objetivo geral
-
-      Para Objetivos:
-      - Deve ser claro e direto
-      - Deve usar verbos no infinitivo
-      - Deve ser mensurável
-      - Deve estar alinhado com a introdução
-
-      Para Metodologia:
-      - Deve descrever o tipo de pesquisa
-      - Deve explicar os procedimentos
-      - Deve mencionar instrumentos/técnicas
-      - Deve ser reproduzível
-
-      Para Resultados:
-      - Deve apresentar dados concretos
-      - Deve relacionar com os objetivos
-      - Deve ser objetivo e claro
-      - Deve incluir análise dos dados
-
-      Para Conclusão:
-      - Deve retomar o objetivo
-      - Deve sintetizar resultados principais
-      - Deve indicar contribuições
-      - Deve ser conclusiva
-
-      Forneça a análise em formato JSON com os seguintes campos:
+      Forneça uma análise detalhada seguindo estes critérios específicos para cada tipo de seção.
+      
+      IMPORTANTE: Sua resposta DEVE ser um objeto JSON válido com exatamente esta estrutura:
       {
         "isValid": boolean,
         "grammarErrors": string[],
@@ -82,37 +47,81 @@ serve(async (req) => {
         "suggestions": string[],
         "overallFeedback": string
       }
+
+      Critérios por seção:
+
+      Introdução:
+      - Apresenta o tema/problema
+      - Contextualiza o assunto
+      - Indica a relevância do estudo
+      - Apresenta o objetivo geral
+
+      Objetivos:
+      - É claro e direto
+      - Usa verbos no infinitivo
+      - É mensurável
+      - Está alinhado com a introdução
+
+      Metodologia:
+      - Descreve o tipo de pesquisa
+      - Explica os procedimentos
+      - Menciona instrumentos/técnicas
+      - É reproduzível
+
+      Resultados:
+      - Apresenta dados concretos
+      - Relaciona com os objetivos
+      - É objetivo e claro
+      - Inclui análise dos dados
+
+      Conclusão:
+      - Retoma o objetivo
+      - Sintetiza resultados principais
+      - Indica contribuições
+      - É conclusiva
+
+      LEMBRE-SE: Sua resposta DEVE ser um objeto JSON válido com a estrutura especificada acima.
     `;
 
     console.log(`Iniciando análise para seção: ${section}`);
-    console.log(`Conteúdo a ser analisado: ${content}`);
-
-    const result = await model.generateContent(prompt);
-    console.log('Resposta recebida do Gemini');
     
+    const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
-    console.log(`Resposta do Gemini: ${text}`);
     
-    // Parse the JSON response
+    console.log('Resposta do Gemini:', text);
+    
+    // Tenta extrair JSON da resposta, mesmo se estiver dentro de outros textos
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     let analysis;
-    try {
-      analysis = JSON.parse(text);
-      console.log('JSON parseado com sucesso');
-    } catch (error) {
-      console.error('Erro ao fazer parse da resposta do Gemini:', error);
-      console.error('Texto recebido:', text);
-      
-      // Fornecer uma resposta estruturada mesmo em caso de erro de parsing
-      analysis = {
-        isValid: false,
-        grammarErrors: [],
-        coherenceIssues: [],
-        sectionSpecificIssues: ['Não foi possível analisar o conteúdo adequadamente'],
-        suggestions: ['Tente reescrever o texto de forma mais clara e objetiva'],
-        overallFeedback: 'Ocorreu um erro ao analisar o conteúdo. A resposta da IA não estava no formato esperado. Por favor, tente novamente com um texto mais claro e objetivo.'
-      };
+    
+    if (jsonMatch) {
+      try {
+        analysis = JSON.parse(jsonMatch[0]);
+        console.log('JSON extraído e parseado com sucesso');
+      } catch (error) {
+        console.error('Erro ao fazer parse do JSON encontrado:', error);
+        throw new Error('Formato de resposta inválido');
+      }
+    } else {
+      console.error('Nenhum JSON encontrado na resposta');
+      throw new Error('Formato de resposta inválido');
     }
+
+    // Valida a estrutura do JSON
+    const requiredFields = ['isValid', 'grammarErrors', 'coherenceIssues', 'sectionSpecificIssues', 'suggestions', 'overallFeedback'];
+    const missingFields = requiredFields.filter(field => !(field in analysis));
+    
+    if (missingFields.length > 0) {
+      console.error('Campos obrigatórios ausentes:', missingFields);
+      throw new Error('Resposta incompleta');
+    }
+
+    // Garante que arrays estejam presentes mesmo que vazios
+    analysis.grammarErrors = analysis.grammarErrors || [];
+    analysis.coherenceIssues = analysis.coherenceIssues || [];
+    analysis.sectionSpecificIssues = analysis.sectionSpecificIssues || [];
+    analysis.suggestions = analysis.suggestions || [];
 
     return new Response(
       JSON.stringify(analysis),
@@ -126,14 +135,13 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erro na função validate-content:', error);
     
-    // Fornecer uma resposta estruturada em caso de erro
     const errorResponse = {
       isValid: false,
       grammarErrors: [],
       coherenceIssues: [],
-      sectionSpecificIssues: [error.message || 'Erro desconhecido ao processar o conteúdo'],
-      suggestions: ['Verifique se o texto foi fornecido corretamente', 'Tente novamente em alguns instantes'],
-      overallFeedback: 'Ocorreu um erro ao processar sua solicitação. Por favor, verifique o conteúdo e tente novamente.'
+      sectionSpecificIssues: ['Erro ao processar o conteúdo: ' + (error.message || 'Erro desconhecido')],
+      suggestions: ['Tente reescrever o texto de forma mais clara e objetiva'],
+      overallFeedback: 'Ocorreu um erro ao analisar seu texto. Por favor, verifique se o conteúdo está bem estruturado e tente novamente.'
     };
 
     return new Response(
