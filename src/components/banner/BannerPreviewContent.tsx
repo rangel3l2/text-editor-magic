@@ -63,24 +63,23 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         }}
       >
         <div className="banner-content p-[2cm]">
-          {/* Header Section - Not draggable */}
-          <div className="mb-8 w-full">
-            <div 
-              className="text-center w-full mb-6"
-              dangerouslySetInnerHTML={{ 
-                __html: previewHtml.split('<div class="banner-section"')[0] 
-              }}
-              style={{
-                fontFamily: 'Times New Roman, serif',
-                fontSize: '16pt',
-                lineHeight: 1.5,
-                color: '#000000',
-              }}
-            />
-          </div>
+          {/* Institution Name - Full Width */}
+          <div 
+            className="w-full text-center mb-8"
+            dangerouslySetInnerHTML={{ 
+              __html: previewHtml.split('<div class="banner-section"')[0] 
+            }}
+            style={{
+              fontFamily: 'Times New Roman, serif',
+              fontSize: '16pt',
+              lineHeight: 1.5,
+              color: '#000000',
+            }}
+          />
 
-          {/* Title and Authors in Left Column */}
+          {/* Two Column Layout */}
           <div className="grid grid-cols-2 gap-x-8">
+            {/* Left Column - Title and Authors */}
             <div className="space-y-4">
               {/* Title */}
               <div
@@ -110,8 +109,8 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
               </div>
             </div>
 
-            {/* Right Column for Other Sections */}
-            <div className="space-y-4">
+            {/* Right Column - Other Sections */}
+            <div>
               {sections.slice(2).map((section, index) => (
                 <div
                   key={index + 2}
@@ -120,7 +119,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, index + 2)}
-                  className="banner-section cursor-move hover:bg-gray-50 transition-colors p-2 rounded"
+                  className="banner-section cursor-move hover:bg-gray-50 transition-colors p-2 rounded mb-4"
                   style={{
                     fontFamily: 'Times New Roman, serif',
                     fontSize: '12pt',
