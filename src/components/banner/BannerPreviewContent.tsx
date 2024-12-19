@@ -3,8 +3,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ImageCropDialog, { ImageConfig } from './ImageCropDialog';
 import { supabase } from "@/integrations/supabase/client";
-import BannerSection from './BannerSection';
 import { Json } from '@/integrations/supabase/types';
+import PreviewHeader from './preview/PreviewHeader';
+import PreviewColumns from './preview/PreviewColumns';
 
 interface BannerPreviewContentProps {
   previewHtml: string;
@@ -147,7 +148,11 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
 
   if (!previewHtml) return null;
 
-  const headerContent = previewHtml.split('<div class="banner-section"')[0];
+  // Extract institution information from the header content
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(previewHtml, 'text/html');
+  const institutionName = doc.querySelector('.institution')?.innerHTML || '';
+  const institutionLogo = doc.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src');
 
   return (
     <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
@@ -167,27 +172,21 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         }}
       >
         <div className="banner-content flex-1 overflow-hidden">
-          {headerContent && (
-            <div className="text-center mb-8">
-              <div dangerouslySetInnerHTML={{ __html: headerContent }} />
-            </div>
-          )}
+          <PreviewHeader 
+            institutionName={institutionName}
+            institutionLogo={institutionLogo}
+          />
 
-          <div className="columns-2 gap-4 h-full">
-            {sections.map((section, index) => (
-              <BannerSection
-                key={index}
-                section={section}
-                index={index}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                getImageStyle={getImageStyle}
-                onImageClick={handleImageClick}
-              />
-            ))}
-          </div>
+          <PreviewColumns
+            sections={sections}
+            draggedSection={draggedSection}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            getImageStyle={getImageStyle}
+            onImageClick={handleImageClick}
+          />
         </div>
       </div>
 
