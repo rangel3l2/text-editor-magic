@@ -16,6 +16,8 @@ export interface BannerContent {
 
 export const useBannerContent = () => {
   const STORAGE_KEY = 'banner_content';
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const initialBannerContent: BannerContent = {
     title: '',
@@ -59,10 +61,21 @@ export const useBannerContent = () => {
     }));
   };
 
+  const onImageConfigChange = (imageId: string, config: any) => {
+    console.log('Image config changed:', imageId, config);
+    // Implementation for image configuration changes
+  };
+
   return {
+    content: bannerContent,
+    handleChange,
+    selectedImage,
+    setSelectedImage,
+    onImageConfigChange,
+    previewOpen,
+    setPreviewOpen,
     bannerContent,
     setBannerContent,
-    handleChange,
     initialBannerContent,
     STORAGE_KEY
   };

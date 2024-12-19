@@ -25,14 +25,21 @@ const BannerEditor = () => {
         onImageConfigChange={onImageConfigChange}
       >
         <div className="space-y-8">
-          <BannerHeader />
+          <BannerHeader title={content.title} />
           <BannerContent
             content={content}
             handleChange={handleChange}
             selectedImage={selectedImage}
             onImageConfigChange={onImageConfigChange}
           />
-          <BannerActions />
+          <BannerActions
+            onGeneratePDF={() => {}}
+            onShare={() => {}}
+            onLoadSavedContent={() => {}}
+            onClearFields={() => {}}
+            onPreview={() => setPreviewOpen(true)}
+            onSave={() => {}}
+          />
         </div>
       </BannerLayout>
     </>

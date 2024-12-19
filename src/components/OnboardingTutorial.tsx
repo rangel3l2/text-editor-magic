@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,9 +20,9 @@ const steps = [
   },
   {
     title: "Editor Integrado",
-    description: "Escreva seus trabalhos diretamente na plataforma.",
+    description: "Tudo que você precisa em um só lugar.",
     icon: <Pencil className="w-12 h-12 text-primary mb-4" />,
-    content: "Nosso editor integrado elimina a necessidade de softwares externos. Você pode escrever, formatar e organizar seu trabalho em um só lugar.",
+    content: "Nosso editor integrado permite que você crie seu trabalho acadêmico sem precisar alternar entre diferentes programas.",
   },
   {
     title: "Orientação Inteligente",
@@ -34,7 +34,7 @@ const steps = [
     title: "Formatação Automática",
     description: "Seu trabalho sempre nas normas.",
     icon: <FileText className="w-12 h-12 text-primary mb-4" />,
-    content: "Esqueça as preocupações com formatação. O AIcademic cuida automaticamente das normas acadêmicas enquanto você foca no conteúdo.",
+    content: "Não se preocupe com formatação! O AIcademic cuida disso para você, seguindo todas as normas acadêmicas necessárias.",
   },
 ];
 
@@ -54,7 +54,6 @@ export function OnboardingTutorial() {
           .single();
 
         if (!data) {
-          // Se não existir registro, criar um novo
           const { error: insertError } = await supabase
             .from('user_preferences')
             .insert({
@@ -95,9 +94,8 @@ export function OnboardingTutorial() {
         .eq('user_id', user.id);
     }
     setOpen(false);
+    setHasSeenTutorial(true);
   };
-
-  if (hasSeenTutorial) return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -106,26 +104,18 @@ export function OnboardingTutorial() {
           <div className="flex flex-col items-center text-center">
             {steps[currentStep].icon}
             <DialogTitle>{steps[currentStep].title}</DialogTitle>
-            <DialogDescription className="mt-2">
+            <DialogDescription>
               {steps[currentStep].description}
             </DialogDescription>
           </div>
         </DialogHeader>
-        <div className="py-4 text-center">
-          {steps[currentStep].content}
+        <div className="py-4">
+          <p className="text-center text-muted-foreground">
+            {steps[currentStep].content}
+          </p>
         </div>
-        <DialogFooter className="flex justify-between items-center">
-          <div className="flex gap-2">
-            {steps.map((_, index) => (
-              <div
-                key={index}
-                className={`h-2 w-2 rounded-full ${
-                  index === currentStep ? "bg-primary" : "bg-gray-200"
-                }`}
-              />
-            ))}
-          </div>
-          <Button onClick={handleNext}>
+        <DialogFooter>
+          <Button onClick={handleNext} className="w-full">
             {currentStep < steps.length - 1 ? "Próximo" : "Começar"}
           </Button>
         </DialogFooter>
