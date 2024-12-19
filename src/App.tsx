@@ -9,6 +9,7 @@ import Profile from "./pages/Profile";
 import BannerEditor from "./components/BannerEditor";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import CookieConsent from "./components/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
           </Routes>
+          <CookieConsent />
         </TooltipProvider>
       </AuthProvider>
     </BrowserRouter>
