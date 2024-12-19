@@ -21,6 +21,32 @@ const BannerSection = ({
   getImageStyle,
   onImageClick
 }: BannerSectionProps) => {
+  const processedHtml = section.innerHTML.replace(
+    /<img([^>]*)>/g,
+    (match, attributes) => {
+      const srcMatch = attributes.match(/src="([^"]*)"/);
+      if (!srcMatch) return match;
+      
+      const imageUrl = srcMatch[1];
+      const style = getImageStyle(imageUrl);
+      const styleString = Object.entries(style)
+        .map(([key, value]) => `${key}:${value}`)
+        .join(';');
+      
+      return `<img${attributes} style="${styleString}" class="cursor-pointer hover:opacity-80 transition-opacity" data-image-url="${imageUrl}" />`;
+    }
+  );
+
+  const handleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'IMG') {
+      const imageUrl = target.getAttribute('data-image-url');
+      if (imageUrl) {
+        onImageClick(imageUrl);
+      }
+    }
+  };
+
   return (
     <div
       draggable
@@ -39,29 +65,8 @@ const BannerSection = ({
     >
       <div className="p-2 rounded">
         <div
-          dangerouslySetInnerHTML={{
-            __html: section.innerHTML.replace(
-              /<img([^>]*)>/g,
-              (match, attributes) => {
-                const srcMatch = attributes.match(/src="([^"]*)"/);
-                if (!srcMatch) return match;
-                
-                const imageUrl = srcMatch[1];
-                const style = getImageStyle(imageUrl);
-                const styleString = Object.entries(style)
-                  .map(([key, value]) => `${key}:${value}`)
-                  .join(';');
-                
-                return `<img${attributes} style="${styleString}" class="cursor-pointer hover:opacity-80 transition-opacity" />`;
-              }
-            )
-          }}
-          onClick={(e) => {
-            const target = e.target as HTMLElement;
-            if (target.tagName === 'IMG') {
-              onImageClick(target.getAttribute('src') || '');
-            }
-          }}
+          dangerouslySetInnerHTML={{ __html: processedHtml }}
+          onClick={handleClick}
         />
       </div>
     </div>

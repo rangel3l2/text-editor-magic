@@ -5,13 +5,15 @@ interface BannerHeaderProps {
 }
 
 const BannerHeader = ({ previewHtml }: BannerHeaderProps) => {
+  if (!previewHtml) return null;
+
+  const headerContent = previewHtml.split('<div class="banner-section"')[0];
+  
   return (
     <div className="col-span-2 w-full mb-4">
       <div 
         className="text-center"
-        dangerouslySetInnerHTML={{ 
-          __html: previewHtml.split('<div class="banner-section"')[0] 
-        }}
+        dangerouslySetInnerHTML={{ __html: headerContent }}
       />
     </div>
   );

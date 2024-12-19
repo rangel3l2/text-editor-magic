@@ -31,7 +31,9 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   };
 
   useEffect(() => {
-    setSections(parseSections(previewHtml));
+    if (previewHtml) {
+      setSections(parseSections(previewHtml));
+    }
   }, [previewHtml]);
 
   const handleDragStart = (index: number) => {
@@ -151,6 +153,8 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
 
     return style;
   };
+
+  if (!previewHtml) return null;
 
   return (
     <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
