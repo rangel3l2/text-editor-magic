@@ -87,10 +87,11 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
           transformOrigin: 'top center',
           display: 'flex',
           flexDirection: 'column',
+          overflow: 'hidden'
         }}
       >
-        <div className="banner-content flex-1">
-          <div className="col-span-2 w-full mb-6">
+        <div className="banner-content flex-1 overflow-hidden">
+          <div className="col-span-2 w-full mb-4">
             <div 
               className="text-center"
               dangerouslySetInnerHTML={{ 
@@ -99,7 +100,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="columns-2 gap-4 h-full">
             {sections.map((section, index) => (
               <div
                 key={index}
@@ -108,11 +109,11 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, index)}
-                className="banner-section relative cursor-move transition-colors"
+                className="banner-section relative cursor-move transition-colors break-inside-avoid-column mb-4"
                 style={{
                   fontFamily: 'Times New Roman, serif',
-                  fontSize: '11pt',
-                  lineHeight: '1.15',
+                  fontSize: '10pt',
+                  lineHeight: '1.2',
                   textAlign: 'justify',
                   color: '#000000',
                 }}
