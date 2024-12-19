@@ -7,13 +7,28 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { content, section } = await req.json();
+
+    // Validar se o conteúdo e a seção foram fornecidos
+    if (!content || !section) {
+      console.error('Conteúdo ou seção não fornecidos');
+      throw new Error('Conteúdo e seção são obrigatórios');
+    }
+
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
+    
+    // Verificar se a chave API está configurada
+    if (!Deno.env.get('GEMINI_API_KEY')) {
+      console.error('GEMINI_API_KEY não configurada');
+      throw new Error('Chave API do Gemini não configurada');
+    }
+
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
@@ -69,23 +84,33 @@ serve(async (req) => {
       }
     `;
 
+    console.log(`Iniciando análise para seção: ${section}`);
+    console.log(`Conteúdo a ser analisado: ${content}`);
+
     const result = await model.generateContent(prompt);
+    console.log('Resposta recebida do Gemini');
+    
     const response = result.response;
     const text = response.text();
+    console.log(`Resposta do Gemini: ${text}`);
     
     // Parse the JSON response
     let analysis;
     try {
       analysis = JSON.parse(text);
+      console.log('JSON parseado com sucesso');
     } catch (error) {
-      console.error('Error parsing Gemini response:', error);
+      console.error('Erro ao fazer parse da resposta do Gemini:', error);
+      console.error('Texto recebido:', text);
+      
+      // Fornecer uma resposta estruturada mesmo em caso de erro de parsing
       analysis = {
         isValid: false,
         grammarErrors: [],
         coherenceIssues: [],
-        sectionSpecificIssues: ['Erro ao analisar o conteúdo'],
-        suggestions: [],
-        overallFeedback: 'Ocorreu um erro ao analisar o conteúdo. Por favor, tente novamente.'
+        sectionSpecificIssues: ['Não foi possível analisar o conteúdo adequadamente'],
+        suggestions: ['Tente reescrever o texto de forma mais clara e objetiva'],
+        overallFeedback: 'Ocorreu um erro ao analisar o conteúdo. A resposta da IA não estava no formato esperado. Por favor, tente novamente com um texto mais claro e objetivo.'
       };
     }
 
@@ -99,12 +124,20 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in validate-content function:', error);
+    console.error('Erro na função validate-content:', error);
+    
+    // Fornecer uma resposta estruturada em caso de erro
+    const errorResponse = {
+      isValid: false,
+      grammarErrors: [],
+      coherenceIssues: [],
+      sectionSpecificIssues: [error.message || 'Erro desconhecido ao processar o conteúdo'],
+      suggestions: ['Verifique se o texto foi fornecido corretamente', 'Tente novamente em alguns instantes'],
+      overallFeedback: 'Ocorreu um erro ao processar sua solicitação. Por favor, verifique o conteúdo e tente novamente.'
+    };
+
     return new Response(
-      JSON.stringify({
-        error: 'Failed to validate content',
-        details: error.message
-      }),
+      JSON.stringify(errorResponse),
       { 
         status: 500,
         headers: { 
