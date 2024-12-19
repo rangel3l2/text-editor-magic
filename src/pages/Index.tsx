@@ -1,12 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, FileText, PenTool, GraduationCap } from "lucide-react";
+import { BookOpen, FileText, PenTool, GraduationCap, BriefcaseIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import LoadingScreen from "@/components/LoadingScreen";
+import { LoginButton } from "@/components/LoginButton";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     // Simulate loading time (you can remove this setTimeout if you have real data loading)
@@ -39,12 +42,53 @@ const Index = () => {
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
               AIcademic
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 max-w-2xl">
+            <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mb-8">
               Escreva, aprenda, conclua – com AIcademic
             </p>
+            <LoginButton />
           </div>
         </div>
       </div>
+
+      {/* My Works Section - Only visible for logged in users */}
+      {user && (
+        <div className="container mx-auto px-4 py-8">
+          <h2 className="text-3xl font-bold text-center mb-8">Meus Trabalhos</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* In Progress Works */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PenTool className="h-6 w-6" />
+                  Em Andamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-gray-500">
+                  <BriefcaseIcon className="h-12 w-12 mx-auto mb-4" />
+                  <p>Nenhum trabalho em andamento</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Completed Works */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-6 w-6" />
+                  Concluídos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-gray-500">
+                  <BriefcaseIcon className="h-12 w-12 mx-auto mb-4" />
+                  <p>Nenhum trabalho concluído</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
 
       {/* Academic Works Section */}
       <div className="container mx-auto px-4 py-16">
