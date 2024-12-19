@@ -13,7 +13,7 @@ const PreviewHeader = ({
 }: PreviewHeaderProps) => {
   return (
     <div className="flex flex-col w-full mb-8">
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="banner-header flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-4">
           {institutionLogo && (
             <img 
@@ -25,7 +25,7 @@ const PreviewHeader = ({
         </div>
         <div className="flex-1 text-right">
           <div 
-            className="institution text-lg font-semibold"
+            className="institution text-xl font-semibold"
             dangerouslySetInnerHTML={{ __html: institutionName }} 
           />
         </div>
