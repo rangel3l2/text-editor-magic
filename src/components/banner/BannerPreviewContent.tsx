@@ -97,19 +97,11 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         [selectedImage]: config
       }));
 
-      // Convert ImageConfig to Json type for Supabase
-      const positionData: Json = {
-        scale: config.scale,
-        rotation: config.rotation,
-        alignment: config.alignment,
-        crop: config.crop
-      };
-
       const { error } = await supabase
         .from('banner_images')
         .upsert({
           image_url: selectedImage,
-          position_data: positionData
+          position_data: config as Json
         });
 
       if (error) throw error;

@@ -1,20 +1,77 @@
 import React from 'react';
+import { Button } from "@/components/ui/button";
+import { FileDown, Share2, Eye, RotateCcw } from "lucide-react";
 
 interface BannerHeaderProps {
-  previewHtml: string;
+  previewHtml?: string;
+  title: string;
+  onGeneratePDF: () => void;
+  onShare: () => void;
+  onOpenPreview: () => void;
+  onClearFields: () => void;
 }
 
-const BannerHeader = ({ previewHtml }: BannerHeaderProps) => {
-  if (!previewHtml) return null;
+const BannerHeader = ({ 
+  previewHtml,
+  title,
+  onGeneratePDF,
+  onShare,
+  onOpenPreview,
+  onClearFields 
+}: BannerHeaderProps) => {
+  const headerContent = previewHtml ? previewHtml.split('<div class="banner-section"')[0] : '';
 
-  const headerContent = previewHtml.split('<div class="banner-section"')[0];
-  
   return (
-    <div className="col-span-2 w-full mb-4">
-      <div 
-        className="text-center"
-        dangerouslySetInnerHTML={{ __html: headerContent }}
-      />
+    <div className="flex flex-col space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{title}</h1>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onGeneratePDF}
+            className="hidden sm:flex"
+          >
+            <FileDown className="h-4 w-4 mr-2" />
+            Baixar PDF
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onShare}
+            className="hidden sm:flex"
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Compartilhar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onOpenPreview}
+            className="hidden sm:flex"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Visualizar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClearFields}
+            className="hidden sm:flex"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Limpar
+          </Button>
+        </div>
+      </div>
+      {headerContent && (
+        <div className="col-span-2 w-full mb-4">
+          <div 
+            className="text-center"
+            dangerouslySetInnerHTML={{ __html: headerContent }}
+          />
+        </div>
+      )}
     </div>
   );
 };

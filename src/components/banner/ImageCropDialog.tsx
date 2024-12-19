@@ -1,17 +1,9 @@
-import { useState } from 'react';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { AlignLeft, AlignCenter, AlignRight, Crop, Move } from "lucide-react";
-
-interface ImageCropDialogProps {
-  imageUrl: string;
-  onSave: (config: ImageConfig) => void;
-  onCancel: () => void;
-  initialConfig?: ImageConfig;
-}
+import { useState, useRef, useEffect } from "react";
+import { Json } from '@/integrations/supabase/types';
+import Cropper from 'react-easy-crop';
+import { Point, Area } from 'react-easy-crop/types';
 
 export interface ImageConfig {
   scale: number;
@@ -23,103 +15,135 @@ export interface ImageConfig {
     width: number;
     height: number;
   };
+  [key: string]: Json;
 }
 
-const ImageCropDialog = ({ imageUrl, onSave, onCancel, initialConfig }: ImageCropDialogProps) => {
-  const [scale, setScale] = useState(initialConfig?.scale || 1);
-  const [rotation, setRotation] = useState(initialConfig?.rotation || 0);
-  const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>(
-    initialConfig?.alignment || 'center'
-  );
+interface ImageCropDialogProps {
+  imageUrl: string;
+  initialConfig?: ImageConfig;
+  onSave: (config: ImageConfig) => void;
+  onCancel: () => void;
+}
+
+const ImageCropDialog = ({
+  imageUrl,
+  initialConfig,
+  onSave,
+  onCancel
+}: ImageCropDialogProps) => {
+  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>('center');
+
+  useEffect(() => {
+    if (initialConfig) {
+      setZoom(initialConfig.scale || 1);
+      setRotation(initialConfig.rotation || 0);
+      setAlignment(initialConfig.alignment || 'center');
+      if (initialConfig.crop) {
+        setCrop({ x: initialConfig.crop.x, y: initialConfig.crop.y });
+      }
+    }
+  }, [initialConfig]);
+
+  const onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
 
   const handleSave = () => {
-    onSave({
-      scale,
+    const config: ImageConfig = {
+      scale: zoom,
       rotation,
       alignment,
-      crop: {
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 100
-      }
-    });
+      crop: croppedAreaPixels ? {
+        x: croppedAreaPixels.x,
+        y: croppedAreaPixels.y,
+        width: croppedAreaPixels.width,
+        height: croppedAreaPixels.height
+      } : undefined
+    };
+    onSave(config);
   };
 
   return (
-    <div className="space-y-6">
-      <DialogHeader>
-        <DialogTitle>Editar Imagem</DialogTitle>
-        <DialogDescription>
-          Ajuste o tamanho, rotação e alinhamento da imagem.
-        </DialogDescription>
-      </DialogHeader>
+    <div className="flex flex-col h-full">
+      <div className="relative flex-1 min-h-[400px]">
+        <Cropper
+          image={imageUrl}
+          crop={crop}
+          zoom={zoom}
+          rotation={rotation}
+          aspect={16/9}
+          onCropChange={setCrop}
+          onZoomChange={setZoom}
+          onRotationChange={setRotation}
+          onCropComplete={onCropComplete}
+        />
+      </div>
 
-      <div className="space-y-4">
-        <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
-          <img
-            src={imageUrl}
-            alt="Preview"
-            className="w-full h-full object-contain transition-transform"
-            style={{
-              transform: `scale(${scale}) rotate(${rotation}deg)`,
-            }}
+      <div className="flex flex-col gap-4 mt-4">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium">Zoom:</label>
+          <input
+            type="range"
+            min={1}
+            max={3}
+            step={0.1}
+            value={zoom}
+            onChange={(e) => setZoom(Number(e.target.value))}
+            className="w-64"
           />
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Tamanho</Label>
-              <Crop className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <Slider
-              value={[scale * 100]}
-              onValueChange={([value]) => setScale(value / 100)}
-              min={50}
-              max={150}
-              step={1}
-            />
-          </div>
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium">Rotação:</label>
+          <input
+            type="range"
+            min={0}
+            max={360}
+            value={rotation}
+            onChange={(e) => setRotation(Number(e.target.value))}
+            className="w-64"
+          />
+        </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Rotação</Label>
-              <Move className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <Slider
-              value={[rotation]}
-              onValueChange={([value]) => setRotation(value)}
-              min={-180}
-              max={180}
-              step={1}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Alinhamento</Label>
-            <ToggleGroup type="single" value={alignment} onValueChange={(value: any) => setAlignment(value)}>
-              <ToggleGroupItem value="left" aria-label="Alinhar à esquerda">
-                <AlignLeft className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="center" aria-label="Centralizar">
-                <AlignCenter className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="right" aria-label="Alinhar à direita">
-                <AlignRight className="h-4 w-4" />
-              </ToggleGroupItem>
-            </ToggleGroup>
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium">Alinhamento:</label>
+          <div className="flex gap-2">
+            <Button
+              variant={alignment === 'left' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setAlignment('left')}
+            >
+              Esquerda
+            </Button>
+            <Button
+              variant={alignment === 'center' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setAlignment('center')}
+            >
+              Centro
+            </Button>
+            <Button
+              variant={alignment === 'right' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setAlignment('right')}
+            >
+              Direita
+            </Button>
           </div>
         </div>
-      </div>
 
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button onClick={handleSave}>
-          Salvar Alterações
-        </Button>
+        <div className="flex justify-end gap-2 mt-4">
+          <Button variant="outline" onClick={onCancel}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave}>
+            Salvar
+          </Button>
+        </div>
       </div>
     </div>
   );

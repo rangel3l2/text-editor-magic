@@ -43,7 +43,8 @@ const BannerEditor = () => {
       >
         <div className="space-y-8">
           <BannerHeader 
-            title={content.title} 
+            title={content.title || "Novo Banner"}
+            previewHtml={content.previewHtml}
             onGeneratePDF={handleGeneratePDF}
             onShare={handleShare}
             onOpenPreview={() => setPreviewOpen(true)}
