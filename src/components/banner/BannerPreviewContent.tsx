@@ -60,13 +60,15 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         className="bg-white shadow-lg"
         style={{
           width: '210mm',
-          height: '297mm',
+          minHeight: '297mm',
           padding: '20mm',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           margin: '0 auto',
+          transform: 'scale(0.9)',
+          transformOrigin: 'top center',
         }}
       >
-        <div className="banner-content h-full">
+        <div className="banner-content">
           {/* Header Section - Not draggable */}
           <div className="text-center mb-8">
             <div dangerouslySetInnerHTML={{ 

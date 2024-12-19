@@ -50,11 +50,11 @@ const BannerLayout = ({
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent 
-          className="max-w-[95vw] w-[1200px] h-[95vh] p-6"
+          className="max-w-[95vw] h-[95vh] p-6"
           style={{
-            aspectRatio: '210/297',
+            width: 'calc(210mm * 0.9)',
             maxHeight: '95vh',
-            width: 'auto',
+            margin: '0 auto',
           }}
         >
           <BannerPreview 
