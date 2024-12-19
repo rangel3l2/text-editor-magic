@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 
 interface BannerPreviewContentProps {
@@ -13,11 +13,11 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   const parseSections = (html: string) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    const sectionElements = doc.querySelectorAll('.banner-section');
-    return Array.from(sectionElements);
+    const sectionElements = Array.from(doc.querySelectorAll('.banner-section'));
+    return sectionElements as HTMLElement[];
   };
 
-  useState(() => {
+  useEffect(() => {
     setSections(parseSections(previewHtml));
   }, [previewHtml]);
 
@@ -25,16 +25,16 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
     setDraggedSection(index);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.currentTarget.classList.add('bg-gray-100');
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.currentTarget.classList.remove('bg-gray-100');
   };
 
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
     e.preventDefault();
     e.currentTarget.classList.remove('bg-gray-100');
 
