@@ -27,25 +27,26 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
-      Format the following text according to these exact ABNT rules:
+      Format the following text into two separate sections according to these exact ABNT rules:
 
-      1. For student authors (Discente):
-         - Surname in UPPERCASE, followed by comma and first name
-         - Replace "Autores:" with "Discente:"
+      1. Student authors section:
+         - Create a new section for students without any label
+         - Format each name: SURNAME in UPPERCASE, followed by comma and first name
          - For more than two authors, use "et al."
          - Separate multiple authors with semicolon and space
          Example: SILVA, João; SANTOS, Maria et al.
 
-      2. For advisor/professor (Docente):
-         - Replace any existing "Orientador:" or similar with "Docente:"
+      2. Advisor section:
+         - Create a new section for advisors without any label
          - Include academic title (Dr., Prof., etc.) if present
-         - Format name same as students: SURNAME, First Name
-         Example: Docente: Dr. SILVA, João
+         - Format name: SURNAME in UPPERCASE, followed by comma and first name
+         Example: Dr. SILVA, João Bispo
 
       Important rules:
-      - Keep any HTML formatting if present
+      - Remove any "Autores:", "Discente:", or "Docente:" labels
+      - Keep HTML formatting if present
       - Keep affiliation and email information unchanged
-      - Format each section separately
+      - Create two distinct sections separated by a line break
       - Return only the formatted text, no explanations
       
       Text to format:
