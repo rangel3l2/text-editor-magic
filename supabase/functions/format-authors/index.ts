@@ -34,20 +34,34 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
-      Format the following author names according to ABNT standards:
-      - If there are more than 2 authors, use "et al." after the first author
+      Format the following author names according to ABNT standards following these exact rules:
+
+      1. For a single author:
+      Format: SOBRENOME, Nome.
+      Example: MEDEIROS, João Bosco.
+
+      2. For two or three authors:
+      Format: SOBRENOME, Nome; SOBRENOME, Nome; SOBRENOME, Nome.
+      Example: SILVA, Antônio Carlos; SOUZA, Maria Clara; PEREIRA, João.
+
+      3. For more than three authors:
+      Format: SOBRENOME, Nome et al.
+      Example: FERREIRA, José Luís et al.
+
+      Important:
+      - Keep any HTML formatting if present
       - Keep affiliation and email information unchanged
+      - Only format the author names, not other information
       - Return only the formatted text, no explanations
-      - Preserve HTML formatting if present
-      - Example: "John Smith, Mary Johnson, Peter Parker" becomes "John Smith et al."
       
-      Authors to format:
+      Text to format:
       "${authors}"
     `;
 
     const result = await model.generateContent(prompt);
     const formattedAuthors = result.response.text().trim();
 
+    console.log('Original authors:', authors);
     console.log('Formatted authors:', formattedAuthors);
 
     return new Response(
