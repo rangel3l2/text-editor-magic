@@ -49,7 +49,14 @@ const BannerLayout = ({
       </nav>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-[95vw] w-[1200px] h-[95vh] p-6">
+        <DialogContent 
+          className="max-w-[95vw] w-[1200px] h-[95vh] p-6"
+          style={{
+            aspectRatio: '210/297',
+            maxHeight: '95vh',
+            width: 'auto',
+          }}
+        >
           <BannerPreview 
             content={content}
             onImageConfigChange={onImageConfigChange}
