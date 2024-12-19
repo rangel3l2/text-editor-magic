@@ -57,31 +57,41 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   return (
     <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
       <div 
-        className="w-[210mm] min-h-[297mm] bg-white shadow-lg"
+        className="w-[210mm] min-h-[297mm] bg-white shadow-lg p-8"
         style={{
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         }}
       >
-        <div className="w-full h-full p-8">
-          {sections.map((section, index) => (
-            <div
-              key={index}
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, index)}
-              className="banner-section cursor-move hover:bg-gray-50 transition-colors p-2 rounded"
-              style={{
-                fontFamily: 'Times New Roman, serif',
-                fontSize: '12pt',
-                lineHeight: 1.5,
-                textAlign: 'justify',
-                color: '#000000',
-              }}
-              dangerouslySetInnerHTML={{ __html: section.outerHTML }}
-            />
-          ))}
+        <div className="banner-content">
+          {/* Header Section - Not draggable */}
+          <div className="text-center mb-8">
+            <div dangerouslySetInnerHTML={{ 
+              __html: previewHtml.split('<div class="banner-section"')[0] 
+            }} />
+          </div>
+
+          {/* Draggable Content Sections */}
+          <div className="grid grid-cols-2 gap-8">
+            {sections.map((section, index) => (
+              <div
+                key={index}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                className="banner-section cursor-move hover:bg-gray-50 transition-colors p-2 rounded"
+                style={{
+                  fontFamily: 'Times New Roman, serif',
+                  fontSize: '12pt',
+                  lineHeight: 1.5,
+                  textAlign: 'justify',
+                  color: '#000000',
+                }}
+                dangerouslySetInnerHTML={{ __html: section.outerHTML }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
