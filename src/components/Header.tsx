@@ -1,5 +1,5 @@
 import { LoginButton } from "./LoginButton";
-import { Settings, Menu } from "lucide-react";
+import { Settings, Menu, Moon, Sun } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,12 +15,14 @@ import {
 } from "@/components/ui/sheet";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
+import { useTheme } from "@/components/theme-provider";
 
 const Header = () => {
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b z-50">
+    <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b z-50">
       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sheet>
@@ -66,17 +68,26 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="mr-2"
+          >
+            {theme === "dark" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </Button>
           <LoginButton />
           <DropdownMenu>
             <DropdownMenuTrigger className="focus:outline-none">
-              <Settings className="h-5 w-5 text-gray-600 hover:text-gray-900 transition-colors" />
+              <Settings className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>
                 Configurações
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                Tema
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
