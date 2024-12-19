@@ -40,7 +40,7 @@ const PreviewHeader = ({
           )}
           {authors && (
             <div 
-              className="text-sm mt-4"
+              className="authors text-sm mt-4"
               dangerouslySetInnerHTML={{ __html: authors }}
             />
           )}

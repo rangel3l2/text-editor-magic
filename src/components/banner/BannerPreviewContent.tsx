@@ -151,12 +151,11 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(previewHtml, 'text/html');
   
-  // Extrair corretamente as informações do cabeçalho
-  const headerSection = doc.querySelector('.banner-header');
-  const institutionName = headerSection?.querySelector('.institution')?.innerHTML || '';
-  const institutionLogo = headerSection?.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src') || '';
-  const title = headerSection?.querySelector('h1')?.innerHTML || '';
-  const authors = headerSection?.querySelector('.authors')?.innerHTML || '';
+  // Extract header information
+  const institutionName = doc.querySelector('.institution')?.innerHTML || '';
+  const institutionLogo = doc.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src') || '';
+  const title = doc.querySelector('h1')?.innerHTML || '';
+  const authors = doc.querySelector('.authors')?.innerHTML || '';
 
   return (
     <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
