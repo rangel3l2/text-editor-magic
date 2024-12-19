@@ -23,7 +23,6 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
   const { user } = useAuth();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
       if (!user) {
         toast({
           title: "Erro ao enviar logo",
@@ -107,15 +106,15 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       handleChange('authors', data.formattedAuthors);
 
       toast({
-        title: "Autores formatados",
-        description: "Os nomes dos autores foram formatados de acordo com as normas ABNT",
+        title: "Nomes formatados",
+        description: "Os nomes foram formatados de acordo com as normas ABNT",
         duration: 3000,
       });
     } catch (error) {
       console.error('Error formatting authors:', error);
       toast({
-        title: "Erro ao formatar autores",
-        description: error.message || "Não foi possível formatar os nomes dos autores automaticamente",
+        title: "Erro ao formatar nomes",
+        description: error.message || "Não foi possível formatar os nomes automaticamente",
         variant: "destructive",
         duration: 5000,
       });
@@ -124,7 +123,6 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
 
   const handleAuthorsChange = async (value: string) => {
     handleChange('authors', value);
-    // Only format if there's actual content and it's not just HTML tags
     if (value && value.replace(/<[^>]*>/g, '').trim()) {
       await formatAuthors(value);
     }
@@ -199,17 +197,34 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
 
       <Card>
         <CardHeader>
-          <CardTitle>4. Autores</CardTitle>
-          <CardDescription>Liste os nomes dos autores, seguidos da afiliação institucional e e-mail de contato do autor principal. Os nomes serão automaticamente formatados de acordo com as normas ABNT. (2-3 linhas)</CardDescription>
+          <CardTitle>4. Discentes</CardTitle>
+          <CardDescription>Liste os nomes dos alunos autores do trabalho. Os nomes serão automaticamente formatados de acordo com as normas ABNT. (1-2 linhas)</CardDescription>
         </CardHeader>
         <CardContent>
           <RichTextEditor
             value={content.authors}
             onChange={handleAuthorsChange}
-            maxLines={3}
-            minLines={2}
+            maxLines={2}
+            minLines={1}
             config={editorConfig}
-            placeholder="Nome dos autores, afiliação institucional e e-mail de contato..."
+            placeholder="Nome dos alunos autores do trabalho..."
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>5. Docentes</CardTitle>
+          <CardDescription>Liste os nomes dos professores orientadores, incluindo titulação (Dr., Prof., etc). Os nomes serão automaticamente formatados de acordo com as normas ABNT. (1-2 linhas)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RichTextEditor
+            value={content.advisors || ""}
+            onChange={(data) => handleChange('advisors', data)}
+            maxLines={2}
+            minLines={1}
+            config={editorConfig}
+            placeholder="Nome dos professores orientadores..."
           />
         </CardContent>
       </Card>

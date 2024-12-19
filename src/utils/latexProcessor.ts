@@ -24,6 +24,7 @@ export const cleanLatexCommands = (text: string) => {
 
 export const generateLatexContent = (content: any) => {
   const processedAuthors = cleanLatexCommands(content.authors);
+  const processedAdvisors = cleanLatexCommands(content.advisors);
   const processedTitle = cleanLatexCommands(content.title);
   const processedInstitution = cleanLatexCommands(content.institution);
 
@@ -45,13 +46,16 @@ export const generateLatexContent = (content: any) => {
   html += '</div>';
 
   // Title and authors section with reduced spacing
-  if (processedTitle || processedAuthors) {
+  if (processedTitle || processedAuthors || processedAdvisors) {
     html += '<div class="text-center mt-4 space-y-2">';
     if (processedTitle) {
       html += `<h1 class="text-2xl font-bold">${processedTitle}</h1>`;
     }
     if (processedAuthors) {
       html += `<div class="authors text-sm mt-2">${processedAuthors}</div>`;
+    }
+    if (processedAdvisors) {
+      html += `<div class="advisors text-sm mt-2"><strong>${processedAdvisors}</strong></div>`;
     }
     html += '</div>';
   }
