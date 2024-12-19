@@ -6,9 +6,8 @@ import { uploadAdapterPlugin } from '@/utils/uploadAdapter';
 import { calculateTextProgress } from '@/utils/textProgress';
 import EditorProgress from './editor/EditorProgress';
 import ImageUploadHandler from './editor/ImageUploadHandler';
+import ValidationFeedback from './editor/ValidationFeedback';
 import { supabase } from "@/integrations/supabase/client";
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface RichTextEditorProps {
   value: string;
@@ -209,81 +208,10 @@ const RichTextEditor = ({
         />
       )}
 
-      {isValidating && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Validando conteúdo...</AlertTitle>
-          <AlertDescription>
-            Aguarde enquanto analisamos o texto.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {validationResult && !isValidating && (
-        <div className="space-y-4">
-          <Alert variant={validationResult.isValid ? "default" : "destructive"}>
-            {validationResult.isValid ? (
-              <CheckCircle2 className="h-4 w-4" />
-            ) : (
-              <AlertCircle className="h-4 w-4" />
-            )}
-            <AlertTitle>
-              {validationResult.isValid ? "Conteúdo adequado" : "Atenção: problemas encontrados"}
-            </AlertTitle>
-            <AlertDescription>
-              {validationResult.overallFeedback}
-            </AlertDescription>
-          </Alert>
-
-          {!validationResult.isValid && (
-            <div className="space-y-2">
-              {validationResult.grammarErrors.length > 0 && (
-                <div>
-                  <h4 className="font-semibold">Erros gramaticais:</h4>
-                  <ul className="list-disc pl-5">
-                    {validationResult.grammarErrors.map((error: string, index: number) => (
-                      <li key={`grammar-${index}`} className="text-sm text-gray-600">{error}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {validationResult.coherenceIssues.length > 0 && (
-                <div>
-                  <h4 className="font-semibold">Problemas de coesão e coerência:</h4>
-                  <ul className="list-disc pl-5">
-                    {validationResult.coherenceIssues.map((issue: string, index: number) => (
-                      <li key={`coherence-${index}`} className="text-sm text-gray-600">{issue}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {validationResult.sectionSpecificIssues.length > 0 && (
-                <div>
-                  <h4 className="font-semibold">Problemas específicos da seção:</h4>
-                  <ul className="list-disc pl-5">
-                    {validationResult.sectionSpecificIssues.map((issue: string, index: number) => (
-                      <li key={`section-${index}`} className="text-sm text-gray-600">{issue}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {validationResult.suggestions.length > 0 && (
-                <div>
-                  <h4 className="font-semibold">Sugestões de melhoria:</h4>
-                  <ul className="list-disc pl-5">
-                    {validationResult.suggestions.map((suggestion: string, index: number) => (
-                      <li key={`suggestion-${index}`} className="text-sm text-gray-600">{suggestion}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      <ValidationFeedback 
+        validationResult={validationResult}
+        isValidating={isValidating}
+      />
     </div>
   );
 };

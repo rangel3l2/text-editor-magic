@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,57 +29,60 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
-      Você é um assistente especializado em análise de textos acadêmicos.
-      Analise o seguinte texto para a seção "${section}" de um banner acadêmico.
+      Você é um especialista em análise de textos acadêmicos.
+      Analise o seguinte texto para a seção "${section}" de um banner acadêmico, focando especialmente em:
+      
+      1. Redundância:
+         - Identificar palavras ou ideias repetidas
+         - Verificar se há informações desnecessárias
+         - Sugerir formas mais concisas de expressar as ideias
+      
+      2. Contextualização:
+         - Verificar se o conteúdo está alinhado com o propósito da seção
+         - Avaliar se mantém coerência com o tema geral
+         - Identificar desvios do assunto principal
       
       Texto a ser analisado:
       "${content}"
 
-      Forneça uma análise detalhada seguindo estes critérios específicos para cada tipo de seção.
-      
-      IMPORTANTE: Sua resposta DEVE ser um objeto JSON válido com exatamente esta estrutura:
+      IMPORTANTE: Sua resposta DEVE ser um objeto JSON com exatamente esta estrutura:
       {
         "isValid": boolean,
+        "redundancyIssues": string[],
+        "contextIssues": string[],
         "grammarErrors": string[],
-        "coherenceIssues": string[],
-        "sectionSpecificIssues": string[],
         "suggestions": string[],
         "overallFeedback": string
       }
 
-      Critérios por seção:
+      Critérios específicos por seção:
 
       Introdução:
-      - Apresenta o tema/problema
-      - Contextualiza o assunto
-      - Indica a relevância do estudo
-      - Apresenta o objetivo geral
+      - Apresenta claramente o tema e problema
+      - Contextualiza sem repetições
+      - Justifica a relevância sem redundância
 
       Objetivos:
-      - É claro e direto
-      - Usa verbos no infinitivo
-      - É mensurável
-      - Está alinhado com a introdução
+      - Cada objetivo é único e específico
+      - Mantém foco no problema apresentado
+      - Evita verbos redundantes
 
       Metodologia:
-      - Descreve o tipo de pesquisa
-      - Explica os procedimentos
-      - Menciona instrumentos/técnicas
-      - É reproduzível
+      - Descreve procedimentos sem repetição
+      - Mantém sequência lógica
+      - Relaciona com objetivos
 
       Resultados:
-      - Apresenta dados concretos
-      - Relaciona com os objetivos
-      - É objetivo e claro
-      - Inclui análise dos dados
+      - Apresenta dados sem redundância
+      - Mantém foco nos objetivos propostos
+      - Análise clara e objetiva
 
       Conclusão:
-      - Retoma o objetivo
-      - Sintetiza resultados principais
-      - Indica contribuições
-      - É conclusiva
+      - Sintetiza sem repetir literalmente
+      - Relaciona com objetivos e resultados
+      - Destaca contribuições únicas
 
-      LEMBRE-SE: Sua resposta DEVE ser um objeto JSON válido com a estrutura especificada acima.
+      Forneça feedback construtivo e específico em português.
     `;
 
     console.log(`Iniciando análise para seção: ${section}`);
@@ -91,7 +93,7 @@ serve(async (req) => {
     
     console.log('Resposta do Gemini:', text);
     
-    // Tenta extrair JSON da resposta, mesmo se estiver dentro de outros textos
+    // Extrai o JSON da resposta
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     let analysis;
     
@@ -100,7 +102,7 @@ serve(async (req) => {
         analysis = JSON.parse(jsonMatch[0]);
         console.log('JSON extraído e parseado com sucesso');
       } catch (error) {
-        console.error('Erro ao fazer parse do JSON encontrado:', error);
+        console.error('Erro ao fazer parse do JSON:', error);
         throw new Error('Formato de resposta inválido');
       }
     } else {
@@ -109,7 +111,7 @@ serve(async (req) => {
     }
 
     // Valida a estrutura do JSON
-    const requiredFields = ['isValid', 'grammarErrors', 'coherenceIssues', 'sectionSpecificIssues', 'suggestions', 'overallFeedback'];
+    const requiredFields = ['isValid', 'redundancyIssues', 'contextIssues', 'grammarErrors', 'suggestions', 'overallFeedback'];
     const missingFields = requiredFields.filter(field => !(field in analysis));
     
     if (missingFields.length > 0) {
@@ -118,9 +120,9 @@ serve(async (req) => {
     }
 
     // Garante que arrays estejam presentes mesmo que vazios
+    analysis.redundancyIssues = analysis.redundancyIssues || [];
+    analysis.contextIssues = analysis.contextIssues || [];
     analysis.grammarErrors = analysis.grammarErrors || [];
-    analysis.coherenceIssues = analysis.coherenceIssues || [];
-    analysis.sectionSpecificIssues = analysis.sectionSpecificIssues || [];
     analysis.suggestions = analysis.suggestions || [];
 
     return new Response(
@@ -137,11 +139,11 @@ serve(async (req) => {
     
     const errorResponse = {
       isValid: false,
+      redundancyIssues: [],
+      contextIssues: ['Erro ao analisar o contexto do texto'],
       grammarErrors: [],
-      coherenceIssues: [],
-      sectionSpecificIssues: ['Erro ao processar o conteúdo: ' + (error.message || 'Erro desconhecido')],
-      suggestions: ['Tente reescrever o texto de forma mais clara e objetiva'],
-      overallFeedback: 'Ocorreu um erro ao analisar seu texto. Por favor, verifique se o conteúdo está bem estruturado e tente novamente.'
+      suggestions: ['Por favor, tente reescrever o texto de forma mais clara e objetiva'],
+      overallFeedback: 'Ocorreu um erro ao analisar seu texto. Verifique se o conteúdo está bem estruturado e tente novamente.'
     };
 
     return new Response(
