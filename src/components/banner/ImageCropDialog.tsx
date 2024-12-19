@@ -3,7 +3,19 @@ import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { Json } from '@/integrations/supabase/types';
 import Cropper from 'react-easy-crop';
-import { Point, Area } from 'react-easy-crop/types';
+
+// Define the types locally instead of importing from react-easy-crop/types
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface Area {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 export interface ImageConfig {
   scale: number;
