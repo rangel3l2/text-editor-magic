@@ -57,80 +57,48 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   return (
     <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
       <div 
-        className="w-[210mm] h-[297mm] bg-white shadow-lg"
+        className="w-[210mm] min-h-[297mm] bg-white shadow-lg"
         style={{
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         }}
       >
-        <div className="banner-content p-[2cm]">
-          {/* Institution Name - Full Width */}
-          <div 
-            className="w-full text-center mb-8"
-            dangerouslySetInnerHTML={{ 
-              __html: previewHtml.split('<div class="banner-section"')[0] 
-            }}
-            style={{
-              fontFamily: 'Times New Roman, serif',
-              fontSize: '16pt',
-              lineHeight: 1.5,
-              color: '#000000',
-            }}
-          />
+        <div className="banner-content p-[3cm] pt-[2cm]">
+          {/* Header Section - Not draggable */}
+          <div className="text-center mb-8">
+            <div 
+              dangerouslySetInnerHTML={{ 
+                __html: previewHtml.split('<div class="banner-section"')[0] 
+              }}
+              style={{
+                fontFamily: 'Times New Roman, serif',
+                fontSize: '14pt',
+                lineHeight: 1.5,
+                color: '#000000',
+              }}
+            />
+          </div>
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-2 gap-x-8">
-            {/* Left Column - Title and Authors */}
-            <div className="space-y-4">
-              {/* Title */}
+          {/* Draggable Content Sections */}
+          <div className="flex flex-col gap-6">
+            {sections.map((section, index) => (
               <div
-                className="banner-section"
-                style={{
-                  fontFamily: 'Times New Roman, serif',
-                  fontSize: '14pt',
-                  fontWeight: 'bold',
-                  lineHeight: 1.5,
-                  color: '#000000',
-                }}
-              >
-                {sections[0] && sections[0].outerHTML}
-              </div>
-
-              {/* Authors */}
-              <div
-                className="banner-section"
+                key={index}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, index)}
+                className="banner-section cursor-move hover:bg-gray-50 transition-colors p-2 rounded"
                 style={{
                   fontFamily: 'Times New Roman, serif',
                   fontSize: '12pt',
                   lineHeight: 1.5,
+                  textAlign: 'justify',
                   color: '#000000',
                 }}
-              >
-                {sections[1] && sections[1].outerHTML}
-              </div>
-            </div>
-
-            {/* Right Column - Other Sections */}
-            <div>
-              {sections.slice(2).map((section, index) => (
-                <div
-                  key={index + 2}
-                  draggable
-                  onDragStart={() => handleDragStart(index + 2)}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, index + 2)}
-                  className="banner-section cursor-move hover:bg-gray-50 transition-colors p-2 rounded mb-4"
-                  style={{
-                    fontFamily: 'Times New Roman, serif',
-                    fontSize: '12pt',
-                    lineHeight: 1.5,
-                    textAlign: 'justify',
-                    color: '#000000',
-                  }}
-                  dangerouslySetInnerHTML={{ __html: section.outerHTML }}
-                />
-              ))}
-            </div>
+                dangerouslySetInnerHTML={{ __html: section.outerHTML }}
+              />
+            ))}
           </div>
         </div>
       </div>
