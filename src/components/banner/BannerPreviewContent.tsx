@@ -148,12 +148,13 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
 
   if (!previewHtml) return null;
 
-  // Extract all header information
   const parser = new DOMParser();
   const doc = parser.parseFromString(previewHtml, 'text/html');
+  
+  // Extract header information correctly
   const institutionName = doc.querySelector('.institution')?.innerHTML || '';
-  const institutionLogo = doc.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src');
-  const title = doc.querySelector('.title')?.innerHTML || '';
+  const institutionLogo = doc.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src') || '';
+  const title = doc.querySelector('h1')?.innerHTML || '';
   const authors = doc.querySelector('.authors')?.innerHTML || '';
 
   return (

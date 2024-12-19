@@ -25,7 +25,7 @@ const PreviewHeader = ({
         </div>
         <div className="flex-1 text-right">
           <div 
-            className="institution"
+            className="institution text-lg font-semibold"
             dangerouslySetInnerHTML={{ __html: institutionName }} 
           />
         </div>
@@ -40,7 +40,7 @@ const PreviewHeader = ({
           )}
           {authors && (
             <div 
-              className="text-sm"
+              className="text-sm mt-4"
               dangerouslySetInnerHTML={{ __html: authors }}
             />
           )}
