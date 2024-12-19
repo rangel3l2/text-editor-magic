@@ -3,6 +3,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ImageCropDialog, { ImageConfig } from './ImageCropDialog';
 import { supabase } from "@/integrations/supabase/client";
+import BannerSection from './BannerSection';
+import BannerHeader from './BannerHeader';
+import { Json } from '@/integrations/supabase/types';
 
 interface BannerPreviewContentProps {
   previewHtml: string;
@@ -92,12 +95,19 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         [selectedImage]: config
       }));
 
-      // Save to Supabase
+      // Convert ImageConfig to Json type for Supabase
+      const positionData: Json = {
+        scale: config.scale,
+        rotation: config.rotation,
+        alignment: config.alignment,
+        crop: config.crop
+      };
+
       const { error } = await supabase
         .from('banner_images')
         .upsert({
           image_url: selectedImage,
-          position_data: config
+          position_data: positionData
         });
 
       if (error) throw error;
@@ -160,61 +170,21 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         }}
       >
         <div className="banner-content flex-1 overflow-hidden">
-          <div className="col-span-2 w-full mb-4">
-            <div 
-              className="text-center"
-              dangerouslySetInnerHTML={{ 
-                __html: previewHtml.split('<div class="banner-section"')[0] 
-              }}
-            />
-          </div>
+          <BannerHeader previewHtml={previewHtml} />
 
           <div className="columns-2 gap-4 h-full">
             {sections.map((section, index) => (
-              <div
+              <BannerSection
                 key={index}
-                draggable
-                onDragStart={() => handleDragStart(index)}
+                section={section}
+                index={index}
+                onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, index)}
-                className="banner-section relative cursor-move transition-colors break-inside-avoid-column mb-4"
-                style={{
-                  fontFamily: 'Times New Roman, serif',
-                  fontSize: '10pt',
-                  lineHeight: '1.2',
-                  textAlign: 'justify',
-                  color: '#000000',
-                }}
-              >
-                <div className="p-2 rounded">
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: section.innerHTML.replace(
-                        /<img([^>]*)>/g,
-                        (match, attributes) => {
-                          const srcMatch = attributes.match(/src="([^"]*)"/);
-                          if (!srcMatch) return match;
-                          
-                          const imageUrl = srcMatch[1];
-                          const style = getImageStyle(imageUrl);
-                          const styleString = Object.entries(style)
-                            .map(([key, value]) => `${key}:${value}`)
-                            .join(';');
-                          
-                          return `<img${attributes} style="${styleString}" onclick="window.handleImageClick('${imageUrl}')" class="cursor-pointer hover:opacity-80 transition-opacity" />`;
-                        }
-                      )
-                    }}
-                    onClick={(e) => {
-                      const target = e.target as HTMLElement;
-                      if (target.tagName === 'IMG') {
-                        handleImageClick(target.getAttribute('src') || '');
-                      }
-                    }}
-                  />
-                </div>
-              </div>
+                onDrop={handleDrop}
+                getImageStyle={getImageStyle}
+                onImageClick={handleImageClick}
+              />
             ))}
           </div>
         </div>

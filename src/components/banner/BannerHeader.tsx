@@ -1,58 +1,18 @@
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { FileDown, Share2, Eye, MoreHorizontal, Trash2 } from "lucide-react";
+import React from 'react';
 
 interface BannerHeaderProps {
-  title: string;
-  onGeneratePDF: () => void;
-  onShare: () => void;
-  onOpenPreview: () => void;
-  onClearFields: () => void;
+  previewHtml: string;
 }
 
-const BannerHeader = ({ 
-  title, 
-  onGeneratePDF, 
-  onShare, 
-  onOpenPreview,
-  onClearFields 
-}: BannerHeaderProps) => {
+const BannerHeader = ({ previewHtml }: BannerHeaderProps) => {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <h2 
-        className="text-2xl font-bold"
-        dangerouslySetInnerHTML={{ __html: title }}
+    <div className="col-span-2 w-full mb-4">
+      <div 
+        className="text-center"
+        dangerouslySetInnerHTML={{ 
+          __html: previewHtml.split('<div class="banner-section"')[0] 
+        }}
       />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={onGeneratePDF} className="cursor-pointer">
-            <FileDown className="mr-2 h-4 w-4" />
-            <span>Baixar PDF</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onOpenPreview} className="cursor-pointer">
-            <Eye className="mr-2 h-4 w-4" />
-            <span>Visualizar Banner</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onShare} className="cursor-pointer">
-            <Share2 className="mr-2 h-4 w-4" />
-            <span>Compartilhar</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onClearFields} className="cursor-pointer text-destructive">
-            <Trash2 className="mr-2 h-4 w-4" />
-            <span>Limpar Campos</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </div>
   );
 };
