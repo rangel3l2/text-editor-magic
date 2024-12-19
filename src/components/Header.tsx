@@ -24,6 +24,7 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-4">
+          <LoginButton />
           <DropdownMenu>
             <DropdownMenuTrigger className="focus:outline-none">
               <Settings className="h-5 w-5 text-gray-600 hover:text-gray-900 transition-colors" />
@@ -37,7 +38,6 @@ const Header = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <LoginButton />
         </div>
       </div>
     </header>

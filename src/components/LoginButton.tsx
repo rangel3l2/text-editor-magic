@@ -40,10 +40,10 @@ export function LoginButton() {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="flex items-center gap-2">
       {user ? (
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-700">{user.email}</span>
+          <span className="text-sm text-gray-700 hidden sm:inline">{user.email}</span>
           <Button
             variant="outline"
             size="sm"
@@ -51,7 +51,7 @@ export function LoginButton() {
             className="flex items-center gap-2"
           >
             <LogOut className="h-4 w-4" />
-            Sair
+            <span className="hidden sm:inline">Sair</span>
           </Button>
         </div>
       ) : (
@@ -62,7 +62,7 @@ export function LoginButton() {
           className="flex items-center gap-2"
         >
           <UserCircle2 className="h-4 w-4" />
-          Entrar com Google
+          <span className="hidden sm:inline">Entrar com Google</span>
         </Button>
       )}
     </div>
