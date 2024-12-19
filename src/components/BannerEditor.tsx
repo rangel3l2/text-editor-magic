@@ -3,6 +3,7 @@ import BannerHeader from "./banner/BannerHeader";
 import BannerContent from "./banner/BannerContent";
 import BannerActions from "./banner/BannerActions";
 import { useBannerContent } from "./banner/useBannerContent";
+import { useBannerActions } from "./banner/useBannerActions";
 import { OnboardingTutorial } from "./OnboardingTutorial";
 
 const BannerEditor = () => {
@@ -13,7 +14,23 @@ const BannerEditor = () => {
     onImageConfigChange,
     previewOpen,
     setPreviewOpen,
+    bannerContent,
+    setBannerContent,
+    initialBannerContent,
+    STORAGE_KEY
   } = useBannerContent();
+
+  const {
+    handleGeneratePDF,
+    handleShare,
+    handleLoadSavedContent,
+    handleClearFields
+  } = useBannerActions(
+    bannerContent,
+    setBannerContent,
+    initialBannerContent,
+    STORAGE_KEY
+  );
 
   return (
     <>
@@ -25,7 +42,12 @@ const BannerEditor = () => {
         onImageConfigChange={onImageConfigChange}
       >
         <div className="space-y-8">
-          <BannerHeader title={content.title} />
+          <BannerHeader 
+            title={content.title} 
+            onGeneratePDF={handleGeneratePDF}
+            onShare={handleShare}
+            onOpenPreview={() => setPreviewOpen(true)}
+          />
           <BannerContent
             content={content}
             handleChange={handleChange}
@@ -33,10 +55,10 @@ const BannerEditor = () => {
             onImageConfigChange={onImageConfigChange}
           />
           <BannerActions
-            onGeneratePDF={() => {}}
-            onShare={() => {}}
-            onLoadSavedContent={() => {}}
-            onClearFields={() => {}}
+            onGeneratePDF={handleGeneratePDF}
+            onShare={handleShare}
+            onLoadSavedContent={handleLoadSavedContent}
+            onClearFields={handleClearFields}
             onOpenPreview={() => setPreviewOpen(true)}
             onSave={() => {}}
           />
