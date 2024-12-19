@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Pencil, BookOpen, Bot, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 const steps = [
   {
@@ -59,14 +60,14 @@ export function OnboardingTutorial() {
             .insert({
               user_id: user.id,
               has_seen_tutorial: false
-            });
+            } satisfies Database['public']['Tables']['user_preferences']['Insert']);
 
           if (!insertError) {
             setHasSeenTutorial(false);
             setOpen(true);
           }
         } else {
-          setHasSeenTutorial(data.has_seen_tutorial);
+          setHasSeenTutorial(data.has_seen_tutorial ?? false);
           if (!data.has_seen_tutorial) {
             setOpen(true);
           }
@@ -90,7 +91,9 @@ export function OnboardingTutorial() {
     if (user) {
       await supabase
         .from('user_preferences')
-        .update({ has_seen_tutorial: true })
+        .update({
+          has_seen_tutorial: true
+        } satisfies Database['public']['Tables']['user_preferences']['Update'])
         .eq('user_id', user.id);
     }
     setOpen(false);

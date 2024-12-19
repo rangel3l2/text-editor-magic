@@ -83,6 +83,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          cookie_consent: boolean | null
+          cookie_consent_date: string | null
+          created_at: string | null
+          has_seen_tutorial: boolean | null
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cookie_consent?: boolean | null
+          cookie_consent_date?: string | null
+          created_at?: string | null
+          has_seen_tutorial?: boolean | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cookie_consent?: boolean | null
+          cookie_consent_date?: string | null
+          created_at?: string | null
+          has_seen_tutorial?: boolean | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

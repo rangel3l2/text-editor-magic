@@ -11,6 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
 
 const CookieConsent = () => {
   const [showBanner, setShowBanner] = useState(false);
@@ -34,12 +35,13 @@ const CookieConsent = () => {
     if (user) {
       try {
         const { error } = await supabase
-          .from("user_preferences")
+          .from('user_preferences')
           .upsert({
             user_id: user.id,
             cookie_consent: true,
             cookie_consent_date: new Date().toISOString(),
-          });
+          } satisfies Database['public']['Tables']['user_preferences']['Insert'])
+          .eq('user_id', user.id);
 
         if (error) throw error;
       } catch (error) {
