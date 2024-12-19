@@ -57,21 +57,29 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   return (
     <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
       <div 
-        className="w-[210mm] min-h-[297mm] bg-white shadow-lg p-8"
+        className="w-[210mm] min-h-[297mm] bg-white shadow-lg"
         style={{
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         }}
       >
-        <div className="banner-content">
+        <div className="banner-content p-[2cm]">
           {/* Header Section - Not draggable */}
-          <div className="text-center mb-8">
-            <div dangerouslySetInnerHTML={{ 
-              __html: previewHtml.split('<div class="banner-section"')[0] 
-            }} />
+          <div className="text-center mb-12">
+            <div 
+              dangerouslySetInnerHTML={{ 
+                __html: previewHtml.split('<div class="banner-section"')[0] 
+              }}
+              style={{
+                fontFamily: 'Times New Roman, serif',
+                fontSize: '14pt',
+                lineHeight: 1.5,
+                color: '#000000',
+              }}
+            />
           </div>
 
           {/* Draggable Content Sections */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-6">
             {sections.map((section, index) => (
               <div
                 key={index}
