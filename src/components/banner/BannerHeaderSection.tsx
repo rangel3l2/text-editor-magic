@@ -87,23 +87,15 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
 
   const formatAuthors = async (authorsText: string) => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/format-authors`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ authors: authorsText }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('format-authors', {
+        body: { authors: authorsText }
+      });
 
-      if (!response.ok) {
-        throw new Error('Failed to format authors');
+      if (error) {
+        throw error;
       }
 
-      const { formattedAuthors } = await response.json();
+      const { formattedAuthors } = data;
       handleChange('authors', formattedAuthors);
 
       toast({
