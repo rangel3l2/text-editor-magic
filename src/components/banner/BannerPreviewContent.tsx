@@ -69,11 +69,14 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         }}
       >
         <div className="banner-content">
-          {/* Header Section - Not draggable */}
-          <div className="text-center mb-6">
-            <div dangerouslySetInnerHTML={{ 
-              __html: previewHtml.split('<div class="banner-section"')[0] 
-            }} />
+          {/* Header Section - Not draggable, spans full width */}
+          <div className="col-span-2 w-full mb-8">
+            <div 
+              className="text-center"
+              dangerouslySetInnerHTML={{ 
+                __html: previewHtml.split('<div class="banner-section"')[0] 
+              }} 
+            />
           </div>
 
           {/* Draggable Content Sections */}

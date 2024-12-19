@@ -27,38 +27,35 @@ export const generateLatexContent = (content: any) => {
   const processedTitle = cleanLatexCommands(content.title);
   const processedInstitution = cleanLatexCommands(content.institution);
 
-  let html = '<div style="height: 100%; padding: 2cm;">';
+  let html = '<div style="height: 100%;">';
   
-  // Header section
-  html += '<div style="text-align: center; margin-bottom: 2cm;">';
+  // Header section - Full width, not draggable
+  html += '<div style="width: 100%;">';
   
-  // Institution logo and name
+  // Institution logo and name in a flex container
   if (content.institutionLogo || processedInstitution) {
-    html += '<div class="banner-section" style="display: flex; align-items: center; justify-content: center; gap: 1cm; margin-bottom: 1cm;">';
+    html += '<div style="display: flex; align-items: center; justify-content: center; gap: 2rem; margin-bottom: 2rem;">';
     if (content.institutionLogo) {
-      html += `<img src="${content.institutionLogo}" style="height: 2cm; object-fit: contain;" alt="Logo da Instituição" />`;
+      html += `<img src="${content.institutionLogo}" style="height: 80px; object-fit: contain;" alt="Logo da Instituição" />`;
     }
     if (processedInstitution) {
-      html += `<div style="font-size: 14pt; font-weight: bold;">${processedInstitution}</div>`;
+      html += `<div style="font-size: 16pt; font-weight: bold;">${processedInstitution}</div>`;
     }
     html += '</div>';
   }
 
   // Title
   if (processedTitle) {
-    html += `<div class="banner-section"><h1 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.5cm;">${processedTitle}</h1></div>`;
+    html += `<h1 style="font-size: 18pt; font-weight: bold; text-align: center; margin-bottom: 1.5rem;">${processedTitle}</h1>`;
   }
 
   // Authors
   if (processedAuthors) {
-    html += `<div class="banner-section" style="font-size: 12pt; margin-bottom: 1cm;">${processedAuthors}</div>`;
+    html += `<div style="font-size: 12pt; text-align: center; margin-bottom: 2rem;">${processedAuthors}</div>`;
   }
   html += '</div>';
 
-  // Content sections in two columns
-  html += '<div style="column-count: 2; column-gap: 1cm;">';
-
-  // Sections
+  // Content sections
   const sections = [
     { title: 'INTRODUÇÃO', content: content.introduction },
     { title: 'OBJETIVOS', content: content.objectives },
@@ -72,8 +69,8 @@ export const generateLatexContent = (content: any) => {
     if (sectionContent) {
       const cleanContent = cleanLatexCommands(sectionContent);
       html += `
-        <div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">
-          <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5cm;">${title}</h2>
+        <div class="banner-section" style="break-inside: avoid; margin-bottom: 1rem;">
+          <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5rem;">${title}</h2>
           <div style="font-size: 12pt;">${cleanContent}</div>
         </div>
       `;
@@ -84,14 +81,14 @@ export const generateLatexContent = (content: any) => {
   if (content.acknowledgments) {
     const cleanAcknowledgments = cleanLatexCommands(content.acknowledgments);
     html += `
-      <div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">
-        <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5cm;">AGRADECIMENTOS</h2>
+      <div class="banner-section" style="break-inside: avoid; margin-bottom: 1rem;">
+        <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5rem;">AGRADECIMENTOS</h2>
         <div style="font-size: 12pt;">${cleanAcknowledgments}</div>
       </div>
     `;
   }
 
-  html += '</div></div>';
+  html += '</div>';
 
   return html;
 };
