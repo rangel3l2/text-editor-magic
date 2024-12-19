@@ -12,7 +12,7 @@ const PreviewHeader = ({
   authors
 }: PreviewHeaderProps) => {
   return (
-    <div className="flex flex-col w-full mb-8">
+    <div className="flex flex-col w-full mb-4">
       <div className="banner-header flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-4">
           {institutionLogo && (
@@ -31,7 +31,7 @@ const PreviewHeader = ({
         )}
       </div>
       {(title || authors) && (
-        <div className="text-center mt-8 space-y-4">
+        <div className="text-center mt-4 space-y-2">
           {title && (
             <h1 
               className="text-2xl font-bold"
@@ -40,7 +40,7 @@ const PreviewHeader = ({
           )}
           {authors && (
             <div 
-              className="authors text-sm mt-4"
+              className="authors text-sm mt-2"
               dangerouslySetInnerHTML={{ __html: authors }}
             />
           )}

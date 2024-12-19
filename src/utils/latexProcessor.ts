@@ -44,14 +44,14 @@ export const generateLatexContent = (content: any) => {
   }
   html += '</div>';
 
-  // Title and authors section
+  // Title and authors section with reduced spacing
   if (processedTitle || processedAuthors) {
-    html += '<div class="text-center mt-8 space-y-4">';
+    html += '<div class="text-center mt-4 space-y-2">';
     if (processedTitle) {
       html += `<h1 class="text-2xl font-bold">${processedTitle}</h1>`;
     }
     if (processedAuthors) {
-      html += `<div class="authors text-sm mt-4">${processedAuthors}</div>`;
+      html += `<div class="authors text-sm mt-2">${processedAuthors}</div>`;
     }
     html += '</div>';
   }
