@@ -50,7 +50,7 @@ const BannerLayout = ({
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent 
-          className="max-w-[95vw] h-[95vh] p-6"
+          className="max-w-[95vw] h-[95vh] p-4"
           style={{
             width: 'calc(210mm * 0.9)',
             maxHeight: '95vh',

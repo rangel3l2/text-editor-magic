@@ -61,7 +61,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         style={{
           width: '210mm',
           minHeight: '297mm',
-          padding: '20mm',
+          padding: '25mm 30mm 25mm 30mm', // ABNT margins for banner
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           margin: '0 auto',
           transform: 'scale(0.9)',
@@ -70,14 +70,14 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
       >
         <div className="banner-content">
           {/* Header Section - Not draggable */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div dangerouslySetInnerHTML={{ 
               __html: previewHtml.split('<div class="banner-section"')[0] 
             }} />
           </div>
 
           {/* Draggable Content Sections */}
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid grid-cols-2 gap-6">
             {sections.map((section, index) => (
               <div
                 key={index}
