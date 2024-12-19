@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserCircle2, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -43,7 +44,18 @@ export function LoginButton() {
     <div className="flex items-center gap-2">
       {user ? (
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-700 hidden sm:inline">{user.email}</span>
+          <Avatar className="h-8 w-8">
+            <AvatarImage 
+              src={user.user_metadata?.avatar_url} 
+              alt={user.user_metadata?.full_name || user.email} 
+            />
+            <AvatarFallback>
+              {(user.user_metadata?.full_name?.[0] || user.email?.[0])?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-sm text-gray-700 hidden sm:inline">
+            {user.user_metadata?.full_name || user.email}
+          </span>
           <Button
             variant="outline"
             size="sm"
