@@ -34,7 +34,7 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
   }, [content, toast]);
 
   return (
-    <Card className="w-full h-full bg-white overflow-hidden">
+    <Card className="w-full h-full bg-white dark:bg-gray-800 overflow-hidden">
       <BannerPreviewContent previewHtml={previewHtml} />
     </Card>
   );
