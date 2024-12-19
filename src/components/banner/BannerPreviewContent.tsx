@@ -27,22 +27,45 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    e.currentTarget.classList.add('bg-gray-100');
+    const target = e.currentTarget;
+    
+    // Get mouse position relative to the target
+    const rect = target.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const isTopHalf = y < rect.height / 2;
+    
+    // Remove existing drop indicators
+    target.classList.remove('drop-top', 'drop-bottom');
+    
+    // Add drop indicator based on mouse position
+    if (isTopHalf) {
+      target.classList.add('drop-top');
+    } else {
+      target.classList.add('drop-bottom');
+    }
   };
 
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.currentTarget.classList.remove('bg-gray-100');
+    e.currentTarget.classList.remove('drop-top', 'drop-bottom');
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
     e.preventDefault();
-    e.currentTarget.classList.remove('bg-gray-100');
+    const target = e.currentTarget;
+    const rect = target.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const isTopHalf = y < rect.height / 2;
+    
+    target.classList.remove('drop-top', 'drop-bottom');
 
     if (draggedSection === null || draggedSection === targetIndex) return;
 
     const newSections = [...sections];
     const [movedSection] = newSections.splice(draggedSection, 1);
-    newSections.splice(targetIndex, 0, movedSection);
+    
+    // Insert at the correct position based on drop location
+    const newPosition = isTopHalf ? targetIndex : targetIndex + 1;
+    newSections.splice(newPosition, 0, movedSection);
 
     setSections(newSections);
     setDraggedSection(null);
@@ -61,7 +84,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         style={{
           width: '210mm',
           minHeight: '297mm',
-          padding: '25mm 30mm 25mm 30mm', // ABNT margins for banner
+          padding: '25mm 30mm 25mm 30mm',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           margin: '0 auto',
           transform: 'scale(0.9)',
@@ -89,7 +112,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, index)}
-                className="banner-section cursor-move hover:bg-gray-50 transition-colors p-2 rounded"
+                className="banner-section relative cursor-move transition-colors"
                 style={{
                   fontFamily: 'Times New Roman, serif',
                   fontSize: '12pt',
@@ -97,8 +120,40 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                   textAlign: 'justify',
                   color: '#000000',
                 }}
-                dangerouslySetInnerHTML={{ __html: section.outerHTML }}
-              />
+              >
+                <style>
+                  {`
+                    .banner-section:hover {
+                      background-color: transparent;
+                    }
+                    .banner-section:hover > div {
+                      background-color: rgb(243 244 246);
+                    }
+                    .banner-section.drop-top::before {
+                      content: '';
+                      position: absolute;
+                      top: -3px;
+                      left: 0;
+                      right: 0;
+                      height: 3px;
+                      background-color: #2563eb;
+                    }
+                    .banner-section.drop-bottom::after {
+                      content: '';
+                      position: absolute;
+                      bottom: -3px;
+                      left: 0;
+                      right: 0;
+                      height: 3px;
+                      background-color: #2563eb;
+                    }
+                  `}
+                </style>
+                <div 
+                  className="p-2 rounded"
+                  dangerouslySetInnerHTML={{ __html: section.outerHTML }} 
+                />
+              </div>
             ))}
           </div>
         </div>
