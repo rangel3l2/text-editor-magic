@@ -29,31 +29,32 @@ export const generateLatexContent = (content: any) => {
 
   let html = '<div style="height: 100%;">';
   
-  // Header section - Full width, not draggable
-  html += '<div style="width: 100%;">';
+  // Header section with specific classes for extraction
+  html += '<div class="banner-header flex items-center justify-between p-4 border-b">';
   
   // Institution logo and name in a flex container
-  if (content.institutionLogo || processedInstitution) {
-    html += '<div style="display: flex; align-items: center; justify-content: center; gap: 2rem; margin-bottom: 2rem;">';
-    if (content.institutionLogo) {
-      html += `<img src="${content.institutionLogo}" style="height: 80px; object-fit: contain;" alt="Logo da Instituição" />`;
+  html += '<div class="flex items-center gap-4">';
+  if (content.institutionLogo) {
+    html += `<img src="${content.institutionLogo}" alt="Logo da Instituição" class="w-24 h-24 object-contain" />`;
+  }
+  html += '</div>';
+  
+  if (processedInstitution) {
+    html += `<div class="institution flex-1 text-right text-xl font-semibold">${processedInstitution}</div>`;
+  }
+  html += '</div>';
+
+  // Title and authors section
+  if (processedTitle || processedAuthors) {
+    html += '<div class="text-center mt-8 space-y-4">';
+    if (processedTitle) {
+      html += `<h1 class="text-2xl font-bold">${processedTitle}</h1>`;
     }
-    if (processedInstitution) {
-      html += `<div style="font-size: 16pt; font-weight: bold;">${processedInstitution}</div>`;
+    if (processedAuthors) {
+      html += `<div class="authors text-sm mt-4">${processedAuthors}</div>`;
     }
     html += '</div>';
   }
-
-  // Title
-  if (processedTitle) {
-    html += `<h1 style="font-size: 18pt; font-weight: bold; text-align: center; margin-bottom: 1.5rem;">${processedTitle}</h1>`;
-  }
-
-  // Authors
-  if (processedAuthors) {
-    html += `<div style="font-size: 12pt; text-align: center; margin-bottom: 2rem;">${processedAuthors}</div>`;
-  }
-  html += '</div>';
 
   // Content sections
   const sections = [

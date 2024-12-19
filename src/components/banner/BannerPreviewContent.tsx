@@ -151,9 +151,10 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(previewHtml, 'text/html');
   
-  // Extract header information
-  const institutionName = doc.querySelector('.institution')?.innerHTML || '';
-  const institutionLogo = doc.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src') || '';
+  // Extract header information from the banner-header section
+  const headerSection = doc.querySelector('.banner-header');
+  const institutionName = headerSection?.querySelector('.institution')?.innerHTML || '';
+  const institutionLogo = headerSection?.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src') || '';
   const title = doc.querySelector('h1')?.innerHTML || '';
   const authors = doc.querySelector('.authors')?.innerHTML || '';
 

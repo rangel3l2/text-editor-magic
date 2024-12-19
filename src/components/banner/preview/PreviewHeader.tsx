@@ -23,12 +23,12 @@ const PreviewHeader = ({
             />
           )}
         </div>
-        <div className="flex-1 text-right">
+        {institutionName && (
           <div 
-            className="institution text-xl font-semibold"
+            className="institution flex-1 text-right text-xl font-semibold"
             dangerouslySetInnerHTML={{ __html: institutionName }} 
           />
-        </div>
+        )}
       </div>
       {(title || authors) && (
         <div className="text-center mt-8 space-y-4">
