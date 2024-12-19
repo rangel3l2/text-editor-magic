@@ -7,22 +7,21 @@ interface BannerPreviewContentProps {
 }
 
 const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
-  const { toast } = useToast();
   const [sections, setSections] = useState<Array<{ id: string; content: string }>>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (previewHtml) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(previewHtml, 'text/html');
-      
-      // Get all sections with class 'banner-section'
-      const sectionElements = Array.from(doc.querySelectorAll('.banner-section'));
-      const newSections = sectionElements.map((section, index) => ({
-        id: `section-${index}`,
-        content: section.outerHTML
-      }));
-      setSections(newSections);
-    }
+    // Parse the HTML string into sections
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(previewHtml, 'text/html');
+    const sectionElements = doc.querySelectorAll('h3, p');
+    
+    const parsedSections = Array.from(sectionElements).map((element, index) => ({
+      id: `section-${index}`,
+      content: element.outerHTML
+    }));
+    
+    setSections(parsedSections);
   }, [previewHtml]);
 
   const handleDragEnd = (result: any) => {
@@ -33,6 +32,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
     items.splice(result.destination.index, 0, reorderedItem);
 
     setSections(items);
+    
     toast({
       title: "Seção movida",
       description: "A ordem das seções foi atualizada com sucesso",
@@ -41,15 +41,15 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   };
 
   return (
-    <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100 dark:bg-gray-900">
+    <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
       <div 
-        className="w-[210mm] min-h-[297mm] bg-white dark:bg-gray-800 shadow-lg"
+        className="w-[210mm] min-h-[297mm] bg-white shadow-lg"
         style={{
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
         }}
       >
         <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="sections">
+          <Droppable droppableId="banner-sections">
             {(provided) => (
               <div
                 {...provided.droppableProps}
@@ -60,19 +60,18 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
                   fontSize: '12pt',
                   lineHeight: 1.5,
                   textAlign: 'justify',
-                  color: 'inherit',
+                  color: 'var(--foreground)',
+                  backgroundColor: 'var(--background)',
                 }}
               >
                 {sections.map((section, index) => (
                   <Draggable key={section.id} draggableId={section.id} index={index}>
-                    {(provided, snapshot) => (
+                    {(provided) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className={`mb-4 p-2 rounded cursor-move ${
-                          snapshot.isDragging ? 'bg-gray-100 dark:bg-gray-700' : ''
-                        }`}
+                        className="cursor-move hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors p-2 rounded"
                         dangerouslySetInnerHTML={{ __html: section.content }}
                       />
                     )}
