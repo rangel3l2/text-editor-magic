@@ -29,15 +29,12 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
     e.preventDefault();
     const target = e.currentTarget;
     
-    // Get mouse position relative to the target
     const rect = target.getBoundingClientRect();
     const y = e.clientY - rect.top;
     const isTopHalf = y < rect.height / 2;
     
-    // Remove existing drop indicators
     target.classList.remove('drop-top', 'drop-bottom');
     
-    // Add drop indicator based on mouse position
     if (isTopHalf) {
       target.classList.add('drop-top');
     } else {
@@ -63,7 +60,6 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
     const newSections = [...sections];
     const [movedSection] = newSections.splice(draggedSection, 1);
     
-    // Insert at the correct position based on drop location
     const newPosition = isTopHalf ? targetIndex : targetIndex + 1;
     newSections.splice(newPosition, 0, movedSection);
 
@@ -82,17 +78,16 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
       <div 
         className="bg-white shadow-lg"
         style={{
-          width: '210mm',
-          minHeight: '297mm',
+          width: '841mm', // A0 width for banner
+          minHeight: '1189mm', // A0 height
           padding: '25mm 30mm 25mm 30mm',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           margin: '0 auto',
-          transform: 'scale(0.9)',
+          transform: 'scale(0.15)', // Adjusted scale to fit screen
           transformOrigin: 'top center',
         }}
       >
         <div className="banner-content">
-          {/* Header Section - Not draggable, spans full width */}
           <div className="col-span-2 w-full mb-8">
             <div 
               className="text-center"
@@ -102,7 +97,6 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
             />
           </div>
 
-          {/* Draggable Content Sections */}
           <div className="grid grid-cols-2 gap-6">
             {sections.map((section, index) => (
               <div
