@@ -7,7 +7,8 @@ interface BannerActionsProps {
   onLoadSavedContent: () => void;
   onClearFields: () => void;
   onOpenPreview: () => void;
-  isAuthenticated: boolean;
+  onSave: () => void;
+  isAuthenticated?: boolean;
 }
 
 const BannerActions = ({ 
@@ -16,7 +17,8 @@ const BannerActions = ({
   onLoadSavedContent, 
   onClearFields,
   onOpenPreview,
-  isAuthenticated 
+  onSave,
+  isAuthenticated = false
 }: BannerActionsProps) => {
   return (
     <div className="hidden sm:flex flex-col sm:flex-row gap-2 w-full sm:w-auto">

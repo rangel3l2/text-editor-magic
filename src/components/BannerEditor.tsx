@@ -37,7 +37,7 @@ const BannerEditor = () => {
             onShare={() => {}}
             onLoadSavedContent={() => {}}
             onClearFields={() => {}}
-            onPreview={() => setPreviewOpen(true)}
+            onOpenPreview={() => setPreviewOpen(true)}
             onSave={() => {}}
           />
         </div>
