@@ -148,11 +148,13 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
 
   if (!previewHtml) return null;
 
-  // Extract institution information from the header content
+  // Extract all header information
   const parser = new DOMParser();
   const doc = parser.parseFromString(previewHtml, 'text/html');
   const institutionName = doc.querySelector('.institution')?.innerHTML || '';
   const institutionLogo = doc.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src');
+  const title = doc.querySelector('.title')?.innerHTML || '';
+  const authors = doc.querySelector('.authors')?.innerHTML || '';
 
   return (
     <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
@@ -175,6 +177,8 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
           <PreviewHeader 
             institutionName={institutionName}
             institutionLogo={institutionLogo}
+            title={title}
+            authors={authors}
           />
 
           <PreviewColumns
