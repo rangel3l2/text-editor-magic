@@ -8,14 +8,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Pencil, BookOpen, Robot, FileText } from "lucide-react";
+import { Pencil, BookOpen, Bot, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const steps = [
   {
     title: "Bem-vindo ao AIcademic!",
     description: "Seu orientador virtual para trabalhos acadêmicos.",
-    icon: <Robot className="w-12 h-12 text-primary mb-4" />,
+    icon: <Bot className="w-12 h-12 text-primary mb-4" />,
     content: "O AIcademic é uma plataforma inovadora que combina edição de texto e orientação por inteligência artificial para ajudar você a criar trabalhos acadêmicos de qualidade.",
   },
   {
@@ -27,7 +27,7 @@ const steps = [
   {
     title: "Orientação Inteligente",
     description: "Receba feedback em tempo real.",
-    icon: <Robot className="w-12 h-12 text-primary mb-4" />,
+    icon: <Bot className="w-12 h-12 text-primary mb-4" />,
     content: "Enquanto você escreve, nossa IA fornece sugestões, correções e orientações para melhorar seu trabalho acadêmico.",
   },
   {
@@ -47,7 +47,7 @@ export function OnboardingTutorial() {
     const checkTutorialStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('user_preferences')
           .select('has_seen_tutorial')
           .eq('user_id', user.id)
@@ -55,13 +55,17 @@ export function OnboardingTutorial() {
 
         if (!data) {
           // Se não existir registro, criar um novo
-          await supabase
+          const { error: insertError } = await supabase
             .from('user_preferences')
-            .insert([
-              { user_id: user.id, has_seen_tutorial: false }
-            ]);
-          setHasSeenTutorial(false);
-          setOpen(true);
+            .insert({
+              user_id: user.id,
+              has_seen_tutorial: false
+            });
+
+          if (!insertError) {
+            setHasSeenTutorial(false);
+            setOpen(true);
+          }
         } else {
           setHasSeenTutorial(data.has_seen_tutorial);
           if (!data.has_seen_tutorial) {
