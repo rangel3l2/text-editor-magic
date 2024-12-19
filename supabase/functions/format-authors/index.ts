@@ -27,36 +27,34 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
-      Format the following text according to ABNT standards following these exact rules:
+      Format the following text according to these exact ABNT rules:
 
-      1. For a single author:
-      Format: SOBRENOME, Nome.
-      Example: MEDEIROS, João Bosco.
+      1. For student authors (Discente):
+         - Surname in UPPERCASE, followed by comma and first name
+         - Replace "Autores:" with "Discente:"
+         - For more than two authors, use "et al."
+         - Separate multiple authors with semicolon and space
+         Example: SILVA, João; SANTOS, Maria et al.
 
-      2. For two or three authors:
-      Format: SOBRENOME, Nome; SOBRENOME, Nome; SOBRENOME, Nome.
-      Example: SILVA, Antônio Carlos; SOUZA, Maria Clara; PEREIRA, João.
+      2. For advisor/professor (Docente):
+         - Replace any existing "Orientador:" or similar with "Docente:"
+         - Include academic title (Dr., Prof., etc.) if present
+         - Format name same as students: SURNAME, First Name
+         Example: Docente: Dr. SILVA, João
 
-      3. For more than three authors:
-      Format: SOBRENOME, Nome et al.
-      Example: FERREIRA, José Luís et al.
-
-      Important:
+      Important rules:
       - Keep any HTML formatting if present
       - Keep affiliation and email information unchanged
-      - Replace "Autores:" with "Discente:" for student authors and "Docente:" for professor authors
-      - Format each section separately following the ABNT rules
-      - Only format the author names, not other information
+      - Format each section separately
       - Return only the formatted text, no explanations
       
       Text to format:
       "${authors}"
     `;
 
+    console.log('Original authors:', authors);
     const result = await model.generateContent(prompt);
     const formattedAuthors = result.response.text().trim();
-
-    console.log('Original authors:', authors);
     console.log('Formatted authors:', formattedAuthors);
 
     return new Response(
@@ -73,7 +71,10 @@ serve(async (req) => {
     console.error('Error formatting authors:', error);
     
     return new Response(
-      JSON.stringify({ error: 'Failed to format authors' }),
+      JSON.stringify({ 
+        error: 'Failed to format authors',
+        details: error.message 
+      }),
       { 
         headers: { 
           ...corsHeaders,
