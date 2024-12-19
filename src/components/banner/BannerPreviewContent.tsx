@@ -4,7 +4,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ImageCropDialog, { ImageConfig } from './ImageCropDialog';
 import { supabase } from "@/integrations/supabase/client";
 import BannerSection from './BannerSection';
-import BannerHeader from './BannerHeader';
 import { Json } from '@/integrations/supabase/types';
 
 interface BannerPreviewContentProps {
@@ -148,6 +147,8 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
 
   if (!previewHtml) return null;
 
+  const headerContent = previewHtml.split('<div class="banner-section"')[0];
+
   return (
     <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
       <div 
@@ -166,14 +167,11 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         }}
       >
         <div className="banner-content flex-1 overflow-hidden">
-          <BannerHeader 
-            title="Preview"
-            previewHtml={previewHtml}
-            onGeneratePDF={() => {}}
-            onShare={() => {}}
-            onOpenPreview={() => {}}
-            onClearFields={() => {}}
-          />
+          {headerContent && (
+            <div className="text-center mb-8">
+              <div dangerouslySetInnerHTML={{ __html: headerContent }} />
+            </div>
+          )}
 
           <div className="columns-2 gap-4 h-full">
             {sections.map((section, index) => (
