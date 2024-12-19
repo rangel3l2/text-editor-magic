@@ -12,6 +12,7 @@ export interface BannerContent {
   conclusion: string;
   references: string;
   acknowledgments: string;
+  previewHtml?: string;
 }
 
 export const useBannerContent = () => {

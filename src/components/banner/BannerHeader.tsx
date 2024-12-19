@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { FileDown, Share2, Eye, RotateCcw } from "lucide-react";
 
 interface BannerHeaderProps {
-  previewHtml?: string;
   title: string;
+  previewHtml?: string;
   onGeneratePDF: () => void;
   onShare: () => void;
   onOpenPreview: () => void;
@@ -12,8 +12,8 @@ interface BannerHeaderProps {
 }
 
 const BannerHeader = ({ 
-  previewHtml,
   title,
+  previewHtml,
   onGeneratePDF,
   onShare,
   onOpenPreview,

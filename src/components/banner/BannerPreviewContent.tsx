@@ -166,7 +166,14 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         }}
       >
         <div className="banner-content flex-1 overflow-hidden">
-          <BannerHeader previewHtml={previewHtml} />
+          <BannerHeader 
+            title="Preview"
+            previewHtml={previewHtml}
+            onGeneratePDF={() => {}}
+            onShare={() => {}}
+            onOpenPreview={() => {}}
+            onClearFields={() => {}}
+          />
 
           <div className="columns-2 gap-4 h-full">
             {sections.map((section, index) => (
