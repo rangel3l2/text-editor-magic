@@ -23,6 +23,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
   const { user } = useAuth();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
       if (!user) {
         toast({
           title: "Erro ao enviar logo",
@@ -52,7 +53,6 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
         .from('banner_images')
         .getPublicUrl(filePath);
 
-      // Create a record in the banner_images table with user_id
       const { error: dbError } = await supabase
         .from('banner_images')
         .insert({
