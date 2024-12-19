@@ -24,7 +24,10 @@ const BannerHeader = ({
 }: BannerHeaderProps) => {
   return (
     <div className="flex items-center justify-between gap-4">
-      <h2 className="text-2xl font-bold">{title}</h2>
+      <h2 
+        className="text-2xl font-bold"
+        dangerouslySetInnerHTML={{ __html: title }}
+      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon">
