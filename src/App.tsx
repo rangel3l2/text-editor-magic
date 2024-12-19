@@ -14,17 +14,17 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="aicademic-theme">
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <Router>
+        <Router>
+          <AuthProvider>
             <Suspense fallback={<LoadingScreen />}>
               <Routes>
                 <Route path="/" element={<TextEditor />} />
                 <Route path="/banner" element={<BannerEditor />} />
               </Routes>
             </Suspense>
-          </Router>
-          <Toaster />
-        </AuthProvider>
+            <Toaster />
+          </AuthProvider>
+        </Router>
       </QueryClientProvider>
     </ThemeProvider>
   );
