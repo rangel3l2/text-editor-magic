@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,20 +24,30 @@ serve(async (req) => {
 
     // Format each name according to ABNT rules
     let formattedNames = namesList.map(name => {
-      // Skip if it's already in the correct format or contains "Dr." or "Prof."
-      if (name.includes('Dr.') || name.includes('Prof.')) {
-        return name.trim()
+      // Check if it's a professor (contains Dr., Prof., etc.)
+      const isProfessor = name.includes('Dr.') || name.includes('Prof.')
+      
+      if (isProfessor) {
+        // For professors, keep the title and format the name
+        const titleMatch = name.match(/(Dr\.|Prof\.)\s+(.+)/)
+        if (titleMatch) {
+          const [, title, fullName] = titleMatch
+          const parts = fullName.split(' ')
+          if (parts.length < 2) return name
+          
+          const lastName = parts.pop()
+          const firstNames = parts.join(' ')
+          return `${title} ${lastName.toUpperCase()}, ${firstNames}`
+        }
+        return name
       }
 
-      // Split the name into parts
+      // For students, format without titles
       const parts = name.split(' ')
       if (parts.length < 2) return name.toUpperCase()
 
-      // Get the last name and the rest
       const lastName = parts.pop()
       const firstNames = parts.join(' ')
-
-      // Format according to ABNT: LASTNAME, FirstNames
       return `${lastName.toUpperCase()}, ${firstNames}`
     })
 
@@ -50,14 +59,6 @@ serve(async (req) => {
       formattedAuthors = `${formattedNames[0]}; ${formattedNames[1]} et al.`
     } else {
       formattedAuthors = formattedNames.join('; ')
-    }
-
-    // Add line break before advisors if they exist
-    if (cleanText.includes('Dr.') || cleanText.includes('Prof.')) {
-      const advisors = namesList
-        .filter(name => name.includes('Dr.') || name.includes('Prof.'))
-        .join('; ')
-      formattedAuthors += `\n\n${advisors}`
     }
 
     console.log('Formatted authors:', formattedAuthors)
