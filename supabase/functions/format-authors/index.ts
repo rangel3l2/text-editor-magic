@@ -42,7 +42,9 @@ serve(async (req) => {
       return `${lastName.toUpperCase()}, ${firstNames}`
     })
 
-    // If there are more than 2 names for students, use "et al."
+    // ABNT formatting for multiple authors:
+    // - If 1-2 authors: show all
+    // - If 3+ authors: show first two followed by "et al."
     let formattedAuthors = ''
     if (formattedNames.length > 2) {
       formattedAuthors = `${formattedNames[0]}; ${formattedNames[1]} et al.`
