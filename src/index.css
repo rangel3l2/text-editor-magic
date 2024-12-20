@@ -75,3 +75,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos do CKEditor para modo escuro */
+.dark .ck.ck-editor__main > .ck-editor__editable {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.dark .ck.ck-editor__main > .ck-editor__editable.ck-focused {
+  border-color: hsl(var(--border));
+}
+
+.dark .ck.ck-toolbar {
+  background-color: hsl(var(--background));
+  border-color: hsl(var(--border));
+}
+
+.dark .ck.ck-toolbar .ck-toolbar__items button {
+  color: hsl(var(--foreground));
+}
+
+.dark .ck.ck-toolbar .ck-toolbar__items button:hover {
+  background-color: hsl(var(--accent));
+}
+
+.dark .ck.ck-toolbar .ck-toolbar__items button.ck-on {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.dark .ck.ck-editor__editable_inline {
+  color: hsl(var(--foreground));
+}
+
+.dark .ck.ck-editor__editable_inline > [data-placeholder]::before {
+  color: hsl(var(--muted-foreground));
+}
