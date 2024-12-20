@@ -21,6 +21,7 @@ interface BannerHeaderSectionProps {
 const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps) => {
   const [uploading, setUploading] = useState(false);
   const [isFormatting, setIsFormatting] = useState(false);
+  const [formatTimeout, setFormatTimeout] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -128,12 +129,41 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     }
   }, [handleChange, toast, isFormatting]);
 
-  const handleAuthorsChange = useCallback(async (value: string) => {
+  const handleAuthorsChange = useCallback((value: string) => {
     handleChange('authors', value);
-    if (value && value.replace(/<[^>]*>/g, '').trim()) {
-      await formatAuthors(value);
+    
+    // Limpa o timeout anterior se existir
+    if (formatTimeout) {
+      clearTimeout(formatTimeout);
     }
-  }, [handleChange, formatAuthors]);
+    
+    // Só formata após 2 segundos de inatividade na digitação
+    const newTimeout = setTimeout(() => {
+      if (value && value.replace(/<[^>]*>/g, '').trim()) {
+        formatAuthors(value);
+      }
+    }, 2000);
+    
+    setFormatTimeout(newTimeout);
+  }, [handleChange, formatAuthors, formatTimeout]);
+
+  const handleAdvisorsChange = useCallback((value: string) => {
+    handleChange('advisors', value);
+    
+    // Limpa o timeout anterior se existir
+    if (formatTimeout) {
+      clearTimeout(formatTimeout);
+    }
+    
+    // Só formata após 2 segundos de inatividade na digitação
+    const newTimeout = setTimeout(() => {
+      if (value && value.replace(/<[^>]*>/g, '').trim()) {
+        formatAuthors(value);
+      }
+    }, 2000);
+    
+    setFormatTimeout(newTimeout);
+  }, [handleChange, formatAuthors, formatTimeout]);
 
   return (
     <div className="space-y-6">
@@ -227,7 +257,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
         <CardContent>
           <RichTextEditor
             value={content.advisors || ""}
-            onChange={(data) => handleChange('advisors', data)}
+            onChange={handleAdvisorsChange}
             maxLines={2}
             minLines={1}
             config={editorConfig}
