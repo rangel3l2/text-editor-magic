@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { ToastDescription } from './ToastDescription';
@@ -8,25 +8,27 @@ export const useEditorValidation = (sectionName: string) => {
   const [isValidating, setIsValidating] = useState(false);
   const [currentSection, setCurrentSection] = useState<string>('');
   const { toast } = useToast();
-
-  let validationTimeout: NodeJS.Timeout;
+  const validationTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastValidationRef = useRef<number>(0);
+  const MIN_VALIDATION_INTERVAL = 10000; // 10 seconds between validations
 
   const validateContent = useCallback(async (content: string) => {
-    if (!content?.trim()) {
-      console.log('Empty content, skipping validation');
+    if (!content?.trim() || !sectionName?.trim()) {
+      console.log('Empty content or section name, skipping validation');
       return;
     }
 
-    if (!sectionName?.trim()) {
-      console.log('No section name provided, skipping validation');
+    const now = Date.now();
+    if (now - lastValidationRef.current < MIN_VALIDATION_INTERVAL) {
+      console.log('Validation throttled, waiting for cooldown');
       return;
     }
 
     try {
       setIsValidating(true);
       setCurrentSection(sectionName);
+      console.log(`Validating section: ${sectionName}`);
 
-      console.log(`Validando seção: ${sectionName}`);
       const { data, error } = await supabase.functions.invoke('validate-content', {
         body: { 
           content: content.trim(),
@@ -36,10 +38,23 @@ export const useEditorValidation = (sectionName: string) => {
 
       if (error) {
         console.error('Error in validation:', error);
+        
+        // Handle rate limit errors specifically
+        if (error.status === 429) {
+          toast({
+            title: "Limite de requisições excedido",
+            description: <ToastDescription message="Por favor, aguarde alguns minutos antes de tentar novamente. O sistema está processando muitas requisições." />,
+            variant: "destructive",
+            duration: 5000,
+          });
+          return;
+        }
+        
         throw error;
       }
 
       setValidationResult(data);
+      lastValidationRef.current = now;
 
       if (!data.isValid) {
         toast({
@@ -52,7 +67,7 @@ export const useEditorValidation = (sectionName: string) => {
       console.error('Error validating content:', error);
       toast({
         title: "Erro na validação",
-        description: "Não foi possível validar o conteúdo. Tente novamente em alguns instantes.",
+        description: <ToastDescription message="Não foi possível validar o conteúdo. Tente novamente em alguns instantes." />,
         variant: "destructive",
         duration: 3000,
       });
@@ -63,13 +78,13 @@ export const useEditorValidation = (sectionName: string) => {
   }, [sectionName, toast]);
 
   const scheduleValidation = useCallback((content: string) => {
-    if (validationTimeout) {
-      clearTimeout(validationTimeout);
+    if (validationTimeoutRef.current) {
+      clearTimeout(validationTimeoutRef.current);
     }
 
-    validationTimeout = setTimeout(() => {
+    validationTimeoutRef.current = setTimeout(() => {
       validateContent(content);
-    }, 2000);
+    }, 2000); // Debounce for 2 seconds
   }, [validateContent]);
 
   return {
