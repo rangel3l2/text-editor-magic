@@ -33,7 +33,8 @@ const RichTextEditor = ({
     validationResult,
     isValidating,
     validateContent,
-    scheduleValidation
+    scheduleValidation,
+    currentSection
   } = useEditorValidation(sectionName);
 
   const {
@@ -114,6 +115,7 @@ const RichTextEditor = ({
       <ValidationFeedback 
         validationResult={validationResult}
         isValidating={isValidating}
+        currentSection={currentSection}
       />
     </div>
   );

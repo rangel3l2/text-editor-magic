@@ -1,17 +1,20 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface ValidationFeedbackProps {
   validationResult: any;
   isValidating: boolean;
+  currentSection?: string;
 }
 
-const ValidationFeedback = ({ validationResult, isValidating }: ValidationFeedbackProps) => {
+const ValidationFeedback = ({ validationResult, isValidating, currentSection }: ValidationFeedbackProps) => {
   if (isValidating) {
     return (
       <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Validando conteúdo...</AlertTitle>
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <AlertTitle>Validando {currentSection}...</AlertTitle>
+        </div>
         <AlertDescription>
           Aguarde enquanto analisamos o texto.
         </AlertDescription>
