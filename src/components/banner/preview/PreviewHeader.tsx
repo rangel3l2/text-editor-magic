@@ -11,6 +11,13 @@ const PreviewHeader = ({
   title,
   authors
 }: PreviewHeaderProps) => {
+  // Function to safely parse HTML content and extract text
+  const parseHtmlContent = (htmlString: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    return doc.body.textContent || '';
+  };
+
   return (
     <div className="flex flex-col w-full mb-4">
       <div className="banner-header flex items-center justify-between p-4 border-b">
@@ -33,10 +40,9 @@ const PreviewHeader = ({
       {(title || authors) && (
         <div className="text-center mt-4 space-y-2">
           {title && (
-            <h1 
-              className="text-2xl font-bold"
-              dangerouslySetInnerHTML={{ __html: title }}
-            />
+            <h1 className="text-2xl font-bold">
+              {parseHtmlContent(title)}
+            </h1>
           )}
           {authors && (
             <div 
