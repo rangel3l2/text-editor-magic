@@ -18,24 +18,26 @@ serve(async (req) => {
 
   try {
     const { content, section } = await req.json();
+    console.log(`Processing validation request for section: ${section}`);
+    console.log(`Content length: ${content?.length || 0} characters`);
 
-    if (!content || !section) {
-      console.error('Content or section not provided');
+    if (!content?.trim() || !section?.trim()) {
+      console.error('Missing required fields:', { content: !!content, section: !!section });
       throw new Error('Conteúdo e seção são obrigatórios');
     }
 
-    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-    
-    if (!Deno.env.get('GEMINI_API_KEY')) {
+    const apiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!apiKey) {
       console.error('GEMINI_API_KEY not configured');
       throw new Error('Chave API do Gemini não configurada');
     }
 
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
       Você é um especialista em análise de textos acadêmicos.
-      Analise o seguinte texto para a seção "${section}" de um banner acadêmico, focando especialmente em:
+      Analise o seguinte texto para a seção "${section}" de um banner acadêmico, focando em:
       
       1. Redundância:
          - Identificar palavras ou ideias repetidas
@@ -50,7 +52,7 @@ serve(async (req) => {
       Texto a ser analisado:
       "${content}"
 
-      IMPORTANTE: Sua resposta DEVE ser um objeto JSON com exatamente esta estrutura:
+      Responda APENAS com um objeto JSON com esta estrutura:
       {
         "isValid": boolean,
         "redundancyIssues": string[],
@@ -60,59 +62,58 @@ serve(async (req) => {
         "overallFeedback": string
       }
 
-      Critérios específicos por seção:
+      Critérios por seção:
 
       Introdução:
-      - Apresenta claramente o tema e problema
+      - Apresenta tema e problema claramente
       - Contextualiza sem repetições
-      - Justifica a relevância sem redundância
+      - Justifica relevância sem redundância
 
       Objetivos:
-      - Cada objetivo é único e específico
-      - Mantém foco no problema apresentado
+      - Objetivos únicos e específicos
+      - Foco no problema apresentado
       - Evita verbos redundantes
 
       Metodologia:
-      - Descreve procedimentos sem repetição
-      - Mantém sequência lógica
+      - Procedimentos sem repetição
+      - Sequência lógica
       - Relaciona com objetivos
 
       Resultados:
-      - Apresenta dados sem redundância
-      - Mantém foco nos objetivos propostos
+      - Dados sem redundância
+      - Foco nos objetivos
       - Análise clara e objetiva
 
       Conclusão:
-      - Sintetiza sem repetir literalmente
-      - Relaciona com objetivos e resultados
+      - Sintetiza sem repetir
+      - Relaciona com objetivos/resultados
       - Destaca contribuições únicas
 
-      Forneça feedback construtivo e específico em português.
+      Feedback em português, objetivo e construtivo.
     `;
 
-    console.log(`Starting analysis for section: ${section}`);
+    console.log('Sending request to Gemini API...');
     
     const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
     
-    console.log('Gemini response:', text);
+    console.log('Received response from Gemini API');
     
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('No JSON found in Gemini response:', text);
+      throw new Error('Formato de resposta inválido do Gemini');
+    }
+
     let analysis;
-    
-    if (jsonMatch) {
-      try {
-        analysis = JSON.parse(jsonMatch[0]);
-        console.log('Successfully parsed JSON response');
-      } catch (error) {
-        console.error('Error parsing JSON:', error);
-        throw new Error('Formato de resposta inválido');
-      }
-    } else {
-      console.error('No JSON found in response');
-      throw new Error('Formato de resposta inválido');
+    try {
+      analysis = JSON.parse(jsonMatch[0]);
+      console.log('Successfully parsed JSON response');
+    } catch (error) {
+      console.error('Error parsing JSON:', error, 'Raw text:', text);
+      throw new Error('Erro ao processar resposta do Gemini');
     }
 
     // Validate JSON structure
@@ -121,7 +122,7 @@ serve(async (req) => {
     
     if (missingFields.length > 0) {
       console.error('Missing required fields:', missingFields);
-      throw new Error('Resposta incompleta');
+      throw new Error('Resposta incompleta do Gemini');
     }
 
     // Ensure arrays are present even if empty
@@ -129,6 +130,8 @@ serve(async (req) => {
     analysis.contextIssues = analysis.contextIssues || [];
     analysis.grammarErrors = analysis.grammarErrors || [];
     analysis.suggestions = analysis.suggestions || [];
+
+    console.log('Sending successful response');
 
     return new Response(
       JSON.stringify(analysis),
@@ -145,10 +148,10 @@ serve(async (req) => {
     const errorResponse = {
       isValid: false,
       redundancyIssues: [],
-      contextIssues: ['Erro ao analisar o contexto do texto'],
+      contextIssues: [`Erro ao analisar o texto: ${error.message}`],
       grammarErrors: [],
-      suggestions: ['Por favor, tente reescrever o texto de forma mais clara e objetiva'],
-      overallFeedback: 'Ocorreu um erro ao analisar seu texto. Verifique se o conteúdo está bem estruturado e tente novamente.'
+      suggestions: ['Por favor, tente novamente em alguns instantes'],
+      overallFeedback: 'Ocorreu um erro técnico ao analisar seu texto. Nossa equipe foi notificada e está trabalhando para resolver o problema.'
     };
 
     return new Response(
