@@ -4,11 +4,16 @@ import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.2.0";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 204
+    });
   }
 
   try {
@@ -60,24 +65,27 @@ serve(async (req) => {
       }
     `;
 
+    console.log('Analyzing title:', title);
     const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
     
-    console.log('Resposta do Gemini:', text);
+    console.log('Gemini response:', text);
     
-    // Extrai o JSON da resposta
+    // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     let analysis;
     
     if (jsonMatch) {
       try {
         analysis = JSON.parse(jsonMatch[0]);
+        console.log('Successfully parsed JSON response');
       } catch (error) {
-        console.error('Erro ao fazer parse do JSON:', error);
+        console.error('Error parsing JSON:', error);
         throw new Error('Formato de resposta inválido');
       }
     } else {
+      console.error('No JSON found in response');
       throw new Error('Formato de resposta inválido');
     }
 
@@ -91,7 +99,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Erro na função validate-title:', error);
+    console.error('Error in validate-title function:', error);
     
     return new Response(
       JSON.stringify({

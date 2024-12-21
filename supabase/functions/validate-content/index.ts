@@ -4,25 +4,30 @@ import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.2.0";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 204
+    });
   }
 
   try {
     const { content, section } = await req.json();
 
     if (!content || !section) {
-      console.error('Conteúdo ou seção não fornecidos');
+      console.error('Content or section not provided');
       throw new Error('Conteúdo e seção são obrigatórios');
     }
 
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     
     if (!Deno.env.get('GEMINI_API_KEY')) {
-      console.error('GEMINI_API_KEY não configurada');
+      console.error('GEMINI_API_KEY not configured');
       throw new Error('Chave API do Gemini não configurada');
     }
 
@@ -85,41 +90,41 @@ serve(async (req) => {
       Forneça feedback construtivo e específico em português.
     `;
 
-    console.log(`Iniciando análise para seção: ${section}`);
+    console.log(`Starting analysis for section: ${section}`);
     
     const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
     
-    console.log('Resposta do Gemini:', text);
+    console.log('Gemini response:', text);
     
-    // Extrai o JSON da resposta
+    // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     let analysis;
     
     if (jsonMatch) {
       try {
         analysis = JSON.parse(jsonMatch[0]);
-        console.log('JSON extraído e parseado com sucesso');
+        console.log('Successfully parsed JSON response');
       } catch (error) {
-        console.error('Erro ao fazer parse do JSON:', error);
+        console.error('Error parsing JSON:', error);
         throw new Error('Formato de resposta inválido');
       }
     } else {
-      console.error('Nenhum JSON encontrado na resposta');
+      console.error('No JSON found in response');
       throw new Error('Formato de resposta inválido');
     }
 
-    // Valida a estrutura do JSON
+    // Validate JSON structure
     const requiredFields = ['isValid', 'redundancyIssues', 'contextIssues', 'grammarErrors', 'suggestions', 'overallFeedback'];
     const missingFields = requiredFields.filter(field => !(field in analysis));
     
     if (missingFields.length > 0) {
-      console.error('Campos obrigatórios ausentes:', missingFields);
+      console.error('Missing required fields:', missingFields);
       throw new Error('Resposta incompleta');
     }
 
-    // Garante que arrays estejam presentes mesmo que vazios
+    // Ensure arrays are present even if empty
     analysis.redundancyIssues = analysis.redundancyIssues || [];
     analysis.contextIssues = analysis.contextIssues || [];
     analysis.grammarErrors = analysis.grammarErrors || [];
@@ -135,7 +140,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Erro na função validate-content:', error);
+    console.error('Error in validate-content function:', error);
     
     const errorResponse = {
       isValid: false,
