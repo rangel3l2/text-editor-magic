@@ -56,7 +56,9 @@ const RichTextEditor = ({
     setIsValidating(true);
     try {
       const { data, error } = await supabase.functions.invoke('validate-content', {
-        body: { content, section: sectionName }
+        body: { content, section: sectionName },
+        // Remove any potential URL formatting issues
+        method: 'POST'
       });
 
       if (error) throw error;

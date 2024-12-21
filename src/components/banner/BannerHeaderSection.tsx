@@ -96,7 +96,8 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     setIsValidatingTitle(true);
     try {
       const { data, error } = await supabase.functions.invoke('validate-title', {
-        body: { title }
+        body: { title },
+        method: 'POST'
       });
 
       if (error) throw error;
@@ -154,7 +155,8 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       console.log('Formatting authors:', authorsText);
       
       const { data, error } = await supabase.functions.invoke('format-authors', {
-        body: { authors: authorsText }
+        body: { authors: authorsText },
+        method: 'POST'
       });
 
       if (error) {
@@ -191,12 +193,10 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
   const handleAuthorsChange = useCallback((value: string) => {
     handleChange('authors', value);
     
-    // Limpa o timeout anterior se existir
     if (formatTimeout) {
       clearTimeout(formatTimeout);
     }
     
-    // Só formata após 2 segundos de inatividade na digitação
     const newTimeout = setTimeout(() => {
       if (value && value.replace(/<[^>]*>/g, '').trim()) {
         formatAuthors(value);
@@ -209,12 +209,10 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
   const handleAdvisorsChange = useCallback((value: string) => {
     handleChange('advisors', value);
     
-    // Limpa o timeout anterior se existir
     if (formatTimeout) {
       clearTimeout(formatTimeout);
     }
     
-    // Só formata após 2 segundos de inatividade na digitação
     const newTimeout = setTimeout(() => {
       if (value && value.replace(/<[^>]*>/g, '').trim()) {
         formatAuthors(value);
