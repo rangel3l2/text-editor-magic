@@ -7,7 +7,36 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
+// Simple in-memory rate limiting
+const rateLimiter = new Map<string, { count: number; timestamp: number }>();
+const RATE_LIMIT = 10; // requests per window
+const RATE_WINDOW = 60 * 1000; // 1 minute window
+
+function isRateLimited(clientId: string): boolean {
+  const now = Date.now();
+  const clientRate = rateLimiter.get(clientId);
+
+  if (!clientRate) {
+    rateLimiter.set(clientId, { count: 1, timestamp: now });
+    return false;
+  }
+
+  if (now - clientRate.timestamp > RATE_WINDOW) {
+    rateLimiter.set(clientId, { count: 1, timestamp: now });
+    return false;
+  }
+
+  if (clientRate.count >= RATE_LIMIT) {
+    return true;
+  }
+
+  clientRate.count++;
+  return false;
+}
+
 serve(async (req) => {
+  console.log('Received request to validate-content');
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
@@ -24,6 +53,31 @@ serve(async (req) => {
     if (!content?.trim() || !section?.trim()) {
       console.error('Missing required fields:', { content: !!content, section: !!section });
       throw new Error('Conteúdo e seção são obrigatórios');
+    }
+
+    // Get client IP or some identifier for rate limiting
+    const clientId = req.headers.get('x-real-ip') || 'default';
+    
+    if (isRateLimited(clientId)) {
+      console.warn(`Rate limit exceeded for client: ${clientId}`);
+      return new Response(
+        JSON.stringify({
+          isValid: false,
+          redundancyIssues: [],
+          contextIssues: ['Muitas requisições em um curto período de tempo.'],
+          grammarErrors: [],
+          suggestions: ['Por favor, aguarde alguns minutos antes de tentar novamente.'],
+          overallFeedback: 'Limite de requisições excedido. Tente novamente em alguns minutos.'
+        }),
+        { 
+          status: 429,
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+            'Retry-After': '60'
+          }
+        }
+      );
     }
 
     const apiKey = Deno.env.get('GEMINI_API_KEY');
