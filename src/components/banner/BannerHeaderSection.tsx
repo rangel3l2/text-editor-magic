@@ -47,6 +47,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       const fileExt = file.name.split('.').pop();
       const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
+      // First upload to storage
       const { error: uploadError, data } = await supabase.storage
         .from('banner_images')
         .upload(filePath, file);
@@ -55,18 +56,23 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
         throw uploadError;
       }
 
+      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('banner_images')
         .getPublicUrl(filePath);
 
+      // Insert into banner_images table with user_id
       const { error: dbError } = await supabase
         .from('banner_images')
         .insert({
           image_url: publicUrl,
-          user_id: user.id
+          user_id: user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
 
       if (dbError) {
+        console.error('Database error:', dbError);
         throw dbError;
       }
 
