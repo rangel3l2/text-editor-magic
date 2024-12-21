@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from "lucide-react";
+import { ToastDescription } from './ToastDescription';
 
 export const useEditorValidation = (sectionName: string) => {
   const [validationResult, setValidationResult] = useState<any>(null);
@@ -31,11 +32,7 @@ export const useEditorValidation = (sectionName: string) => {
       if (!data.isValid) {
         toast({
           title: `Validação da seção: ${sectionName}`,
-          description: (
-            <div className="flex items-center gap-2">
-              {data.overallFeedback}
-            </div>
-          ),
+          description: <ToastDescription message={data.overallFeedback} />,
           duration: 5000,
         });
       }
