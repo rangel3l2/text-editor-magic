@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from "lucide-react";
 import { ToastDescription } from './ToastDescription';
 
 export const useEditorValidation = (sectionName: string) => {
@@ -13,13 +12,26 @@ export const useEditorValidation = (sectionName: string) => {
   let validationTimeout: NodeJS.Timeout;
 
   const validateContent = useCallback(async (content: string) => {
+    if (!content?.trim()) {
+      console.log('Empty content, skipping validation');
+      return;
+    }
+
+    if (!sectionName?.trim()) {
+      console.log('No section name provided, skipping validation');
+      return;
+    }
+
     try {
       setIsValidating(true);
       setCurrentSection(sectionName);
 
       console.log(`Validando seção: ${sectionName}`);
       const { data, error } = await supabase.functions.invoke('validate-content', {
-        body: { content, sectionName }
+        body: { 
+          content: content.trim(),
+          section: sectionName.trim()
+        }
       });
 
       if (error) {

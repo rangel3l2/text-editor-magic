@@ -24,9 +24,14 @@ serve(async (req) => {
     console.log(`Processing validation request for section: ${section}`);
     console.log(`Content length: ${content?.length || 0} characters`);
 
-    if (!content?.trim() || !section?.trim()) {
-      console.error('Missing required fields:', { content: !!content, section: !!section });
-      throw new Error('Conteúdo e seção são obrigatórios');
+    if (!content?.trim()) {
+      console.error('Missing content field');
+      throw new Error('O conteúdo é obrigatório');
+    }
+
+    if (!section?.trim()) {
+      console.error('Missing section field');
+      throw new Error('A seção é obrigatória');
     }
 
     // Get client IP or some identifier for rate limiting
