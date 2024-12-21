@@ -1,11 +1,11 @@
 export class RateLimiter {
   private static instance: RateLimiter;
-  private clients: Map<string, { count: number; timestamp: number }>;
-  private readonly RATE_LIMIT = 5; // Reduced from 10 to be more conservative
-  private readonly RATE_WINDOW = 60 * 1000; // 1 minute window
+  private requests: Map<string, number[]>;
+  private readonly windowMs = 60000; // 1 minute window
+  private readonly maxRequests = 5;   // 5 requests per minute
 
   private constructor() {
-    this.clients = new Map();
+    this.requests = new Map();
   }
 
   public static getInstance(): RateLimiter {
@@ -16,32 +16,36 @@ export class RateLimiter {
   }
 
   public isLimited(clientId: string): boolean {
-    const now = Date.now();
-    const clientRate = this.clients.get(clientId);
+    this.cleanup(clientId);
+    const timestamps = this.requests.get(clientId) || [];
+    return timestamps.length >= this.maxRequests;
+  }
 
-    if (!clientRate) {
-      this.clients.set(clientId, { count: 1, timestamp: now });
-      return false;
-    }
-
-    if (now - clientRate.timestamp > this.RATE_WINDOW) {
-      this.clients.set(clientId, { count: 1, timestamp: now });
-      return false;
-    }
-
-    if (clientRate.count >= this.RATE_LIMIT) {
-      return true;
-    }
-
-    clientRate.count++;
-    return false;
+  public recordRequest(clientId: string): void {
+    const timestamps = this.requests.get(clientId) || [];
+    timestamps.push(Date.now());
+    this.requests.set(clientId, timestamps);
   }
 
   public getRemainingTime(clientId: string): number {
-    const clientRate = this.clients.get(clientId);
-    if (!clientRate) return 0;
+    const timestamps = this.requests.get(clientId) || [];
+    if (timestamps.length === 0) return 0;
     
-    const timeElapsed = Date.now() - clientRate.timestamp;
-    return Math.max(0, this.RATE_WINDOW - timeElapsed);
+    const oldestTimestamp = timestamps[0];
+    return Math.max(0, this.windowMs - (Date.now() - oldestTimestamp));
+  }
+
+  private cleanup(clientId: string): void {
+    const now = Date.now();
+    const timestamps = this.requests.get(clientId) || [];
+    const validTimestamps = timestamps.filter(
+      timestamp => now - timestamp < this.windowMs
+    );
+    
+    if (validTimestamps.length > 0) {
+      this.requests.set(clientId, validTimestamps);
+    } else {
+      this.requests.delete(clientId);
+    }
   }
 }

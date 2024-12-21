@@ -48,8 +48,8 @@ serve(async (req) => {
           redundancyIssues: [],
           contextIssues: ['Muitas requisições em um curto período de tempo.'],
           grammarErrors: [],
-          suggestions: ['Por favor, aguarde alguns minutos antes de tentar novamente.'],
-          overallFeedback: 'Limite de requisições excedido. Tente novamente em alguns minutos.'
+          suggestions: ['Por favor, aguarde alguns segundos antes de tentar novamente.'],
+          overallFeedback: 'Limite de requisições excedido. Tente novamente em alguns segundos.'
         }),
         { 
           status: 429,
@@ -71,19 +71,50 @@ serve(async (req) => {
     console.log('Initializing Gemini client...');
     const geminiClient = new GeminiClient(apiKey);
     
-    console.log('Analyzing text with Gemini...');
-    const analysis = await geminiClient.analyzeText(content, section);
-    console.log('Successfully received Gemini analysis');
+    try {
+      console.log('Analyzing text with Gemini...');
+      const analysis = await geminiClient.analyzeText(content, section);
+      console.log('Successfully received Gemini analysis');
 
-    return new Response(
-      JSON.stringify(analysis),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
+      // Record successful request in rate limiter
+      rateLimiter.recordRequest(clientId);
+
+      return new Response(
+        JSON.stringify(analysis),
+        { 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
         }
+      );
+    } catch (error) {
+      console.error('Error in Gemini analysis:', error);
+      
+      // Check if it's a rate limit error from Gemini
+      if (error.message?.includes('429') || error.message?.includes('quota')) {
+        return new Response(
+          JSON.stringify({
+            isValid: false,
+            redundancyIssues: [],
+            contextIssues: ['O serviço está temporariamente indisponível devido ao alto volume de requisições.'],
+            grammarErrors: [],
+            suggestions: ['Por favor, aguarde alguns minutos antes de tentar novamente.'],
+            overallFeedback: 'Sistema sobrecarregado. Tente novamente em alguns minutos.'
+          }),
+          { 
+            status: 429,
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+              'Retry-After': '300' // 5 minutes
+            }
+          }
+        );
       }
-    );
+      
+      throw error;
+    }
   } catch (error) {
     console.error('Error in validate-content function:', error);
     
