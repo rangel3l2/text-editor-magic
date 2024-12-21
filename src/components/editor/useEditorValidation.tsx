@@ -10,7 +10,7 @@ export const useEditorValidation = (sectionName: string) => {
   const { toast } = useToast();
   const validationTimeoutRef = useRef<NodeJS.Timeout>();
   const lastValidationRef = useRef<number>(0);
-  const MIN_VALIDATION_INTERVAL = 10000; // 10 seconds between validations
+  const MIN_VALIDATION_INTERVAL = 30000; // 30 seconds between validations
 
   const validateContent = useCallback(async (content: string) => {
     if (!content?.trim() || !sectionName?.trim()) {
@@ -21,6 +21,12 @@ export const useEditorValidation = (sectionName: string) => {
     const now = Date.now();
     if (now - lastValidationRef.current < MIN_VALIDATION_INTERVAL) {
       console.log('Validation throttled, waiting for cooldown');
+      const remainingTime = Math.ceil((MIN_VALIDATION_INTERVAL - (now - lastValidationRef.current)) / 1000);
+      toast({
+        title: "Aguarde um momento",
+        description: <ToastDescription message={`Por favor, aguarde ${remainingTime} segundos antes de tentar validar novamente.`} />,
+        duration: 3000,
+      });
       return;
     }
 
@@ -84,8 +90,17 @@ export const useEditorValidation = (sectionName: string) => {
 
     validationTimeoutRef.current = setTimeout(() => {
       validateContent(content);
-    }, 2000); // Debounce for 2 seconds
+    }, 3000); // Increased debounce to 3 seconds
   }, [validateContent]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     validationResult,
