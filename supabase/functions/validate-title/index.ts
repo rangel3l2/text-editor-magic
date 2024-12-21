@@ -17,18 +17,22 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Received request to validate title');
     const { title } = await req.json();
 
     if (!title) {
+      console.error('No title provided');
       throw new Error('Título não fornecido');
     }
 
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
     
     if (!Deno.env.get('GEMINI_API_KEY')) {
+      console.error('GEMINI_API_KEY not configured');
       throw new Error('Chave API do Gemini não configurada');
     }
 
+    console.log('Initializing Gemini model');
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
@@ -113,7 +117,7 @@ serve(async (req) => {
         feedback: 'Ocorreu um erro ao analisar seu título. Por favor, tente novamente.'
       }),
       { 
-        status: 500,
+        status: error.status || 500,
         headers: { 
           ...corsHeaders,
           'Content-Type': 'application/json'
