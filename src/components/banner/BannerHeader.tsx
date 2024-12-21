@@ -21,10 +21,17 @@ const BannerHeader = ({
 }: BannerHeaderProps) => {
   const headerContent = previewHtml ? previewHtml.split('<div class="banner-section"')[0] : '';
 
+  // Function to safely parse HTML content and extract text
+  const parseHtmlContent = (htmlString: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    return doc.body.textContent || '';
+  };
+
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{title}</h1>
+        <h1 className="text-2xl font-bold">{parseHtmlContent(title)}</h1>
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
