@@ -13,8 +13,8 @@ export const useEditorValidation = (sectionName: string) => {
   const MIN_VALIDATION_INTERVAL = 30000; // 30 seconds between validations
 
   const validateContent = useCallback(async (content: string) => {
-    if (!content?.trim() || !sectionName?.trim()) {
-      console.log('Empty content or section name, skipping validation');
+    if (!content?.trim()) {
+      console.log('Empty content, skipping validation');
       return;
     }
 
@@ -35,10 +35,18 @@ export const useEditorValidation = (sectionName: string) => {
       setCurrentSection(sectionName);
       console.log(`Validating section: ${sectionName}`);
 
+      // Determine prompt type based on section name
+      const prompts = [];
+      if (sectionName.toLowerCase().includes('título')) {
+        prompts.push({ type: 'title' });
+      } else {
+        prompts.push({ type: 'content', section: sectionName });
+      }
+
       const { data, error } = await supabase.functions.invoke('validate-content', {
         body: { 
           content: content.trim(),
-          section: sectionName.trim()
+          prompts
         }
       });
 

@@ -20,8 +20,8 @@ serve(async (req) => {
   }
 
   try {
-    const { content, section } = await req.json();
-    console.log(`Processing validation request for section: ${section}`);
+    const { content, prompts } = await req.json();
+    console.log(`Processing validation request with ${prompts.length} prompts`);
     console.log(`Content length: ${content?.length || 0} characters`);
 
     if (!content?.trim()) {
@@ -29,9 +29,9 @@ serve(async (req) => {
       throw new Error('O conteúdo é obrigatório');
     }
 
-    if (!section?.trim()) {
-      console.error('Missing section field');
-      throw new Error('A seção é obrigatória');
+    if (!prompts || !Array.isArray(prompts) || prompts.length === 0) {
+      console.error('Invalid prompts array');
+      throw new Error('Prompts inválidos');
     }
 
     // Get client IP or some identifier for rate limiting
@@ -72,8 +72,8 @@ serve(async (req) => {
     const geminiClient = new GeminiClient(apiKey);
     
     try {
-      console.log('Analyzing text with Gemini...');
-      const analysis = await geminiClient.analyzeText(content, section);
+      console.log('Analyzing content with Gemini...');
+      const analysis = await geminiClient.analyzeContent(content, prompts);
       console.log('Successfully received Gemini analysis');
 
       // Record successful request in rate limiter
