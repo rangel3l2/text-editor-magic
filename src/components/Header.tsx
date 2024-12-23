@@ -16,10 +16,34 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useTheme } from "@/components/theme-provider";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+
+  const { data: isAdmin } = useQuery({
+    queryKey: ["isAdmin", user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Error checking admin status:", error);
+        return false;
+      }
+
+      return data?.is_admin || false;
+    },
+    enabled: !!user,
+  });
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b z-50">
@@ -50,6 +74,15 @@ const Header = () => {
                 >
                   Criar Banner
                 </Button>
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    className="justify-start"
+                    onClick={() => navigate("/admin")}
+                  >
+                    Configurações de Admin
+                  </Button>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
@@ -86,9 +119,15 @@ const Header = () => {
               <Settings className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                Configurações
-              </DropdownMenuItem>
+              {isAdmin ? (
+                <DropdownMenuItem onClick={() => navigate("/admin")}>
+                  Configurações de Admin
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem>
+                  Configurações
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

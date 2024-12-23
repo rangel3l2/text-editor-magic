@@ -9,6 +9,7 @@ import LoadingScreen from "./components/LoadingScreen";
 import { Suspense } from "react";
 import Index from "./pages/Index";
 import Header from "./components/Header";
+import AdminSettings from "./pages/AdminSettings";
 
 const queryClient = new QueryClient();
 
@@ -20,11 +21,12 @@ function App() {
           <AuthProvider>
             <Suspense fallback={<LoadingScreen />}>
               <Header />
-              <div className="pt-14"> {/* Add padding to account for fixed header */}
+              <div className="pt-14">
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/editor" element={<TextEditor />} />
                   <Route path="/banner" element={<BannerEditor />} />
+                  <Route path="/admin" element={<AdminSettings />} />
                 </Routes>
               </div>
             </Suspense>
