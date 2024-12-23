@@ -5,6 +5,9 @@ export class GeminiClient {
   private maxRetries = 3;
   private baseDelay = 2000; // 2 seconds
   private maxBackoff = 32000; // 32 seconds
+  private requestsTimestamp: Map<string, number[]> = new Map();
+  private readonly windowMs = 60000; // 1 minute window
+  private readonly maxRequestsPerWindow = 10; // Max requests per minute
   
   constructor(apiKey: string) {
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -15,17 +18,47 @@ export class GeminiClient {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  private isRateLimited(section: string): boolean {
+    const now = Date.now();
+    const timestamps = this.requestsTimestamp.get(section) || [];
+    
+    // Clean up old timestamps
+    const recentTimestamps = timestamps.filter(ts => now - ts < this.windowMs);
+    this.requestsTimestamp.set(section, recentTimestamps);
+    
+    // Apply stricter limits for Results section
+    const maxRequests = section.toLowerCase().includes('resultados') ? 
+      Math.floor(this.maxRequestsPerWindow / 2) : 
+      this.maxRequestsPerWindow;
+    
+    return recentTimestamps.length >= maxRequests;
+  }
+
+  private recordRequest(section: string): void {
+    const timestamps = this.requestsTimestamp.get(section) || [];
+    timestamps.push(Date.now());
+    this.requestsTimestamp.set(section, timestamps);
+  }
+
   private async retryWithExponentialBackoff<T>(
     operation: () => Promise<T>,
+    section: string,
     attempt: number = 0
   ): Promise<T> {
     try {
+      if (this.isRateLimited(section)) {
+        throw new Error('RATE_LIMIT_EXCEEDED');
+      }
+
+      this.recordRequest(section);
       return await operation();
     } catch (error) {
       console.error(`Attempt ${attempt + 1} failed:`, error);
 
       if (attempt >= this.maxRetries || 
-          (!error.message?.includes('429') && !error.message?.toLowerCase().includes('rate limit'))) {
+          (!error.message?.includes('429') && 
+           !error.message?.includes('RATE_LIMIT') && 
+           !error.message?.toLowerCase().includes('quota'))) {
         throw error;
       }
 
@@ -37,11 +70,13 @@ export class GeminiClient {
       console.log(`Retrying after ${delayMs}ms (attempt ${attempt + 1}/${this.maxRetries})`);
       await this.delay(delayMs);
       
-      return this.retryWithExponentialBackoff(operation, attempt + 1);
+      return this.retryWithExponentialBackoff(operation, section, attempt + 1);
     }
   }
 
   async analyzeContent(content: string, prompts: { type: string, section?: string }[]): Promise<any> {
+    const section = prompts[0]?.section || 'default';
+    
     return this.retryWithExponentialBackoff(async () => {
       try {
         let combinedPrompt = "";
@@ -116,7 +151,7 @@ export class GeminiClient {
         console.error('Error in Gemini analysis:', error);
         throw error;
       }
-    });
+    }, section);
   }
 
   private validateResponseStructure(response: any): boolean {

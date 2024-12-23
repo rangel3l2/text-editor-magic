@@ -10,7 +10,17 @@ export const useEditorValidation = (sectionName: string) => {
   const { toast } = useToast();
   const validationTimeoutRef = useRef<NodeJS.Timeout>();
   const lastValidationRef = useRef<number>(0);
+  const retryAttemptsRef = useRef<number>(0);
+  const MAX_RETRY_ATTEMPTS = 3;
   const MIN_VALIDATION_INTERVAL = 30000; // 30 seconds between validations
+  const RESULTS_SECTION_INTERVAL = 45000; // 45 seconds for Results section
+
+  const getValidationInterval = useCallback(() => {
+    // Longer interval for Results section to avoid rate limits
+    return sectionName.toLowerCase().includes('resultados') ? 
+      RESULTS_SECTION_INTERVAL : 
+      MIN_VALIDATION_INTERVAL;
+  }, [sectionName]);
 
   const validateContent = useCallback(async (content: string) => {
     if (!content?.trim()) {
@@ -19,14 +29,20 @@ export const useEditorValidation = (sectionName: string) => {
     }
 
     const now = Date.now();
-    if (now - lastValidationRef.current < MIN_VALIDATION_INTERVAL) {
+    const validationInterval = getValidationInterval();
+    
+    if (now - lastValidationRef.current < validationInterval) {
       console.log('Validation throttled, waiting for cooldown');
-      const remainingTime = Math.ceil((MIN_VALIDATION_INTERVAL - (now - lastValidationRef.current)) / 1000);
-      toast({
-        title: "Aguarde um momento",
-        description: <ToastDescription message={`Por favor, aguarde ${remainingTime} segundos antes de tentar validar novamente.`} />,
-        duration: 3000,
-      });
+      const remainingTime = Math.ceil((validationInterval - (now - lastValidationRef.current)) / 1000);
+      
+      // Only show toast if it's the Results section
+      if (sectionName.toLowerCase().includes('resultados')) {
+        toast({
+          title: "Aguarde um momento",
+          description: <ToastDescription message={`Para evitar sobrecarga, aguarde ${remainingTime} segundos antes de validar a seção de Resultados.`} />,
+          duration: 5000,
+        });
+      }
       return;
     }
 
@@ -35,7 +51,6 @@ export const useEditorValidation = (sectionName: string) => {
       setCurrentSection(sectionName);
       console.log(`Validating section: ${sectionName}`);
 
-      // Determine prompt type based on section name
       const prompts = [];
       if (sectionName.toLowerCase().includes('título')) {
         prompts.push({ type: 'title' });
@@ -53,15 +68,33 @@ export const useEditorValidation = (sectionName: string) => {
       if (error) {
         console.error('Error in validation:', error);
         
-        // Handle rate limit errors specifically
+        // Handle rate limit errors
         if (error.status === 429) {
-          toast({
-            title: "Limite de requisições excedido",
-            description: <ToastDescription message="Por favor, aguarde alguns minutos antes de tentar novamente. O sistema está processando muitas requisições." />,
-            variant: "destructive",
-            duration: 5000,
-          });
-          return;
+          const retryAfter = 30; // Default 30 seconds if not specified
+          retryAttemptsRef.current += 1;
+          
+          if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
+            toast({
+              title: "Limite de requisições atingido",
+              description: <ToastDescription message={`Tentando novamente em ${retryAfter} segundos... (Tentativa ${retryAttemptsRef.current} de ${MAX_RETRY_ATTEMPTS})`} />,
+              duration: 5000,
+            });
+            
+            // Schedule retry
+            setTimeout(() => {
+              validateContent(content);
+            }, retryAfter * 1000);
+            return;
+          } else {
+            toast({
+              title: "Limite de requisições excedido",
+              description: <ToastDescription message="Por favor, aguarde alguns minutos antes de tentar novamente. O sistema está processando muitas requisições." />,
+              variant: "destructive",
+              duration: 5000,
+            });
+            retryAttemptsRef.current = 0;
+            return;
+          }
         }
         
         throw error;
@@ -69,6 +102,7 @@ export const useEditorValidation = (sectionName: string) => {
 
       setValidationResult(data);
       lastValidationRef.current = now;
+      retryAttemptsRef.current = 0; // Reset retry counter on success
 
       if (!data.isValid) {
         toast({
@@ -89,17 +123,20 @@ export const useEditorValidation = (sectionName: string) => {
       setIsValidating(false);
       setCurrentSection('');
     }
-  }, [sectionName, toast]);
+  }, [sectionName, toast, getValidationInterval]);
 
   const scheduleValidation = useCallback((content: string) => {
     if (validationTimeoutRef.current) {
       clearTimeout(validationTimeoutRef.current);
     }
 
+    // Longer delay for Results section
+    const validationDelay = sectionName.toLowerCase().includes('resultados') ? 5000 : 3000;
+
     validationTimeoutRef.current = setTimeout(() => {
       validateContent(content);
-    }, 3000); // Increased debounce to 3 seconds
-  }, [validateContent]);
+    }, validationDelay);
+  }, [validateContent, sectionName]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
