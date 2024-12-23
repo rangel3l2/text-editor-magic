@@ -4,6 +4,7 @@ export class RateLimiter {
   private backoffTimes: Map<string, number>;
   private readonly windowMs: number = 60000; // 1 minute
   private readonly maxRequests: number = 5; // 5 requests per minute
+  private readonly maxResultsRequests: number = 2; // 2 requests per minute for Results
   private readonly maxBackoffMs: number = 300000; // 5 minutes
   private readonly baseBackoffMs: number = 30000; // 30 seconds
 
@@ -19,7 +20,7 @@ export class RateLimiter {
     return RateLimiter.instance;
   }
 
-  public isLimited(clientId: string): boolean {
+  public isLimited(clientId: string, isResultsSection: boolean = false): boolean {
     const now = Date.now();
     
     // Check if in backoff period
@@ -33,7 +34,8 @@ export class RateLimiter {
     this.cleanupOldRequests(clientId, now);
     
     const clientRequests = this.requests.get(clientId) || [];
-    const isLimited = clientRequests.length >= this.maxRequests;
+    const maxRequests = isResultsSection ? this.maxResultsRequests : this.maxRequests;
+    const isLimited = clientRequests.length >= maxRequests;
     
     if (isLimited) {
       console.log(`Rate limit exceeded for client ${clientId}. ${clientRequests.length} requests in the last minute.`);

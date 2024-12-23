@@ -13,13 +13,14 @@ export const useEditorValidation = (sectionName: string) => {
   const retryAttemptsRef = useRef<number>(0);
   const MAX_RETRY_ATTEMPTS = 3;
   const MIN_VALIDATION_INTERVAL = 30000; // 30 seconds between validations
-  const RESULTS_SECTION_INTERVAL = 45000; // 45 seconds for Results section
+  const RESULTS_SECTION_INTERVAL = 60000; // 1 minute for Results section
+  const RATE_LIMIT_BACKOFF = 45000; // 45 seconds backoff after rate limit
 
   const getValidationInterval = useCallback(() => {
     // Longer interval for Results section to avoid rate limits
-    return sectionName.toLowerCase().includes('resultados') ? 
-      RESULTS_SECTION_INTERVAL : 
-      MIN_VALIDATION_INTERVAL;
+    const isResultsSection = sectionName.toLowerCase().includes('resultados') || 
+                           sectionName.toLowerCase().includes('discussão');
+    return isResultsSection ? RESULTS_SECTION_INTERVAL : MIN_VALIDATION_INTERVAL;
   }, [sectionName]);
 
   const validateContent = useCallback(async (content: string) => {
@@ -30,16 +31,19 @@ export const useEditorValidation = (sectionName: string) => {
 
     const now = Date.now();
     const validationInterval = getValidationInterval();
+    const timeSinceLastValidation = now - lastValidationRef.current;
     
-    if (now - lastValidationRef.current < validationInterval) {
+    if (timeSinceLastValidation < validationInterval) {
       console.log('Validation throttled, waiting for cooldown');
-      const remainingTime = Math.ceil((validationInterval - (now - lastValidationRef.current)) / 1000);
+      const remainingTime = Math.ceil((validationInterval - timeSinceLastValidation) / 1000);
       
-      // Only show toast if it's the Results section
-      if (sectionName.toLowerCase().includes('resultados')) {
+      const isResultsSection = sectionName.toLowerCase().includes('resultados') || 
+                              sectionName.toLowerCase().includes('discussão');
+      
+      if (isResultsSection) {
         toast({
           title: "Aguarde um momento",
-          description: <ToastDescription message={`Para evitar sobrecarga, aguarde ${remainingTime} segundos antes de validar a seção de Resultados.`} />,
+          description: <ToastDescription message={`Para evitar sobrecarga, aguarde ${remainingTime} segundos antes de validar a seção de ${sectionName}.`} />,
           duration: 5000,
         });
       }
@@ -69,28 +73,29 @@ export const useEditorValidation = (sectionName: string) => {
         console.error('Error in validation:', error);
         
         // Handle rate limit errors
-        if (error.status === 429) {
-          const retryAfter = 30; // Default 30 seconds if not specified
+        if (error.status === 429 || (error.message && error.message.includes('GEMINI_RATE_LIMIT'))) {
+          const retryAfter = RATE_LIMIT_BACKOFF;
           retryAttemptsRef.current += 1;
           
           if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
+            const retryInSeconds = Math.ceil(retryAfter / 1000);
             toast({
               title: "Limite de requisições atingido",
-              description: <ToastDescription message={`Tentando novamente em ${retryAfter} segundos... (Tentativa ${retryAttemptsRef.current} de ${MAX_RETRY_ATTEMPTS})`} />,
-              duration: 5000,
+              description: <ToastDescription message={`Sistema sobrecarregado. Tentando novamente em ${retryInSeconds} segundos... (Tentativa ${retryAttemptsRef.current} de ${MAX_RETRY_ATTEMPTS})`} />,
+              duration: 8000,
             });
             
-            // Schedule retry
+            // Schedule retry with exponential backoff
             setTimeout(() => {
               validateContent(content);
-            }, retryAfter * 1000);
+            }, retryAfter * Math.pow(2, retryAttemptsRef.current - 1));
             return;
           } else {
             toast({
               title: "Limite de requisições excedido",
-              description: <ToastDescription message="Por favor, aguarde alguns minutos antes de tentar novamente. O sistema está processando muitas requisições." />,
+              description: <ToastDescription message="O sistema está processando muitas requisições. Por favor, aguarde alguns minutos antes de tentar novamente." />,
               variant: "destructive",
-              duration: 5000,
+              duration: 8000,
             });
             retryAttemptsRef.current = 0;
             return;
@@ -102,7 +107,7 @@ export const useEditorValidation = (sectionName: string) => {
 
       setValidationResult(data);
       lastValidationRef.current = now;
-      retryAttemptsRef.current = 0; // Reset retry counter on success
+      retryAttemptsRef.current = 0;
 
       if (!data.isValid) {
         toast({
@@ -117,7 +122,7 @@ export const useEditorValidation = (sectionName: string) => {
         title: "Erro na validação",
         description: <ToastDescription message="Não foi possível validar o conteúdo. Tente novamente em alguns instantes." />,
         variant: "destructive",
-        duration: 3000,
+        duration: 5000,
       });
     } finally {
       setIsValidating(false);

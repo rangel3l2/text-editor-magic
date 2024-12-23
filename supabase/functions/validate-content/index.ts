@@ -11,14 +11,17 @@ const corsHeaders = {
 // Simple in-memory cache with TTL
 const validationCache = new Map<string, { result: any, timestamp: number }>();
 const CACHE_TTL = 300000; // 5 minutes
+const RESULTS_SECTION_CACHE_TTL = 600000; // 10 minutes for Results section
 
 function getCacheKey(content: string, prompts: any[]): string {
   return `${content}_${JSON.stringify(prompts)}`;
 }
 
-function getCachedResult(key: string): any | null {
+function getCachedResult(key: string, isResultsSection: boolean): any | null {
   const cached = validationCache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+  const ttl = isResultsSection ? RESULTS_SECTION_CACHE_TTL : CACHE_TTL;
+  
+  if (cached && Date.now() - cached.timestamp < ttl) {
     console.log('Cache hit for validation');
     return cached.result;
   }
@@ -47,9 +50,14 @@ serve(async (req) => {
       throw new Error('Prompts inválidos');
     }
 
+    const isResultsSection = prompts.some(p => 
+      p.section?.toLowerCase().includes('resultados') || 
+      p.section?.toLowerCase().includes('discussão')
+    );
+
     // Check cache first
     const cacheKey = getCacheKey(content, prompts);
-    const cachedResult = getCachedResult(cacheKey);
+    const cachedResult = getCachedResult(cacheKey, isResultsSection);
     if (cachedResult) {
       return new Response(
         JSON.stringify(cachedResult),
@@ -60,8 +68,9 @@ serve(async (req) => {
     const clientId = req.headers.get('x-real-ip') || 'default';
     const rateLimiter = RateLimiter.getInstance();
     
-    if (rateLimiter.isLimited(clientId)) {
-      console.warn(`Rate limit exceeded for client: ${clientId}`);
+    // Stricter rate limiting for Results section
+    if (isResultsSection && rateLimiter.isLimited(clientId, true)) {
+      console.warn(`Rate limit exceeded for Results section client: ${clientId}`);
       const retryAfter = Math.ceil(rateLimiter.getRemainingTime(clientId) / 1000);
       
       return new Response(
