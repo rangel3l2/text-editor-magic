@@ -2,8 +2,9 @@ import { GoogleGenerativeAI } from "npm:@google/generative-ai@0.2.0";
 
 export class GeminiClient {
   private model;
-  private maxRetries = 2;
-  private baseDelay = 1000; // 1 second
+  private maxRetries = 3;
+  private baseDelay = 2000; // 2 seconds
+  private maxBackoff = 32000; // 32 seconds
   
   constructor(apiKey: string) {
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -21,13 +22,19 @@ export class GeminiClient {
     try {
       return await operation();
     } catch (error) {
+      console.error(`Attempt ${attempt + 1} failed:`, error);
+
       if (attempt >= this.maxRetries || 
-          !error.message?.includes('429')) {
+          (!error.message?.includes('429') && !error.message?.toLowerCase().includes('rate limit'))) {
         throw error;
       }
 
-      const delayMs = this.baseDelay * Math.pow(2, attempt);
-      console.log(`Retrying after ${delayMs}ms (attempt ${attempt + 1})`);
+      const delayMs = Math.min(
+        this.baseDelay * Math.pow(2, attempt),
+        this.maxBackoff
+      );
+      
+      console.log(`Retrying after ${delayMs}ms (attempt ${attempt + 1}/${this.maxRetries})`);
       await this.delay(delayMs);
       
       return this.retryWithExponentialBackoff(operation, attempt + 1);
@@ -47,19 +54,9 @@ export class GeminiClient {
                 "${content}"
                 
                 Critérios de análise:
-                1. Clareza e Objetividade:
-                   - O título deve ser claro e direto
-                   - Deve informar o tema principal do trabalho
-                   - Evitar termos ambíguos ou muito técnicos
-                
-                2. Número de Palavras:
-                   - Ideal: entre 6 e 8 palavras
-                   - Máximo: 12 palavras
-                
-                3. Aspectos Técnicos:
-                   - Verificar erros ortográficos
-                   - Analisar coesão e coerência
-                   - Verificar pontuação
+                1. Clareza e Objetividade
+                2. Número de Palavras
+                3. Aspectos Técnicos
               `;
               break;
             case "content":
@@ -91,8 +88,7 @@ export class GeminiClient {
           "overallFeedback": string
         }`;
 
-        console.log('Sending combined prompt to Gemini:', combinedPrompt);
-        
+        console.log('Sending request to Gemini...');
         const result = await this.model.generateContent(combinedPrompt);
         const response = result.response;
         const text = response.text();
@@ -107,12 +103,7 @@ export class GeminiClient {
 
           const parsedJson = JSON.parse(jsonMatch[0]);
           
-          if (typeof parsedJson.isValid !== 'boolean' ||
-              !Array.isArray(parsedJson.redundancyIssues) ||
-              !Array.isArray(parsedJson.contextIssues) ||
-              !Array.isArray(parsedJson.grammarErrors) ||
-              !Array.isArray(parsedJson.suggestions) ||
-              typeof parsedJson.overallFeedback !== 'string') {
+          if (!this.validateResponseStructure(parsedJson)) {
             throw new Error('Invalid response structure from Gemini');
           }
 
@@ -126,5 +117,16 @@ export class GeminiClient {
         throw error;
       }
     });
+  }
+
+  private validateResponseStructure(response: any): boolean {
+    return (
+      typeof response.isValid === 'boolean' &&
+      Array.isArray(response.redundancyIssues) &&
+      Array.isArray(response.contextIssues) &&
+      Array.isArray(response.grammarErrors) &&
+      Array.isArray(response.suggestions) &&
+      typeof response.overallFeedback === 'string'
+    );
   }
 }
