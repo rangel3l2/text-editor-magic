@@ -8,9 +8,11 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-// Simple in-memory cache
+// Simple in-memory cache with TTL
 const validationCache = new Map<string, { result: any, timestamp: number }>();
 const CACHE_TTL = 300000; // 5 minutes
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 2000; // 2 seconds
 
 function getCacheKey(content: string, prompts: any[]): string {
   return `${content}_${JSON.stringify(prompts)}`;
@@ -23,6 +25,34 @@ function getCachedResult(key: string): any | null {
     return cached.result;
   }
   return null;
+}
+
+async function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function validateWithRetry(
+  geminiClient: GeminiClient, 
+  content: string, 
+  prompts: any[], 
+  attempt: number = 0
+): Promise<any> {
+  try {
+    console.log(`Attempt ${attempt + 1} of ${MAX_RETRIES}`);
+    return await geminiClient.analyzeContent(content, prompts);
+  } catch (error) {
+    console.error(`Error in attempt ${attempt + 1}:`, error);
+    
+    if (error.message?.includes('429') || error.message?.toLowerCase().includes('rate limit')) {
+      if (attempt < MAX_RETRIES - 1) {
+        const retryDelay = INITIAL_RETRY_DELAY * Math.pow(2, attempt);
+        console.log(`Rate limit hit. Retrying in ${retryDelay}ms...`);
+        await delay(retryDelay);
+        return validateWithRetry(geminiClient, content, prompts, attempt + 1);
+      }
+    }
+    throw error;
+  }
 }
 
 serve(async (req) => {
@@ -95,7 +125,7 @@ serve(async (req) => {
     
     try {
       console.log('Analyzing content with Gemini...');
-      const analysis = await geminiClient.analyzeContent(content, prompts);
+      const analysis = await validateWithRetry(geminiClient, content, prompts);
       console.log('Successfully received Gemini analysis');
 
       // Cache successful result
