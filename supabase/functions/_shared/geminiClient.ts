@@ -70,13 +70,32 @@ export class GeminiClient {
       const response = result.response;
       const text = response.text();
       
-      // Extract JSON from response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('Formato de resposta inválido do Gemini');
-      }
+      console.log('Raw Gemini response:', text);
 
-      return JSON.parse(jsonMatch[0]);
+      try {
+        // Extract JSON from response
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('Invalid response format from Gemini');
+        }
+
+        const parsedJson = JSON.parse(jsonMatch[0]);
+        
+        // Validate the response structure
+        if (typeof parsedJson.isValid !== 'boolean' ||
+            !Array.isArray(parsedJson.redundancyIssues) ||
+            !Array.isArray(parsedJson.contextIssues) ||
+            !Array.isArray(parsedJson.grammarErrors) ||
+            !Array.isArray(parsedJson.suggestions) ||
+            typeof parsedJson.overallFeedback !== 'string') {
+          throw new Error('Invalid response structure from Gemini');
+        }
+
+        return parsedJson;
+      } catch (parseError) {
+        console.error('Error parsing Gemini response:', parseError);
+        throw new Error(`Failed to parse Gemini response: ${parseError.message}`);
+      }
     } catch (error) {
       console.error('Error in Gemini analysis:', error);
       throw error;

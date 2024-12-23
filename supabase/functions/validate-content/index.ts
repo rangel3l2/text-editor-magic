@@ -44,12 +44,9 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify({
-          isValid: false,
-          redundancyIssues: [],
-          contextIssues: ['Muitas requisições em um curto período de tempo.'],
-          grammarErrors: [],
-          suggestions: ['Por favor, aguarde alguns segundos antes de tentar novamente.'],
-          overallFeedback: 'Limite de requisições excedido. Tente novamente em alguns segundos.'
+          error: 'RATE_LIMIT_EXCEEDED',
+          message: 'Too many requests',
+          retryAfter
         }),
         { 
           status: 429,
@@ -95,12 +92,8 @@ serve(async (req) => {
       if (error.message?.includes('429') || error.message?.includes('quota')) {
         return new Response(
           JSON.stringify({
-            isValid: false,
-            redundancyIssues: [],
-            contextIssues: ['O serviço está temporariamente indisponível devido ao alto volume de requisições.'],
-            grammarErrors: [],
-            suggestions: ['Por favor, aguarde alguns minutos antes de tentar novamente.'],
-            overallFeedback: 'Sistema sobrecarregado. Tente novamente em alguns minutos.'
+            error: 'GEMINI_RATE_LIMIT',
+            message: 'Gemini API rate limit exceeded'
           }),
           { 
             status: 429,
@@ -118,17 +111,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in validate-content function:', error);
     
-    const errorResponse = {
-      isValid: false,
-      redundancyIssues: [],
-      contextIssues: [`Erro ao analisar o texto: ${error.message}`],
-      grammarErrors: [],
-      suggestions: ['Por favor, tente novamente em alguns instantes'],
-      overallFeedback: 'Ocorreu um erro técnico ao analisar seu texto. Nossa equipe foi notificada e está trabalhando para resolver o problema.'
-    };
-
     return new Response(
-      JSON.stringify(errorResponse),
+      JSON.stringify({
+        error: 'INTERNAL_SERVER_ERROR',
+        message: error.message || 'An unexpected error occurred'
+      }),
       { 
         status: 500,
         headers: { 
