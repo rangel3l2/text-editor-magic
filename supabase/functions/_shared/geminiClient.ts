@@ -40,6 +40,54 @@ export class GeminiClient {
     this.requestsTimestamp.set(section, timestamps);
   }
 
+  private buildPrompt(content: string, prompts: { type: string, section?: string }[]): string {
+    let combinedPrompt = "";
+    
+    prompts.forEach((prompt, index) => {
+      switch (prompt.type) {
+        case "title":
+          combinedPrompt += `
+            Analise o título do banner acadêmico:
+            "${content}"
+            
+            Critérios de análise:
+            1. Clareza e Objetividade
+            2. Número de Palavras
+            3. Aspectos Técnicos
+          `;
+          break;
+        case "content":
+          combinedPrompt += `
+            Analise o texto para a seção "${prompt.section}" do banner acadêmico:
+            "${content}"
+            
+            Critérios:
+            1. Adequação ao formato banner
+            2. Clareza e objetividade
+            3. Coerência e coesão
+            4. Gramática e ortografia
+          `;
+          break;
+      }
+      
+      if (index < prompts.length - 1) {
+        combinedPrompt += "\n\n---\n\n";
+      }
+    });
+
+    combinedPrompt += `\n\nIMPORTANTE: Sua resposta DEVE ser um objeto JSON válido com esta estrutura:
+    {
+      "isValid": boolean,
+      "contextIssues": string[],
+      "suggestions": string[],
+      "overallFeedback": string
+    }
+    
+    Certifique-se de que a resposta seja um JSON válido e bem formatado.`;
+
+    return combinedPrompt;
+  }
+
   private async retryWithExponentialBackoff<T>(
     operation: () => Promise<T>,
     section: string,
@@ -79,70 +127,23 @@ export class GeminiClient {
     
     return this.retryWithExponentialBackoff(async () => {
       try {
-        let combinedPrompt = "";
+        const prompt = this.buildPrompt(content, prompts);
+        console.log('Sending request to Gemini with prompt:', prompt);
         
-        prompts.forEach((prompt, index) => {
-          switch (prompt.type) {
-            case "title":
-              combinedPrompt += `
-                Análise do título do banner acadêmico:
-                "${content}"
-                
-                Critérios de análise:
-                1. Clareza e Objetividade
-                2. Número de Palavras
-                3. Aspectos Técnicos
-              `;
-              break;
-            case "content":
-              combinedPrompt += `
-                Análise do texto para a seção "${prompt.section}" do banner acadêmico:
-                "${content}"
-                
-                Critérios:
-                1. Adequação ao formato banner
-                2. Clareza e objetividade
-                3. Coerência e coesão
-                4. Gramática e ortografia
-              `;
-              break;
-          }
-          
-          if (index < prompts.length - 1) {
-            combinedPrompt += "\n\n---\n\n";
-          }
-        });
-
-        combinedPrompt += `\n\nResposta DEVE ser um objeto JSON com esta estrutura:
-        {
-          "isValid": boolean,
-          "redundancyIssues": string[],
-          "contextIssues": string[],
-          "grammarErrors": string[],
-          "suggestions": string[],
-          "overallFeedback": string
-        }`;
-
-        console.log('Sending request to Gemini...');
-        const result = await this.model.generateContent(combinedPrompt);
+        const result = await this.model.generateContent(prompt);
         const response = result.response;
         const text = response.text();
         
         console.log('Raw Gemini response:', text);
+        
+        // Try to find and parse JSON in the response
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('No JSON found in Gemini response');
+        }
 
         try {
-          const jsonMatch = text.match(/\{[\s\S]*\}/);
-          if (!jsonMatch) {
-            throw new Error('Invalid response format from Gemini');
-          }
-
-          const parsedJson = JSON.parse(jsonMatch[0]);
-          
-          if (!this.validateResponseStructure(parsedJson)) {
-            throw new Error('Invalid response structure from Gemini');
-          }
-
-          return parsedJson;
+          return JSON.parse(jsonMatch[0]);
         } catch (parseError) {
           console.error('Error parsing Gemini response:', parseError);
           throw new Error(`Failed to parse Gemini response: ${parseError.message}`);
@@ -152,16 +153,5 @@ export class GeminiClient {
         throw error;
       }
     }, section);
-  }
-
-  private validateResponseStructure(response: any): boolean {
-    return (
-      typeof response.isValid === 'boolean' &&
-      Array.isArray(response.redundancyIssues) &&
-      Array.isArray(response.contextIssues) &&
-      Array.isArray(response.grammarErrors) &&
-      Array.isArray(response.suggestions) &&
-      typeof response.overallFeedback === 'string'
-    );
   }
 }

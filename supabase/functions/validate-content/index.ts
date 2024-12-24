@@ -12,6 +12,52 @@ function getCacheKey(content: string, prompts: any[]): string {
   return `${content}_${JSON.stringify(prompts)}`;
 }
 
+function sanitizeJsonString(str: string): string {
+  // Remove any potential control characters
+  str = str.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+  
+  // Try to find JSON-like structure
+  const jsonMatch = str.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('No JSON object found in response');
+  }
+  
+  return jsonMatch[0];
+}
+
+function parseGeminiResponse(text: string) {
+  console.log('Raw Gemini response:', text);
+  
+  try {
+    // First try direct parsing
+    return JSON.parse(text);
+  } catch (error) {
+    console.log('Direct parsing failed, attempting to sanitize:', error);
+    
+    // Try to sanitize and parse
+    const sanitized = sanitizeJsonString(text);
+    console.log('Sanitized JSON:', sanitized);
+    
+    try {
+      return JSON.parse(sanitized);
+    } catch (secondError) {
+      console.error('Failed to parse sanitized JSON:', secondError);
+      throw new Error(`Failed to parse Gemini response after sanitization: ${secondError.message}`);
+    }
+  }
+}
+
+function validateResponseStructure(response: any): boolean {
+  const requiredFields = ['isValid', 'contextIssues', 'suggestions', 'overallFeedback'];
+  return requiredFields.every(field => {
+    const hasField = field in response;
+    if (!hasField) {
+      console.log(`Missing required field: ${field}`);
+    }
+    return hasField;
+  });
+}
+
 serve(async (req) => {
   console.log('Received request to validate-content');
 
@@ -94,6 +140,11 @@ serve(async (req) => {
       console.log('Analyzing content with Gemini...');
       const analysis = await geminiClient.analyzeContent(content, prompts);
       console.log('Successfully received Gemini analysis');
+
+      // Ensure the response has the correct structure
+      if (!validateResponseStructure(analysis)) {
+        throw new Error('Invalid response structure from Gemini');
+      }
 
       // Cache successful result
       rateLimiter.setCacheResult(cacheKey, analysis);
