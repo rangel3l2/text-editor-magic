@@ -8,24 +8,8 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-// Simple in-memory cache with TTL
-const validationCache = new Map<string, { result: any, timestamp: number }>();
-const CACHE_TTL = 300000; // 5 minutes
-const RESULTS_SECTION_CACHE_TTL = 600000; // 10 minutes for Results section
-
 function getCacheKey(content: string, prompts: any[]): string {
   return `${content}_${JSON.stringify(prompts)}`;
-}
-
-function getCachedResult(key: string, isResultsSection: boolean): any | null {
-  const cached = validationCache.get(key);
-  const ttl = isResultsSection ? RESULTS_SECTION_CACHE_TTL : CACHE_TTL;
-  
-  if (cached && Date.now() - cached.timestamp < ttl) {
-    console.log('Cache hit for validation');
-    return cached.result;
-  }
-  return null;
 }
 
 serve(async (req) => {
@@ -55,33 +39,37 @@ serve(async (req) => {
       p.section?.toLowerCase().includes('discussão')
     );
 
+    const clientId = req.headers.get('x-real-ip') || 'default';
+    const rateLimiter = RateLimiter.getInstance();
+    
     // Check cache first
     const cacheKey = getCacheKey(content, prompts);
-    const cachedResult = getCachedResult(cacheKey, isResultsSection);
+    const cachedResult = rateLimiter.getCachedResult(cacheKey, isResultsSection);
     if (cachedResult) {
+      console.log('Returning cached result');
       return new Response(
         JSON.stringify(cachedResult),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const clientId = req.headers.get('x-real-ip') || 'default';
-    const rateLimiter = RateLimiter.getInstance();
-    
-    // Stricter rate limiting for Results section
-    if (isResultsSection && rateLimiter.isLimited(clientId, true)) {
-      console.warn(`Rate limit exceeded for Results section client: ${clientId}`);
+    // Check rate limits
+    if (rateLimiter.isLimited(clientId, isResultsSection)) {
+      console.warn(`Rate limit exceeded for client: ${clientId}`);
       const retryAfter = Math.ceil(rateLimiter.getRemainingTime(clientId) / 1000);
+      const backoffMessage = isResultsSection ? 
+        'A seção de Resultados e Discussão requer mais tempo entre validações.' :
+        'Muitas requisições em um curto período.';
       
       return new Response(
         JSON.stringify({
           error: 'RATE_LIMIT_EXCEEDED',
-          message: 'Muitas requisições em um curto período',
+          message: backoffMessage,
           retryAfter,
           isValid: false,
           contextIssues: ['O serviço está temporariamente indisponível devido ao alto volume de requisições.'],
           suggestions: ['Por favor, aguarde alguns minutos antes de tentar novamente.'],
-          overallFeedback: 'Sistema sobrecarregado. Tente novamente em alguns minutos.'
+          overallFeedback: `Sistema sobrecarregado. Tente novamente em ${retryAfter} segundos.`
         }),
         { 
           status: 429,
@@ -108,10 +96,7 @@ serve(async (req) => {
       console.log('Successfully received Gemini analysis');
 
       // Cache successful result
-      validationCache.set(cacheKey, {
-        result: analysis,
-        timestamp: Date.now()
-      });
+      rateLimiter.setCacheResult(cacheKey, analysis);
 
       // Record successful request and clear any backoff
       rateLimiter.recordRequest(clientId);
@@ -141,7 +126,7 @@ serve(async (req) => {
             isValid: false,
             contextIssues: ['O serviço está temporariamente indisponível.'],
             suggestions: ['Por favor, aguarde alguns minutos antes de tentar novamente.'],
-            overallFeedback: 'Sistema temporariamente indisponível. Tente novamente em alguns minutos.'
+            overallFeedback: `Sistema temporariamente indisponível. Tente novamente em ${retryAfter} segundos.`
           }),
           { 
             status: 429,

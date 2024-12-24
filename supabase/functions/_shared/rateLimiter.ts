@@ -7,10 +7,14 @@ export class RateLimiter {
   private readonly maxResultsRequests: number = 2; // 2 requests per minute for Results
   private readonly maxBackoffMs: number = 300000; // 5 minutes
   private readonly baseBackoffMs: number = 30000; // 30 seconds
+  private readonly cache: Map<string, { result: any; timestamp: number }>;
+  private readonly cacheTTL: number = 300000; // 5 minutes cache TTL
+  private readonly resultsCacheTTL: number = 600000; // 10 minutes cache TTL for Results
 
   private constructor() {
     this.requests = new Map();
     this.backoffTimes = new Map();
+    this.cache = new Map();
   }
 
   public static getInstance(): RateLimiter {
@@ -18,6 +22,28 @@ export class RateLimiter {
       RateLimiter.instance = new RateLimiter();
     }
     return RateLimiter.instance;
+  }
+
+  public getCachedResult(key: string, isResultsSection: boolean = false): any | null {
+    const cached = this.cache.get(key);
+    if (!cached) return null;
+
+    const ttl = isResultsSection ? this.resultsCacheTTL : this.cacheTTL;
+    if (Date.now() - cached.timestamp > ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    console.log(`Cache hit for key: ${key}`);
+    return cached.result;
+  }
+
+  public setCacheResult(key: string, result: any): void {
+    this.cache.set(key, {
+      result,
+      timestamp: Date.now()
+    });
+    console.log(`Cached result for key: ${key}`);
   }
 
   public isLimited(clientId: string, isResultsSection: boolean = false): boolean {
@@ -93,6 +119,7 @@ export class RateLimiter {
     const now = Date.now();
     const currentBackoff = this.backoffTimes.get(clientId);
     
+    // Implement exponential backoff
     let nextBackoff = currentBackoff ? 
       Math.min(currentBackoff * 2, this.maxBackoffMs) : 
       this.baseBackoffMs;

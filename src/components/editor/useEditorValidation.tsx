@@ -17,7 +17,6 @@ export const useEditorValidation = (sectionName: string) => {
   const RATE_LIMIT_BACKOFF = 45000; // 45 seconds backoff after rate limit
 
   const getValidationInterval = useCallback(() => {
-    // Longer interval for Results section to avoid rate limits
     const isResultsSection = sectionName.toLowerCase().includes('resultados') || 
                            sectionName.toLowerCase().includes('discussão');
     return isResultsSection ? RESULTS_SECTION_INTERVAL : MIN_VALIDATION_INTERVAL;
@@ -73,8 +72,11 @@ export const useEditorValidation = (sectionName: string) => {
         console.error('Error in validation:', error);
         
         // Handle rate limit errors
-        if (error.status === 429 || (error.message && error.message.includes('GEMINI_RATE_LIMIT'))) {
-          const retryAfter = RATE_LIMIT_BACKOFF;
+        if (error.status === 429 || (error.message && error.message.includes('RATE_LIMIT'))) {
+          const retryAfter = error.message?.includes('retryAfter') ? 
+            JSON.parse(error.message).retryAfter * 1000 : 
+            RATE_LIMIT_BACKOFF;
+          
           retryAttemptsRef.current += 1;
           
           if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
