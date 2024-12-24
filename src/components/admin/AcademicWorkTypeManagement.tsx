@@ -1,10 +1,6 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -14,22 +10,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-
-interface WorkType {
-  id: string;
-  name: string;
-  description: string | null;
-  is_active: boolean;
-}
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AcademicWorkTypeManagement = () => {
-  const [newTypeName, setNewTypeName] = useState("");
-  const [newTypeDescription, setNewTypeDescription] = useState("");
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [newType, setNewType] = useState({ name: "", description: "" });
+  const [updating, setUpdating] = useState(false);
 
-  const { data: workTypes, isLoading } = useQuery({
-    queryKey: ["workTypes"],
+  const { data: workTypes, refetch } = useQuery({
+    queryKey: ["academicWorkTypes"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("academic_work_types")
@@ -41,101 +35,91 @@ const AcademicWorkTypeManagement = () => {
         throw error;
       }
 
-      return data as WorkType[];
+      return data;
     },
   });
 
-  const addWorkTypeMutation = useMutation({
-    mutationFn: async ({ name, description }: { name: string; description: string }) => {
-      const { error } = await supabase
-        .from("academic_work_types")
-        .insert([{ name, description }]);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workTypes"] });
-      toast({
-        title: "Sucesso",
-        description: "Tipo de trabalho acadêmico adicionado com sucesso",
-      });
-      setNewTypeName("");
-      setNewTypeDescription("");
-    },
-    onError: (error) => {
-      toast({
-        title: "Erro",
-        description: "Erro ao adicionar tipo de trabalho acadêmico",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const toggleActiveMutation = useMutation({
-    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase
-        .from("academic_work_types")
-        .update({ is_active })
-        .eq("id", id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workTypes"] });
-      toast({
-        title: "Sucesso",
-        description: "Status atualizado com sucesso",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar status",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newTypeName) {
-      addWorkTypeMutation.mutate({
-        name: newTypeName,
-        description: newTypeDescription,
+    if (!newType.name.trim()) {
+      toast({
+        title: "Erro",
+        description: "O nome do tipo de trabalho é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("academic_work_types").insert({
+        name: newType.name,
+        description: newType.description,
+        created_by: user?.id,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Tipo de trabalho acadêmico adicionado com sucesso.",
+      });
+      setNewType({ name: "", description: "" });
+      refetch();
+    } catch (error) {
+      console.error("Error adding work type:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar tipo de trabalho acadêmico.",
+        variant: "destructive",
       });
     }
   };
 
-  if (isLoading) {
-    return <div>Carregando...</div>;
-  }
+  const handleToggleActive = async (typeId: string, currentValue: boolean) => {
+    setUpdating(true);
+    try {
+      const { error } = await supabase
+        .from("academic_work_types")
+        .update({ is_active: !currentValue })
+        .eq("id", typeId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Status do tipo de trabalho atualizado com sucesso.",
+      });
+      refetch();
+    } catch (error) {
+      console.error("Error updating work type status:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar status do tipo de trabalho.",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <label htmlFor="name">Nome do Tipo de Trabalho</label>
-            <Input
-              id="name"
-              value={newTypeName}
-              onChange={(e) => setNewTypeName(e.target.value)}
-              placeholder="Ex: TCC, Artigo Científico"
-            />
-          </div>
-          <div className="grid gap-2">
-            <label htmlFor="description">Descrição</label>
-            <Textarea
-              id="description"
-              value={newTypeDescription}
-              onChange={(e) => setNewTypeDescription(e.target.value)}
-              placeholder="Descreva o tipo de trabalho acadêmico"
-            />
-          </div>
+        <div className="space-y-2">
+          <Input
+            placeholder="Nome do tipo de trabalho"
+            value={newType.name}
+            onChange={(e) => setNewType({ ...newType, name: e.target.value })}
+          />
+          <Textarea
+            placeholder="Descrição (opcional)"
+            value={newType.description}
+            onChange={(e) =>
+              setNewType({ ...newType, description: e.target.value })
+            }
+          />
+          <Button type="submit">Adicionar Tipo de Trabalho</Button>
         </div>
-        <Button type="submit" disabled={addWorkTypeMutation.isPending}>
-          Adicionar Tipo
-        </Button>
       </form>
 
       <Table>
@@ -143,7 +127,7 @@ const AcademicWorkTypeManagement = () => {
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Descrição</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>Ativo</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -154,8 +138,9 @@ const AcademicWorkTypeManagement = () => {
               <TableCell>
                 <Switch
                   checked={type.is_active}
-                  onCheckedChange={(checked) =>
-                    toggleActiveMutation.mutate({ id: type.id, is_active: checked })
+                  disabled={updating}
+                  onCheckedChange={() =>
+                    handleToggleActive(type.id, type.is_active)
                   }
                 />
               </TableCell>
