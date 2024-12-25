@@ -20,7 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminUserManagement from "./admin/AdminUserManagement";
 import AcademicWorkTypeManagement from "./admin/AcademicWorkTypeManagement";
@@ -31,10 +31,12 @@ const Header = () => {
   const { user } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const { data: isAdmin } = useQuery({
+  const { data: isAdmin, refetch: refetchAdminStatus } = useQuery({
     queryKey: ["isAdmin", user?.id],
     queryFn: async () => {
       if (!user) return false;
+      console.log("Checking admin status for user:", user.email);
+      
       const { data, error } = await supabase
         .from("profiles")
         .select("is_admin")
@@ -46,10 +48,17 @@ const Header = () => {
         return false;
       }
 
+      console.log("Admin status response:", data);
       return data?.is_admin || false;
     },
     enabled: !!user,
   });
+
+  useEffect(() => {
+    if (user) {
+      refetchAdminStatus();
+    }
+  }, [user, refetchAdminStatus]);
 
   return (
     <>
