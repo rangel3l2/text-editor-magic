@@ -24,13 +24,25 @@ export const handleGoogleSignIn = async () => {
 };
 
 export const handleSignOut = async () => {
-  const { error } = await supabase.auth.signOut();
-  if (error) {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
+    
+    // Clear local storage
+    localStorage.removeItem('supabase.auth.token');
+    
+    // Force reload the page to clear all states
+    window.location.href = '/';
+    
+    toast.success('Logout realizado com sucesso!');
+  } catch (error) {
     toast.error('Erro ao fazer logout');
     console.error('Error signing out:', error);
     throw error;
   }
-  toast.success('Logout realizado com sucesso!');
 };
 
 export const cleanupHashFromUrl = () => {

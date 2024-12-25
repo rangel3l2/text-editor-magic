@@ -4,13 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { UserCircle2, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 
 export function LoginButton() {
   const { user, signInWithGoogle, signOut } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
@@ -31,15 +29,9 @@ export function LoginButton() {
 
   const handleLogout = async () => {
     try {
-      await signOut();
-      // Clear all queries from the cache
+      // Clear all queries from the cache before signing out
       queryClient.clear();
-      // Redirect to home page
-      navigate("/");
-      toast({
-        title: "Logout realizado com sucesso!",
-        description: "Você foi desconectado.",
-      });
+      await signOut();
     } catch (error) {
       console.error("Error during logout:", error);
       toast({
