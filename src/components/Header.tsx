@@ -34,7 +34,11 @@ const Header = () => {
   const { data: isAdmin, refetch: refetchAdminStatus } = useQuery({
     queryKey: ["isAdmin", user?.id],
     queryFn: async () => {
-      if (!user) return false;
+      if (!user) {
+        console.log("No user logged in");
+        return false;
+      }
+      
       console.log("Checking admin status for user:", user.email);
       
       const { data, error } = await supabase
@@ -49,16 +53,25 @@ const Header = () => {
       }
 
       console.log("Admin status response:", data);
+      console.log("Is admin value:", data?.is_admin);
       return data?.is_admin || false;
     },
     enabled: !!user,
+    staleTime: 0, // Always refetch when the query is triggered
+    cacheTime: 0, // Don't cache the result
   });
 
   useEffect(() => {
     if (user) {
+      console.log("User changed, refetching admin status");
       refetchAdminStatus();
     }
   }, [user, refetchAdminStatus]);
+
+  // Log whenever isAdmin changes
+  useEffect(() => {
+    console.log("Current admin status:", isAdmin);
+  }, [isAdmin]);
 
   return (
     <>
