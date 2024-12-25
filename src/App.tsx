@@ -19,20 +19,18 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <Router>
           <AuthProvider>
-            <div>
+            <Suspense fallback={<LoadingScreen />}>
               <Header />
               <div className="pt-14">
-                <Suspense fallback={<LoadingScreen />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/editor" element={<TextEditor />} />
-                    <Route path="/banner" element={<BannerEditor />} />
-                    <Route path="/admin" element={<AdminSettings />} />
-                  </Routes>
-                </Suspense>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/editor" element={<TextEditor />} />
+                  <Route path="/banner" element={<BannerEditor />} />
+                  <Route path="/admin" element={<AdminSettings />} />
+                </Routes>
               </div>
-              <Toaster />
-            </div>
+            </Suspense>
+            <Toaster />
           </AuthProvider>
         </Router>
       </QueryClientProvider>
