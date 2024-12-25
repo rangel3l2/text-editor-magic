@@ -58,7 +58,7 @@ const Header = () => {
     },
     enabled: !!user,
     staleTime: 0, // Always refetch when the query is triggered
-    cacheTime: 0, // Don't cache the result
+    gcTime: 0, // Don't cache the result (previously cacheTime)
   });
 
   useEffect(() => {
