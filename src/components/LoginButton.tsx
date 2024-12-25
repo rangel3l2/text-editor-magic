@@ -29,9 +29,14 @@ export function LoginButton() {
 
   const handleLogout = async () => {
     try {
-      // Clear all queries from the cache before signing out
+      // Clear all queries from the cache
       queryClient.clear();
+      
+      // Execute logout
       await signOut();
+      
+      // Force page reload after successful logout
+      window.location.reload();
     } catch (error) {
       console.error("Error during logout:", error);
       toast({
