@@ -29,8 +29,8 @@ function App() {
                   <Route path="/admin" element={<AdminSettings />} />
                 </Routes>
               </div>
-              <Toaster />
             </Suspense>
+            <Toaster />
           </AuthProvider>
         </Router>
       </QueryClientProvider>

@@ -3,12 +3,10 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserCircle2, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 
 export function LoginButton() {
   const { user, signInWithGoogle, signOut } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const handleLogin = async () => {
     try {
@@ -18,7 +16,6 @@ export function LoginButton() {
         description: "Você está conectado com sua conta Google.",
       });
     } catch (error) {
-      console.error("Error during login:", error);
       toast({
         title: "Erro ao realizar login",
         description: "Tente novamente mais tarde.",
@@ -29,16 +26,12 @@ export function LoginButton() {
 
   const handleLogout = async () => {
     try {
-      // Clear all queries from the cache
-      queryClient.clear();
-      
-      // Execute logout
       await signOut();
-      
-      // Force page reload after successful logout
-      window.location.reload();
+      toast({
+        title: "Logout realizado com sucesso!",
+        description: "Você foi desconectado.",
+      });
     } catch (error) {
-      console.error("Error during logout:", error);
       toast({
         title: "Erro ao realizar logout",
         description: "Tente novamente mais tarde.",
@@ -60,7 +53,7 @@ export function LoginButton() {
               {(user.user_metadata?.full_name?.[0] || user.email?.[0])?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm text-gray-700 dark:text-gray-300 hidden sm:inline">
+          <span className="text-sm text-gray-700 hidden sm:inline">
             {user.user_metadata?.full_name || user.email}
           </span>
           <Button

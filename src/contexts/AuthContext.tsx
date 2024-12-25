@@ -21,9 +21,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       await handleSignOut();
+      navigate('/');
     } catch (error) {
       console.error('Error in signOut:', error);
-      navigate('/');
     }
   };
 
