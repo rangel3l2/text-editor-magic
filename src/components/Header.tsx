@@ -42,7 +42,7 @@ const Header = () => {
       
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("is_admin")
+        .select("*")
         .eq("id", user.id)
         .single();
 
@@ -51,15 +51,18 @@ const Header = () => {
         return false;
       }
 
-      console.log("Admin status response:", profile);
+      console.log("Profile data:", profile);
+      console.log("Is admin?", profile?.is_admin);
       return profile?.is_admin || false;
     },
     enabled: !!user,
+    refetchInterval: 1000, // Refetch every second while debugging
   });
 
   useEffect(() => {
     if (user) {
       console.log("User changed, refetching admin status");
+      console.log("Current user:", user);
       refetchAdminStatus();
     }
   }, [user, refetchAdminStatus]);
@@ -67,6 +70,9 @@ const Header = () => {
   // Adicionar log para visualizar o estado de admin
   useEffect(() => {
     console.log("Current admin status:", isAdmin);
+    if (isAdmin) {
+      console.log("User has admin privileges");
+    }
   }, [isAdmin]);
 
   return (
