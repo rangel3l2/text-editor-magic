@@ -24,12 +24,14 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminUserManagement from "./admin/AdminUserManagement";
 import AcademicWorkTypeManagement from "./admin/AcademicWorkTypeManagement";
+import { useToast } from "./ui/use-toast";
 
 const Header = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { toast } = useToast();
 
   const { data: isAdmin, refetch: refetchAdminStatus } = useQuery({
     queryKey: ["isAdmin", user?.id],
@@ -38,25 +40,47 @@ const Header = () => {
         console.log("No user found");
         return false;
       }
-      console.log("Checking admin status for user:", user.email);
       
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+      try {
+        console.log("Checking admin status for user:", user.email);
+        
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
 
-      if (error) {
-        console.error("Error checking admin status:", error);
+        if (error) {
+          console.error("Error checking admin status:", error);
+          toast({
+            title: "Erro ao verificar status de administrador",
+            description: "Por favor, tente novamente mais tarde.",
+            variant: "destructive",
+          });
+          return false;
+        }
+
+        if (!profile) {
+          console.log("No profile found for user");
+          return false;
+        }
+
+        console.log("Profile data:", profile);
+        console.log("Is admin?", profile?.is_admin);
+        return profile?.is_admin || false;
+      } catch (error) {
+        console.error("Unexpected error checking admin status:", error);
+        toast({
+          title: "Erro inesperado",
+          description: "Ocorreu um erro ao verificar suas permissões.",
+          variant: "destructive",
+        });
         return false;
       }
-
-      console.log("Profile data:", profile);
-      console.log("Is admin?", profile?.is_admin);
-      return profile?.is_admin || false;
     },
     enabled: !!user,
-    refetchInterval: 1000, // Refetch every second while debugging
+    retry: 2,
+    retryDelay: 1000,
   });
 
   useEffect(() => {
@@ -67,7 +91,6 @@ const Header = () => {
     }
   }, [user, refetchAdminStatus]);
 
-  // Adicionar log para visualizar o estado de admin
   useEffect(() => {
     console.log("Current admin status:", isAdmin);
     if (isAdmin) {
