@@ -15,8 +15,8 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="aicademic-theme">
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="system" storageKey="aicademic-theme">
         <Router>
           <AuthProvider>
             <Suspense fallback={<LoadingScreen />}>
@@ -29,12 +29,12 @@ function App() {
                   <Route path="/admin" element={<AdminSettings />} />
                 </Routes>
               </div>
+              <Toaster />
             </Suspense>
-            <Toaster />
           </AuthProvider>
         </Router>
-      </QueryClientProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
