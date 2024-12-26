@@ -39,6 +39,6 @@ export const useAdminStatus = (user: User | null) => {
     enabled: !!user,
     retry: 1,
     staleTime: 30000, // Cache por 30 segundos
-    cacheTime: 60000, // Manter no cache por 1 minuto
+    gcTime: 60000, // Manter no cache por 1 minuto (anteriormente cacheTime)
   });
 };
