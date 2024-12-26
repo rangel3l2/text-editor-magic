@@ -34,10 +34,13 @@ const Header = () => {
   const { data: isAdmin, refetch: refetchAdminStatus } = useQuery({
     queryKey: ["isAdmin", user?.id],
     queryFn: async () => {
-      if (!user) return false;
+      if (!user) {
+        console.log("No user found");
+        return false;
+      }
       console.log("Checking admin status for user:", user.email);
       
-      const { data, error } = await supabase
+      const { data: profile, error } = await supabase
         .from("profiles")
         .select("is_admin")
         .eq("id", user.id)
@@ -48,17 +51,23 @@ const Header = () => {
         return false;
       }
 
-      console.log("Admin status response:", data);
-      return data?.is_admin || false;
+      console.log("Admin status response:", profile);
+      return profile?.is_admin || false;
     },
     enabled: !!user,
   });
 
   useEffect(() => {
     if (user) {
+      console.log("User changed, refetching admin status");
       refetchAdminStatus();
     }
   }, [user, refetchAdminStatus]);
+
+  // Adicionar log para visualizar o estado de admin
+  useEffect(() => {
+    console.log("Current admin status:", isAdmin);
+  }, [isAdmin]);
 
   return (
     <>

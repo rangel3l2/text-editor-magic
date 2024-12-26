@@ -12,6 +12,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
+      console.log("Iniciando login com Google...");
       await handleGoogleSignIn();
     } catch (error) {
       console.error('Error in signInWithGoogle:', error);
@@ -26,6 +27,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error in signOut:', error);
     }
   };
+
+  // Log quando o usuário muda
+  console.log("Current user in AuthContext:", user);
 
   const value = {
     user,
