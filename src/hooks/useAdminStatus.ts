@@ -22,17 +22,20 @@ export const useAdminStatus = (user: User | null) => {
 
         if (error) {
           console.error("Error checking admin status:", error);
-          throw error;
+          // Only show toast for network or server errors, not auth errors
+          if (!error.message.includes('JWT')) {
+            toast({
+              title: "Erro ao verificar permissões",
+              description: "Tente novamente em alguns instantes.",
+              variant: "destructive",
+            });
+          }
+          return false;
         }
 
         return profile?.is_admin || false;
       } catch (error) {
         console.error("Error in admin status check:", error);
-        toast({
-          title: "Erro ao verificar permissões",
-          description: "Por favor, faça login novamente.",
-          variant: "destructive",
-        });
         return false;
       }
     },
