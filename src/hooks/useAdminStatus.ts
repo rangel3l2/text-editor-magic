@@ -14,15 +14,18 @@ export const useAdminStatus = (user: User | null) => {
       }
 
       try {
+        console.log("Verificando status de admin para usuário:", user.id);
+        
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("is_admin")
           .eq("id", user.id)
-          .maybeSingle();
+          .single();
 
         if (error) {
-          console.error("Error checking admin status:", error);
-          // Only show toast for network or server errors, not auth errors
+          console.error("Erro ao verificar status de admin:", error);
+          
+          // Não mostrar toast para erros de JWT pois são esperados durante a inicialização
           if (!error.message.includes('JWT')) {
             toast({
               title: "Erro ao verificar permissões",
@@ -33,9 +36,10 @@ export const useAdminStatus = (user: User | null) => {
           return false;
         }
 
+        console.log("Perfil do usuário:", profile);
         return profile?.is_admin || false;
       } catch (error) {
-        console.error("Error in admin status check:", error);
+        console.error("Erro na verificação de status de admin:", error);
         return false;
       }
     },
