@@ -17,8 +17,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="aicademic-theme">
-        <Router>
-          <AuthProvider>
+        <AuthProvider>
+          <Router>
             <Suspense fallback={<LoadingScreen />}>
               <Header />
               <div className="pt-14">
@@ -31,8 +31,8 @@ function App() {
               </div>
               <Toaster />
             </Suspense>
-          </AuthProvider>
-        </Router>
+          </Router>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
