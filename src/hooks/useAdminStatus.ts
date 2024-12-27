@@ -10,12 +10,45 @@ export const useAdminStatus = (user: User | null) => {
     queryKey: ["isAdmin", user?.id],
     queryFn: async () => {
       if (!user) {
+        console.log("Nenhum usuário logado");
         return false;
       }
 
       try {
         console.log("Verificando status de admin para usuário:", user.id);
         
+        // Primeiro, verificar se o perfil existe
+        const { data: profileExists, error: checkError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (checkError) {
+          console.error("Erro ao verificar existência do perfil:", checkError);
+          return false;
+        }
+
+        if (!profileExists) {
+          console.log("Perfil não encontrado, criando novo perfil...");
+          const { error: insertError } = await supabase
+            .from("profiles")
+            .insert([
+              { 
+                id: user.id,
+                email: user.email,
+                is_admin: user.email === 'rangel.silva@estudante.ifms.edu.br' || 
+                         user.email === 'rangel3lband@gmail.com'
+              }
+            ]);
+
+          if (insertError) {
+            console.error("Erro ao criar perfil:", insertError);
+            return false;
+          }
+        }
+
+        // Agora verificar o status de admin
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("is_admin")
@@ -46,6 +79,6 @@ export const useAdminStatus = (user: User | null) => {
     enabled: !!user,
     retry: 1,
     staleTime: 30000, // Cache por 30 segundos
-    gcTime: 60000, // Manter no cache por 1 minuto (anteriormente cacheTime)
+    gcTime: 60000, // Manter no cache por 1 minuto
   });
 };
