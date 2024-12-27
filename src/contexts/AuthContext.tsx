@@ -1,14 +1,17 @@
 import { createContext, useContext, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AuthContextType } from './auth/types';
 import { useAuthSession } from './auth/useAuthSession';
 import { handleGoogleSignIn, handleSignOut } from './auth/authUtils';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+interface AuthProviderProps {
+  children: ReactNode;
+  onSignOut?: () => void;
+}
+
+export function AuthProvider({ children, onSignOut }: AuthProviderProps) {
   const { user } = useAuthSession();
-  const navigate = useNavigate();
 
   const signInWithGoogle = async () => {
     try {
@@ -25,7 +28,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear any cached data
       localStorage.clear();
       sessionStorage.clear();
-      navigate('/');
+      if (onSignOut) {
+        onSignOut();
+      }
     } catch (error) {
       console.error('Error in signOut:', error);
     }

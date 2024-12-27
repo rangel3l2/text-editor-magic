@@ -10,29 +10,38 @@ import { Suspense } from "react";
 import Index from "./pages/Index";
 import Header from "./components/Header";
 import AdminSettings from "./pages/AdminSettings";
+import { useNavigate } from "react-router-dom";
 
 const queryClient = new QueryClient();
+
+function AppContent() {
+  const navigate = useNavigate();
+  
+  return (
+    <AuthProvider onSignOut={() => navigate('/')}>
+      <Suspense fallback={<LoadingScreen />}>
+        <Header />
+        <div className="pt-14">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/editor" element={<TextEditor />} />
+            <Route path="/banner" element={<BannerEditor />} />
+            <Route path="/admin" element={<AdminSettings />} />
+          </Routes>
+        </div>
+        <Toaster />
+      </Suspense>
+    </AuthProvider>
+  );
+}
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="aicademic-theme">
-        <AuthProvider>
-          <Router>
-            <Suspense fallback={<LoadingScreen />}>
-              <Header />
-              <div className="pt-14">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/editor" element={<TextEditor />} />
-                  <Route path="/banner" element={<BannerEditor />} />
-                  <Route path="/admin" element={<AdminSettings />} />
-                </Routes>
-              </div>
-              <Toaster />
-            </Suspense>
-          </Router>
-        </AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
       </ThemeProvider>
     </QueryClientProvider>
   );
