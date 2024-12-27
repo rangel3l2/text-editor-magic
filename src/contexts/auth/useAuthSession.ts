@@ -31,43 +31,6 @@ export const useAuthSession = () => {
       if (event === 'SIGNED_IN' && !previousUser && currentUser) {
         cleanupHashFromUrl();
         toast.success('Login realizado com sucesso!');
-        
-        // Verificar se o perfil existe e criar se necessário
-        const checkAndCreateProfile = async () => {
-          try {
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', currentUser.id)
-              .single();
-
-            console.log("Profile check result:", profile, profileError);
-
-            if (!profile && !profileError) {
-              console.log("Creating new profile for user:", currentUser.email);
-              const { error: insertError } = await supabase
-                .from('profiles')
-                .insert([
-                  { 
-                    id: currentUser.id,
-                    email: currentUser.email,
-                    is_admin: currentUser.email === 'rangel.silva@estudante.ifms.edu.br' || 
-                             currentUser.email === 'rangel3lband@gmail.com'
-                  }
-                ]);
-
-              if (insertError) {
-                console.error("Error creating profile:", insertError);
-              } else {
-                console.log("Profile created successfully");
-              }
-            }
-          } catch (error) {
-            console.error("Error in profile check/creation:", error);
-          }
-        };
-
-        checkAndCreateProfile();
       }
     });
 
