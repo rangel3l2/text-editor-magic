@@ -20,12 +20,12 @@ export const handleGoogleSignIn = async () => {
       if (error.message.includes('provider is not enabled')) {
         toast.error('O login com Google não está habilitado. Por favor, contate o administrador do sistema.');
       } else {
-        toast.error('Erro ao fazer login com Google');
+        toast.error('Erro ao fazer login com Google. Por favor, tente novamente.');
       }
     }
   } catch (error) {
     console.error('Erro inesperado no login:', error);
-    toast.error('Erro inesperado ao tentar fazer login');
+    toast.error('Erro inesperado ao tentar fazer login. Por favor, tente novamente.');
   }
 };
 
@@ -35,13 +35,13 @@ export const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Erro no logout:', error);
-      toast.error('Erro ao fazer logout');
+      toast.error('Erro ao fazer logout. Por favor, tente novamente.');
       throw error;
     }
     toast.success('Logout realizado com sucesso!');
   } catch (error) {
     console.error('Erro inesperado no logout:', error);
-    toast.error('Erro inesperado ao tentar fazer logout');
+    toast.error('Erro inesperado ao tentar fazer logout. Por favor, tente novamente.');
   }
 };
 

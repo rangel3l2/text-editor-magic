@@ -17,6 +17,9 @@ export const useAdminStatus = (user: User | null) => {
       try {
         console.log("Verificando status de admin para usuário:", user.id);
         
+        // Aguardar um momento para garantir que a sessão está pronta
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         // Verificar o status de admin
         const { data: profile, error } = await supabase
           .from("profiles")
@@ -31,7 +34,7 @@ export const useAdminStatus = (user: User | null) => {
           if (!error.message.includes('JWT')) {
             toast({
               title: "Erro ao verificar permissões",
-              description: "Tente novamente em alguns instantes.",
+              description: "Por favor, faça logout e tente novamente.",
               variant: "destructive",
             });
           }
@@ -46,7 +49,8 @@ export const useAdminStatus = (user: User | null) => {
       }
     },
     enabled: !!user,
-    retry: 1,
+    retry: 2,
+    retryDelay: 1000,
     staleTime: 30000, // Cache por 30 segundos
     gcTime: 60000, // Manter no cache por 1 minuto
   });
