@@ -10,17 +10,16 @@ export const useAdminStatus = (user: User | null) => {
     queryKey: ["isAdmin", user?.id],
     queryFn: async () => {
       if (!user) {
-        console.log("Nenhum usuário logado");
+        console.log("No user logged in");
         return false;
       }
 
       try {
-        console.log("Verificando status de admin para usuário:", user.id);
+        console.log("Checking admin status for user:", user.id);
         
-        // Aguardar um momento para garantir que a sessão está pronta
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Wait for session to be ready
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Verificar o status de admin
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("is_admin")
@@ -28,30 +27,37 @@ export const useAdminStatus = (user: User | null) => {
           .single();
 
         if (error) {
-          console.error("Erro ao verificar status de admin:", error);
+          console.error("Error checking admin status:", error);
           
-          // Não mostrar toast para erros de JWT pois são esperados durante a inicialização
+          // Only show toast for non-JWT errors
           if (!error.message.includes('JWT')) {
             toast({
-              title: "Erro ao verificar permissões",
-              description: "Por favor, faça logout e tente novamente.",
+              title: "Erro de permissões",
+              description: "Por favor, faça logout e entre novamente na sua conta.",
               variant: "destructive",
+              duration: 5000,
             });
           }
           return false;
         }
 
-        console.log("Perfil do usuário:", profile);
+        console.log("User profile:", profile);
         return profile?.is_admin || false;
       } catch (error) {
-        console.error("Erro na verificação de status de admin:", error);
+        console.error("Error in admin status check:", error);
+        toast({
+          title: "Erro ao verificar permissões",
+          description: "Por favor, tente novamente mais tarde.",
+          variant: "destructive",
+          duration: 5000,
+        });
         return false;
       }
     },
     enabled: !!user,
-    retry: 2,
-    retryDelay: 1000,
-    staleTime: 30000, // Cache por 30 segundos
-    gcTime: 60000, // Manter no cache por 1 minuto
+    retry: 3,
+    retryDelay: 2000,
+    staleTime: 30000,
+    gcTime: 60000,
   });
 };
