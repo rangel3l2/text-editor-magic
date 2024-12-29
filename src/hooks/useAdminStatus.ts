@@ -30,17 +30,7 @@ export const useAdminStatus = (user: User | null) => {
           if (error.message.includes('JWT')) {
             toast({
               title: "Erro de sessão",
-              description: (
-                <div className="flex items-center gap-2">
-                  <span>Sua sessão expirou. Por favor, faça logout e entre novamente.</span>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(error.message)}
-                    className="hover:text-primary"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </button>
-                </div>
-              ),
+              description: "Sua sessão expirou. Por favor, faça logout e entre novamente.",
               variant: "destructive",
               duration: 5000,
             });
@@ -49,17 +39,7 @@ export const useAdminStatus = (user: User | null) => {
           
           toast({
             title: "Erro ao verificar permissões",
-            description: (
-              <div className="flex items-center gap-2">
-                <span>Ocorreu um erro ao verificar suas permissões. Tente novamente mais tarde.</span>
-                <button
-                  onClick={() => navigator.clipboard.writeText(error.message)}
-                  className="hover:text-primary"
-                >
-                  <Copy className="h-4 w-4" />
-                </button>
-              </div>
-            ),
+            description: "Ocorreu um erro ao verificar suas permissões. Tente novamente mais tarde.",
             variant: "destructive",
             duration: 5000,
           });
@@ -72,17 +52,7 @@ export const useAdminStatus = (user: User | null) => {
         console.error("Error in admin status check:", error);
         toast({
           title: "Erro ao verificar permissões",
-          description: (
-            <div className="flex items-center gap-2">
-              <span>Por favor, faça logout e entre novamente na sua conta.</span>
-              <button
-                onClick={() => navigator.clipboard.writeText(error instanceof Error ? error.message : 'Unknown error')}
-                className="hover:text-primary"
-              >
-                <Copy className="h-4 w-4" />
-              </button>
-            </div>
-          ),
+          description: "Por favor, faça logout e entre novamente na sua conta.",
           variant: "destructive",
           duration: 5000,
         });
