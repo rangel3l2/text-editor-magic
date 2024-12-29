@@ -14,7 +14,7 @@ const Header = () => {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { data: isAdmin } = useAdminStatus(user);
+  const { data: isAdmin, isLoading } = useAdminStatus(user);
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b z-50">
@@ -52,7 +52,7 @@ const Header = () => {
             )}
           </Button>
           <LoginButton />
-          {isAdmin && (
+          {!isLoading && isAdmin && (
             <Button
               variant="ghost"
               size="icon"

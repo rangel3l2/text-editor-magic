@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface MobileMenuProps {
@@ -40,9 +40,10 @@ const MobileMenu = ({ isAdmin, onSettingsClick }: MobileMenuProps) => {
           {isAdmin && (
             <Button
               variant="ghost"
-              className="justify-start"
+              className="justify-start flex items-center gap-2"
               onClick={onSettingsClick}
             >
+              <Settings className="h-4 w-4" />
               Configurações de Admin
             </Button>
           )}
