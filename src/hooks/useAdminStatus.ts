@@ -17,9 +17,6 @@ export const useAdminStatus = (user: User | null) => {
       try {
         console.log("Checking admin status for user:", user.id);
         
-        // Wait for session to be ready
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("is_admin")
@@ -29,15 +26,22 @@ export const useAdminStatus = (user: User | null) => {
         if (error) {
           console.error("Error checking admin status:", error);
           
-          // Only show toast for non-JWT errors
-          if (!error.message.includes('JWT')) {
+          if (error.message.includes('JWT')) {
             toast({
-              title: "Erro de permissões",
-              description: "Por favor, faça logout e entre novamente na sua conta.",
+              title: "Erro de sessão",
+              description: "Sua sessão expirou. Por favor, faça logout e entre novamente.",
               variant: "destructive",
               duration: 5000,
             });
+            return false;
           }
+          
+          toast({
+            title: "Erro ao verificar permissões",
+            description: "Ocorreu um erro ao verificar suas permissões. Tente novamente mais tarde.",
+            variant: "destructive",
+            duration: 5000,
+          });
           return false;
         }
 
@@ -47,7 +51,7 @@ export const useAdminStatus = (user: User | null) => {
         console.error("Error in admin status check:", error);
         toast({
           title: "Erro ao verificar permissões",
-          description: "Por favor, tente novamente mais tarde.",
+          description: "Por favor, faça logout e entre novamente na sua conta.",
           variant: "destructive",
           duration: 5000,
         });
@@ -55,8 +59,8 @@ export const useAdminStatus = (user: User | null) => {
       }
     },
     enabled: !!user,
-    retry: 3,
-    retryDelay: 2000,
+    retry: 1,
+    retryDelay: 1000,
     staleTime: 30000,
     gcTime: 60000,
   });
