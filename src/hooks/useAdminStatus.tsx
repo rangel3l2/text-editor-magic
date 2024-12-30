@@ -1,16 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@supabase/supabase-js";
+import { useQuery } from "@tanstack/react-query";
 
 export const useAdminStatus = (user: User | null) => {
   const { toast } = useToast();
 
   return useQuery({
-    queryKey: ["isAdmin", user?.id],
+    queryKey: ["adminStatus", user?.id],
     queryFn: async () => {
       if (!user) {
-        console.log("No user logged in");
+        console.log("No user provided to useAdminStatus");
         return false;
       }
 
@@ -28,40 +28,28 @@ export const useAdminStatus = (user: User | null) => {
           .maybeSingle();
 
         if (error) {
-          console.error("Error checking admin status:", {
-            error,
-            code: error.code,
-            details: error.details,
-            hint: error.hint,
-            userId: user.id,
-            email: user.email
-          });
-
-          // If profile doesn't exist, create it
+          console.error("Error checking admin status:", error);
+          
+          // Profile doesn't exist
           if (error.code === "PGRST116") {
             console.log("Profile not found, attempting to create...");
             
             const isAdminEmail = ["rangel.silva@estudante.ifms.edu.br", "rangel3lband@gmail.com"].includes(user.email || "");
-            console.log("Is admin email?", { email: user.email, isAdmin: isAdminEmail });
-
-            const { data: newProfile, error: insertError } = await supabase
+            
+            const { data: newProfile, error: createError } = await supabase
               .from("profiles")
-              .insert({
-                id: user.id,
-                email: user.email,
-                is_admin: isAdminEmail
-              })
+              .insert([
+                {
+                  id: user.id,
+                  email: user.email,
+                  is_admin: isAdminEmail,
+                },
+              ])
               .select("is_admin")
-              .single();
+              .maybeSingle();
 
-            if (insertError) {
-              console.error("Error creating profile:", {
-                error: insertError,
-                code: insertError.code,
-                details: insertError.details,
-                hint: insertError.hint
-              });
-              
+            if (createError) {
+              console.error("Error creating profile:", createError);
               toast({
                 title: "Erro ao criar perfil",
                 description: "Não foi possível criar seu perfil. Por favor, tente fazer logout e entrar novamente.",
@@ -70,11 +58,10 @@ export const useAdminStatus = (user: User | null) => {
               return false;
             }
 
-            console.log("New profile created:", newProfile);
             return newProfile?.is_admin || false;
           }
 
-          // Handle JWT/session errors
+          // Handle unauthorized errors
           if (error.code === "PGRST401") {
             toast({
               title: "Sessão expirada",
@@ -84,7 +71,7 @@ export const useAdminStatus = (user: User | null) => {
             return false;
           }
 
-          // Handle permission errors
+          // Handle forbidden errors
           if (error.code === "PGRST403") {
             toast({
               title: "Erro de permissão",
@@ -95,16 +82,6 @@ export const useAdminStatus = (user: User | null) => {
           }
 
           // Handle server errors
-          if (error.code === "PGRST500") {
-            toast({
-              title: "Erro no servidor",
-              description: "Ocorreu um erro no servidor. Por favor, tente novamente em alguns instantes.",
-              variant: "destructive",
-            });
-            return false;
-          }
-
-          // Generic error
           toast({
             title: "Erro ao verificar permissões",
             description: "Ocorreu um erro ao verificar suas permissões. Por favor, tente novamente.",
@@ -113,7 +90,6 @@ export const useAdminStatus = (user: User | null) => {
           return false;
         }
 
-        console.log("Profile found:", profile);
         return profile?.is_admin || false;
       } catch (error) {
         console.error("Unexpected error in admin status check:", error);
@@ -125,10 +101,7 @@ export const useAdminStatus = (user: User | null) => {
         return false;
       }
     },
-    enabled: !!user,
     retry: 1,
-    retryDelay: 2000,
-    staleTime: 30000,
-    gcTime: 60000,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
