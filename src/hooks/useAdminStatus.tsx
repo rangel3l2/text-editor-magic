@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@supabase/supabase-js";
-import { ToastDescription } from "@/components/editor/ToastDescription";
 
 export const useAdminStatus = (user: User | null) => {
   const { toast } = useToast();
@@ -16,10 +15,9 @@ export const useAdminStatus = (user: User | null) => {
       }
 
       try {
-        console.log("Checking admin status for user:", {
+        console.log("Checking admin status for:", {
           userId: user.id,
           email: user.email,
-          session: await supabase.auth.getSession()
         });
         
         // First, try to get the profile
@@ -40,7 +38,7 @@ export const useAdminStatus = (user: User | null) => {
           });
 
           // If profile doesn't exist, create it
-          if (error.code === "PGRST116" || error.status === 404) {
+          if (error.code === "PGRST116") {
             console.log("Profile not found, attempting to create...");
             
             const isAdminEmail = ["rangel.silva@estudante.ifms.edu.br", "rangel3lband@gmail.com"].includes(user.email || "");
@@ -66,7 +64,7 @@ export const useAdminStatus = (user: User | null) => {
               
               toast({
                 title: "Erro ao criar perfil",
-                description: <ToastDescription message="Não foi possível criar seu perfil. Por favor, tente fazer logout e entrar novamente." />,
+                description: "Não foi possível criar seu perfil. Por favor, tente fazer logout e entrar novamente.",
                 variant: "destructive",
               });
               return false;
@@ -76,31 +74,31 @@ export const useAdminStatus = (user: User | null) => {
             return newProfile?.is_admin || false;
           }
 
-          // Handle session errors
-          if (error.message?.includes('JWT') || error.status === 401) {
+          // Handle JWT/session errors
+          if (error.code === "PGRST401") {
             toast({
               title: "Sessão expirada",
-              description: <ToastDescription message="Sua sessão expirou. Por favor, faça logout e entre novamente." />,
+              description: "Sua sessão expirou. Por favor, faça logout e entre novamente.",
               variant: "destructive",
             });
             return false;
           }
 
           // Handle permission errors
-          if (error.code === "PGRST301" || error.status === 403) {
+          if (error.code === "PGRST403") {
             toast({
               title: "Erro de permissão",
-              description: <ToastDescription message="Você não tem permissão para acessar estas configurações." />,
+              description: "Você não tem permissão para acessar estas configurações.",
               variant: "destructive",
             });
             return false;
           }
 
           // Handle server errors
-          if (error.status === 500) {
+          if (error.code === "PGRST500") {
             toast({
               title: "Erro no servidor",
-              description: <ToastDescription message="Ocorreu um erro no servidor. Por favor, tente novamente em alguns instantes." />,
+              description: "Ocorreu um erro no servidor. Por favor, tente novamente em alguns instantes.",
               variant: "destructive",
             });
             return false;
@@ -109,7 +107,7 @@ export const useAdminStatus = (user: User | null) => {
           // Generic error
           toast({
             title: "Erro ao verificar permissões",
-            description: <ToastDescription message="Ocorreu um erro ao verificar suas permissões. Por favor, tente novamente." />,
+            description: "Ocorreu um erro ao verificar suas permissões. Por favor, tente novamente.",
             variant: "destructive",
           });
           return false;
@@ -121,7 +119,7 @@ export const useAdminStatus = (user: User | null) => {
         console.error("Unexpected error in admin status check:", error);
         toast({
           title: "Erro inesperado",
-          description: <ToastDescription message="Ocorreu um erro inesperado. Por favor, tente novamente mais tarde." />,
+          description: "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
           variant: "destructive",
         });
         return false;
