@@ -15,7 +15,6 @@ export function AuthProvider({ children, onSignOut }: AuthProviderProps) {
 
   const signInWithGoogle = async () => {
     try {
-      console.log("Starting Google login...");
       await handleGoogleSignIn();
     } catch (error) {
       console.error('Error in signInWithGoogle:', error);
@@ -35,8 +34,6 @@ export function AuthProvider({ children, onSignOut }: AuthProviderProps) {
       console.error('Error in signOut:', error);
     }
   };
-
-  console.log("Current user in AuthContext:", user);
 
   const value = {
     user,

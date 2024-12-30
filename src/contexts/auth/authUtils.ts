@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const handleGoogleSignIn = async () => {
   try {
-    console.log("Starting Google login process...");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -33,7 +32,6 @@ export const handleGoogleSignIn = async () => {
 
 export const handleSignOut = async () => {
   try {
-    console.log("Starting logout process...");
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Logout error:', error);

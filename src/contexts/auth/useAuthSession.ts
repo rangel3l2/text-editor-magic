@@ -10,7 +10,6 @@ export const useAuthSession = () => {
   useEffect(() => {
     // Check current session without showing toast
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session);
       if (session) {
         setUser(session.user);
         cleanupHashFromUrl();
@@ -21,7 +20,6 @@ export const useAuthSession = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session);
       const previousUser = user;
       const currentUser = session?.user;
       
