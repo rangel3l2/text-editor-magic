@@ -34,7 +34,9 @@ export const useAdminStatus = (user: User | null) => {
           if (error.code === "PGRST116") {
             console.log("Profile not found, attempting to create...");
             
+            // Check if email is in admin list
             const isAdminEmail = ["rangel.silva@estudante.ifms.edu.br", "rangel3lband@gmail.com"].includes(user.email || "");
+            console.log("Is admin email?", { email: user.email, isAdmin: isAdminEmail });
             
             const { data: newProfile, error: createError } = await supabase
               .from("profiles")
@@ -58,6 +60,7 @@ export const useAdminStatus = (user: User | null) => {
               return false;
             }
 
+            console.log("New profile created:", newProfile);
             return newProfile?.is_admin || false;
           }
 
@@ -90,6 +93,7 @@ export const useAdminStatus = (user: User | null) => {
           return false;
         }
 
+        console.log("Profile found:", profile);
         return profile?.is_admin || false;
       } catch (error) {
         console.error("Unexpected error in admin status check:", error);
