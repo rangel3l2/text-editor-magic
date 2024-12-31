@@ -20,15 +20,18 @@ export const useAdminStatus = (user: User | null) => {
           email: user.email,
         });
         
+        // First try to get the profile directly
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("is_admin")
           .eq("id", user.id)
+          .limit(1)
           .maybeSingle();
 
         if (error) {
           console.error("Error fetching profile:", error);
           
+          // If profile doesn't exist, create it
           if (error.code === "PGRST116") {
             console.log("Profile not found, creating new profile...");
             
@@ -52,6 +55,7 @@ export const useAdminStatus = (user: User | null) => {
                 }
               ])
               .select("is_admin")
+              .limit(1)
               .maybeSingle();
 
             if (createError) {
@@ -68,7 +72,7 @@ export const useAdminStatus = (user: User | null) => {
             return newProfile?.is_admin || false;
           }
 
-          // Handle other specific error cases
+          // Handle authentication errors
           if (error.code === "PGRST401") {
             console.error("Authentication error:", error);
             toast({
@@ -79,6 +83,8 @@ export const useAdminStatus = (user: User | null) => {
             return false;
           }
 
+          // Handle other errors
+          console.error("Unexpected error:", error);
           toast({
             title: "Erro ao verificar permissões",
             description: "Tente novamente mais tarde.",
