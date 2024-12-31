@@ -15,12 +15,11 @@ export const useAdminStatus = (user: User | null) => {
       }
 
       try {
-        console.log("Checking admin status for:", {
+        console.log("Checking admin status for user:", {
           userId: user.id,
           email: user.email,
         });
         
-        // First, try to get the profile
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("is_admin")
@@ -28,16 +27,21 @@ export const useAdminStatus = (user: User | null) => {
           .maybeSingle();
 
         if (error) {
-          console.error("Error checking admin status:", error);
+          console.error("Error fetching profile:", error);
           
-          // Profile doesn't exist
           if (error.code === "PGRST116") {
-            console.log("Profile not found, attempting to create...");
+            console.log("Profile not found, creating new profile...");
             
-            // Check if email is in admin list
-            const isAdminEmail = ["rangel.silva@estudante.ifms.edu.br", "rangel3lband@gmail.com"].includes(user.email || "");
-            console.log("Is admin email?", { email: user.email, isAdmin: isAdminEmail });
+            const isAdminEmail = [
+              "rangel.silva@estudante.ifms.edu.br",
+              "rangel3lband@gmail.com"
+            ].includes(user.email || "");
             
+            console.log("Creating profile with admin status:", {
+              email: user.email,
+              isAdmin: isAdminEmail
+            });
+
             const { data: newProfile, error: createError } = await supabase
               .from("profiles")
               .insert([
@@ -45,7 +49,7 @@ export const useAdminStatus = (user: User | null) => {
                   id: user.id,
                   email: user.email,
                   is_admin: isAdminEmail,
-                },
+                }
               ])
               .select("is_admin")
               .maybeSingle();
@@ -54,40 +58,30 @@ export const useAdminStatus = (user: User | null) => {
               console.error("Error creating profile:", createError);
               toast({
                 title: "Erro ao criar perfil",
-                description: "Não foi possível criar seu perfil. Por favor, tente fazer logout e entrar novamente.",
+                description: "Por favor, tente fazer logout e entrar novamente.",
                 variant: "destructive",
               });
               return false;
             }
 
-            console.log("New profile created:", newProfile);
+            console.log("New profile created successfully:", newProfile);
             return newProfile?.is_admin || false;
           }
 
-          // Handle unauthorized errors
+          // Handle other specific error cases
           if (error.code === "PGRST401") {
+            console.error("Authentication error:", error);
             toast({
               title: "Sessão expirada",
-              description: "Sua sessão expirou. Por favor, faça logout e entre novamente.",
+              description: "Por favor, faça logout e entre novamente.",
               variant: "destructive",
             });
             return false;
           }
 
-          // Handle forbidden errors
-          if (error.code === "PGRST403") {
-            toast({
-              title: "Erro de permissão",
-              description: "Você não tem permissão para acessar estas configurações.",
-              variant: "destructive",
-            });
-            return false;
-          }
-
-          // Handle server errors
           toast({
             title: "Erro ao verificar permissões",
-            description: "Ocorreu um erro ao verificar suas permissões. Por favor, tente novamente.",
+            description: "Tente novamente mais tarde.",
             variant: "destructive",
           });
           return false;
@@ -96,10 +90,10 @@ export const useAdminStatus = (user: User | null) => {
         console.log("Profile found:", profile);
         return profile?.is_admin || false;
       } catch (error) {
-        console.error("Unexpected error in admin status check:", error);
+        console.error("Unexpected error in useAdminStatus:", error);
         toast({
           title: "Erro inesperado",
-          description: "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+          description: "Por favor, tente novamente mais tarde.",
           variant: "destructive",
         });
         return false;
