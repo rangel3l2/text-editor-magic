@@ -49,29 +49,25 @@ const Index = () => {
     }
   };
 
-  return (
-    <div className="container mx-auto p-6 space-y-12">
-      {/* Welcome Section */}
-      <section className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Bem-vindo ao AIcademic</h1>
-        <p className="text-xl text-muted-foreground">
-          Seu assistente inteligente para trabalhos acadêmicos
+  if (error) {
+    return (
+      <div className="container mx-auto p-6 text-center">
+        <h2 className="text-2xl font-bold text-red-600">
+          Erro ao carregar tipos de trabalho
+        </h2>
+        <p className="mt-2 text-gray-600">
+          Por favor, tente novamente mais tarde.
         </p>
-      </section>
+      </div>
+    );
+  }
 
-      {/* Academic Work Types Section */}
-      <section>
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-4xl font-bold mb-8 text-center">Bem-vindo ao AIcademic</h1>
+      <div className="mb-12">
         <h2 className="text-2xl font-semibold mb-6">Tipos de Trabalhos Acadêmicos</h2>
-        {error ? (
-          <div className="text-center">
-            <h3 className="text-xl font-bold text-red-600">
-              Erro ao carregar tipos de trabalho
-            </h3>
-            <p className="mt-2 text-gray-600">
-              Por favor, tente novamente mais tarde.
-            </p>
-          </div>
-        ) : workTypes && workTypes.length > 0 ? (
+        {workTypes && workTypes.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {workTypes.map((type) => (
               <Card key={type.id} className="hover:shadow-lg transition-shadow">
@@ -100,9 +96,8 @@ const Index = () => {
             </p>
           </div>
         )}
-      </section>
-
-      {/* Features Section */}
+      </div>
+      
       <section className="bg-muted p-8 rounded-lg">
         <h2 className="text-2xl font-semibold mb-6">Recursos</h2>
         <div className="grid gap-6 md:grid-cols-3">
