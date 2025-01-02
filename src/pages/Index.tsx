@@ -29,6 +29,10 @@ const Index = () => {
         return "/article";
       case "Tese/Dissertação":
         return "/thesis";
+      case "Monografia":
+        return "/monography";
+      case "Projeto de Intervenção":
+        return "/intervention";
       default:
         return "/";
     }
