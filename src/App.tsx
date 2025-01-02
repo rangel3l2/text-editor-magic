@@ -10,6 +10,8 @@ import { Suspense } from "react";
 import Index from "./pages/Index";
 import Header from "./components/Header";
 import AdminSettings from "./pages/AdminSettings";
+import ArticleEditor from "./pages/ArticleEditor";
+import ThesisEditor from "./pages/ThesisEditor";
 import { useNavigate } from "react-router-dom";
 
 const queryClient = new QueryClient();
@@ -24,8 +26,9 @@ function AppContent() {
         <div className="pt-14">
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/editor" element={<TextEditor />} />
             <Route path="/banner" element={<BannerEditor />} />
+            <Route path="/article" element={<ArticleEditor />} />
+            <Route path="/thesis" element={<ThesisEditor />} />
             <Route path="/admin" element={<AdminSettings />} />
           </Routes>
         </div>
