@@ -64,9 +64,46 @@ const Index = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-4xl font-bold mb-8 text-center">Bem-vindo ao AIcademic</h1>
-      <div className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6">Tipos de Trabalhos Acadêmicos</h2>
+      <div className="text-center mb-12">
+        <img 
+          src="/lovable-uploads/18aaac24-735d-4b38-9fb2-dd5205a71b41.png" 
+          alt="AIcademic Logo" 
+          className="mx-auto w-32 h-32 mb-4"
+        />
+        <h1 className="text-4xl font-bold mb-2">AIcademic</h1>
+        <p className="text-lg text-muted-foreground">
+          Escreva, aprenda, conclua – com AIcademic
+        </p>
+      </div>
+
+      <div className="mb-16">
+        <h2 className="text-2xl font-semibold mb-8 text-center">Meus Trabalhos</h2>
+        <div className="grid md:grid-cols-2 gap-8">
+          <Card className="text-center p-6">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-center gap-2">
+                Em Andamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Nenhum trabalho em andamento</p>
+            </CardContent>
+          </Card>
+          <Card className="text-center p-6">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-center gap-2">
+                Concluídos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Nenhum trabalho concluído</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="mb-16">
+        <h2 className="text-2xl font-semibold mb-8 text-center">Trabalhos Acadêmicos Disponíveis</h2>
         {workTypes && workTypes.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {workTypes.map((type) => (
@@ -97,34 +134,22 @@ const Index = () => {
           </div>
         )}
       </div>
-      
-      <section className="bg-muted p-8 rounded-lg">
-        <h2 className="text-2xl font-semibold mb-6">Recursos</h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Formatação Automática</CardTitle>
-              <CardDescription>
-                Seus trabalhos sempre seguirão as normas ABNT
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Revisão Inteligente</CardTitle>
-              <CardDescription>
-                Sugestões de melhorias em tempo real
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Exportação Flexível</CardTitle>
-              <CardDescription>
-                Exporte seus trabalhos em diversos formatos
-              </CardDescription>
-            </CardHeader>
-          </Card>
+
+      <section className="text-center">
+        <h2 className="text-2xl font-semibold mb-8">Por que escolher o AIcademic?</h2>
+        <div className="grid gap-8 md:grid-cols-3">
+          <div>
+            <h3 className="text-xl font-semibold mb-2">Fácil de Usar</h3>
+            <p className="text-muted-foreground">Interface intuitiva e amigável para todos os usuários</p>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-2">Formatação Automática</h3>
+            <p className="text-muted-foreground">Seus trabalhos sempre seguirão as normas acadêmicas</p>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-2">Exportação Flexível</h3>
+            <p className="text-muted-foreground">Exporte seus trabalhos em diversos formatos</p>
+          </div>
         </div>
       </section>
     </div>
