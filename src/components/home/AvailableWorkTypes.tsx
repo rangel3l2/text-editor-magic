@@ -16,6 +16,7 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
     queryKey: ["academicWorkTypes"],
     queryFn: async () => {
       console.log("Fetching work types...");
+      
       // First, fetch all active work types
       const { data: typesData, error: typesError } = await supabase
         .from("academic_work_types")
@@ -27,6 +28,8 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
         console.error("Error fetching work types:", typesError);
         throw typesError;
       }
+
+      console.log("Active work types fetched:", typesData);
 
       // If there are work types, fetch the admin status for their creators
       if (typesData && typesData.length > 0) {
@@ -45,27 +48,35 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
             throw profilesError;
           }
 
+          console.log("Creator profiles fetched:", profilesData);
+
           // Create a map of user IDs to admin status
           const adminMap = new Map(
             profilesData?.map((profile) => [profile.id, profile.is_admin]) || []
           );
 
-          // If user is not authenticated, show only work types created by admins
+          // For non-authenticated users, show work types created by admins
           if (!user) {
-            const adminWorkTypes = typesData.filter(
-              (type) => type.created_by && adminMap.get(type.created_by)
-            );
-            console.log("Admin work types for non-auth users:", adminWorkTypes);
+            const adminWorkTypes = typesData.filter((type) => {
+              const isAdminCreated = type.created_by && adminMap.get(type.created_by);
+              console.log(`Work type ${type.name} created by admin: ${isAdminCreated}`);
+              return isAdminCreated;
+            });
+            
+            console.log("Work types for non-auth users:", adminWorkTypes);
             return adminWorkTypes;
           }
         }
 
         // For authenticated users or if no creator IDs found, return all active work types
+        console.log("Returning all active work types:", typesData);
         return typesData;
       }
 
+      console.log("No work types found");
       return [];
     },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const getRouteForWorkType = (name: string) => {
