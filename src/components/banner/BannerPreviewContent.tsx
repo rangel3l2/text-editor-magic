@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useToast } from "@/components/ui/use-toast";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import ImageCropDialog, { ImageConfig } from './ImageCropDialog';
-import { supabase } from "@/integrations/supabase/client";
-import { Json } from '@/integrations/supabase/types';
+import { ImageConfig } from './ImageCropDialog';
 import PreviewHeader from './preview/PreviewHeader';
 import PreviewColumns from './preview/PreviewColumns';
+import ImageSettings from './preview/ImageSettings';
+import BannerPreviewStyles from './preview/BannerPreviewStyles';
 
 interface BannerPreviewContentProps {
   previewHtml: string;
@@ -16,7 +14,6 @@ interface ImageSettings {
 }
 
 const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
-  const { toast } = useToast();
   const [sections, setSections] = useState<HTMLElement[]>([]);
   const [draggedSection, setDraggedSection] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -75,52 +72,11 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
     newSections.splice(newPosition, 0, movedSection);
     setSections(newSections);
     setDraggedSection(null);
-
-    toast({
-      title: "Seção movida",
-      description: "A ordem das seções foi atualizada com sucesso",
-      duration: 2000,
-    });
   };
 
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
     setIsImageDialogOpen(true);
-  };
-
-  const handleImageSave = async (config: ImageConfig) => {
-    if (!selectedImage) return;
-
-    try {
-      setImageSettings(prev => ({
-        ...prev,
-        [selectedImage]: config
-      }));
-
-      const { error } = await supabase
-        .from('banner_images')
-        .upsert({
-          image_url: selectedImage,
-          position_data: config as Json
-        });
-
-      if (error) throw error;
-
-      setIsImageDialogOpen(false);
-      toast({
-        title: "Imagem atualizada",
-        description: "As alterações na imagem foram salvas com sucesso",
-        duration: 2000,
-      });
-    } catch (error) {
-      console.error('Error saving image settings:', error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as alterações da imagem",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
   };
 
   const getImageStyle = (imageUrl: string) => {
@@ -151,7 +107,6 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(previewHtml, 'text/html');
   
-  // Extract header information from the banner-header section
   const headerSection = doc.querySelector('.banner-header');
   const institutionName = headerSection?.querySelector('.institution')?.innerHTML || '';
   const institutionLogo = headerSection?.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src') || '';
@@ -196,45 +151,15 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
         </div>
       </div>
 
-      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
-        <DialogContent className="max-w-[95vw] w-[800px] max-h-[95vh] p-6">
-          <ImageCropDialog
-            imageUrl={selectedImage || ''}
-            initialConfig={selectedImage ? imageSettings[selectedImage] : undefined}
-            onSave={handleImageSave}
-            onCancel={() => setIsImageDialogOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <ImageSettings
+        selectedImage={selectedImage}
+        isImageDialogOpen={isImageDialogOpen}
+        setIsImageDialogOpen={setIsImageDialogOpen}
+        imageSettings={imageSettings}
+        setImageSettings={setImageSettings}
+      />
 
-      <style>
-        {`
-          .banner-section:hover {
-            background-color: transparent;
-          }
-          .banner-section:hover > div {
-            background-color: rgb(243 244 246);
-          }
-          .banner-section.drop-top::before {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background-color: #2563eb;
-          }
-          .banner-section.drop-bottom::after {
-            content: '';
-            position: absolute;
-            bottom: -3px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background-color: #2563eb;
-          }
-        `}
-      </style>
+      <BannerPreviewStyles />
     </div>
   );
 };
