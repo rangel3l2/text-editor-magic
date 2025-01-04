@@ -14,7 +14,7 @@ interface WorkTypeCardProps {
 
 const WorkTypeCard = ({ type, onStart, getRouteForWorkType }: WorkTypeCardProps) => {
   return (
-    <Card className="shadow-lg hover:shadow-xl transition-shadow">
+    <Card className="shadow-lg hover:shadow-xl transition-shadow h-full flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-purple-700">
           <GraduationCap className="h-5 w-5" />
@@ -22,7 +22,7 @@ const WorkTypeCard = ({ type, onStart, getRouteForWorkType }: WorkTypeCardProps)
         </CardTitle>
         <CardDescription>{type.description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col justify-between">
         <div className="space-y-2 mb-4 text-sm text-muted-foreground">
           {type.name === "Banner Acadêmico" && (
             <>
@@ -74,7 +74,7 @@ const WorkTypeCard = ({ type, onStart, getRouteForWorkType }: WorkTypeCardProps)
           )}
         </div>
         <Button
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white mt-auto"
           onClick={() => onStart(getRouteForWorkType(type.name))}
         >
           Começar
