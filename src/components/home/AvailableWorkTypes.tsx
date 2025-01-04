@@ -16,38 +16,48 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
     queryKey: ["academicWorkTypes"],
     queryFn: async () => {
       console.log("Fetching work types...");
-      const { data, error } = await supabase
+      const { data: typesData, error: typesError } = await supabase
         .from("academic_work_types")
-        .select("*, profiles!academic_work_types_created_by_fkey(is_admin)")
+        .select("*, created_by")
         .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .then(result => {
-          if (result.error) throw result.error;
-          
-          // If user is not authenticated, filter to show only types created by admins
-          if (!user) {
-            return {
-              ...result,
-              data: result.data?.filter(type => 
-                type.profiles?.is_admin === true
-              ) || []
-            };
-          }
-          return result;
-        });
+        .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching work types:", error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os tipos de trabalho acadêmico.",
-          variant: "destructive",
-        });
-        throw error;
+      if (typesError) {
+        console.error("Error fetching work types:", typesError);
+        throw typesError;
       }
 
-      console.log("Work types fetched:", data);
-      return data;
+      // If there are work types, fetch the admin status for their creators
+      if (typesData && typesData.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, is_admin")
+          .in(
+            "id",
+            typesData.map((type) => type.created_by).filter(Boolean)
+          );
+
+        if (profilesError) {
+          console.error("Error fetching profiles:", profilesError);
+          throw profilesError;
+        }
+
+        // Create a map of user IDs to admin status
+        const adminMap = new Map(
+          profilesData?.map((profile) => [profile.id, profile.is_admin]) || []
+        );
+
+        // If user is not authenticated, filter to show only types created by admins
+        if (!user) {
+          return typesData.filter(
+            (type) => type.created_by && adminMap.get(type.created_by)
+          );
+        }
+
+        return typesData;
+      }
+
+      return [];
     },
   });
 
