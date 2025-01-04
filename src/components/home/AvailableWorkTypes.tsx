@@ -17,15 +17,10 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
     queryFn: async () => {
       console.log("Fetching work types...");
       
-      // Fetch active work types and join with profiles through auth.users
+      // First, fetch active work types
       const { data: typesData, error: typesError } = await supabase
         .from("academic_work_types")
-        .select(`
-          *,
-          profiles!created_by(
-            is_admin
-          )
-        `)
+        .select("*")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
@@ -34,17 +29,48 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
         throw typesError;
       }
 
-      console.log("Fetched work types with creator info:", typesData);
-
       if (!typesData || typesData.length === 0) {
         console.log("No work types found");
         return [];
       }
 
+      // Then, fetch admin status for creators
+      const creatorIds = typesData
+        .map(type => type.created_by)
+        .filter(id => id !== null) as string[];
+
+      if (creatorIds.length === 0) {
+        console.log("No creators found");
+        return typesData;
+      }
+
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, is_admin")
+        .in("id", creatorIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        throw profilesError;
+      }
+
+      // Create a map of creator IDs to their admin status
+      const creatorAdminMap = new Map(
+        profilesData?.map(profile => [profile.id, profile.is_admin]) || []
+      );
+
+      // Enhance work types with creator admin status
+      const enhancedTypes = typesData.map(type => ({
+        ...type,
+        creator_is_admin: type.created_by ? creatorAdminMap.get(type.created_by) : false
+      }));
+
+      console.log("Enhanced work types:", enhancedTypes);
+
       // For non-authenticated users, only show work types created by admins
       if (!user) {
-        const adminWorkTypes = typesData.filter((type) => {
-          const isAdminCreated = type.profiles?.[0]?.is_admin === true;
+        const adminWorkTypes = enhancedTypes.filter(type => {
+          const isAdminCreated = type.creator_is_admin === true;
           console.log(`Work type ${type.name} created by admin: ${isAdminCreated}`);
           return isAdminCreated;
         });
@@ -54,8 +80,8 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
       }
 
       // For authenticated users, return all active work types
-      console.log("Returning all active work types for authenticated user:", typesData);
-      return typesData;
+      console.log("Returning all active work types for authenticated user:", enhancedTypes);
+      return enhancedTypes;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
