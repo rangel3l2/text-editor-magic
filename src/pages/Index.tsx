@@ -67,7 +67,7 @@ const Index = () => {
     <div className="container mx-auto p-6">
       <div className="text-center mb-16">
         <img 
-          src="/lovable-uploads/18aaac24-735d-4b38-9fb2-dd5205a71b41.png" 
+          src="/lovable-uploads/16ebf0c7-f8d8-44a5-97a9-385bf41881e7.png" 
           alt="AIcademic Logo" 
           className="mx-auto w-32 h-32 mb-4"
         />
