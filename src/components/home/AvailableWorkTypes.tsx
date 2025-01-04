@@ -13,6 +13,7 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
   const { data: workTypes, error } = useQuery({
     queryKey: ["academicWorkTypes"],
     queryFn: async () => {
+      console.log("Fetching work types...");
       const { data, error } = await supabase
         .from("academic_work_types")
         .select("*")
@@ -29,6 +30,7 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
         throw error;
       }
 
+      console.log("Work types fetched:", data);
       return data;
     },
   });
@@ -65,7 +67,9 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
 
   return (
     <div className="mb-16">
-      <h2 className="text-2xl font-bold text-center mb-8">Trabalhos Acadêmicos Disponíveis</h2>
+      <h2 className="text-2xl font-bold text-center mb-8 text-purple-800">
+        Trabalhos Acadêmicos Disponíveis
+      </h2>
       {workTypes && workTypes.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {workTypes.map((type) => (
