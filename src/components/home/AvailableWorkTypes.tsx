@@ -47,13 +47,14 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
           profilesData?.map((profile) => [profile.id, profile.is_admin]) || []
         );
 
-        // If user is not authenticated, filter to show only types created by admins
+        // If user is not authenticated, show all work types created by admins
         if (!user) {
           return typesData.filter(
             (type) => type.created_by && adminMap.get(type.created_by)
           );
         }
 
+        // For authenticated users, show all active work types
         return typesData;
       }
 
