@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import WorkTypeCard from "./WorkTypeCard";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AvailableWorkTypesProps {
   onStart: (route: string) => void;
@@ -9,6 +10,7 @@ interface AvailableWorkTypesProps {
 
 const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const { data: workTypes, error } = useQuery({
     queryKey: ["academicWorkTypes"],
@@ -18,7 +20,8 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
         .from("academic_work_types")
         .select("*")
         .eq("is_active", true)
-        .order("name");
+        .order("created_at", { ascending: false })
+        .limit(user ? undefined : 1); // If no user is logged in, only get the latest work type
 
       if (error) {
         console.error("Error fetching work types:", error);
@@ -68,7 +71,10 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-16">
       <h2 className="text-2xl font-bold text-center mb-8 text-purple-800">
-        Trabalhos Acadêmicos Disponíveis
+        {user 
+          ? "Trabalhos Acadêmicos Disponíveis"
+          : "Último Trabalho Acadêmico Disponível"
+        }
       </h2>
       {workTypes && workTypes.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
