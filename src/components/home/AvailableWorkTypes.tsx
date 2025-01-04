@@ -17,12 +17,12 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
     queryFn: async () => {
       console.log("Fetching work types...");
       
-      // First, fetch all active work types and their creators' admin status in a single query
+      // Fetch active work types and join with profiles through auth.users
       const { data: typesData, error: typesError } = await supabase
         .from("academic_work_types")
         .select(`
           *,
-          creator:profiles!academic_work_types_created_by_fkey (
+          profiles!created_by(
             is_admin
           )
         `)
@@ -44,7 +44,7 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
       // For non-authenticated users, only show work types created by admins
       if (!user) {
         const adminWorkTypes = typesData.filter((type) => {
-          const isAdminCreated = type.creator?.is_admin === true;
+          const isAdminCreated = type.profiles?.[0]?.is_admin === true;
           console.log(`Work type ${type.name} created by admin: ${isAdminCreated}`);
           return isAdminCreated;
         });
