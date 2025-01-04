@@ -18,10 +18,23 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
       console.log("Fetching work types...");
       const { data, error } = await supabase
         .from("academic_work_types")
-        .select("*")
+        .select("*, profiles!academic_work_types_created_by_fkey(is_admin)")
         .eq("is_active", true)
         .order("created_at", { ascending: false })
-        .limit(user ? undefined : 1); // If no user is logged in, only get the latest work type
+        .then(result => {
+          if (result.error) throw result.error;
+          
+          // If user is not authenticated, filter to show only types created by admins
+          if (!user) {
+            return {
+              ...result,
+              data: result.data?.filter(type => 
+                type.profiles?.is_admin === true
+              ) || []
+            };
+          }
+          return result;
+        });
 
       if (error) {
         console.error("Error fetching work types:", error);
@@ -71,10 +84,7 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-16">
       <h2 className="text-2xl font-bold text-center mb-8 text-purple-800">
-        {user 
-          ? "Trabalhos Acadêmicos Disponíveis"
-          : "Último Trabalho Acadêmico Disponível"
-        }
+        Trabalhos Acadêmicos Disponíveis
       </h2>
       {workTypes && workTypes.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
