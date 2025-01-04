@@ -5,12 +5,16 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from '@/integrations/supabase/types';
 
+interface ImageSettings {
+  [key: string]: ImageConfig;
+}
+
 interface ImageSettingsProps {
   selectedImage: string | null;
   isImageDialogOpen: boolean;
   setIsImageDialogOpen: (open: boolean) => void;
-  imageSettings: { [key: string]: ImageConfig };
-  setImageSettings: (settings: { [key: string]: ImageConfig }) => void;
+  imageSettings: ImageSettings;
+  setImageSettings: React.Dispatch<React.SetStateAction<ImageSettings>>;
 }
 
 const ImageSettings = ({
