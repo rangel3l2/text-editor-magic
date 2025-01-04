@@ -17,10 +17,15 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
     queryFn: async () => {
       console.log("Fetching work types...");
       
-      // First, fetch all active work types
+      // First, fetch all active work types and their creators' admin status in a single query
       const { data: typesData, error: typesError } = await supabase
         .from("academic_work_types")
-        .select("*")
+        .select(`
+          *,
+          creator:profiles!academic_work_types_created_by_fkey (
+            is_admin
+          )
+        `)
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
@@ -29,52 +34,28 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
         throw typesError;
       }
 
-      console.log("Active work types fetched:", typesData);
+      console.log("Fetched work types with creator info:", typesData);
 
-      // If there are work types, fetch the admin status for their creators
-      if (typesData && typesData.length > 0) {
-        const creatorIds = typesData
-          .map((type) => type.created_by)
-          .filter(Boolean);
-
-        if (creatorIds.length > 0) {
-          const { data: profilesData, error: profilesError } = await supabase
-            .from("profiles")
-            .select("id, is_admin")
-            .in("id", creatorIds);
-
-          if (profilesError) {
-            console.error("Error fetching profiles:", profilesError);
-            throw profilesError;
-          }
-
-          console.log("Creator profiles fetched:", profilesData);
-
-          // Create a map of user IDs to admin status
-          const adminMap = new Map(
-            profilesData?.map((profile) => [profile.id, profile.is_admin]) || []
-          );
-
-          // For non-authenticated users, show work types created by admins
-          if (!user) {
-            const adminWorkTypes = typesData.filter((type) => {
-              const isAdminCreated = type.created_by && adminMap.get(type.created_by);
-              console.log(`Work type ${type.name} created by admin: ${isAdminCreated}`);
-              return isAdminCreated;
-            });
-            
-            console.log("Work types for non-auth users:", adminWorkTypes);
-            return adminWorkTypes;
-          }
-        }
-
-        // For authenticated users or if no creator IDs found, return all active work types
-        console.log("Returning all active work types:", typesData);
-        return typesData;
+      if (!typesData || typesData.length === 0) {
+        console.log("No work types found");
+        return [];
       }
 
-      console.log("No work types found");
-      return [];
+      // For non-authenticated users, only show work types created by admins
+      if (!user) {
+        const adminWorkTypes = typesData.filter((type) => {
+          const isAdminCreated = type.creator?.is_admin === true;
+          console.log(`Work type ${type.name} created by admin: ${isAdminCreated}`);
+          return isAdminCreated;
+        });
+        
+        console.log("Work types for non-auth users:", adminWorkTypes);
+        return adminWorkTypes;
+      }
+
+      // For authenticated users, return all active work types
+      console.log("Returning all active work types for authenticated user:", typesData);
+      return typesData;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
