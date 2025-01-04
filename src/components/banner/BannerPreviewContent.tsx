@@ -5,12 +5,12 @@ import PreviewColumns from './preview/PreviewColumns';
 import ImageSettings from './preview/ImageSettings';
 import BannerPreviewStyles from './preview/BannerPreviewStyles';
 
-interface BannerPreviewContentProps {
-  previewHtml: string;
+interface ImageSettingsConfig {
+  [key: string]: ImageConfig;
 }
 
-interface ImageSettings {
-  [key: string]: ImageConfig;
+interface BannerPreviewContentProps {
+  previewHtml: string;
 }
 
 const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
@@ -18,7 +18,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
   const [draggedSection, setDraggedSection] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
-  const [imageSettings, setImageSettings] = useState<ImageSettings>({});
+  const [imageSettings, setImageSettings] = useState<ImageSettingsConfig>({});
 
   const parseSections = (html: string) => {
     const parser = new DOMParser();
