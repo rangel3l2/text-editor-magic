@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { BookText, GraduationCap, FileText } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -64,7 +65,7 @@ const Index = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="text-center mb-12">
+      <div className="text-center mb-16">
         <img 
           src="/lovable-uploads/18aaac24-735d-4b38-9fb2-dd5205a71b41.png" 
           alt="AIcademic Logo" 
@@ -77,11 +78,12 @@ const Index = () => {
       </div>
 
       <div className="mb-16">
-        <h2 className="text-2xl font-semibold mb-8 text-center">Meus Trabalhos</h2>
+        <h2 className="text-2xl font-bold text-center mb-8">Meus Trabalhos</h2>
         <div className="grid md:grid-cols-2 gap-8">
-          <Card className="text-center p-6">
+          <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center justify-center gap-2">
+              <CardTitle className="flex items-center gap-2">
+                <BookText className="h-5 w-5" />
                 Em Andamento
               </CardTitle>
             </CardHeader>
@@ -89,9 +91,10 @@ const Index = () => {
               <p className="text-muted-foreground">Nenhum trabalho em andamento</p>
             </CardContent>
           </Card>
-          <Card className="text-center p-6">
+          <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center justify-center gap-2">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
                 Concluídos
               </CardTitle>
             </CardHeader>
@@ -103,16 +106,42 @@ const Index = () => {
       </div>
 
       <div className="mb-16">
-        <h2 className="text-2xl font-semibold mb-8 text-center">Trabalhos Acadêmicos Disponíveis</h2>
+        <h2 className="text-2xl font-bold text-center mb-8">Trabalhos Acadêmicos Disponíveis</h2>
         {workTypes && workTypes.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {workTypes.map((type) => (
-              <Card key={type.id} className="hover:shadow-lg transition-shadow">
+              <Card key={type.id} className="shadow-lg">
                 <CardHeader>
-                  <CardTitle>{type.name}</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <GraduationCap className="h-5 w-5" />
+                    {type.name}
+                  </CardTitle>
                   <CardDescription>{type.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  <div className="space-y-2 mb-4">
+                    {type.name === "Banner Acadêmico" && (
+                      <>
+                        <p>• Formatação padronizada</p>
+                        <p>• Seções estruturadas</p>
+                        <p>• Exportação em alta qualidade</p>
+                      </>
+                    )}
+                    {type.name === "Artigo Científico" && (
+                      <>
+                        <p>• Normas ABNT</p>
+                        <p>• Citações automáticas</p>
+                        <p>• Referências formatadas</p>
+                      </>
+                    )}
+                    {type.name === "Tese/Dissertação" && (
+                      <>
+                        <p>• Estrutura completa</p>
+                        <p>• Formatação acadêmica</p>
+                        <p>• Sumário automático</p>
+                      </>
+                    )}
+                  </div>
                   <Button
                     className="w-full"
                     onClick={() => navigate(getRouteForWorkType(type.name))}
@@ -136,17 +165,20 @@ const Index = () => {
       </div>
 
       <section className="text-center">
-        <h2 className="text-2xl font-semibold mb-8">Por que escolher o AIcademic?</h2>
+        <h2 className="text-2xl font-bold mb-8">Por que escolher o AIcademic?</h2>
         <div className="grid gap-8 md:grid-cols-3">
           <div>
+            <BookText className="h-12 w-12 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Fácil de Usar</h3>
             <p className="text-muted-foreground">Interface intuitiva e amigável para todos os usuários</p>
           </div>
           <div>
+            <FileText className="h-12 w-12 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Formatação Automática</h3>
             <p className="text-muted-foreground">Seus trabalhos sempre seguirão as normas acadêmicas</p>
           </div>
           <div>
+            <GraduationCap className="h-12 w-12 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Exportação Flexível</h3>
             <p className="text-muted-foreground">Exporte seus trabalhos em diversos formatos</p>
           </div>
