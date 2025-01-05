@@ -22,22 +22,16 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
         .from("academic_work_types")
         .select("*")
         .eq("is_active", true)
-        .order("created_at", { ascending: false });
+        .order("name");
 
       if (typesError) {
         console.error("Error fetching work types:", typesError);
         throw typesError;
       }
 
-      if (!typesData || typesData.length === 0) {
-        console.log("No work types found");
-        return [];
-      }
-
-      console.log("Active work types found:", typesData);
+      console.log("Work types fetched:", typesData);
       return typesData;
     },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const getRouteForWorkType = (name: string) => {
