@@ -13,7 +13,7 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
   const { user } = useAuth();
 
   const { data: workTypes, error } = useQuery({
-    queryKey: ["academicWorkTypes"],
+    queryKey: ["academicWorkTypes", "active"],
     queryFn: async () => {
       console.log("Fetching work types...");
       
@@ -32,6 +32,9 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
       console.log("Work types fetched:", typesData);
       return typesData;
     },
+    staleTime: 1000 * 60, // Cache for 1 minute
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const getRouteForWorkType = (name: string) => {
