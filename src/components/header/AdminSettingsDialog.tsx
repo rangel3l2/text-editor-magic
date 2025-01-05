@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminUserManagement from "../admin/AdminUserManagement";
 import AcademicWorkTypeManagement from "../admin/AcademicWorkTypeManagement";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AdminSettingsDialogProps {
   isOpen: boolean;
@@ -9,8 +10,18 @@ interface AdminSettingsDialogProps {
 }
 
 const AdminSettingsDialog = ({ isOpen, onOpenChange }: AdminSettingsDialogProps) => {
+  const queryClient = useQueryClient();
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // Invalidate the academicWorkTypes query when the dialog closes
+      queryClient.invalidateQueries({ queryKey: ["academicWorkTypes"] });
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Configurações do Sistema</DialogTitle>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Table,
@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const AcademicWorkTypeManagement = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [newType, setNewType] = useState({ name: "", description: "" });
   const [updating, setUpdating] = useState(false);
 
@@ -64,7 +65,8 @@ const AcademicWorkTypeManagement = () => {
         description: "Tipo de trabalho acadêmico adicionado com sucesso.",
       });
       setNewType({ name: "", description: "" });
-      refetch();
+      // Invalidate both queries to ensure all components update
+      queryClient.invalidateQueries({ queryKey: ["academicWorkTypes"] });
     } catch (error) {
       console.error("Error adding work type:", error);
       toast({
@@ -89,7 +91,8 @@ const AcademicWorkTypeManagement = () => {
         title: "Sucesso",
         description: "Status do tipo de trabalho atualizado com sucesso.",
       });
-      refetch();
+      // Invalidate both queries to ensure all components update
+      queryClient.invalidateQueries({ queryKey: ["academicWorkTypes"] });
     } catch (error) {
       console.error("Error updating work type status:", error);
       toast({
