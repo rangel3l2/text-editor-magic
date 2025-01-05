@@ -17,7 +17,7 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
     queryFn: async () => {
       console.log("Fetching work types...");
       
-      // First, fetch active work types
+      // Fetch only active work types
       const { data: typesData, error: typesError } = await supabase
         .from("academic_work_types")
         .select("*")
@@ -34,49 +34,8 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
         return [];
       }
 
-      // Then, fetch admin status for creators
-      const creatorIds = typesData
-        .map(type => type.created_by)
-        .filter(id => id !== null) as string[];
-
-      if (creatorIds.length === 0) {
-        console.log("No creators found, returning all types");
-        return typesData;
-      }
-
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, is_admin")
-        .in("id", creatorIds);
-
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        throw profilesError;
-      }
-
-      // Create a map of creator IDs to their admin status
-      const creatorAdminMap = new Map(
-        profilesData?.map(profile => [profile.id, profile.is_admin]) || []
-      );
-
-      // Enhance work types with creator admin status
-      const enhancedTypes = typesData.map(type => ({
-        ...type,
-        creator_is_admin: type.created_by ? creatorAdminMap.get(type.created_by) : false
-      }));
-
-      console.log("Enhanced work types:", enhancedTypes);
-
-      // For non-authenticated users, show all active work types
-      // We removed the admin filter since active work types should be visible to all
-      if (!user) {
-        console.log("Returning active work types for non-auth users:", enhancedTypes);
-        return enhancedTypes;
-      }
-
-      // For authenticated users, return all active work types
-      console.log("Returning all active work types for authenticated user:", enhancedTypes);
-      return enhancedTypes;
+      console.log("Active work types found:", typesData);
+      return typesData;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
