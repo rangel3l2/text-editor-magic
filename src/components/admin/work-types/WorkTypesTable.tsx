@@ -31,18 +31,35 @@ export const WorkTypesTable = ({ workTypes }: WorkTypesTableProps) => {
   const [updating, setUpdating] = useState(false);
 
   const toggleWorkTypeStatus = async (id: string, currentStatus: boolean) => {
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para realizar esta ação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setUpdating(true);
-      const { data: workType, error } = await supabase
+      console.log("Toggling work type status...");
+
+      // Update the work type status
+      const { data: workType, error: updateError } = await supabase
         .from("academic_work_types")
         .update({ is_active: !currentStatus })
         .eq("id", id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (updateError) {
+        console.error("Error updating work type:", updateError);
+        throw updateError;
+      }
 
-      // Log the status change
+      console.log("Work type updated:", workType);
+
+      // Create system log
       const { error: logError } = await supabase.from("system_logs").insert([
         {
           action: "UPDATE",
@@ -52,23 +69,29 @@ export const WorkTypesTable = ({ workTypes }: WorkTypesTableProps) => {
             field: "is_active",
             old_value: currentStatus,
             new_value: !currentStatus,
+            work_type_name: workTypes.find(wt => wt.id === id)?.name
           },
-          performed_by: user?.id,
+          performed_by: user.id,
         },
       ]);
 
       if (logError) {
-        console.error("Error creating log:", logError);
+        console.error("Error creating system log:", logError);
         throw logError;
       }
+
+      console.log("System log created successfully");
 
       toast({
         title: "Sucesso",
         description: "Status do tipo de trabalho atualizado com sucesso.",
       });
+      
+      // Invalidate both queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ["academicWorkTypes"] });
+      queryClient.invalidateQueries({ queryKey: ["systemLogs"] });
     } catch (error) {
-      console.error("Error updating work type status:", error);
+      console.error("Error in toggleWorkTypeStatus:", error);
       toast({
         title: "Erro",
         description: "Erro ao atualizar status do tipo de trabalho.",
