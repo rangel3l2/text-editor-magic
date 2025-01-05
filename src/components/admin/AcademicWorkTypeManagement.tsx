@@ -9,11 +9,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 
 const AcademicWorkTypeManagement = () => {
@@ -23,9 +23,10 @@ const AcademicWorkTypeManagement = () => {
   const [newType, setNewType] = useState({ name: "", description: "" });
   const [updating, setUpdating] = useState(false);
 
-  const { data: workTypes, refetch } = useQuery({
-    queryKey: ["academicWorkTypes"],
+  const { data: workTypes, isLoading, refetch } = useQuery({
+    queryKey: ["academicWorkTypes", "admin"],
     queryFn: async () => {
+      console.log("Fetching work types...");
       const { data, error } = await supabase
         .from("academic_work_types")
         .select("*")
@@ -36,13 +37,14 @@ const AcademicWorkTypeManagement = () => {
         throw error;
       }
 
+      console.log("Work types fetched:", data);
       return data;
     },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAddWorkType = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newType.name.trim()) {
+    if (!newType.name) {
       toast({
         title: "Erro",
         description: "O nome do tipo de trabalho é obrigatório.",
@@ -52,20 +54,39 @@ const AcademicWorkTypeManagement = () => {
     }
 
     try {
-      const { error } = await supabase.from("academic_work_types").insert({
-        name: newType.name,
-        description: newType.description,
-        created_by: user?.id,
-      });
+      const { data: workType, error } = await supabase
+        .from("academic_work_types")
+        .insert([
+          {
+            name: newType.name,
+            description: newType.description,
+            created_by: user?.id,
+          },
+        ])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Log the creation
+      await supabase.from("system_logs").insert([
+        {
+          action: "CREATE",
+          entity_type: "academic_work_types",
+          entity_id: workType.id,
+          details: {
+            name: workType.name,
+            description: workType.description,
+          },
+          performed_by: user?.id,
+        },
+      ]);
 
       toast({
         title: "Sucesso",
         description: "Tipo de trabalho acadêmico adicionado com sucesso.",
       });
       setNewType({ name: "", description: "" });
-      // Invalidate both queries to ensure all components update
       queryClient.invalidateQueries({ queryKey: ["academicWorkTypes"] });
     } catch (error) {
       console.error("Error adding work type:", error);
@@ -77,21 +98,37 @@ const AcademicWorkTypeManagement = () => {
     }
   };
 
-  const handleToggleActive = async (typeId: string, currentValue: boolean) => {
-    setUpdating(true);
+  const toggleWorkTypeStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
+      setUpdating(true);
+      const { data: workType, error } = await supabase
         .from("academic_work_types")
-        .update({ is_active: !currentValue })
-        .eq("id", typeId);
+        .update({ is_active: !currentStatus })
+        .eq("id", id)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Log the status change
+      await supabase.from("system_logs").insert([
+        {
+          action: "UPDATE",
+          entity_type: "academic_work_types",
+          entity_id: workType.id,
+          details: {
+            field: "is_active",
+            old_value: currentStatus,
+            new_value: !currentStatus,
+          },
+          performed_by: user?.id,
+        },
+      ]);
 
       toast({
         title: "Sucesso",
         description: "Status do tipo de trabalho atualizado com sucesso.",
       });
-      // Invalidate both queries to ensure all components update
       queryClient.invalidateQueries({ queryKey: ["academicWorkTypes"] });
     } catch (error) {
       console.error("Error updating work type status:", error);
@@ -105,9 +142,13 @@ const AcademicWorkTypeManagement = () => {
     }
   };
 
+  if (isLoading) {
+    return <div>Carregando...</div>;
+  }
+
   return (
-    <div className="space-y-8">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-6">
+      <form onSubmit={handleAddWorkType} className="space-y-4">
         <div className="space-y-2">
           <Input
             placeholder="Nome do tipo de trabalho"
@@ -121,8 +162,8 @@ const AcademicWorkTypeManagement = () => {
               setNewType({ ...newType, description: e.target.value })
             }
           />
-          <Button type="submit">Adicionar Tipo de Trabalho</Button>
         </div>
+        <Button type="submit">Adicionar Tipo de Trabalho</Button>
       </form>
 
       <Table>
@@ -130,7 +171,8 @@ const AcademicWorkTypeManagement = () => {
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Descrição</TableHead>
-            <TableHead>Ativo</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -138,13 +180,14 @@ const AcademicWorkTypeManagement = () => {
             <TableRow key={type.id}>
               <TableCell>{type.name}</TableCell>
               <TableCell>{type.description}</TableCell>
+              <TableCell>{type.is_active ? "Ativo" : "Inativo"}</TableCell>
               <TableCell>
                 <Switch
                   checked={type.is_active}
-                  disabled={updating}
                   onCheckedChange={() =>
-                    handleToggleActive(type.id, type.is_active)
+                    toggleWorkTypeStatus(type.id, type.is_active || false)
                   }
+                  disabled={updating}
                 />
               </TableCell>
             </TableRow>
