@@ -40,7 +40,7 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
         .filter(id => id !== null) as string[];
 
       if (creatorIds.length === 0) {
-        console.log("No creators found");
+        console.log("No creators found, returning all types");
         return typesData;
       }
 
@@ -67,16 +67,11 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
 
       console.log("Enhanced work types:", enhancedTypes);
 
-      // For non-authenticated users, only show work types created by admins
+      // For non-authenticated users, show all active work types
+      // We removed the admin filter since active work types should be visible to all
       if (!user) {
-        const adminWorkTypes = enhancedTypes.filter(type => {
-          const isAdminCreated = type.creator_is_admin === true;
-          console.log(`Work type ${type.name} created by admin: ${isAdminCreated}`);
-          return isAdminCreated;
-        });
-        
-        console.log("Work types for non-auth users:", adminWorkTypes);
-        return adminWorkTypes;
+        console.log("Returning active work types for non-auth users:", enhancedTypes);
+        return enhancedTypes;
       }
 
       // For authenticated users, return all active work types
