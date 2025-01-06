@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import BannerEditor from "./components/BannerEditor";
 import TextEditor from "./components/TextEditor";
 import LoadingScreen from "./components/LoadingScreen";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import Index from "./pages/Index";
 import Header from "./components/Header";
 import AdminSettings from "./pages/AdminSettings";
@@ -20,9 +20,11 @@ const queryClient = new QueryClient();
 
 function AppContent() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
   
   return (
     <AuthProvider onSignOut={() => navigate('/')}>
+      {isLoading && <LoadingScreen onLoadComplete={() => setIsLoading(false)} />}
       <Suspense fallback={<LoadingScreen />}>
         <Header />
         <div className="pt-14">
