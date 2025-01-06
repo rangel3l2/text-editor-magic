@@ -31,13 +31,18 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     
     setIsValidatingTitle(true);
     try {
+      console.log('Validating title:', title);
       const { data, error } = await supabase.functions.invoke('validate-title', {
         body: { title },
         method: 'POST'
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Validation error:', error);
+        throw error;
+      }
 
+      console.log('Validation response:', data);
       setTitleValidation(data);
 
       if (!data.isValid) {
@@ -113,7 +118,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
         description: "Os nomes foram formatados de acordo com as normas ABNT",
         duration: 3000,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error formatting authors:', error);
       toast({
         title: "Erro ao formatar nomes",
