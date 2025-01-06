@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { updateWorkTypeStatus } from "./services/workTypeService";
+import { logWorkTypeUpdate } from "./services/systemLogService";
 
 interface WorkType {
   id: string;
@@ -30,52 +31,21 @@ export const useWorkTypeStatus = (workTypes: WorkType[]) => {
       console.log("Toggling work type status...", {
         workTypeId: id,
         currentStatus,
-        userId: user.id
+        userId: user.id,
       });
 
-      const { data: workType, error: updateError } = await supabase
-        .from("academic_work_types")
-        .update({ is_active: !currentStatus })
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error("Error updating work type:", updateError);
-        throw updateError;
-      }
-
-      console.log("Work type updated:", workType);
-
-      const workTypeName = workTypes.find(wt => wt.id === id)?.name;
-      console.log("Creating system log for work type:", workTypeName);
-
-      const { data: logData, error: logError } = await supabase
-        .from("system_logs")
-        .insert([
-          {
-            action: "UPDATE",
-            entity_type: "academic_work_types",
-            entity_id: id,
-            details: {
-              field: "is_active",
-              old_value: currentStatus,
-              new_value: !currentStatus,
-              work_type_name: workTypeName,
-              modified_by: user.email
-            },
-            performed_by: user.id,
-          },
-        ])
-        .select()
-        .single();
-
-      if (logError) {
-        console.error("Error creating system log:", logError);
-        throw logError;
-      }
-
-      console.log("System log created successfully:", logData);
+      await updateWorkTypeStatus(id, currentStatus);
+      
+      const workTypeName = workTypes.find((wt) => wt.id === id)?.name;
+      
+      await logWorkTypeUpdate({
+        workTypeId: id,
+        workTypeName,
+        oldValue: currentStatus,
+        newValue: !currentStatus,
+        userId: user.id,
+        userEmail: user.email || "",
+      });
 
       // Invalidate both queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ["academicWorkTypes"] });
