@@ -2,9 +2,32 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookText, FileText, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const WorkInProgress = () => {
   const { user, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+
+  const { data: works, isLoading } = useQuery({
+    queryKey: ['works', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('work_in_progress')
+        .select('*')
+        .order('last_modified', { ascending: false });
+        
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const inProgressWorks = works?.filter(work => !work.content?.isComplete) || [];
+  const completedWorks = works?.filter(work => work.content?.isComplete) || [];
 
   if (!user) {
     return (
@@ -41,7 +64,28 @@ const WorkInProgress = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Nenhum trabalho em andamento</p>
+            {isLoading ? (
+              <p className="text-muted-foreground">Carregando...</p>
+            ) : inProgressWorks.length > 0 ? (
+              <div className="space-y-4">
+                {inProgressWorks.map((work) => (
+                  <div
+                    key={work.id}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                    onClick={() => navigate(`/${work.work_type.toLowerCase()}/${work.id}`)}
+                  >
+                    <div>
+                      <p className="font-medium">{work.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Última modificação: {new Date(work.last_modified).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Nenhum trabalho em andamento</p>
+            )}
           </CardContent>
         </Card>
         <Card className="shadow-lg">
@@ -52,7 +96,28 @@ const WorkInProgress = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Nenhum trabalho concluído</p>
+            {isLoading ? (
+              <p className="text-muted-foreground">Carregando...</p>
+            ) : completedWorks.length > 0 ? (
+              <div className="space-y-4">
+                {completedWorks.map((work) => (
+                  <div
+                    key={work.id}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                    onClick={() => navigate(`/${work.work_type.toLowerCase()}/${work.id}`)}
+                  >
+                    <div>
+                      <p className="font-medium">{work.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Concluído em: {new Date(work.last_modified).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Nenhum trabalho concluído</p>
+            )}
           </CardContent>
         </Card>
       </div>

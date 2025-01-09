@@ -197,6 +197,36 @@ export type Database = {
         }
         Relationships: []
       }
+      work_in_progress: {
+        Row: {
+          content: Json | null
+          created_at: string | null
+          id: string
+          last_modified: string | null
+          title: string
+          user_id: string
+          work_type: string
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string | null
+          id?: string
+          last_modified?: string | null
+          title?: string
+          user_id: string
+          work_type: string
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string | null
+          id?: string
+          last_modified?: string | null
+          title?: string
+          user_id?: string
+          work_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
