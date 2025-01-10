@@ -9,12 +9,13 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "./ui/use-toast";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const BannerEditor = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { id } = useParams();
+  const navigate = useNavigate();
   
   const {
     content,
@@ -41,7 +42,15 @@ const BannerEditor = () => {
   // Save work in progress whenever content changes
   useEffect(() => {
     const saveWork = async () => {
-      if (!user) return;
+      if (!user) {
+        toast({
+          title: "Faça login para salvar seu trabalho",
+          description: "Você precisa estar logado para salvar seu progresso.",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
+      }
 
       try {
         if (id) {
@@ -51,13 +60,14 @@ const BannerEditor = () => {
             .update({
               title: content.title || 'Trabalho sem título',
               content: bannerContent,
+              last_modified: new Date().toISOString(),
             })
             .eq('id', id);
 
           if (error) throw error;
         } else {
           // Create new work
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from('work_in_progress')
             .insert([
               {
@@ -66,10 +76,20 @@ const BannerEditor = () => {
                 work_type: 'banner',
                 content: bannerContent,
               }
-            ]);
+            ])
+            .select()
+            .single();
 
           if (error) throw error;
+          
+          // Navigate to the new work's URL
+          navigate(`/banner/${data.id}`);
         }
+
+        toast({
+          title: "Trabalho salvo",
+          description: "Seu progresso foi salvo com sucesso.",
+        });
       } catch (error) {
         console.error('Error saving work:', error);
         toast({
@@ -81,9 +101,9 @@ const BannerEditor = () => {
     };
 
     // Debounce save to avoid too many database calls
-    const timeoutId = setTimeout(saveWork, 1000);
+    const timeoutId = setTimeout(saveWork, 2000);
     return () => clearTimeout(timeoutId);
-  }, [content, bannerContent, user, id, toast]);
+  }, [content, bannerContent, user, id, toast, navigate]);
 
   return (
     <>
