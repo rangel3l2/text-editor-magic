@@ -1,4 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
 export interface BannerContent {
   title: string;
@@ -16,7 +20,9 @@ export interface BannerContent {
 }
 
 export const useBannerContent = () => {
-  const STORAGE_KEY = 'banner_content';
+  const { id } = useParams();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -36,24 +42,39 @@ export const useBannerContent = () => {
 
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
 
+  // Carregar dados do banner se existir um ID
   useEffect(() => {
-    const savedContent = localStorage.getItem(STORAGE_KEY);
-    if (savedContent) {
-      try {
-        const parsedContent = JSON.parse(savedContent);
-        setBannerContent(prevContent => ({
-          ...initialBannerContent,
-          ...parsedContent
-        }));
-      } catch (error) {
-        console.error('Error parsing saved content:', error);
-      }
-    }
-  }, []);
+    const loadBannerContent = async () => {
+      if (!id || !user) return;
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(bannerContent));
-  }, [bannerContent]);
+      try {
+        const { data, error } = await supabase
+          .from('work_in_progress')
+          .select('content')
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data?.content) {
+          setBannerContent(prevContent => ({
+            ...initialBannerContent,
+            ...data.content
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading banner content:', error);
+        toast({
+          title: "Erro ao carregar conteúdo",
+          description: "Não foi possível carregar o conteúdo do banner. Por favor, tente novamente.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadBannerContent();
+  }, [id, user, toast]);
 
   const handleChange = (field: string, value: string) => {
     setBannerContent(prev => ({
@@ -78,6 +99,5 @@ export const useBannerContent = () => {
     bannerContent,
     setBannerContent,
     initialBannerContent,
-    STORAGE_KEY
   };
 };

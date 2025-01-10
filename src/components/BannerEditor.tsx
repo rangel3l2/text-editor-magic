@@ -26,19 +26,16 @@ const BannerEditor = () => {
     bannerContent,
     setBannerContent,
     initialBannerContent,
-    STORAGE_KEY
   } = useBannerContent();
 
   const {
     handleGeneratePDF,
     handleShare,
-    handleLoadSavedContent,
     handleClearFields
   } = useBannerActions(
     bannerContent,
     setBannerContent,
     initialBannerContent,
-    STORAGE_KEY
   );
 
   // Save work in progress whenever content changes
@@ -115,7 +112,7 @@ const BannerEditor = () => {
           <BannerActions
             onGeneratePDF={handleGeneratePDF}
             onShare={handleShare}
-            onLoadSavedContent={handleLoadSavedContent}
+            onLoadSavedContent={() => {}}
             onClearFields={handleClearFields}
             onOpenPreview={() => setPreviewOpen(true)}
             onSave={() => {}}

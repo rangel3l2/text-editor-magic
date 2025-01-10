@@ -2,14 +2,17 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BannerContent } from './useBannerContent';
 import { validateBannerContent } from '@/utils/bannerValidation';
+import { useAuth } from "@/contexts/AuthContext";
+import { useParams } from "react-router-dom";
 
 export const useBannerActions = (
   bannerContent: BannerContent,
   setBannerContent: (content: BannerContent) => void,
   initialBannerContent: BannerContent,
-  STORAGE_KEY: string
 ) => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { id } = useParams();
 
   const handleGeneratePDF = async () => {
     if (!validateBannerContent(bannerContent)) {
@@ -103,42 +106,8 @@ export const useBannerActions = (
     }
   };
 
-  const handleLoadSavedContent = () => {
-    try {
-      const savedContent = localStorage.getItem(STORAGE_KEY);
-      if (savedContent) {
-        const parsedContent = JSON.parse(savedContent);
-        setBannerContent({
-          ...initialBannerContent,
-          ...parsedContent
-        });
-        toast({
-          title: "Conteúdo recuperado",
-          description: "Seu conteúdo foi carregado com sucesso",
-          duration: 3000,
-        });
-      } else {
-        toast({
-          title: "Nenhum conteúdo encontrado",
-          description: "Não há conteúdo salvo anteriormente",
-          variant: "destructive",
-          duration: 3000,
-        });
-      }
-    } catch (error) {
-      console.error('Error loading saved content:', error);
-      toast({
-        title: "Erro ao carregar",
-        description: "Não foi possível carregar o conteúdo salvo",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  };
-
   const handleClearFields = () => {
     setBannerContent(initialBannerContent);
-    localStorage.removeItem(STORAGE_KEY);
     toast({
       title: "Campos limpos",
       description: "Todos os campos foram limpos com sucesso",
@@ -149,7 +118,6 @@ export const useBannerActions = (
   return {
     handleGeneratePDF,
     handleShare,
-    handleLoadSavedContent,
     handleClearFields
   };
 };
