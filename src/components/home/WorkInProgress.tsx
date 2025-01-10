@@ -21,7 +21,30 @@ const WorkInProgress = () => {
         .order('last_modified', { ascending: false });
         
       if (error) throw error;
-      return data;
+
+      // Carregar trabalhos do localStorage também
+      const localWorks = Object.entries(localStorage)
+        .filter(([key]) => key.startsWith(`banner_work_${user.id}`))
+        .map(([key, value]) => {
+          try {
+            const localWork = JSON.parse(value);
+            return {
+              id: key.split('_').pop(),
+              title: localWork.title || `Trabalho Desconhecido ${Math.floor(Math.random() * 1000)}`,
+              work_type: 'banner',
+              content: localWork.content,
+              last_modified: localWork.lastModified,
+              isLocal: true
+            };
+          } catch (e) {
+            return null;
+          }
+        })
+        .filter(Boolean);
+
+      // Combinar trabalhos do banco e localStorage
+      const allWorks = [...(data || []), ...localWorks];
+      return allWorks;
     },
     enabled: !!user,
   });
@@ -75,7 +98,10 @@ const WorkInProgress = () => {
                     onClick={() => navigate(`/${work.work_type.toLowerCase()}/${work.id}`)}
                   >
                     <div>
-                      <p className="font-medium">{work.title}</p>
+                      <p className="font-medium">
+                        {work.title || `Trabalho Desconhecido ${Math.floor(Math.random() * 1000)}`}
+                        {work.isLocal && <span className="ml-2 text-sm text-muted-foreground">(Local)</span>}
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         Última modificação: {new Date(work.last_modified).toLocaleDateString()}
                       </p>

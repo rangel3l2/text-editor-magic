@@ -1,15 +1,17 @@
-import BannerLayout from "./banner/BannerLayout";
-import BannerHeader from "./banner/BannerHeader";
-import BannerContent from "./banner/BannerContent";
-import BannerActions from "./banner/BannerActions";
-import { useBannerContent } from "./banner/useBannerContent";
-import { useBannerActions } from "./banner/useBannerActions";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
 import { OnboardingTutorial } from "./OnboardingTutorial";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "./ui/use-toast";
 import { useParams, useNavigate } from "react-router-dom";
+import BannerLayout from "./banner/BannerLayout";
+import BannerHeader from "./banner/BannerHeader";
+import BannerContent from "./banner/BannerContent";
+import BannerActions from "./banner/BannerActions";
+import { useBannerContent } from "./banner/useBannerContent";
+import { useBannerActions } from "./banner/useBannerActions";
 
 const BannerEditor = () => {
   const { user } = useAuth();
@@ -42,13 +44,21 @@ const BannerEditor = () => {
   // Save work in progress whenever content changes
   useEffect(() => {
     const saveWork = async () => {
+      // Salvar no localStorage
+      const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id || 'new'}`;
+      localStorage.setItem(localStorageKey, JSON.stringify({
+        title: content.title || 'Trabalho sem título',
+        content: bannerContent,
+        lastModified: new Date().toISOString()
+      }));
+
+      // Se não estiver logado, apenas salva no localStorage
       if (!user) {
         toast({
-          title: "Faça login para salvar seu trabalho",
-          description: "Você precisa estar logado para salvar seu progresso.",
-          variant: "destructive",
+          title: "Trabalho salvo localmente",
+          description: "Faça login para salvar seu trabalho na nuvem.",
+          variant: "default",
         });
-        navigate('/');
         return;
       }
 
@@ -88,22 +98,37 @@ const BannerEditor = () => {
 
         toast({
           title: "Trabalho salvo",
-          description: "Seu progresso foi salvo com sucesso.",
+          description: "Seu progresso foi salvo com sucesso na nuvem.",
         });
       } catch (error) {
         console.error('Error saving work:', error);
         toast({
           title: "Erro ao salvar trabalho",
-          description: "Não foi possível salvar seu trabalho. Por favor, tente novamente.",
+          description: "Não foi possível salvar seu trabalho na nuvem. Uma cópia local foi mantida.",
           variant: "destructive",
         });
       }
     };
 
-    // Debounce save to avoid too many database calls
+    // Debounce save to avoid too many calls
     const timeoutId = setTimeout(saveWork, 2000);
     return () => clearTimeout(timeoutId);
   }, [content, bannerContent, user, id, toast, navigate]);
+
+  // Carregar trabalho salvo no localStorage ao iniciar
+  useEffect(() => {
+    const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id || 'new'}`;
+    const savedWork = localStorage.getItem(localStorageKey);
+    
+    if (savedWork) {
+      try {
+        const { content: savedContent } = JSON.parse(savedWork);
+        setBannerContent(savedContent);
+      } catch (error) {
+        console.error('Error loading local work:', error);
+      }
+    }
+  }, [id, user?.id]);
 
   return (
     <>
