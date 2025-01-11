@@ -5,48 +5,74 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 const WorkInProgress = () => {
   const { user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { data: works, isLoading } = useQuery({
     queryKey: ['works', user?.id],
     queryFn: async () => {
-      if (!user) return null;
-      
-      const { data, error } = await supabase
-        .from('work_in_progress')
-        .select('*')
-        .order('last_modified', { ascending: false });
+      try {
+        if (!user) return [];
         
-      if (error) throw error;
+        // Fetch works from database
+        const { data: dbWorks, error } = await supabase
+          .from('work_in_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('last_modified', { ascending: false });
+          
+        if (error) {
+          console.error('Error fetching works:', error);
+          toast({
+            title: "Erro ao carregar trabalhos",
+            description: "Não foi possível carregar seus trabalhos do banco de dados.",
+            variant: "destructive",
+          });
+          return [];
+        }
 
-      // Carregar trabalhos do localStorage também
-      const localWorks = Object.entries(localStorage)
-        .filter(([key]) => key.startsWith(`banner_work_${user.id}`))
-        .map(([key, value]) => {
-          try {
-            const localWork = JSON.parse(value);
-            return {
-              id: key.split('_').pop(),
-              title: localWork.title || `Trabalho Desconhecido ${Math.floor(Math.random() * 1000)}`,
-              work_type: 'banner',
-              content: localWork.content,
-              last_modified: localWork.lastModified,
-              isLocal: true
-            };
-          } catch (e) {
-            return null;
-          }
-        })
-        .filter(Boolean);
+        // Get works from localStorage
+        const localWorks = Object.entries(localStorage)
+          .filter(([key]) => key.startsWith(`banner_work_${user.id}`))
+          .map(([key, value]) => {
+            try {
+              const localWork = JSON.parse(value);
+              return {
+                id: key.split('_').pop(),
+                title: localWork.title || `Trabalho Desconhecido ${Math.floor(Math.random() * 1000)}`,
+                work_type: 'banner',
+                content: localWork,
+                last_modified: localWork.lastModified || new Date().toISOString(),
+                isLocal: true
+              };
+            } catch (e) {
+              console.error('Error parsing local work:', e);
+              return null;
+            }
+          })
+          .filter(Boolean);
 
-      // Combinar trabalhos do banco e localStorage
-      const allWorks = [...(data || []), ...localWorks];
-      return allWorks;
+        // Combine and sort works
+        const allWorks = [...(dbWorks || []), ...localWorks]
+          .sort((a, b) => new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime());
+
+        return allWorks;
+      } catch (error) {
+        console.error('Error in queryFn:', error);
+        toast({
+          title: "Erro ao carregar trabalhos",
+          description: "Ocorreu um erro ao carregar seus trabalhos.",
+          variant: "destructive",
+        });
+        return [];
+      }
     },
     enabled: !!user,
+    initialData: [],
   });
 
   const inProgressWorks = works?.filter(work => !work.content?.isComplete) || [];
