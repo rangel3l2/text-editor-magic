@@ -42,9 +42,10 @@ const WorkInProgress = () => {
             try {
               const localWork = JSON.parse(value);
               const workId = key.split('_').pop();
+              const randomId = Math.floor(Math.random() * 10000);
               return {
                 id: workId,
-                title: localWork.title || `Trabalho Desconhecido ${Math.floor(Math.random() * 1000)}`,
+                title: localWork.title || `Trabalho Desconhecido #${randomId}`,
                 work_type: 'banner',
                 content: localWork.content,
                 last_modified: localWork.lastModified || new Date().toISOString(),
@@ -57,10 +58,15 @@ const WorkInProgress = () => {
           })
           .filter(Boolean);
 
-        // Combine and sort works
+        // Combine and sort works, ensuring unique titles for untitled works
         const allWorks = [...(dbWorks || []), ...localWorks]
+          .map(work => ({
+            ...work,
+            title: work.title || `Trabalho Desconhecido #${work.id.slice(0, 8)}`
+          }))
           .sort((a, b) => new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime());
 
+        console.log('All works loaded:', allWorks);
         return allWorks;
       } catch (error) {
         console.error('Error in queryFn:', error);
@@ -80,7 +86,7 @@ const WorkInProgress = () => {
     if (!work) return;
     
     const route = `/${work.work_type.toLowerCase()}/${work.id}`;
-    console.log('Navigating to:', route);
+    console.log('Navigating to:', route, 'Work:', work);
     navigate(route);
   };
 
@@ -134,7 +140,7 @@ const WorkInProgress = () => {
                   >
                     <div>
                       <p className="font-medium">
-                        {work.title || `Trabalho Desconhecido ${Math.floor(Math.random() * 1000)}`}
+                        {work.title}
                         {work.isLocal && <span className="ml-2 text-sm text-muted-foreground">(Local)</span>}
                       </p>
                       <p className="text-sm text-muted-foreground">

@@ -46,6 +46,8 @@ const BannerEditor = () => {
     const loadWork = async () => {
       if (!id) return;
 
+      console.log('Loading work with ID:', id);
+
       // First try to load from localStorage
       const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id}`;
       const savedWork = localStorage.getItem(localStorageKey);
@@ -99,13 +101,18 @@ const BannerEditor = () => {
   // Save work in progress whenever content changes
   useEffect(() => {
     const saveWork = async () => {
+      const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || 'Trabalho sem título';
+      
       // Save to localStorage first
       const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id || 'new'}`;
-      localStorage.setItem(localStorageKey, JSON.stringify({
-        title: content.title || 'Trabalho sem título',
+      const workData = {
+        title: workTitle,
         content: bannerContent,
         lastModified: new Date().toISOString()
-      }));
+      };
+      
+      console.log('Saving work to localStorage:', workData);
+      localStorage.setItem(localStorageKey, JSON.stringify(workData));
 
       // If not logged in, only save locally
       if (!user) {
@@ -123,7 +130,7 @@ const BannerEditor = () => {
           const { error } = await supabase
             .from('work_in_progress')
             .update({
-              title: content.title || 'Trabalho sem título',
+              title: workTitle,
               content: bannerContent,
               last_modified: new Date().toISOString(),
             })
@@ -138,7 +145,7 @@ const BannerEditor = () => {
             .insert([
               {
                 user_id: user.id,
-                title: content.title || 'Trabalho sem título',
+                title: workTitle,
                 work_type: 'banner',
                 content: bannerContent,
               }
@@ -152,6 +159,7 @@ const BannerEditor = () => {
           navigate(`/banner/${data.id}`);
         }
 
+        console.log('Work saved to database successfully');
         toast({
           title: "Trabalho salvo",
           description: "Seu progresso foi salvo com sucesso na nuvem.",
