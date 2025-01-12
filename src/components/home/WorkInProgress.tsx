@@ -125,6 +125,10 @@ const WorkInProgress = () => {
     navigate(fullRoute);
   };
 
+  // Filter works based on completion status
+  const inProgressWorks = works?.filter(work => !work.content?.isComplete) || [];
+  const completedWorks = works?.filter(work => work.content?.isComplete) || [];
+
   if (!user) {
     return (
       <div className="mb-16">
@@ -162,9 +166,9 @@ const WorkInProgress = () => {
           <CardContent>
             {isLoading ? (
               <p className="text-muted-foreground">Carregando...</p>
-            ) : works.length > 0 ? (
+            ) : inProgressWorks.length > 0 ? (
               <div className="space-y-4">
-                {works.map((work) => (
+                {inProgressWorks.map((work) => (
                   <div
                     key={work.id}
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
