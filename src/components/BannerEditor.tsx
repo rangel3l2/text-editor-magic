@@ -44,28 +44,52 @@ const BannerEditor = () => {
   // Load existing work if ID is provided
   useEffect(() => {
     const loadWork = async () => {
-      if (!id || !user) return;
+      if (!id) return;
 
-      try {
-        const { data, error } = await supabase
-          .from('work_in_progress')
-          .select('*')
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) throw error;
-
-        if (data?.content) {
-          setBannerContent(data.content);
+      // First try to load from localStorage
+      const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id}`;
+      const savedWork = localStorage.getItem(localStorageKey);
+      
+      if (savedWork) {
+        try {
+          const parsedWork = JSON.parse(savedWork);
+          if (parsedWork.content) {
+            console.log('Loading work from localStorage:', parsedWork);
+            setBannerContent(parsedWork.content);
+            return;
+          }
+        } catch (error) {
+          console.error('Error parsing local work:', error);
         }
-      } catch (error) {
-        console.error('Error loading work:', error);
-        toast({
-          title: "Erro ao carregar trabalho",
-          description: "Não foi possível carregar o trabalho. Verifique sua conexão.",
-          variant: "destructive",
-        });
+      }
+
+      // If not found in localStorage and user is logged in, try database
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('work_in_progress')
+            .select('*')
+            .eq('id', id)
+            .eq('user_id', user.id)
+            .single();
+
+          if (error) {
+            console.error('Error loading work from database:', error);
+            throw error;
+          }
+
+          if (data?.content) {
+            console.log('Loading work from database:', data);
+            setBannerContent(data.content);
+          }
+        } catch (error) {
+          console.error('Error loading work:', error);
+          toast({
+            title: "Erro ao carregar trabalho",
+            description: "Não foi possível carregar o trabalho. Verifique sua conexão.",
+            variant: "destructive",
+          });
+        }
       }
     };
 

@@ -41,11 +41,12 @@ const WorkInProgress = () => {
           .map(([key, value]) => {
             try {
               const localWork = JSON.parse(value);
+              const workId = key.split('_').pop();
               return {
-                id: key.split('_').pop(),
+                id: workId,
                 title: localWork.title || `Trabalho Desconhecido ${Math.floor(Math.random() * 1000)}`,
                 work_type: 'banner',
-                content: localWork,
+                content: localWork.content,
                 last_modified: localWork.lastModified || new Date().toISOString(),
                 isLocal: true
               };
@@ -74,6 +75,14 @@ const WorkInProgress = () => {
     enabled: !!user,
     initialData: [],
   });
+
+  const handleWorkClick = (work: any) => {
+    if (!work) return;
+    
+    const route = `/${work.work_type.toLowerCase()}/${work.id}`;
+    console.log('Navigating to:', route);
+    navigate(route);
+  };
 
   const inProgressWorks = works?.filter(work => !work.content?.isComplete) || [];
   const completedWorks = works?.filter(work => work.content?.isComplete) || [];
@@ -121,7 +130,7 @@ const WorkInProgress = () => {
                   <div
                     key={work.id}
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
-                    onClick={() => navigate(`/${work.work_type.toLowerCase()}/${work.id}`)}
+                    onClick={() => handleWorkClick(work)}
                   >
                     <div>
                       <p className="font-medium">
@@ -156,7 +165,7 @@ const WorkInProgress = () => {
                   <div
                     key={work.id}
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
-                    onClick={() => navigate(`/${work.work_type.toLowerCase()}/${work.id}`)}
+                    onClick={() => handleWorkClick(work)}
                   >
                     <div>
                       <p className="font-medium">{work.title}</p>
