@@ -41,10 +41,41 @@ const BannerEditor = () => {
     initialBannerContent,
   );
 
+  // Load existing work if ID is provided
+  useEffect(() => {
+    const loadWork = async () => {
+      if (!id || !user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('work_in_progress')
+          .select('*')
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data?.content) {
+          setBannerContent(data.content);
+        }
+      } catch (error) {
+        console.error('Error loading work:', error);
+        toast({
+          title: "Erro ao carregar trabalho",
+          description: "Não foi possível carregar o trabalho. Verifique sua conexão.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadWork();
+  }, [id, user, setBannerContent, toast]);
+
   // Save work in progress whenever content changes
   useEffect(() => {
     const saveWork = async () => {
-      // Salvar no localStorage
+      // Save to localStorage first
       const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id || 'new'}`;
       localStorage.setItem(localStorageKey, JSON.stringify({
         title: content.title || 'Trabalho sem título',
@@ -52,7 +83,7 @@ const BannerEditor = () => {
         lastModified: new Date().toISOString()
       }));
 
-      // Se não estiver logado, apenas salva no localStorage
+      // If not logged in, only save locally
       if (!user) {
         toast({
           title: "Trabalho salvo localmente",
@@ -72,7 +103,8 @@ const BannerEditor = () => {
               content: bannerContent,
               last_modified: new Date().toISOString(),
             })
-            .eq('id', id);
+            .eq('id', id)
+            .eq('user_id', user.id);
 
           if (error) throw error;
         } else {
@@ -114,21 +146,6 @@ const BannerEditor = () => {
     const timeoutId = setTimeout(saveWork, 2000);
     return () => clearTimeout(timeoutId);
   }, [content, bannerContent, user, id, toast, navigate]);
-
-  // Carregar trabalho salvo no localStorage ao iniciar
-  useEffect(() => {
-    const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id || 'new'}`;
-    const savedWork = localStorage.getItem(localStorageKey);
-    
-    if (savedWork) {
-      try {
-        const { content: savedContent } = JSON.parse(savedWork);
-        setBannerContent(savedContent);
-      } catch (error) {
-        console.error('Error loading local work:', error);
-      }
-    }
-  }, [id, user?.id]);
 
   return (
     <>
