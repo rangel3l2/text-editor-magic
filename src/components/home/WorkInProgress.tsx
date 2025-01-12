@@ -16,10 +16,12 @@ const WorkInProgress = () => {
   const { data: workTypes } = useQuery({
     queryKey: ['academicWorkTypes'],
     queryFn: async () => {
+      console.log('Fetching work types...');
       const { data, error } = await supabase
         .from('academic_work_types')
         .select('*');
       if (error) throw error;
+      console.log('Work types fetched:', data);
       return data;
     },
   });
@@ -70,7 +72,7 @@ const WorkInProgress = () => {
           })
           .filter(Boolean);
 
-        // Combine and sort works, ensuring unique titles for untitled works
+        // Combine and sort works
         const allWorks = [...(dbWorks || []), ...localWorks]
           .map(work => ({
             ...work,
@@ -102,8 +104,9 @@ const WorkInProgress = () => {
   const handleWorkClick = (work: any) => {
     if (!work) return;
     
+    console.log('Navigating to work:', work);
     const route = `/${work.work_type.toLowerCase()}/${work.id}`;
-    console.log('Navigating to:', route, 'Work:', work);
+    console.log('Route:', route);
     navigate(route);
   };
 

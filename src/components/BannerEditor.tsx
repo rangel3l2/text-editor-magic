@@ -48,26 +48,9 @@ const BannerEditor = () => {
 
       console.log('Loading work with ID:', id);
 
-      // First try to load from localStorage
-      const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id}`;
-      const savedWork = localStorage.getItem(localStorageKey);
-      
-      if (savedWork) {
-        try {
-          const parsedWork = JSON.parse(savedWork);
-          if (parsedWork.content) {
-            console.log('Loading work from localStorage:', parsedWork);
-            setBannerContent(parsedWork.content);
-            return;
-          }
-        } catch (error) {
-          console.error('Error parsing local work:', error);
-        }
-      }
-
-      // If not found in localStorage and user is logged in, try database
-      if (user) {
-        try {
+      try {
+        // Try to load from database first if user is logged in
+        if (user) {
           const { data, error } = await supabase
             .from('work_in_progress')
             .select('*')
@@ -83,20 +66,47 @@ const BannerEditor = () => {
           if (data?.content) {
             console.log('Loading work from database:', data);
             setBannerContent(data.content);
+            return;
           }
-        } catch (error) {
-          console.error('Error loading work:', error);
-          toast({
-            title: "Erro ao carregar trabalho",
-            description: "Não foi possível carregar o trabalho. Verifique sua conexão.",
-            variant: "destructive",
-          });
         }
+
+        // If not found in database or user not logged in, try localStorage
+        const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id}`;
+        const savedWork = localStorage.getItem(localStorageKey);
+        
+        if (savedWork) {
+          try {
+            const parsedWork = JSON.parse(savedWork);
+            if (parsedWork.content) {
+              console.log('Loading work from localStorage:', parsedWork);
+              setBannerContent(parsedWork.content);
+              return;
+            }
+          } catch (error) {
+            console.error('Error parsing local work:', error);
+          }
+        }
+
+        // If work not found anywhere, show error
+        toast({
+          title: "Trabalho não encontrado",
+          description: "Não foi possível encontrar o trabalho solicitado.",
+          variant: "destructive",
+        });
+        navigate('/');
+      } catch (error) {
+        console.error('Error loading work:', error);
+        toast({
+          title: "Erro ao carregar trabalho",
+          description: "Não foi possível carregar o trabalho. Verifique sua conexão.",
+          variant: "destructive",
+        });
+        navigate('/');
       }
     };
 
     loadWork();
-  }, [id, user, setBannerContent, toast]);
+  }, [id, user, setBannerContent, toast, navigate]);
 
   // Save work in progress whenever content changes
   useEffect(() => {
