@@ -6,11 +6,23 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const WorkInProgress = () => {
   const { user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const { data: workTypes } = useQuery({
+    queryKey: ['academicWorkTypes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('academic_work_types')
+        .select('*');
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: works, isLoading } = useQuery({
     queryKey: ['works', user?.id],
@@ -82,6 +94,11 @@ const WorkInProgress = () => {
     initialData: [],
   });
 
+  const getWorkTypeName = (workType: string) => {
+    const type = workTypes?.find(t => t.name.toLowerCase().replace(/\s+/g, '') === workType.toLowerCase());
+    return type?.name || workType;
+  };
+
   const handleWorkClick = (work: any) => {
     if (!work) return;
     
@@ -139,10 +156,15 @@ const WorkInProgress = () => {
                     onClick={() => handleWorkClick(work)}
                   >
                     <div>
-                      <p className="font-medium">
-                        {work.title}
-                        {work.isLocal && <span className="ml-2 text-sm text-muted-foreground">(Local)</span>}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">
+                          {work.title}
+                          {work.isLocal && <span className="ml-2 text-sm text-muted-foreground">(Local)</span>}
+                        </p>
+                        <Badge variant="outline" className="ml-2">
+                          {getWorkTypeName(work.work_type)}
+                        </Badge>
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         Última modificação: {new Date(work.last_modified).toLocaleDateString()}
                       </p>
@@ -174,7 +196,12 @@ const WorkInProgress = () => {
                     onClick={() => handleWorkClick(work)}
                   >
                     <div>
-                      <p className="font-medium">{work.title}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{work.title}</p>
+                        <Badge variant="outline" className="ml-2">
+                          {getWorkTypeName(work.work_type)}
+                        </Badge>
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         Concluído em: {new Date(work.last_modified).toLocaleDateString()}
                       </p>
