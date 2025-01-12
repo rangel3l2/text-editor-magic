@@ -32,7 +32,6 @@ const WorkInProgress = () => {
       try {
         if (!user) return [];
         
-        // Fetch works from database
         const { data: dbWorks, error } = await supabase
           .from('work_in_progress')
           .select('*')
@@ -49,7 +48,6 @@ const WorkInProgress = () => {
           return [];
         }
 
-        // Get works from localStorage
         const localWorks = Object.entries(localStorage)
           .filter(([key]) => key.startsWith(`banner_work_${user.id}`))
           .map(([key, value]) => {
@@ -72,7 +70,6 @@ const WorkInProgress = () => {
           })
           .filter(Boolean);
 
-        // Combine and sort works
         const allWorks = [...(dbWorks || []), ...localWorks]
           .map(work => ({
             ...work,
@@ -101,17 +98,32 @@ const WorkInProgress = () => {
     return type?.name || workType;
   };
 
+  const getWorkTypeRoute = (workType: string): string => {
+    const workTypeRoutes: { [key: string]: string } = {
+      'banner': 'banner',
+      'article': 'article',
+      'thesis': 'thesis',
+      'monography': 'monography',
+      'intervention': 'intervention'
+    };
+
+    const route = workTypeRoutes[workType.toLowerCase()];
+    if (!route) {
+      console.error('Unknown work type:', workType);
+      return 'banner';
+    }
+    return route;
+  };
+
   const handleWorkClick = (work: any) => {
     if (!work) return;
     
     console.log('Navigating to work:', work);
-    const route = `/${work.work_type.toLowerCase()}/${work.id}`;
-    console.log('Route:', route);
-    navigate(route);
+    const route = getWorkTypeRoute(work.work_type);
+    const fullRoute = `/${route}/${work.id}`;
+    console.log('Route:', fullRoute);
+    navigate(fullRoute);
   };
-
-  const inProgressWorks = works?.filter(work => !work.content?.isComplete) || [];
-  const completedWorks = works?.filter(work => work.content?.isComplete) || [];
 
   if (!user) {
     return (
@@ -150,9 +162,9 @@ const WorkInProgress = () => {
           <CardContent>
             {isLoading ? (
               <p className="text-muted-foreground">Carregando...</p>
-            ) : inProgressWorks.length > 0 ? (
+            ) : works.length > 0 ? (
               <div className="space-y-4">
-                {inProgressWorks.map((work) => (
+                {works.map((work) => (
                   <div
                     key={work.id}
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
