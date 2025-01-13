@@ -19,6 +19,7 @@ const BannerEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   const {
     content,
@@ -48,6 +49,19 @@ const BannerEditor = () => {
     
     setIsCreating(true);
     try {
+      const { data: existingWorks } = await supabase
+        .from('work_in_progress')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('work_type', 'banner')
+        .is('content', null);
+
+      // If there's an empty work, use that instead of creating a new one
+      if (existingWorks && existingWorks.length > 0) {
+        navigate(`/banner/${existingWorks[0].id}`);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('work_in_progress')
         .insert([
@@ -79,8 +93,11 @@ const BannerEditor = () => {
   // Load existing work if ID is provided
   useEffect(() => {
     const loadWork = async () => {
+      setIsLoading(true);
+      
       if (!id) {
         createNewWork();
+        setIsLoading(false);
         return;
       }
 
@@ -93,7 +110,7 @@ const BannerEditor = () => {
             .select('*')
             .eq('id', id)
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
 
           if (error) {
             console.error('Error loading work from database:', error);
@@ -103,6 +120,7 @@ const BannerEditor = () => {
           if (data?.content) {
             console.log('Loading work from database:', data);
             setBannerContent(data.content);
+            setIsLoading(false);
             return;
           }
         }
@@ -117,6 +135,7 @@ const BannerEditor = () => {
             if (parsedWork.content) {
               console.log('Loading work from localStorage:', parsedWork);
               setBannerContent(parsedWork.content);
+              setIsLoading(false);
               return;
             }
           } catch (error) {
@@ -138,6 +157,8 @@ const BannerEditor = () => {
           variant: "destructive",
         });
         navigate('/');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -147,6 +168,8 @@ const BannerEditor = () => {
   // Save work in progress whenever content changes
   useEffect(() => {
     const saveWork = async () => {
+      if (isLoading) return; // Don't save while loading
+      
       const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || 'Trabalho sem título';
       
       // Save to localStorage first
@@ -160,7 +183,7 @@ const BannerEditor = () => {
       console.log('Saving work to localStorage:', workData);
       localStorage.setItem(localStorageKey, JSON.stringify(workData));
 
-      // If not logged in, only save locally
+      // If not logged in or no ID, only save locally
       if (!user || !id) {
         toast({
           title: "Trabalho salvo localmente",
@@ -199,10 +222,18 @@ const BannerEditor = () => {
     };
 
     // Save immediately when content changes
-    if (content.title || Object.values(content).some(value => value)) {
+    if (!isLoading && (content.title || Object.values(content).some(value => value))) {
       saveWork();
     }
-  }, [content, bannerContent, user, id, toast]);
+  }, [content, bannerContent, user, id, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
     <>
