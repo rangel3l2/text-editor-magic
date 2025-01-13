@@ -49,12 +49,16 @@ const BannerEditor = () => {
     
     setIsCreating(true);
     try {
-      const { data: existingWorks } = await supabase
+      // First check for existing empty works
+      const { data: existingWorks, error: existingError } = await supabase
         .from('work_in_progress')
         .select('id')
         .eq('user_id', user.id)
         .eq('work_type', 'banner')
-        .is('content', null);
+        .is('content', null)
+        .limit(1);
+
+      if (existingError) throw existingError;
 
       // If there's an empty work, use that instead of creating a new one
       if (existingWorks && existingWorks.length > 0) {
@@ -62,6 +66,7 @@ const BannerEditor = () => {
         return;
       }
 
+      // Create new work only if no empty work exists
       const { data, error } = await supabase
         .from('work_in_progress')
         .insert([
@@ -92,15 +97,17 @@ const BannerEditor = () => {
 
   // Load existing work if ID is provided
   useEffect(() => {
-    let isMounted = true; // Add mounted flag
+    let isMounted = true;
 
     const loadWork = async () => {
-      if (!isMounted) return; // Check if component is still mounted
+      if (!isMounted) return;
       setIsLoading(true);
-      
+
       try {
         if (!id) {
-          await createNewWork();
+          if (user) {
+            await createNewWork();
+          }
           if (isMounted) setIsLoading(false);
           return;
         }
@@ -166,7 +173,6 @@ const BannerEditor = () => {
 
     loadWork();
 
-    // Cleanup function
     return () => {
       isMounted = false;
     };
@@ -174,13 +180,13 @@ const BannerEditor = () => {
 
   // Save work in progress whenever content changes
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading || !id || isCreating) return;
 
     const saveWork = async () => {
       const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || 'Trabalho sem título';
       
       // Save to localStorage first
-      const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id || 'new'}`;
+      const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id}`;
       const workData = {
         title: workTitle,
         content: bannerContent,
@@ -190,14 +196,7 @@ const BannerEditor = () => {
       localStorage.setItem(localStorageKey, JSON.stringify(workData));
 
       // If not logged in or no ID, only save locally
-      if (!user || !id) {
-        toast({
-          title: "Trabalho salvo localmente",
-          description: "Faça login para salvar seu trabalho na nuvem.",
-          variant: "default",
-        });
-        return;
-      }
+      if (!user || !id) return;
 
       try {
         const { error } = await supabase
@@ -211,11 +210,6 @@ const BannerEditor = () => {
           .eq('user_id', user.id);
 
         if (error) throw error;
-
-        toast({
-          title: "Trabalho salvo",
-          description: "Seu progresso foi salvo com sucesso na nuvem.",
-        });
       } catch (error) {
         console.error('Error saving work:', error);
         toast({
@@ -230,7 +224,7 @@ const BannerEditor = () => {
     if (!isLoading && (content.title || Object.values(content).some(value => value))) {
       saveWork();
     }
-  }, [content, bannerContent, user, id, isLoading]);
+  }, [content, bannerContent, user, id, isLoading, isCreating]);
 
   if (isLoading) {
     return (
