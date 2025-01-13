@@ -92,18 +92,19 @@ const BannerEditor = () => {
 
   // Load existing work if ID is provided
   useEffect(() => {
+    let isMounted = true; // Add mounted flag
+
     const loadWork = async () => {
+      if (!isMounted) return; // Check if component is still mounted
       setIsLoading(true);
       
-      if (!id) {
-        createNewWork();
-        setIsLoading(false);
-        return;
-      }
-
-      console.log('Loading work with ID:', id);
-
       try {
+        if (!id) {
+          await createNewWork();
+          if (isMounted) setIsLoading(false);
+          return;
+        }
+
         if (user) {
           const { data, error } = await supabase
             .from('work_in_progress')
@@ -112,15 +113,13 @@ const BannerEditor = () => {
             .eq('user_id', user.id)
             .maybeSingle();
 
-          if (error) {
-            console.error('Error loading work from database:', error);
-            throw error;
-          }
+          if (error) throw error;
 
           if (data?.content) {
-            console.log('Loading work from database:', data);
-            setBannerContent(data.content);
-            setIsLoading(false);
+            if (isMounted) {
+              setBannerContent(data.content);
+              setIsLoading(false);
+            }
             return;
           }
         }
@@ -132,8 +131,7 @@ const BannerEditor = () => {
         if (savedWork) {
           try {
             const parsedWork = JSON.parse(savedWork);
-            if (parsedWork.content) {
-              console.log('Loading work from localStorage:', parsedWork);
+            if (parsedWork.content && isMounted) {
               setBannerContent(parsedWork.content);
               setIsLoading(false);
               return;
@@ -143,33 +141,42 @@ const BannerEditor = () => {
           }
         }
 
-        toast({
-          title: "Trabalho não encontrado",
-          description: "Não foi possível encontrar o trabalho solicitado.",
-          variant: "destructive",
-        });
-        navigate('/');
+        if (isMounted) {
+          toast({
+            title: "Trabalho não encontrado",
+            description: "Não foi possível encontrar o trabalho solicitado.",
+            variant: "destructive",
+          });
+          navigate('/');
+        }
       } catch (error) {
         console.error('Error loading work:', error);
-        toast({
-          title: "Erro ao carregar trabalho",
-          description: "Não foi possível carregar o trabalho. Verifique sua conexão.",
-          variant: "destructive",
-        });
-        navigate('/');
+        if (isMounted) {
+          toast({
+            title: "Erro ao carregar trabalho",
+            description: "Não foi possível carregar o trabalho. Verifique sua conexão.",
+            variant: "destructive",
+          });
+          navigate('/');
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     loadWork();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, [id, user]);
 
   // Save work in progress whenever content changes
   useEffect(() => {
+    if (isLoading) return;
+
     const saveWork = async () => {
-      if (isLoading) return; // Don't save while loading
-      
       const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || 'Trabalho sem título';
       
       // Save to localStorage first
@@ -180,7 +187,6 @@ const BannerEditor = () => {
         lastModified: new Date().toISOString()
       };
       
-      console.log('Saving work to localStorage:', workData);
       localStorage.setItem(localStorageKey, JSON.stringify(workData));
 
       // If not logged in or no ID, only save locally
@@ -206,7 +212,6 @@ const BannerEditor = () => {
 
         if (error) throw error;
 
-        console.log('Work saved to database successfully');
         toast({
           title: "Trabalho salvo",
           description: "Seu progresso foi salvo com sucesso na nuvem.",
