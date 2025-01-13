@@ -44,7 +44,38 @@ const BannerEditor = () => {
   // Load existing work if ID is provided
   useEffect(() => {
     const loadWork = async () => {
-      if (!id) return;
+      if (!id) {
+        // If no ID, create a new work entry immediately
+        if (user) {
+          try {
+            const { data, error } = await supabase
+              .from('work_in_progress')
+              .insert([
+                {
+                  user_id: user.id,
+                  title: 'Novo Banner',
+                  work_type: 'banner',
+                  content: initialBannerContent,
+                }
+              ])
+              .select()
+              .single();
+
+            if (error) throw error;
+            
+            // Navigate to the new work's URL
+            navigate(`/banner/${data.id}`);
+          } catch (error) {
+            console.error('Error creating new work:', error);
+            toast({
+              title: "Erro ao criar trabalho",
+              description: "Não foi possível criar um novo trabalho.",
+              variant: "destructive",
+            });
+          }
+        }
+        return;
+      }
 
       console.log('Loading work with ID:', id);
 
@@ -106,7 +137,7 @@ const BannerEditor = () => {
     };
 
     loadWork();
-  }, [id, user, setBannerContent, toast, navigate]);
+  }, [id, user, setBannerContent, toast, navigate, initialBannerContent]);
 
   // Save work in progress whenever content changes
   useEffect(() => {
@@ -148,25 +179,6 @@ const BannerEditor = () => {
             .eq('user_id', user.id);
 
           if (error) throw error;
-        } else {
-          // Create new work
-          const { data, error } = await supabase
-            .from('work_in_progress')
-            .insert([
-              {
-                user_id: user.id,
-                title: workTitle,
-                work_type: 'banner',
-                content: bannerContent,
-              }
-            ])
-            .select()
-            .single();
-
-          if (error) throw error;
-          
-          // Navigate to the new work's URL
-          navigate(`/banner/${data.id}`);
         }
 
         console.log('Work saved to database successfully');
@@ -184,10 +196,9 @@ const BannerEditor = () => {
       }
     };
 
-    // Debounce save to avoid too many calls
-    const timeoutId = setTimeout(saveWork, 2000);
-    return () => clearTimeout(timeoutId);
-  }, [content, bannerContent, user, id, toast, navigate]);
+    // Save immediately when content changes
+    saveWork();
+  }, [content, bannerContent, user, id, toast]);
 
   return (
     <>
