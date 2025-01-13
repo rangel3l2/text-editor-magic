@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { OnboardingTutorial } from "./OnboardingTutorial";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "./ui/use-toast";
@@ -18,6 +18,7 @@ const BannerEditor = () => {
   const { toast } = useToast();
   const { id } = useParams();
   const navigate = useNavigate();
+  const [isCreating, setIsCreating] = useState(false);
   
   const {
     content,
@@ -41,46 +42,51 @@ const BannerEditor = () => {
     initialBannerContent,
   );
 
+  // Create new work entry
+  const createNewWork = async () => {
+    if (!user || isCreating) return;
+    
+    setIsCreating(true);
+    try {
+      const { data, error } = await supabase
+        .from('work_in_progress')
+        .insert([
+          {
+            user_id: user.id,
+            title: 'Novo Banner',
+            work_type: 'banner',
+            content: initialBannerContent,
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      navigate(`/banner/${data.id}`);
+    } catch (error) {
+      console.error('Error creating new work:', error);
+      toast({
+        title: "Erro ao criar trabalho",
+        description: "Não foi possível criar um novo trabalho.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   // Load existing work if ID is provided
   useEffect(() => {
     const loadWork = async () => {
       if (!id) {
-        // If no ID, create a new work entry immediately
-        if (user) {
-          try {
-            const { data, error } = await supabase
-              .from('work_in_progress')
-              .insert([
-                {
-                  user_id: user.id,
-                  title: 'Novo Banner',
-                  work_type: 'banner',
-                  content: initialBannerContent,
-                }
-              ])
-              .select()
-              .single();
-
-            if (error) throw error;
-            
-            // Navigate to the new work's URL
-            navigate(`/banner/${data.id}`);
-          } catch (error) {
-            console.error('Error creating new work:', error);
-            toast({
-              title: "Erro ao criar trabalho",
-              description: "Não foi possível criar um novo trabalho.",
-              variant: "destructive",
-            });
-          }
-        }
+        createNewWork();
         return;
       }
 
       console.log('Loading work with ID:', id);
 
       try {
-        // Try to load from database first if user is logged in
         if (user) {
           const { data, error } = await supabase
             .from('work_in_progress')
@@ -118,7 +124,6 @@ const BannerEditor = () => {
           }
         }
 
-        // If work not found anywhere, show error
         toast({
           title: "Trabalho não encontrado",
           description: "Não foi possível encontrar o trabalho solicitado.",
@@ -137,7 +142,7 @@ const BannerEditor = () => {
     };
 
     loadWork();
-  }, [id, user, setBannerContent, toast, navigate, initialBannerContent]);
+  }, [id, user]);
 
   // Save work in progress whenever content changes
   useEffect(() => {
@@ -156,7 +161,7 @@ const BannerEditor = () => {
       localStorage.setItem(localStorageKey, JSON.stringify(workData));
 
       // If not logged in, only save locally
-      if (!user) {
+      if (!user || !id) {
         toast({
           title: "Trabalho salvo localmente",
           description: "Faça login para salvar seu trabalho na nuvem.",
@@ -166,20 +171,17 @@ const BannerEditor = () => {
       }
 
       try {
-        if (id) {
-          // Update existing work
-          const { error } = await supabase
-            .from('work_in_progress')
-            .update({
-              title: workTitle,
-              content: bannerContent,
-              last_modified: new Date().toISOString(),
-            })
-            .eq('id', id)
-            .eq('user_id', user.id);
+        const { error } = await supabase
+          .from('work_in_progress')
+          .update({
+            title: workTitle,
+            content: bannerContent,
+            last_modified: new Date().toISOString(),
+          })
+          .eq('id', id)
+          .eq('user_id', user.id);
 
-          if (error) throw error;
-        }
+        if (error) throw error;
 
         console.log('Work saved to database successfully');
         toast({
@@ -197,7 +199,9 @@ const BannerEditor = () => {
     };
 
     // Save immediately when content changes
-    saveWork();
+    if (content.title || Object.values(content).some(value => value)) {
+      saveWork();
+    }
   }, [content, bannerContent, user, id, toast]);
 
   return (
