@@ -74,7 +74,6 @@ const BannerEditor = () => {
       if (error) throw error;
       
       if (data) {
-        // Use navigate with the full path to avoid 404
         navigate(`/banner/${data.id}`, { replace: true });
         toast({
           title: "Trabalho criado",
@@ -89,7 +88,6 @@ const BannerEditor = () => {
         description: "Não foi possível criar um novo trabalho.",
         variant: "destructive",
       });
-      // Navigate back to home on error
       navigate('/', { replace: true });
     } finally {
       setIsCreating(false);
