@@ -49,7 +49,6 @@ const BannerEditor = () => {
     
     setIsCreating(true);
     try {
-      // First check for existing empty works
       const { data: existingWorks, error: existingError } = await supabase
         .from('work_in_progress')
         .select('id')
@@ -60,13 +59,11 @@ const BannerEditor = () => {
 
       if (existingError) throw existingError;
 
-      // If there's an empty work, use that instead of creating a new one
       if (existingWorks && existingWorks.length > 0) {
         navigate(`/banner/${existingWorks[0].id}`);
         return;
       }
 
-      // Create new work only if no empty work exists
       const { data, error } = await supabase
         .from('work_in_progress')
         .insert([
@@ -82,7 +79,9 @@ const BannerEditor = () => {
 
       if (error) throw error;
       
-      navigate(`/banner/${data.id}`);
+      if (data) {
+        navigate(`/banner/${data.id}`);
+      }
     } catch (error) {
       console.error('Error creating new work:', error);
       toast({
@@ -101,37 +100,39 @@ const BannerEditor = () => {
 
     const loadWork = async () => {
       if (!isMounted) return;
-      setIsLoading(true);
 
       try {
+        setIsLoading(true);
+
         if (!id) {
           if (user) {
             await createNewWork();
           }
-          if (isMounted) setIsLoading(false);
           return;
         }
 
-        if (user) {
-          const { data, error } = await supabase
-            .from('work_in_progress')
-            .select('*')
-            .eq('id', id)
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-          if (error) throw error;
-
-          if (data?.content) {
-            if (isMounted) {
-              setBannerContent(data.content);
-              setIsLoading(false);
-            }
-            return;
-          }
+        if (!user) {
+          navigate('/');
+          return;
         }
 
-        // If not found in database or user not logged in, try localStorage
+        const { data, error } = await supabase
+          .from('work_in_progress')
+          .select('*')
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data?.content) {
+          if (isMounted) {
+            setBannerContent(data.content);
+          }
+          return;
+        }
+
+        // If not found in database, try localStorage
         const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id}`;
         const savedWork = localStorage.getItem(localStorageKey);
         
@@ -140,7 +141,6 @@ const BannerEditor = () => {
             const parsedWork = JSON.parse(savedWork);
             if (parsedWork.content && isMounted) {
               setBannerContent(parsedWork.content);
-              setIsLoading(false);
               return;
             }
           } catch (error) {
@@ -167,7 +167,9 @@ const BannerEditor = () => {
           navigate('/');
         }
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -180,13 +182,12 @@ const BannerEditor = () => {
 
   // Save work in progress whenever content changes
   useEffect(() => {
-    if (isLoading || !id || isCreating) return;
+    if (isLoading || !id || isCreating || !user) return;
 
     const saveWork = async () => {
       const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || 'Trabalho sem título';
       
-      // Save to localStorage first
-      const localStorageKey = `banner_work_${user?.id || 'anonymous'}_${id}`;
+      const localStorageKey = `banner_work_${user.id}_${id}`;
       const workData = {
         title: workTitle,
         content: bannerContent,
@@ -194,9 +195,6 @@ const BannerEditor = () => {
       };
       
       localStorage.setItem(localStorageKey, JSON.stringify(workData));
-
-      // If not logged in or no ID, only save locally
-      if (!user || !id) return;
 
       try {
         const { error } = await supabase
@@ -220,7 +218,6 @@ const BannerEditor = () => {
       }
     };
 
-    // Save immediately when content changes
     if (!isLoading && (content.title || Object.values(content).some(value => value))) {
       saveWork();
     }
