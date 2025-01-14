@@ -43,18 +43,27 @@ const BannerEditor = () => {
     initialBannerContent,
   );
 
+  // Generate unique title for untitled works
+  const generateUniqueTitle = () => {
+    const timestamp = new Date().toLocaleString('pt-BR');
+    const randomId = Math.floor(Math.random() * 10000);
+    return `Trabalho Desconhecido #${randomId} (${timestamp})`;
+  };
+
   // Create new work entry only when user makes first edit
   const createNewWork = async () => {
     if (!user || isCreating) return;
     
     setIsCreating(true);
     try {
+      const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
+      
       const { data, error } = await supabase
         .from('work_in_progress')
         .insert([
           {
             user_id: user.id,
-            title: 'Novo Banner',
+            title: workTitle,
             work_type: 'banner',
             content: initialBannerContent,
           }
@@ -127,14 +136,14 @@ const BannerEditor = () => {
     }
   }, [id, user]);
 
-  // Save work in progress only when content changes and we have an ID
+  // Save work in progress when content changes
   useEffect(() => {
     const saveWork = async () => {
-      if (!id || !user || isLoading || isCreating || !Object.values(content).some(value => value)) {
+      if (!id || !user || isLoading || isCreating) {
         return;
       }
 
-      const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || 'Trabalho sem título';
+      const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
       
       try {
         const { error } = await supabase
