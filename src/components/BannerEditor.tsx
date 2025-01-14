@@ -43,7 +43,7 @@ const BannerEditor = () => {
     initialBannerContent,
   );
 
-  // Create new work entry
+  // Create new work entry only when user makes first edit
   const createNewWork = async () => {
     if (!user || isCreating) return;
     
@@ -84,9 +84,7 @@ const BannerEditor = () => {
     const loadWork = async () => {
       try {
         if (!id) {
-          if (user) {
-            await createNewWork();
-          }
+          setIsLoading(false);
           return;
         }
 
@@ -122,22 +120,20 @@ const BannerEditor = () => {
       }
     };
 
-    if (user && isLoading) {
+    if (user) {
       loadWork();
+    } else {
+      setIsLoading(false);
     }
+  }, [id, user]);
 
-    return () => {
-      // Cleanup
-    };
-  }, [id, user, isLoading]);
-
-  // Save work in progress whenever content changes
+  // Save work in progress only when content changes and we have an ID
   useEffect(() => {
-    if (!id || !user || isLoading || isCreating) {
-      return;
-    }
-
     const saveWork = async () => {
+      if (!id || !user || isLoading || isCreating || !Object.values(content).some(value => value)) {
+        return;
+      }
+
       const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || 'Trabalho sem título';
       
       try {
@@ -162,10 +158,15 @@ const BannerEditor = () => {
       }
     };
 
-    if (!isLoading && (content.title || Object.values(content).some(value => value))) {
-      saveWork();
-    }
+    saveWork();
   }, [content, bannerContent, user, id, isLoading, isCreating]);
+
+  // Create new work when user starts editing and there's no ID
+  useEffect(() => {
+    if (!id && user && !isCreating && Object.values(content).some(value => value)) {
+      createNewWork();
+    }
+  }, [content, id, user, isCreating]);
 
   if (isLoading) {
     return (
