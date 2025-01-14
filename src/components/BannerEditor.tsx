@@ -49,21 +49,6 @@ const BannerEditor = () => {
     
     setIsCreating(true);
     try {
-      const { data: existingWorks, error: existingError } = await supabase
-        .from('work_in_progress')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('work_type', 'banner')
-        .is('content', null)
-        .limit(1);
-
-      if (existingError) throw existingError;
-
-      if (existingWorks && existingWorks.length > 0) {
-        navigate(`/banner/${existingWorks[0].id}`);
-        return;
-      }
-
       const { data, error } = await supabase
         .from('work_in_progress')
         .insert([
@@ -96,14 +81,9 @@ const BannerEditor = () => {
 
   // Load existing work if ID is provided
   useEffect(() => {
-    console.log('Loading work effect triggered', { id, user, isLoading });
-    
     const loadWork = async () => {
-      console.log('Starting loadWork function');
-      
       try {
         if (!id) {
-          console.log('No ID provided, checking if should create new work');
           if (user) {
             await createNewWork();
           }
@@ -111,12 +91,10 @@ const BannerEditor = () => {
         }
 
         if (!user) {
-          console.log('No user found, redirecting to home');
           navigate('/');
           return;
         }
 
-        console.log('Fetching work from database');
         const { data, error } = await supabase
           .from('work_in_progress')
           .select('*')
@@ -125,42 +103,12 @@ const BannerEditor = () => {
           .single();
 
         if (error) {
-          console.error('Error fetching work:', error);
           throw error;
         }
-
-        console.log('Work data received:', data);
         
         if (data?.content) {
-          console.log('Setting banner content from database');
           setBannerContent(data.content);
-          return;
         }
-
-        console.log('No content in database, checking localStorage');
-        const localStorageKey = `banner_work_${user.id}_${id}`;
-        const savedWork = localStorage.getItem(localStorageKey);
-        
-        if (savedWork) {
-          try {
-            const parsedWork = JSON.parse(savedWork);
-            if (parsedWork.content) {
-              console.log('Setting banner content from localStorage');
-              setBannerContent(parsedWork.content);
-              return;
-            }
-          } catch (error) {
-            console.error('Error parsing local work:', error);
-          }
-        }
-
-        console.log('No work found, redirecting to home');
-        toast({
-          title: "Trabalho não encontrado",
-          description: "Não foi possível encontrar o trabalho solicitado.",
-          variant: "destructive",
-        });
-        navigate('/');
       } catch (error) {
         console.error('Error in loadWork:', error);
         toast({
@@ -170,42 +118,29 @@ const BannerEditor = () => {
         });
         navigate('/');
       } finally {
-        console.log('Setting loading to false');
         setIsLoading(false);
       }
     };
 
-    if (isLoading) {
+    if (user && isLoading) {
       loadWork();
     }
 
     return () => {
-      console.log('Cleanup effect');
+      // Cleanup
     };
-  }, [id, user]);
+  }, [id, user, isLoading]);
 
   // Save work in progress whenever content changes
   useEffect(() => {
-    if (isLoading || !id || isCreating || !user) {
-      console.log('Skipping save due to conditions:', { isLoading, id, isCreating, hasUser: !!user });
+    if (!id || !user || isLoading || isCreating) {
       return;
     }
 
     const saveWork = async () => {
-      console.log('Starting save work');
       const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || 'Trabalho sem título';
       
-      const localStorageKey = `banner_work_${user.id}_${id}`;
-      const workData = {
-        title: workTitle,
-        content: bannerContent,
-        lastModified: new Date().toISOString()
-      };
-      
-      localStorage.setItem(localStorageKey, JSON.stringify(workData));
-
       try {
-        console.log('Saving to database');
         const { error } = await supabase
           .from('work_in_progress')
           .update({
@@ -217,12 +152,11 @@ const BannerEditor = () => {
           .eq('user_id', user.id);
 
         if (error) throw error;
-        console.log('Save successful');
       } catch (error) {
         console.error('Error saving work:', error);
         toast({
           title: "Erro ao salvar trabalho",
-          description: "Não foi possível salvar seu trabalho na nuvem. Uma cópia local foi mantida.",
+          description: "Não foi possível salvar seu trabalho na nuvem.",
           variant: "destructive",
         });
       }
@@ -234,7 +168,6 @@ const BannerEditor = () => {
   }, [content, bannerContent, user, id, isLoading, isCreating]);
 
   if (isLoading) {
-    console.log('Rendering loading state');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
@@ -242,7 +175,6 @@ const BannerEditor = () => {
     );
   }
 
-  console.log('Rendering main component');
   return (
     <>
       <OnboardingTutorial />
