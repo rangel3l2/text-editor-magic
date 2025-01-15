@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { OnboardingTutorial } from "./OnboardingTutorial";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "./ui/use-toast";
@@ -20,6 +20,7 @@ const BannerEditor = () => {
   const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const createTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const {
     content,
@@ -52,7 +53,7 @@ const BannerEditor = () => {
 
   // Create new work entry only when user makes first edit
   const createNewWork = async () => {
-    if (!user || isCreating) return;
+    if (!user || isCreating || id) return;
     
     setIsCreating(true);
     try {
@@ -138,7 +139,7 @@ const BannerEditor = () => {
     loadWork();
   }, [id, user]);
 
-  // Save work in progress when content changes
+  // Save work in progress when content changes with debounce
   useEffect(() => {
     const saveWork = async () => {
       if (!id || !user || isLoading || isCreating) {
@@ -169,14 +170,27 @@ const BannerEditor = () => {
       }
     };
 
-    saveWork();
+    const debounceTimeout = setTimeout(saveWork, 1000);
+    return () => clearTimeout(debounceTimeout);
   }, [content, bannerContent, user, id, isLoading, isCreating]);
 
-  // Create new work when user starts editing and there's no ID
+  // Create new work when user starts editing with debounce
   useEffect(() => {
     if (!id && user && !isCreating && Object.values(content).some(value => value)) {
-      createNewWork();
+      if (createTimeoutRef.current) {
+        clearTimeout(createTimeoutRef.current);
+      }
+      
+      createTimeoutRef.current = setTimeout(() => {
+        createNewWork();
+      }, 2000); // Wait 2 seconds after typing before creating new work
     }
+    
+    return () => {
+      if (createTimeoutRef.current) {
+        clearTimeout(createTimeoutRef.current);
+      }
+    };
   }, [content, id, user, isCreating]);
 
   if (isLoading) {
