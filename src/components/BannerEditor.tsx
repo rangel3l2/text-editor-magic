@@ -20,6 +20,7 @@ const BannerEditor = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const workCreatedRef = useRef(false);
+  const hasStartedTypingRef = useRef(false);
   
   const {
     content,
@@ -50,37 +51,61 @@ const BannerEditor = () => {
     return `Trabalho Desconhecido #${randomId} (${timestamp})`;
   };
 
-  // Save work to localStorage while editing
-  useEffect(() => {
-    if (!user || id) return; // Don't save to localStorage if we have an ID or no user
+  // Create new work when starting to type
+  const createNewWork = async (workTitle: string) => {
+    if (!user || workCreatedRef.current) return;
     
-    const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
-    const localStorageKey = `banner_work_${user.id}_draft`;
-    
-    if (Object.values(content).some(value => value)) {
-      const workData = {
-        title: workTitle,
-        content: bannerContent,
-        lastModified: new Date().toISOString(),
-      };
-      localStorage.setItem(localStorageKey, JSON.stringify(workData));
+    try {
+      workCreatedRef.current = true;
+      const { data, error } = await supabase
+        .from('work_in_progress')
+        .insert([
+          {
+            user_id: user.id,
+            title: workTitle,
+            work_type: 'banner',
+            content: bannerContent,
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      if (data) {
+        // Clear any existing draft
+        localStorage.removeItem(`banner_work_${user.id}_draft`);
+        // Navigate to the new work
+        navigate(`/banner/${data.id}`, { replace: true });
+      }
+    } catch (error) {
+      console.error('Error creating new work:', error);
+      workCreatedRef.current = false;
+      toast({
+        title: "Erro ao criar trabalho",
+        description: "Não foi possível criar um novo trabalho.",
+        variant: "destructive",
+      });
     }
-  }, [content, bannerContent, user, id]);
+  };
+
+  // Handle content changes and work creation
+  useEffect(() => {
+    if (!user || id) return;
+
+    const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
+    
+    if (!hasStartedTypingRef.current && Object.values(content).some(value => value)) {
+      hasStartedTypingRef.current = true;
+      createNewWork(workTitle);
+    }
+  }, [content, user, id]);
 
   // Load existing work if ID is provided
   useEffect(() => {
     const loadWork = async () => {
       try {
         if (!id) {
-          // If no ID, check for draft in localStorage
-          if (user) {
-            const localStorageKey = `banner_work_${user.id}_draft`;
-            const savedDraft = localStorage.getItem(localStorageKey);
-            if (savedDraft) {
-              const parsedDraft = JSON.parse(savedDraft);
-              setBannerContent(parsedDraft.content);
-            }
-          }
           setIsLoading(false);
           return;
         }
@@ -103,7 +128,7 @@ const BannerEditor = () => {
         
         if (data?.content) {
           setBannerContent(data.content);
-          // Clear draft from localStorage when loading saved work
+          // Clear any existing draft
           localStorage.removeItem(`banner_work_${user.id}_draft`);
         }
       } catch (error) {
@@ -154,48 +179,6 @@ const BannerEditor = () => {
     const debounceTimeout = setTimeout(saveWork, 1000);
     return () => clearTimeout(debounceTimeout);
   }, [content, bannerContent, user, id, isLoading]);
-
-  // Clean up localStorage and create work when component unmounts
-  useEffect(() => {
-    return () => {
-      if (user && !id && !workCreatedRef.current) {
-        // Only clean up if we're navigating away and have content
-        const localStorageKey = `banner_work_${user.id}_draft`;
-        const savedDraft = localStorage.getItem(localStorageKey);
-        if (savedDraft) {
-          const parsedDraft = JSON.parse(savedDraft);
-          // Create work in Supabase when navigating away
-          const createWork = async () => {
-            try {
-              workCreatedRef.current = true; // Mark work as created
-              const { data, error } = await supabase
-                .from('work_in_progress')
-                .insert([
-                  {
-                    user_id: user.id,
-                    title: parsedDraft.title,
-                    work_type: 'banner',
-                    content: parsedDraft.content,
-                  }
-                ])
-                .select()
-                .single();
-
-              if (error) throw error;
-              
-              if (data) {
-                localStorage.removeItem(localStorageKey);
-              }
-            } catch (error) {
-              console.error('Error creating work from draft:', error);
-              workCreatedRef.current = false; // Reset flag if creation fails
-            }
-          };
-          createWork();
-        }
-      }
-    };
-  }, [user, id]);
 
   if (isLoading) {
     return (
