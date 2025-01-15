@@ -18,9 +18,7 @@ const BannerEditor = () => {
   const { toast } = useToast();
   const { id } = useParams();
   const navigate = useNavigate();
-  const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const createTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const {
     content,
@@ -51,55 +49,37 @@ const BannerEditor = () => {
     return `Trabalho Desconhecido #${randomId} (${timestamp})`;
   };
 
-  // Create new work entry only when user makes first edit
-  const createNewWork = async () => {
-    if (!user || isCreating || id) return;
+  // Save work to localStorage while editing
+  useEffect(() => {
+    if (!user || id) return; // Don't save to localStorage if we have an ID or no user
     
-    setIsCreating(true);
-    try {
-      const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
-      
-      const { data, error } = await supabase
-        .from('work_in_progress')
-        .insert([
-          {
-            user_id: user.id,
-            title: workTitle,
-            work_type: 'banner',
-            content: initialBannerContent,
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      if (data) {
-        navigate(`/banner/${data.id}`, { replace: true });
-        toast({
-          title: "Trabalho criado",
-          description: "Um novo banner foi iniciado.",
-          duration: 3000,
-        });
-      }
-    } catch (error) {
-      console.error('Error creating new work:', error);
-      toast({
-        title: "Erro ao criar trabalho",
-        description: "Não foi possível criar um novo trabalho.",
-        variant: "destructive",
-      });
-      navigate('/', { replace: true });
-    } finally {
-      setIsCreating(false);
+    const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
+    const localStorageKey = `banner_work_${user.id}_draft`;
+    
+    if (Object.values(content).some(value => value)) {
+      const workData = {
+        title: workTitle,
+        content: bannerContent,
+        lastModified: new Date().toISOString(),
+      };
+      localStorage.setItem(localStorageKey, JSON.stringify(workData));
     }
-  };
+  }, [content, bannerContent, user, id]);
 
   // Load existing work if ID is provided
   useEffect(() => {
     const loadWork = async () => {
       try {
         if (!id) {
+          // If no ID, check for draft in localStorage
+          if (user) {
+            const localStorageKey = `banner_work_${user.id}_draft`;
+            const savedDraft = localStorage.getItem(localStorageKey);
+            if (savedDraft) {
+              const parsedDraft = JSON.parse(savedDraft);
+              setBannerContent(parsedDraft.content);
+            }
+          }
           setIsLoading(false);
           return;
         }
@@ -122,6 +102,8 @@ const BannerEditor = () => {
         
         if (data?.content) {
           setBannerContent(data.content);
+          // Clear draft from localStorage when loading saved work
+          localStorage.removeItem(`banner_work_${user.id}_draft`);
         }
       } catch (error) {
         console.error('Error in loadWork:', error);
@@ -141,11 +123,9 @@ const BannerEditor = () => {
 
   // Save work in progress when content changes with debounce
   useEffect(() => {
-    const saveWork = async () => {
-      if (!id || !user || isLoading || isCreating) {
-        return;
-      }
+    if (!id || !user || isLoading) return;
 
+    const saveWork = async () => {
       const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
       
       try {
@@ -172,26 +152,47 @@ const BannerEditor = () => {
 
     const debounceTimeout = setTimeout(saveWork, 1000);
     return () => clearTimeout(debounceTimeout);
-  }, [content, bannerContent, user, id, isLoading, isCreating]);
+  }, [content, bannerContent, user, id, isLoading]);
 
-  // Create new work when user starts editing with debounce
+  // Clean up localStorage when component unmounts
   useEffect(() => {
-    if (!id && user && !isCreating && Object.values(content).some(value => value)) {
-      if (createTimeoutRef.current) {
-        clearTimeout(createTimeoutRef.current);
-      }
-      
-      createTimeoutRef.current = setTimeout(() => {
-        createNewWork();
-      }, 2000); // Wait 2 seconds after typing before creating new work
-    }
-    
     return () => {
-      if (createTimeoutRef.current) {
-        clearTimeout(createTimeoutRef.current);
+      if (user && !id) {
+        // Only clean up if we're navigating away and have content
+        const localStorageKey = `banner_work_${user.id}_draft`;
+        const savedDraft = localStorage.getItem(localStorageKey);
+        if (savedDraft) {
+          const parsedDraft = JSON.parse(savedDraft);
+          // Create work in Supabase when navigating away
+          const createWork = async () => {
+            try {
+              const { data, error } = await supabase
+                .from('work_in_progress')
+                .insert([
+                  {
+                    user_id: user.id,
+                    title: parsedDraft.title,
+                    work_type: 'banner',
+                    content: parsedDraft.content,
+                  }
+                ])
+                .select()
+                .single();
+
+              if (error) throw error;
+              
+              if (data) {
+                localStorage.removeItem(localStorageKey);
+              }
+            } catch (error) {
+              console.error('Error creating work from draft:', error);
+            }
+          };
+          createWork();
+        }
       }
     };
-  }, [content, id, user, isCreating]);
+  }, [user, id]);
 
   if (isLoading) {
     return (
