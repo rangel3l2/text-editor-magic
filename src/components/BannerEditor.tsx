@@ -19,6 +19,7 @@ const BannerEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const workCreatedRef = useRef(false);
   
   const {
     content,
@@ -154,10 +155,10 @@ const BannerEditor = () => {
     return () => clearTimeout(debounceTimeout);
   }, [content, bannerContent, user, id, isLoading]);
 
-  // Clean up localStorage when component unmounts
+  // Clean up localStorage and create work when component unmounts
   useEffect(() => {
     return () => {
-      if (user && !id) {
+      if (user && !id && !workCreatedRef.current) {
         // Only clean up if we're navigating away and have content
         const localStorageKey = `banner_work_${user.id}_draft`;
         const savedDraft = localStorage.getItem(localStorageKey);
@@ -166,6 +167,7 @@ const BannerEditor = () => {
           // Create work in Supabase when navigating away
           const createWork = async () => {
             try {
+              workCreatedRef.current = true; // Mark work as created
               const { data, error } = await supabase
                 .from('work_in_progress')
                 .insert([
@@ -186,6 +188,7 @@ const BannerEditor = () => {
               }
             } catch (error) {
               console.error('Error creating work from draft:', error);
+              workCreatedRef.current = false; // Reset flag if creation fails
             }
           };
           createWork();
