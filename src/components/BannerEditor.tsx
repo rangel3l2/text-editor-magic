@@ -20,7 +20,7 @@ const BannerEditor = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const workCreatedRef = useRef(false);
-  const hasStartedTypingRef = useRef(false);
+  const lastActiveFieldRef = useRef<string | null>(null);
   
   const {
     content,
@@ -51,7 +51,7 @@ const BannerEditor = () => {
     return `Trabalho Desconhecido #${randomId} (${timestamp})`;
   };
 
-  // Create new work when starting to type
+  // Create new work when content is added
   const createNewWork = async (workTitle: string) => {
     if (!user || workCreatedRef.current) return;
     
@@ -89,17 +89,19 @@ const BannerEditor = () => {
     }
   };
 
-  // Handle content changes and work creation
-  useEffect(() => {
-    if (!user || id) return;
+  // Handle field changes and work creation
+  const handleFieldChange = (field: string, value: string) => {
+    handleChange(field, value);
+    lastActiveFieldRef.current = field;
 
-    const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
-    
-    if (!hasStartedTypingRef.current && Object.values(content).some(value => value)) {
-      hasStartedTypingRef.current = true;
+    // If this is a new work (no ID) and we have content, create the work
+    if (!id && !workCreatedRef.current && value.trim()) {
+      const workTitle = field === 'title' && value.trim() 
+        ? value.trim() 
+        : generateUniqueTitle();
       createNewWork(workTitle);
     }
-  }, [content, user, id]);
+  };
 
   // Load existing work if ID is provided
   useEffect(() => {
@@ -208,7 +210,7 @@ const BannerEditor = () => {
           />
           <BannerContent
             content={content}
-            handleChange={handleChange}
+            handleChange={handleFieldChange}
             selectedImage={selectedImage}
             onImageConfigChange={onImageConfigChange}
           />
