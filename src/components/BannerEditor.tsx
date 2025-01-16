@@ -23,6 +23,7 @@ const BannerEditor = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [hasEditedFirstField, setHasEditedFirstField] = useState(false);
   const workCreatedRef = useRef(false);
+  const [shouldCreateWork, setShouldCreateWork] = useState(false);
   
   const {
     content,
@@ -71,8 +72,64 @@ const BannerEditor = () => {
       setShowLoginModal(true);
       return;
     }
+
     handleChange(field, value);
+
+    // If this is the title field and we're not editing an existing work,
+    // mark that we should create a new work
+    if (field === 'title' && !id && user && !workCreatedRef.current) {
+      setShouldCreateWork(true);
+    }
   };
+
+  // Create new work when title is changed and user moves to another field
+  useEffect(() => {
+    if (shouldCreateWork && user && !id && !workCreatedRef.current) {
+      const createWork = async () => {
+        try {
+          console.log('Creating new work...');
+          workCreatedRef.current = true;
+          const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
+          
+          const { data, error } = await supabase
+            .from('work_in_progress')
+            .insert([
+              {
+                user_id: user.id,
+                title: workTitle,
+                work_type: 'banner',
+                content: bannerContent,
+              }
+            ])
+            .select()
+            .single();
+
+          if (error) throw error;
+          
+          console.log('Work created:', data);
+          if (data) {
+            // Clear any draft from localStorage
+            localStorage.removeItem(`banner_work_${user.id}_draft`);
+            // Navigate to the new work URL using the slug
+            const slug = generateSlug(workTitle);
+            navigate(`/banner/${data.id}`, { replace: true });
+          }
+        } catch (error) {
+          console.error('Error creating work:', error);
+          workCreatedRef.current = false;
+          toast({
+            title: "Erro ao criar trabalho",
+            description: "Não foi possível criar o trabalho. Tente novamente.",
+            variant: "destructive",
+          });
+        } finally {
+          setShouldCreateWork(false);
+        }
+      };
+
+      createWork();
+    }
+  }, [shouldCreateWork, user, id, content.title, bannerContent, navigate, toast]);
 
   // Load existing work if ID is provided
   useEffect(() => {
@@ -161,51 +218,6 @@ const BannerEditor = () => {
     const debounceTimeout = setTimeout(saveWork, 1000);
     return () => clearTimeout(debounceTimeout);
   }, [content, bannerContent, user, id, isLoading]);
-
-  // Clean up localStorage and create work when component unmounts
-  useEffect(() => {
-    return () => {
-      if (user && !id && !workCreatedRef.current) {
-        const localStorageKey = `banner_work_${user.id}_draft`;
-        const savedDraft = localStorage.getItem(localStorageKey);
-        if (savedDraft) {
-          const parsedDraft = JSON.parse(savedDraft);
-          const workTitle = parsedDraft.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
-          
-          const createWork = async () => {
-            try {
-              workCreatedRef.current = true;
-              const { data, error } = await supabase
-                .from('work_in_progress')
-                .insert([
-                  {
-                    user_id: user.id,
-                    title: workTitle,
-                    work_type: 'banner',
-                    content: parsedDraft.content,
-                  }
-                ])
-                .select()
-                .single();
-
-              if (error) throw error;
-              
-              if (data) {
-                localStorage.removeItem(localStorageKey);
-                // Navigate to the new work URL using the slug
-                const slug = generateSlug(workTitle);
-                navigate(`/banner/${slug}`, { replace: true });
-              }
-            } catch (error) {
-              console.error('Error creating work from draft:', error);
-              workCreatedRef.current = false;
-            }
-          };
-          createWork();
-        }
-      }
-    };
-  }, [user, id, navigate]);
 
   if (isLoading) {
     return (
