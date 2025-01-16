@@ -24,6 +24,7 @@ const WorkInProgress = () => {
       console.log('Work types fetched:', data);
       return data;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const { data: works, isLoading } = useQuery({
@@ -32,6 +33,7 @@ const WorkInProgress = () => {
       try {
         if (!user) return [];
         
+        console.log('Fetching works for user:', user.id);
         const { data: dbWorks, error } = await supabase
           .from('work_in_progress')
           .select('*')
@@ -47,6 +49,8 @@ const WorkInProgress = () => {
           });
           return [];
         }
+
+        console.log('DB works fetched:', dbWorks);
 
         const localWorks = Object.entries(localStorage)
           .filter(([key]) => key.startsWith(`banner_work_${user.id}`))
@@ -70,6 +74,8 @@ const WorkInProgress = () => {
           })
           .filter(Boolean);
 
+        console.log('Local works found:', localWorks);
+
         const allWorks = [...(dbWorks || []), ...localWorks]
           .map(work => ({
             ...work,
@@ -90,7 +96,9 @@ const WorkInProgress = () => {
       }
     },
     enabled: !!user,
-    initialData: [],
+    staleTime: 1000 * 60, // 1 minute
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const getWorkTypeName = (workType: string) => {
@@ -125,10 +133,6 @@ const WorkInProgress = () => {
     navigate(fullRoute);
   };
 
-  // Filter works based on completion status
-  const inProgressWorks = works?.filter(work => !work.content?.isComplete) || [];
-  const completedWorks = works?.filter(work => work.content?.isComplete) || [];
-
   if (!user) {
     return (
       <div className="mb-16">
@@ -151,6 +155,10 @@ const WorkInProgress = () => {
       </div>
     );
   }
+
+  // Filter works based on completion status
+  const inProgressWorks = works?.filter(work => !work.content?.isComplete) || [];
+  const completedWorks = works?.filter(work => work.content?.isComplete) || [];
 
   return (
     <div className="mb-16">
