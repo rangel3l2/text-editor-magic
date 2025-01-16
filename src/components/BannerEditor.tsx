@@ -43,6 +43,17 @@ const BannerEditor = () => {
     initialBannerContent,
   );
 
+  // Generate URL-friendly slug from title
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .trim();
+  };
+
   // Generate unique title for untitled works
   const generateUniqueTitle = () => {
     const timestamp = new Date().toLocaleString('pt-BR');
@@ -159,21 +170,21 @@ const BannerEditor = () => {
   useEffect(() => {
     return () => {
       if (user && !id && !workCreatedRef.current) {
-        // Only clean up if we're navigating away and have content
         const localStorageKey = `banner_work_${user.id}_draft`;
         const savedDraft = localStorage.getItem(localStorageKey);
         if (savedDraft) {
           const parsedDraft = JSON.parse(savedDraft);
-          // Create work in Supabase when navigating away
+          const workTitle = parsedDraft.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
+          
           const createWork = async () => {
             try {
-              workCreatedRef.current = true; // Mark work as created
+              workCreatedRef.current = true;
               const { data, error } = await supabase
                 .from('work_in_progress')
                 .insert([
                   {
                     user_id: user.id,
-                    title: parsedDraft.title,
+                    title: workTitle,
                     work_type: 'banner',
                     content: parsedDraft.content,
                   }
@@ -185,17 +196,20 @@ const BannerEditor = () => {
               
               if (data) {
                 localStorage.removeItem(localStorageKey);
+                // Navigate to the new work URL using the slug
+                const slug = generateSlug(workTitle);
+                navigate(`/banner/${slug}`, { replace: true });
               }
             } catch (error) {
               console.error('Error creating work from draft:', error);
-              workCreatedRef.current = false; // Reset flag if creation fails
+              workCreatedRef.current = false;
             }
           };
           createWork();
         }
       }
     };
-  }, [user, id]);
+  }, [user, id, navigate]);
 
   if (isLoading) {
     return (
