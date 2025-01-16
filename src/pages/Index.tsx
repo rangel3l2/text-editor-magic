@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import Header from "@/components/Header";
 import HomeHeader from "@/components/home/HomeHeader";
 import WorkInProgress from "@/components/home/WorkInProgress";
 import AvailableWorkTypes from "@/components/home/AvailableWorkTypes";
@@ -8,12 +9,15 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="container mx-auto p-6">
-      <HomeHeader />
-      <WorkInProgress />
-      <AvailableWorkTypes onStart={navigate} />
-      <WhyChooseSection />
-    </div>
+    <>
+      <Header />
+      <div className="container mx-auto p-6 pt-16">
+        <HomeHeader />
+        <WorkInProgress />
+        <AvailableWorkTypes onStart={navigate} />
+        <WhyChooseSection />
+      </div>
+    </>
   );
 };
 
