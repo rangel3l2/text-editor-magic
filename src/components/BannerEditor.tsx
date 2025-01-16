@@ -12,6 +12,7 @@ import BannerContent from "./banner/BannerContent";
 import BannerActions from "./banner/BannerActions";
 import { useBannerContent } from "./banner/useBannerContent";
 import { useBannerActions } from "./banner/useBannerActions";
+import LoginRequiredModal from "./banner/LoginRequiredModal";
 
 const BannerEditor = () => {
   const { user } = useAuth();
@@ -19,6 +20,8 @@ const BannerEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [hasEditedFirstField, setHasEditedFirstField] = useState(false);
   const workCreatedRef = useRef(false);
   
   const {
@@ -61,22 +64,15 @@ const BannerEditor = () => {
     return `Trabalho Desconhecido #${randomId} (${timestamp})`;
   };
 
-  // Save work to localStorage while editing
-  useEffect(() => {
-    if (!user || id) return; // Don't save to localStorage if we have an ID or no user
-    
-    const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
-    const localStorageKey = `banner_work_${user.id}_draft`;
-    
-    if (Object.values(content).some(value => value)) {
-      const workData = {
-        title: workTitle,
-        content: bannerContent,
-        lastModified: new Date().toISOString(),
-      };
-      localStorage.setItem(localStorageKey, JSON.stringify(workData));
+  const handleFieldChange = (field: string, value: string) => {
+    if (!user && !hasEditedFirstField) {
+      setHasEditedFirstField(true);
+    } else if (!user && hasEditedFirstField) {
+      setShowLoginModal(true);
+      return;
     }
-  }, [content, bannerContent, user, id]);
+    handleChange(field, value);
+  };
 
   // Load existing work if ID is provided
   useEffect(() => {
@@ -222,6 +218,10 @@ const BannerEditor = () => {
   return (
     <>
       <OnboardingTutorial />
+      <LoginRequiredModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+      />
       <BannerLayout
         previewOpen={previewOpen}
         setPreviewOpen={setPreviewOpen}
@@ -239,7 +239,7 @@ const BannerEditor = () => {
           />
           <BannerContent
             content={content}
-            handleChange={handleChange}
+            handleChange={handleFieldChange}
             selectedImage={selectedImage}
             onImageConfigChange={onImageConfigChange}
           />
