@@ -24,6 +24,7 @@ const BannerEditor = () => {
   const [hasEditedFirstField, setHasEditedFirstField] = useState(false);
   const workCreatedRef = useRef(false);
   const [shouldCreateWork, setShouldCreateWork] = useState(false);
+  const createWorkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const {
     content,
@@ -65,7 +66,8 @@ const BannerEditor = () => {
     return `Trabalho Desconhecido #${randomId} (${timestamp})`;
   };
 
-  const handleFieldChange = async (field: string, value: string) => {
+  const handleFieldChange = (field: string, value: string) => {
+    // Handle non-logged in users first
     if (!user && !hasEditedFirstField) {
       setHasEditedFirstField(true);
     } else if (!user && hasEditedFirstField) {
@@ -73,17 +75,24 @@ const BannerEditor = () => {
       return;
     }
 
-    // Update the content immediately
+    // Update the content immediately for responsive typing
     handleChange(field, value);
 
-    // If this is the title field and we're not editing an existing work,
-    // mark that we should create a new work
-    if (field === 'title' && !id && user && !workCreatedRef.current) {
-      setShouldCreateWork(true);
+    // Only handle work creation for title field and logged in users
+    if (field === 'title' && user && !id && !workCreatedRef.current) {
+      // Clear any existing timeout
+      if (createWorkTimeoutRef.current) {
+        clearTimeout(createWorkTimeoutRef.current);
+      }
+
+      // Set a new timeout to create work after user stops typing
+      createWorkTimeoutRef.current = setTimeout(() => {
+        setShouldCreateWork(true);
+      }, 1500); // Wait 1.5 seconds after last keystroke
     }
   };
 
-  // Create new work when title is changed and user moves to another field
+  // Create new work when shouldCreateWork is true
   useEffect(() => {
     if (shouldCreateWork && user && !id && !workCreatedRef.current) {
       const createWork = async () => {
