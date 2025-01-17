@@ -4,7 +4,7 @@ import { OnboardingTutorial } from "./OnboardingTutorial";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "./ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useParams, useNavigate } from "react-router-dom";
 import BannerLayout from "./banner/BannerLayout";
 import BannerHeader from "./banner/BannerHeader";
@@ -26,6 +26,7 @@ const BannerEditor = () => {
   const [shouldCreateWork, setShouldCreateWork] = useState(false);
   const createWorkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastFieldValueRef = useRef<string>("");
+  const [hasShownFirstLoadError, setHasShownFirstLoadError] = useState(false);
   
   const {
     content,
@@ -69,11 +70,10 @@ const BannerEditor = () => {
 
   const isFieldComplete = (value: string): boolean => {
     const cleanValue = value.replace(/<[^>]*>/g, '').trim();
-    return cleanValue.length >= 10; // Consider a field complete if it has at least 10 characters
+    return cleanValue.length >= 10;
   };
 
   const handleFieldChange = (field: string, value: string) => {
-    // Handle non-logged in users first
     if (!user && !hasEditedFirstField) {
       setHasEditedFirstField(true);
     } else if (!user && hasEditedFirstField) {
@@ -81,20 +81,17 @@ const BannerEditor = () => {
       return;
     }
 
-    // Update the content immediately for responsive typing
     handleChange(field, value);
     lastFieldValueRef.current = value;
 
-    // Clear any existing timeout
     if (createWorkTimeoutRef.current) {
       clearTimeout(createWorkTimeoutRef.current);
     }
 
-    // Only create work if field is complete and user moves to another field
     if (user && !id && !workCreatedRef.current && isFieldComplete(value)) {
       createWorkTimeoutRef.current = setTimeout(() => {
         setShouldCreateWork(true);
-      }, 1500); // Wait 1.5 seconds after last keystroke
+      }, 1500);
     }
   };
 
@@ -150,7 +147,6 @@ const BannerEditor = () => {
     const loadWork = async () => {
       try {
         if (!id) {
-          // If no ID, check for draft in localStorage
           if (user) {
             const localStorageKey = `banner_work_${user.id}_draft`;
             const savedDraft = localStorage.getItem(localStorageKey);
@@ -173,24 +169,31 @@ const BannerEditor = () => {
           .select('*')
           .eq('id', id)
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           throw error;
         }
+
+        if (!data) {
+          navigate('/', { replace: true });
+          return;
+        }
         
         if (data?.content) {
           setBannerContent(data.content);
-          // Clear draft from localStorage when loading saved work
           localStorage.removeItem(`banner_work_${user.id}_draft`);
         }
       } catch (error) {
         console.error('Error in loadWork:', error);
-        toast({
-          title: "Erro ao carregar trabalho",
-          description: "Não foi possível carregar o trabalho. Verifique sua conexão.",
-          variant: "destructive",
-        });
+        if (!hasShownFirstLoadError) {
+          toast({
+            title: "Erro ao carregar trabalho",
+            description: "Não foi possível carregar o trabalho. Verifique sua conexão.",
+            variant: "destructive",
+          });
+          setHasShownFirstLoadError(true);
+        }
         navigate('/', { replace: true });
       } finally {
         setIsLoading(false);
