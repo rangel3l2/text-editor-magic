@@ -65,7 +65,7 @@ const BannerEditor = () => {
     return `Trabalho Desconhecido #${randomId} (${timestamp})`;
   };
 
-  const handleFieldChange = (field: string, value: string) => {
+  const handleFieldChange = async (field: string, value: string) => {
     if (!user && !hasEditedFirstField) {
       setHasEditedFirstField(true);
     } else if (!user && hasEditedFirstField) {
@@ -73,6 +73,7 @@ const BannerEditor = () => {
       return;
     }
 
+    // Update the content immediately
     handleChange(field, value);
 
     // If this is the title field and we're not editing an existing work,
