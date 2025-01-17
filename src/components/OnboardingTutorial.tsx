@@ -42,36 +42,29 @@ const steps = [
 export function OnboardingTutorial() {
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [hasSeenTutorial, setHasSeenTutorial] = useState(true);
 
   useEffect(() => {
     const checkTutorialStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data, error } = await supabase
-          .from('user_preferences')
-          .select('has_seen_tutorial')
-          .eq('user_id', user.id)
-          .single();
-
-        if (!data) {
-          const { error: insertError } = await supabase
-            .from('user_preferences')
-            .insert({
-              user_id: user.id,
-              has_seen_tutorial: false
-            } satisfies Database['public']['Tables']['user_preferences']['Insert']);
-
-          if (!insertError) {
-            setHasSeenTutorial(false);
-            setOpen(true);
-          }
-        } else {
-          setHasSeenTutorial(data.has_seen_tutorial ?? false);
-          if (!data.has_seen_tutorial) {
-            setOpen(true);
-          }
+      
+      if (!user) {
+        // For anonymous users, check localStorage
+        const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
+        if (!hasSeenTutorial) {
+          setOpen(true);
         }
+        return;
+      }
+
+      // For logged in users, check database
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .select('has_seen_tutorial')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!data?.has_seen_tutorial) {
+        setOpen(true);
       }
     };
 
@@ -88,16 +81,22 @@ export function OnboardingTutorial() {
 
   const handleFinish = async () => {
     const { data: { user } } = await supabase.auth.getUser();
+    
     if (user) {
+      // Save preference in database for logged in users
       await supabase
         .from('user_preferences')
-        .update({
+        .upsert({
+          user_id: user.id,
           has_seen_tutorial: true
         } satisfies Database['public']['Tables']['user_preferences']['Update'])
         .eq('user_id', user.id);
+    } else {
+      // Save in localStorage for anonymous users
+      localStorage.setItem("hasSeenTutorial", "true");
     }
+    
     setOpen(false);
-    setHasSeenTutorial(true);
   };
 
   return (

@@ -18,15 +18,38 @@ const CookieConsent = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    const checkCookieConsent = () => {
-      const consent = localStorage.getItem("cookieConsent");
-      if (!consent) {
+    const checkCookieConsent = async () => {
+      // First check localStorage for anonymous users
+      const localConsent = localStorage.getItem("cookieConsent");
+      if (localConsent) {
+        setShowBanner(false);
+        return;
+      }
+
+      // Then check database for logged in users
+      if (user) {
+        const { data, error } = await supabase
+          .from('user_preferences')
+          .select('cookie_consent')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error("Error checking cookie consent:", error);
+          setShowBanner(true);
+          return;
+        }
+
+        // Only show if user hasn't consented before
+        setShowBanner(!data?.cookie_consent);
+      } else {
+        // Show for anonymous users who haven't consented
         setShowBanner(true);
       }
     };
 
     checkCookieConsent();
-  }, []);
+  }, [user]);
 
   const handleAccept = async () => {
     localStorage.setItem("cookieConsent", "accepted");
