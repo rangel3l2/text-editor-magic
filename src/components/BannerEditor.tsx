@@ -25,6 +25,7 @@ const BannerEditor = () => {
   const workCreatedRef = useRef(false);
   const [shouldCreateWork, setShouldCreateWork] = useState(false);
   const createWorkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFieldValueRef = useRef<string>("");
   
   const {
     content,
@@ -66,6 +67,11 @@ const BannerEditor = () => {
     return `Trabalho Desconhecido #${randomId} (${timestamp})`;
   };
 
+  const isFieldComplete = (value: string): boolean => {
+    const cleanValue = value.replace(/<[^>]*>/g, '').trim();
+    return cleanValue.length >= 10; // Consider a field complete if it has at least 10 characters
+  };
+
   const handleFieldChange = (field: string, value: string) => {
     // Handle non-logged in users first
     if (!user && !hasEditedFirstField) {
@@ -77,15 +83,15 @@ const BannerEditor = () => {
 
     // Update the content immediately for responsive typing
     handleChange(field, value);
+    lastFieldValueRef.current = value;
 
-    // Only handle work creation for title field and logged in users
-    if (field === 'title' && user && !id && !workCreatedRef.current) {
-      // Clear any existing timeout
-      if (createWorkTimeoutRef.current) {
-        clearTimeout(createWorkTimeoutRef.current);
-      }
+    // Clear any existing timeout
+    if (createWorkTimeoutRef.current) {
+      clearTimeout(createWorkTimeoutRef.current);
+    }
 
-      // Set a new timeout to create work after user stops typing
+    // Only create work if field is complete and user moves to another field
+    if (user && !id && !workCreatedRef.current && isFieldComplete(value)) {
       createWorkTimeoutRef.current = setTimeout(() => {
         setShouldCreateWork(true);
       }, 1500); // Wait 1.5 seconds after last keystroke
@@ -118,9 +124,7 @@ const BannerEditor = () => {
           
           console.log('Work created:', data);
           if (data) {
-            // Clear any draft from localStorage
             localStorage.removeItem(`banner_work_${user.id}_draft`);
-            // Navigate to the new work URL using the slug
             const slug = generateSlug(workTitle);
             navigate(`/banner/${data.id}`, { replace: true });
           }

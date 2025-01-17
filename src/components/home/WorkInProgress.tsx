@@ -65,6 +65,7 @@ const WorkInProgress = () => {
                 work_type: 'banner',
                 content: localWork.content,
                 last_modified: localWork.lastModified || new Date().toISOString(),
+                created_at: localWork.created_at || new Date().toISOString(),
                 isLocal: true
               };
             } catch (e) {
@@ -160,6 +161,16 @@ const WorkInProgress = () => {
   const inProgressWorks = works?.filter(work => !work.content?.isComplete) || [];
   const completedWorks = works?.filter(work => work.content?.isComplete) || [];
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <div className="mb-16">
       <h2 className="text-2xl font-bold text-center mb-8">Meus Trabalhos</h2>
@@ -179,22 +190,26 @@ const WorkInProgress = () => {
                 {inProgressWorks.map((work) => (
                   <div
                     key={work.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                    className="flex flex-col p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
                     onClick={() => handleWorkClick(work)}
                   >
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
                         <p className="font-medium">
                           {work.title}
                           {work.isLocal && <span className="ml-2 text-sm text-muted-foreground">(Local)</span>}
                         </p>
-                        <Badge variant="outline" className="ml-2">
-                          {getWorkTypeName(work.work_type)}
-                        </Badge>
+                        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                          <Badge variant="outline">
+                            {getWorkTypeName(work.work_type)}
+                          </Badge>
+                          <p>ID: {work.id.slice(0, 8)}</p>
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Última modificação: {new Date(work.last_modified).toLocaleDateString()}
-                      </p>
+                    </div>
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      <p>Criado em: {formatDate(work.created_at)}</p>
+                      <p>Última modificação: {formatDate(work.last_modified)}</p>
                     </div>
                   </div>
                 ))}
@@ -219,19 +234,23 @@ const WorkInProgress = () => {
                 {completedWorks.map((work) => (
                   <div
                     key={work.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                    className="flex flex-col p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
                     onClick={() => handleWorkClick(work)}
                   >
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
                         <p className="font-medium">{work.title}</p>
-                        <Badge variant="outline" className="ml-2">
-                          {getWorkTypeName(work.work_type)}
-                        </Badge>
+                        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                          <Badge variant="outline">
+                            {getWorkTypeName(work.work_type)}
+                          </Badge>
+                          <p>ID: {work.id.slice(0, 8)}</p>
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Concluído em: {new Date(work.last_modified).toLocaleDateString()}
-                      </p>
+                    </div>
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      <p>Criado em: {formatDate(work.created_at)}</p>
+                      <p>Última modificação: {formatDate(work.last_modified)}</p>
                     </div>
                   </div>
                 ))}
