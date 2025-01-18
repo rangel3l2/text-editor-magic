@@ -2,16 +2,46 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookText, FileText, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useEffect } from "react";
 
 const WorkInProgress = () => {
   const { user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Subscribe to realtime changes when component mounts
+  useEffect(() => {
+    if (!user) return;
+
+    // Subscribe to changes in the work_in_progress table
+    const channel = supabase
+      .channel('work_in_progress_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'work_in_progress',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Invalidate and refetch the works query when changes occur
+          queryClient.invalidateQueries({ queryKey: ['works', user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      // Cleanup subscription when component unmounts
+      channel.unsubscribe();
+    };
+  }, [user, queryClient]);
 
   const { data: workTypes } = useQuery({
     queryKey: ['academicWorkTypes'],
