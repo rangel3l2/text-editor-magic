@@ -113,7 +113,7 @@ const BannerEditor = () => {
               }
             ])
             .select()
-            .single();
+            .maybeSingle();
 
           if (error) throw error;
           
@@ -172,11 +172,17 @@ const BannerEditor = () => {
           .maybeSingle();
 
         if (error) {
+          console.error('Error loading work:', error);
           throw error;
         }
 
         if (!data) {
           console.log('No work found with ID:', id);
+          toast({
+            title: "Trabalho não encontrado",
+            description: "O trabalho que você está tentando acessar não existe ou foi removido.",
+            variant: "destructive",
+          });
           navigate('/', { replace: true });
           return;
         }
