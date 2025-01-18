@@ -19,27 +19,32 @@ const WorkInProgress = () => {
   useEffect(() => {
     if (!user) return;
 
+    console.log('Setting up realtime subscription for user:', user.id);
+
     // Subscribe to changes in the work_in_progress table
     const channel = supabase
       .channel('work_in_progress_changes')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'work_in_progress',
           filter: `user_id=eq.${user.id}`
         },
-        () => {
+        (payload) => {
+          console.log('Received realtime update:', payload);
           // Invalidate and refetch the works query when changes occur
           queryClient.invalidateQueries({ queryKey: ['works', user.id] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
-      // Cleanup subscription when component unmounts
-      channel.unsubscribe();
+      console.log('Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
     };
   }, [user, queryClient]);
 
@@ -80,42 +85,8 @@ const WorkInProgress = () => {
           return [];
         }
 
-        console.log('DB works fetched:', dbWorks);
-
-        const localWorks = Object.entries(localStorage)
-          .filter(([key]) => key.startsWith(`banner_work_${user.id}`))
-          .map(([key, value]) => {
-            try {
-              const localWork = JSON.parse(value);
-              const workId = key.split('_').pop();
-              const randomId = Math.floor(Math.random() * 10000);
-              return {
-                id: workId,
-                title: localWork.title || `Trabalho Desconhecido #${randomId}`,
-                work_type: 'banner',
-                content: localWork.content,
-                last_modified: localWork.lastModified || new Date().toISOString(),
-                created_at: localWork.created_at || new Date().toISOString(),
-                isLocal: true
-              };
-            } catch (e) {
-              console.error('Error parsing local work:', e);
-              return null;
-            }
-          })
-          .filter(Boolean);
-
-        console.log('Local works found:', localWorks);
-
-        const allWorks = [...(dbWorks || []), ...localWorks]
-          .map(work => ({
-            ...work,
-            title: work.title || `Trabalho Desconhecido #${work.id.slice(0, 8)}`
-          }))
-          .sort((a, b) => new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime());
-
-        console.log('All works loaded:', allWorks);
-        return allWorks;
+        console.log('Works fetched from DB:', dbWorks);
+        return dbWorks || [];
       } catch (error) {
         console.error('Error in queryFn:', error);
         toast({
@@ -127,7 +98,7 @@ const WorkInProgress = () => {
       }
     },
     enabled: !!user,
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 0, // Disable stale time to always fetch fresh data
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
@@ -164,6 +135,17 @@ const WorkInProgress = () => {
     navigate(fullRoute);
   };
 
+  // Format date helper function
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   if (!user) {
     return (
       <div className="mb-16">
@@ -191,16 +173,6 @@ const WorkInProgress = () => {
   const inProgressWorks = works?.filter(work => !work.content?.isComplete) || [];
   const completedWorks = works?.filter(work => work.content?.isComplete) || [];
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
     <div className="mb-16">
       <h2 className="text-2xl font-bold text-center mb-8">Meus Trabalhos</h2>
@@ -225,10 +197,7 @@ const WorkInProgress = () => {
                   >
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
-                        <p className="font-medium">
-                          {work.title}
-                          {work.isLocal && <span className="ml-2 text-sm text-muted-foreground">(Local)</span>}
-                        </p>
+                        <p className="font-medium">{work.title}</p>
                         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                           <Badge variant="outline">
                             {getWorkTypeName(work.work_type)}
