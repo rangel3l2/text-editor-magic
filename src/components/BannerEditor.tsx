@@ -51,18 +51,16 @@ const BannerEditor = () => {
     initialBannerContent,
   );
 
-  // Generate URL-friendly slug from title
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/[^\w\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .replace(/<[^>]*>/g, '')
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
       .trim();
   };
 
-  // Generate unique title for untitled works
   const generateUniqueTitle = () => {
     const timestamp = new Date().toLocaleString('pt-BR');
     const randomId = Math.floor(Math.random() * 10000);
@@ -96,7 +94,6 @@ const BannerEditor = () => {
     }
   };
 
-  // Create new work when shouldCreateWork is true
   useEffect(() => {
     if (shouldCreateWork && user && !currentWorkId && !workCreatedRef.current) {
       const createWork = async () => {
@@ -124,7 +121,7 @@ const BannerEditor = () => {
           if (data) {
             localStorage.removeItem(`banner_work_${user.id}_draft`);
             setCurrentWorkId(data.id);
-            // Não redireciona mais, apenas atualiza o ID do trabalho atual
+            navigate(`/banner/${data.id}`, { replace: true });
           }
         } catch (error) {
           console.error('Error creating work:', error);
@@ -141,9 +138,8 @@ const BannerEditor = () => {
 
       createWork();
     }
-  }, [shouldCreateWork, user, currentWorkId, content.title, bannerContent, toast]);
+  }, [shouldCreateWork, user, currentWorkId, content.title, bannerContent, toast, navigate]);
 
-  // Load existing work if ID is provided
   useEffect(() => {
     const loadWork = async () => {
       try {
@@ -167,6 +163,7 @@ const BannerEditor = () => {
           return;
         }
 
+        console.log('Loading work with ID:', id);
         const { data, error } = await supabase
           .from('work_in_progress')
           .select('*')
@@ -179,10 +176,12 @@ const BannerEditor = () => {
         }
 
         if (!data) {
+          console.log('No work found with ID:', id);
           navigate('/', { replace: true });
           return;
         }
         
+        console.log('Work loaded:', data);
         if (data?.content) {
           setBannerContent(data.content);
           localStorage.removeItem(`banner_work_${user.id}_draft`);
@@ -204,9 +203,8 @@ const BannerEditor = () => {
     };
 
     loadWork();
-  }, [id, user]);
+  }, [id, user, setBannerContent, navigate, toast, hasShownFirstLoadError]);
 
-  // Save work in progress when content changes with debounce
   useEffect(() => {
     if (!currentWorkId || !user || isLoading) return;
 
@@ -214,6 +212,7 @@ const BannerEditor = () => {
       const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
       
       try {
+        console.log('Saving work:', { id: currentWorkId, title: workTitle });
         const { error } = await supabase
           .from('work_in_progress')
           .update({
@@ -225,6 +224,7 @@ const BannerEditor = () => {
           .eq('user_id', user.id);
 
         if (error) throw error;
+        console.log('Work saved successfully');
       } catch (error) {
         console.error('Error saving work:', error);
         toast({
@@ -237,7 +237,7 @@ const BannerEditor = () => {
 
     const debounceTimeout = setTimeout(saveWork, 1000);
     return () => clearTimeout(debounceTimeout);
-  }, [content, bannerContent, user, currentWorkId, isLoading]);
+  }, [content, bannerContent, user, currentWorkId, isLoading, toast]);
 
   if (isLoading) {
     return (
