@@ -27,6 +27,7 @@ const BannerEditor = () => {
   const createWorkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastFieldValueRef = useRef<string>("");
   const [hasShownFirstLoadError, setHasShownFirstLoadError] = useState(false);
+  const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
   
   const {
     content,
@@ -88,7 +89,7 @@ const BannerEditor = () => {
       clearTimeout(createWorkTimeoutRef.current);
     }
 
-    if (user && !id && !workCreatedRef.current && isFieldComplete(value)) {
+    if (user && !currentWorkId && !workCreatedRef.current && isFieldComplete(value)) {
       createWorkTimeoutRef.current = setTimeout(() => {
         setShouldCreateWork(true);
       }, 1500);
@@ -97,7 +98,7 @@ const BannerEditor = () => {
 
   // Create new work when shouldCreateWork is true
   useEffect(() => {
-    if (shouldCreateWork && user && !id && !workCreatedRef.current) {
+    if (shouldCreateWork && user && !currentWorkId && !workCreatedRef.current) {
       const createWork = async () => {
         try {
           console.log('Creating new work...');
@@ -122,8 +123,8 @@ const BannerEditor = () => {
           console.log('Work created:', data);
           if (data) {
             localStorage.removeItem(`banner_work_${user.id}_draft`);
-            const slug = generateSlug(workTitle);
-            navigate(`/banner/${data.id}`, { replace: true });
+            setCurrentWorkId(data.id);
+            // Não redireciona mais, apenas atualiza o ID do trabalho atual
           }
         } catch (error) {
           console.error('Error creating work:', error);
@@ -140,7 +141,7 @@ const BannerEditor = () => {
 
       createWork();
     }
-  }, [shouldCreateWork, user, id, content.title, bannerContent, navigate, toast]);
+  }, [shouldCreateWork, user, currentWorkId, content.title, bannerContent, toast]);
 
   // Load existing work if ID is provided
   useEffect(() => {
@@ -158,6 +159,8 @@ const BannerEditor = () => {
           setIsLoading(false);
           return;
         }
+
+        setCurrentWorkId(id);
 
         if (!user) {
           navigate('/', { replace: true });
@@ -205,7 +208,7 @@ const BannerEditor = () => {
 
   // Save work in progress when content changes with debounce
   useEffect(() => {
-    if (!id || !user || isLoading) return;
+    if (!currentWorkId || !user || isLoading) return;
 
     const saveWork = async () => {
       const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
@@ -218,7 +221,7 @@ const BannerEditor = () => {
             content: bannerContent,
             last_modified: new Date().toISOString(),
           })
-          .eq('id', id)
+          .eq('id', currentWorkId)
           .eq('user_id', user.id);
 
         if (error) throw error;
@@ -234,7 +237,7 @@ const BannerEditor = () => {
 
     const debounceTimeout = setTimeout(saveWork, 1000);
     return () => clearTimeout(debounceTimeout);
-  }, [content, bannerContent, user, id, isLoading]);
+  }, [content, bannerContent, user, currentWorkId, isLoading]);
 
   if (isLoading) {
     return (
