@@ -28,6 +28,7 @@ const BannerEditor = () => {
   const lastFieldValueRef = useRef<string>("");
   const [hasShownFirstLoadError, setHasShownFirstLoadError] = useState(false);
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const {
     content,
@@ -208,7 +209,19 @@ const BannerEditor = () => {
       }
     };
 
+    // Clear any existing timeout
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+
     loadWork();
+
+    // Cleanup function
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
   }, [id, user, setBannerContent, navigate, toast, hasShownFirstLoadError]);
 
   useEffect(() => {
@@ -229,15 +242,14 @@ const BannerEditor = () => {
           .eq('id', currentWorkId)
           .eq('user_id', user.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error saving work:', error);
+          throw error;
+        }
         console.log('Work saved successfully');
       } catch (error) {
         console.error('Error saving work:', error);
-        toast({
-          title: "Erro ao salvar trabalho",
-          description: "Não foi possível salvar seu trabalho na nuvem.",
-          variant: "destructive",
-        });
+        // Não mostrar toast de erro aqui para evitar mensagens repetitivas
       }
     };
 
