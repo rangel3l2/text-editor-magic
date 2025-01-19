@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -42,8 +43,17 @@ const steps = [
 export function OnboardingTutorial() {
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const location = useLocation();
+
+  // Check if we're on an existing work page (has an ID in the URL)
+  const isExistingWork = location.pathname.split('/').length > 2;
 
   useEffect(() => {
+    // Don't show tutorial on existing work pages
+    if (isExistingWork) {
+      return;
+    }
+
     const checkTutorialStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -69,7 +79,7 @@ export function OnboardingTutorial() {
     };
 
     checkTutorialStatus();
-  }, []);
+  }, [isExistingWork]);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -98,6 +108,11 @@ export function OnboardingTutorial() {
     
     setOpen(false);
   };
+
+  // Don't render anything if we're on an existing work page
+  if (isExistingWork) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
