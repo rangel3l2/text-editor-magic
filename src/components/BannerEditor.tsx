@@ -29,6 +29,8 @@ const BannerEditor = () => {
   const [hasShownFirstLoadError, setHasShownFirstLoadError] = useState(false);
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const loadAttemptRef = useRef(0);
+  const maxLoadAttempts = 3;
   
   const {
     content,
@@ -179,6 +181,12 @@ const BannerEditor = () => {
 
         if (!data) {
           console.log('No work found with ID:', id);
+          if (loadAttemptRef.current < maxLoadAttempts) {
+            loadAttemptRef.current += 1;
+            setTimeout(loadWork, 1000); // Tenta novamente após 1 segundo
+            return;
+          }
+          
           toast({
             title: "Trabalho não encontrado",
             description: "O trabalho que você está tentando acessar não existe ou foi removido.",
@@ -192,9 +200,17 @@ const BannerEditor = () => {
         if (data?.content) {
           setBannerContent(data.content);
           localStorage.removeItem(`banner_work_${user.id}_draft`);
+          // Reset load attempts after successful load
+          loadAttemptRef.current = 0;
         }
       } catch (error) {
         console.error('Error in loadWork:', error);
+        if (loadAttemptRef.current < maxLoadAttempts) {
+          loadAttemptRef.current += 1;
+          setTimeout(loadWork, 1000); // Tenta novamente após 1 segundo
+          return;
+        }
+        
         if (!hasShownFirstLoadError) {
           toast({
             title: "Erro ao carregar trabalho",
