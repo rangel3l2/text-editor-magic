@@ -55,14 +55,18 @@ export function OnboardingTutorial() {
     }
 
     const checkTutorialStatus = async () => {
+      // First check localStorage for all users
+      const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
+      if (hasSeenTutorial === "true") {
+        setOpen(false);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        // For anonymous users, check localStorage
-        const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
-        if (!hasSeenTutorial) {
-          setOpen(true);
-        }
+        // For anonymous users, we already checked localStorage
+        setOpen(true);
         return;
       }
 
@@ -71,11 +75,22 @@ export function OnboardingTutorial() {
         .from('user_preferences')
         .select('has_seen_tutorial')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (!data?.has_seen_tutorial) {
-        setOpen(true);
+      if (error) {
+        console.error("Error checking tutorial status:", error);
+        return;
       }
+
+      // If user has seen tutorial in database, save to localStorage too
+      if (data?.has_seen_tutorial) {
+        localStorage.setItem("hasSeenTutorial", "true");
+        setOpen(false);
+        return;
+      }
+
+      // Show tutorial if user hasn't seen it
+      setOpen(true);
     };
 
     checkTutorialStatus();
@@ -90,20 +105,24 @@ export function OnboardingTutorial() {
   };
 
   const handleFinish = async () => {
+    // Save in localStorage for all users
+    localStorage.setItem("hasSeenTutorial", "true");
+    
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
       // Save preference in database for logged in users
-      await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          has_seen_tutorial: true
-        } satisfies Database['public']['Tables']['user_preferences']['Update'])
-        .eq('user_id', user.id);
-    } else {
-      // Save in localStorage for anonymous users
-      localStorage.setItem("hasSeenTutorial", "true");
+      try {
+        await supabase
+          .from('user_preferences')
+          .upsert({
+            user_id: user.id,
+            has_seen_tutorial: true
+          } satisfies Database['public']['Tables']['user_preferences']['Update'])
+          .eq('user_id', user.id);
+      } catch (error) {
+        console.error("Error saving tutorial preference:", error);
+      }
     }
     
     setOpen(false);
