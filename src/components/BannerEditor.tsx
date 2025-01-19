@@ -166,7 +166,7 @@ const BannerEditor = () => {
           return;
         }
 
-        console.log('Loading work with ID:', id);
+        console.log('Carregando trabalho com ID:', id);
         const { data, error } = await supabase
           .from('work_in_progress')
           .select('*')
@@ -175,46 +175,45 @@ const BannerEditor = () => {
           .maybeSingle();
 
         if (error) {
-          console.error('Error loading work:', error);
+          console.error('Erro ao carregar trabalho:', error);
           throw error;
         }
 
         if (!data) {
-          console.log('No work found with ID:', id);
+          console.log('Trabalho não encontrado com ID:', id);
           if (loadAttemptRef.current < maxLoadAttempts) {
             loadAttemptRef.current += 1;
-            setTimeout(loadWork, 1000); // Tenta novamente após 1 segundo
+            setTimeout(loadWork, 1000);
             return;
           }
           
           toast({
             title: "Trabalho não encontrado",
-            description: "O trabalho que você está tentando acessar não existe ou foi removido.",
+            description: "Não foi possível encontrar o trabalho selecionado. Ele pode ter sido removido ou você não tem permissão para acessá-lo.",
             variant: "destructive",
           });
           navigate('/', { replace: true });
           return;
         }
         
-        console.log('Work loaded:', data);
+        console.log('Trabalho carregado:', data);
         if (data?.content) {
           setBannerContent(data.content);
           localStorage.removeItem(`banner_work_${user.id}_draft`);
-          // Reset load attempts after successful load
           loadAttemptRef.current = 0;
         }
       } catch (error) {
-        console.error('Error in loadWork:', error);
+        console.error('Erro ao carregar trabalho:', error);
         if (loadAttemptRef.current < maxLoadAttempts) {
           loadAttemptRef.current += 1;
-          setTimeout(loadWork, 1000); // Tenta novamente após 1 segundo
+          setTimeout(loadWork, 1000);
           return;
         }
         
         if (!hasShownFirstLoadError) {
           toast({
             title: "Erro ao carregar trabalho",
-            description: "Não foi possível carregar o trabalho. Verifique sua conexão.",
+            description: "Não foi possível carregar o trabalho selecionado. Por favor, tente novamente.",
             variant: "destructive",
           });
           setHasShownFirstLoadError(true);
