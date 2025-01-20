@@ -75,7 +75,7 @@ const BannerEditor = () => {
     return cleanValue.length >= 10;
   };
 
-  const handleFieldChange = (field: string, value: string) => {
+  const handleFieldChange = async (field: string, value: string) => {
     if (!user && !hasEditedFirstField) {
       setHasEditedFirstField(true);
     } else if (!user && hasEditedFirstField) {
@@ -101,7 +101,6 @@ const BannerEditor = () => {
     if (shouldCreateWork && user && !currentWorkId && !workCreatedRef.current) {
       const createWork = async () => {
         try {
-          console.log('Creating new work...');
           workCreatedRef.current = true;
           const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
           
@@ -118,20 +117,22 @@ const BannerEditor = () => {
             .select()
             .maybeSingle();
 
-          if (error) throw error;
+          if (error) {
+            console.error('Erro ao criar trabalho:', error);
+            throw error;
+          }
           
-          console.log('Work created:', data);
           if (data) {
             localStorage.removeItem(`banner_work_${user.id}_draft`);
             setCurrentWorkId(data.id);
             navigate(`/banner/${data.id}`, { replace: true });
           }
-        } catch (error) {
-          console.error('Error creating work:', error);
+        } catch (error: any) {
+          console.error('Erro ao criar trabalho:', error);
           workCreatedRef.current = false;
           toast({
             title: "Erro ao criar trabalho",
-            description: "Não foi possível criar o trabalho. Tente novamente.",
+            description: "Ocorreu um erro ao criar seu trabalho. Por favor, tente novamente.",
             variant: "destructive",
           });
         } finally {
@@ -166,7 +167,6 @@ const BannerEditor = () => {
           return;
         }
 
-        console.log('Carregando trabalho com ID:', id);
         const { data, error } = await supabase
           .from('work_in_progress')
           .select('*')
@@ -176,11 +176,18 @@ const BannerEditor = () => {
 
         if (error) {
           console.error('Erro ao carregar trabalho:', error);
+          if (error.message?.includes('404') || error.message?.includes('failed to call url')) {
+            toast({
+              title: "Erro de conexão",
+              description: "Não foi possível conectar ao servidor. Por favor, verifique sua conexão e tente novamente.",
+              variant: "destructive",
+            });
+            return;
+          }
           throw error;
         }
 
         if (!data) {
-          console.log('Trabalho não encontrado com ID:', id);
           if (loadAttemptRef.current < maxLoadAttempts) {
             loadAttemptRef.current += 1;
             setTimeout(loadWork, 1000);
@@ -189,20 +196,19 @@ const BannerEditor = () => {
           
           toast({
             title: "Trabalho não encontrado",
-            description: "Não foi possível encontrar o trabalho selecionado. Ele pode ter sido removido ou você não tem permissão para acessá-lo.",
+            description: "O trabalho que você selecionou não foi encontrado. Ele pode ter sido removido ou você não tem permissão para acessá-lo.",
             variant: "destructive",
           });
           navigate('/', { replace: true });
           return;
         }
         
-        console.log('Trabalho carregado:', data);
         if (data?.content) {
           setBannerContent(data.content);
           localStorage.removeItem(`banner_work_${user.id}_draft`);
           loadAttemptRef.current = 0;
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erro ao carregar trabalho:', error);
         if (loadAttemptRef.current < maxLoadAttempts) {
           loadAttemptRef.current += 1;
@@ -213,7 +219,7 @@ const BannerEditor = () => {
         if (!hasShownFirstLoadError) {
           toast({
             title: "Erro ao carregar trabalho",
-            description: "Não foi possível carregar o trabalho selecionado. Por favor, tente novamente.",
+            description: "Ocorreu um erro ao tentar carregar o trabalho selecionado. Por favor, tente novamente.",
             variant: "destructive",
           });
           setHasShownFirstLoadError(true);
@@ -224,14 +230,12 @@ const BannerEditor = () => {
       }
     };
 
-    // Clear any existing timeout
     if (loadingTimeoutRef.current) {
       clearTimeout(loadingTimeoutRef.current);
     }
 
     loadWork();
 
-    // Cleanup function
     return () => {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
@@ -246,7 +250,6 @@ const BannerEditor = () => {
       const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
       
       try {
-        console.log('Saving work:', { id: currentWorkId, title: workTitle });
         const { error } = await supabase
           .from('work_in_progress')
           .update({
@@ -258,19 +261,17 @@ const BannerEditor = () => {
           .eq('user_id', user.id);
 
         if (error) {
-          console.error('Error saving work:', error);
+          console.error('Erro ao salvar trabalho:', error);
           throw error;
         }
-        console.log('Work saved successfully');
       } catch (error) {
-        console.error('Error saving work:', error);
-        // Não mostrar toast de erro aqui para evitar mensagens repetitivas
+        console.error('Erro ao salvar trabalho:', error);
       }
     };
 
     const debounceTimeout = setTimeout(saveWork, 1000);
     return () => clearTimeout(debounceTimeout);
-  }, [content, bannerContent, user, currentWorkId, isLoading, toast]);
+  }, [content, bannerContent, user, currentWorkId, isLoading]);
 
   if (isLoading) {
     return (
