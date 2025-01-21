@@ -152,7 +152,7 @@ const WorkInProgress = () => {
       }
 
       // Se o trabalho existe, navegar para ele
-      navigate(fullRoute);
+      navigate(fullRoute, { replace: false });
     } catch (error) {
       console.error('Error checking work existence:', error);
       toast({

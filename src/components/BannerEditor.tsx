@@ -146,11 +146,9 @@ const BannerEditor = () => {
   }, [shouldCreateWork, user, currentWorkId, content.title, bannerContent, toast, navigate]);
 
   useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
-
     const loadWork = async () => {
-      if (isLoadingRef.current || !isMounted) return;
+      // Evitar múltiplas chamadas simultâneas
+      if (isLoadingRef.current) return;
       isLoadingRef.current = true;
 
       try {
@@ -179,7 +177,6 @@ const BannerEditor = () => {
           .select('*')
           .eq('id', id)
           .eq('user_id', user.id)
-          .abortSignal(controller.signal)
           .maybeSingle();
 
         if (error) {
@@ -195,9 +192,7 @@ const BannerEditor = () => {
           
           if (loadAttemptRef.current < maxLoadAttempts) {
             loadAttemptRef.current += 1;
-            if (isMounted) {
-              setTimeout(loadWork, 2000 * loadAttemptRef.current);
-            }
+            setTimeout(loadWork, 2000 * loadAttemptRef.current); // Aumenta o tempo entre tentativas
             return;
           }
 
@@ -212,9 +207,7 @@ const BannerEditor = () => {
         if (!data) {
           if (loadAttemptRef.current < maxLoadAttempts) {
             loadAttemptRef.current += 1;
-            if (isMounted) {
-              setTimeout(loadWork, 2000 * loadAttemptRef.current);
-            }
+            setTimeout(loadWork, 2000 * loadAttemptRef.current);
             return;
           }
           
@@ -227,20 +220,20 @@ const BannerEditor = () => {
           return;
         }
         
-        if (data?.content && isMounted) {
+        if (data?.content) {
           setBannerContent(data.content);
           localStorage.removeItem(`banner_work_${user.id}_draft`);
           loadAttemptRef.current = 0;
         }
       } catch (error: any) {
         console.error('Erro ao carregar trabalho:', error);
-        if (loadAttemptRef.current < maxLoadAttempts && isMounted) {
+        if (loadAttemptRef.current < maxLoadAttempts) {
           loadAttemptRef.current += 1;
           setTimeout(loadWork, 2000 * loadAttemptRef.current);
           return;
         }
         
-        if (!hasShownFirstLoadError && isMounted) {
+        if (!hasShownFirstLoadError) {
           toast({
             title: "Erro ao carregar trabalho",
             description: "Ocorreu um erro ao tentar carregar o trabalho selecionado. Por favor, tente novamente.",
@@ -249,18 +242,18 @@ const BannerEditor = () => {
           setHasShownFirstLoadError(true);
         }
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-          isLoadingRef.current = false;
-        }
+        setIsLoading(false);
+        isLoadingRef.current = false;
       }
     };
+
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
 
     loadWork();
 
     return () => {
-      isMounted = false;
-      controller.abort();
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
