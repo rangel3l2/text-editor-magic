@@ -125,7 +125,7 @@ const BannerEditor = () => {
           if (data) {
             localStorage.removeItem(`banner_work_${user.id}_draft`);
             setCurrentWorkId(data.id);
-            navigate(`/banner/${data.id}`, { replace: true });
+            navigate(`/banner/${data.id}`);
           }
         } catch (error: any) {
           console.error('Erro ao criar trabalho:', error);
@@ -175,8 +175,24 @@ const BannerEditor = () => {
           .maybeSingle();
 
         if (error) {
-          console.error('Erro ao carregar trabalho:', error);
+          if (error.message?.includes('JWT')) {
+            // Token expirado ou inválido, não redirecionar
+            console.error('Erro de autenticação:', error);
+            toast({
+              title: "Sessão expirada",
+              description: "Por favor, faça login novamente.",
+              variant: "destructive",
+            });
+            return;
+          }
+          
           if (error.message?.includes('404') || error.message?.includes('failed to call url')) {
+            console.error('Erro de conexão:', error);
+            if (loadAttemptRef.current < maxLoadAttempts) {
+              loadAttemptRef.current += 1;
+              setTimeout(loadWork, 1000);
+              return;
+            }
             toast({
               title: "Erro de conexão",
               description: "Não foi possível conectar ao servidor. Por favor, verifique sua conexão e tente novamente.",
@@ -196,7 +212,7 @@ const BannerEditor = () => {
           
           toast({
             title: "Trabalho não encontrado",
-            description: "O trabalho que você selecionou não foi encontrado. Ele pode ter sido removido ou você não tem permissão para acessá-lo.",
+            description: "O trabalho que você selecionou não foi encontrado ou você não tem permissão para acessá-lo.",
             variant: "destructive",
           });
           navigate('/', { replace: true });
@@ -224,7 +240,6 @@ const BannerEditor = () => {
           });
           setHasShownFirstLoadError(true);
         }
-        navigate('/', { replace: true });
       } finally {
         setIsLoading(false);
       }
