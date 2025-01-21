@@ -15,26 +15,23 @@ const WorkInProgress = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Subscribe to realtime changes when component mounts
   useEffect(() => {
     if (!user) return;
 
     console.log('Setting up realtime subscription for user:', user.id);
 
-    // Subscribe to changes in the work_in_progress table
     const channel = supabase
       .channel('work_in_progress_changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'work_in_progress',
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
           console.log('Received realtime update:', payload);
-          // Invalidate and refetch the works query when changes occur
           queryClient.invalidateQueries({ queryKey: ['works', user.id] });
         }
       )
@@ -44,7 +41,7 @@ const WorkInProgress = () => {
 
     return () => {
       console.log('Cleaning up realtime subscription');
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, [user, queryClient]);
 
@@ -59,7 +56,7 @@ const WorkInProgress = () => {
       console.log('Work types fetched:', data);
       return data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: works, isLoading } = useQuery({
@@ -98,7 +95,7 @@ const WorkInProgress = () => {
       }
     },
     enabled: !!user,
-    staleTime: 0, // Disable stale time to always fetch fresh data
+    staleTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
@@ -114,7 +111,7 @@ const WorkInProgress = () => {
       'article': 'article',
       'thesis': 'thesis',
       'monography': 'monography',
-      'intervention': 'intervention'
+      'intervention': 'intervention-project'
     };
 
     const route = workTypeRoutes[workType.toLowerCase()];
@@ -125,17 +122,47 @@ const WorkInProgress = () => {
     return route;
   };
 
-  const handleWorkClick = (work: any) => {
+  const handleWorkClick = async (work: any) => {
     if (!work) return;
     
     console.log('Navigating to work:', work);
     const route = getWorkTypeRoute(work.work_type);
     const fullRoute = `/${route}/${work.id}`;
     console.log('Route:', fullRoute);
-    navigate(fullRoute);
+    
+    try {
+      // Verificar se o trabalho ainda existe antes de navegar
+      const { data, error } = await supabase
+        .from('work_in_progress')
+        .select('id')
+        .eq('id', work.id)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data) {
+        toast({
+          title: "Trabalho não encontrado",
+          description: "Este trabalho pode ter sido removido ou você não tem mais acesso a ele.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Se o trabalho existe, navegar para ele
+      navigate(fullRoute, { replace: false });
+    } catch (error) {
+      console.error('Error checking work existence:', error);
+      toast({
+        title: "Erro ao acessar trabalho",
+        description: "Não foi possível acessar este trabalho no momento. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
-  // Format date helper function
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -169,7 +196,6 @@ const WorkInProgress = () => {
     );
   }
 
-  // Filter works based on completion status
   const inProgressWorks = works?.filter(work => !work.content?.isComplete) || [];
   const completedWorks = works?.filter(work => work.content?.isComplete) || [];
 
