@@ -31,6 +31,7 @@ const BannerEditor = () => {
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loadAttemptRef = useRef(0);
   const maxLoadAttempts = 3;
+  const isLoadingRef = useRef(false);
   
   const {
     content,
@@ -146,6 +147,10 @@ const BannerEditor = () => {
 
   useEffect(() => {
     const loadWork = async () => {
+      // Evitar múltiplas chamadas simultâneas
+      if (isLoadingRef.current) return;
+      isLoadingRef.current = true;
+
       try {
         if (!id) {
           if (user) {
@@ -176,7 +181,6 @@ const BannerEditor = () => {
 
         if (error) {
           if (error.message?.includes('JWT')) {
-            // Token expirado ou inválido, não redirecionar
             console.error('Erro de autenticação:', error);
             toast({
               title: "Sessão expirada",
@@ -186,27 +190,24 @@ const BannerEditor = () => {
             return;
           }
           
-          if (error.message?.includes('404') || error.message?.includes('failed to call url')) {
-            console.error('Erro de conexão:', error);
-            if (loadAttemptRef.current < maxLoadAttempts) {
-              loadAttemptRef.current += 1;
-              setTimeout(loadWork, 1000);
-              return;
-            }
-            toast({
-              title: "Erro de conexão",
-              description: "Não foi possível conectar ao servidor. Por favor, verifique sua conexão e tente novamente.",
-              variant: "destructive",
-            });
+          if (loadAttemptRef.current < maxLoadAttempts) {
+            loadAttemptRef.current += 1;
+            setTimeout(loadWork, 2000 * loadAttemptRef.current); // Aumenta o tempo entre tentativas
             return;
           }
-          throw error;
+
+          toast({
+            title: "Erro de conexão",
+            description: "Não foi possível conectar ao servidor. Por favor, verifique sua conexão e tente novamente.",
+            variant: "destructive",
+          });
+          return;
         }
 
         if (!data) {
           if (loadAttemptRef.current < maxLoadAttempts) {
             loadAttemptRef.current += 1;
-            setTimeout(loadWork, 1000);
+            setTimeout(loadWork, 2000 * loadAttemptRef.current);
             return;
           }
           
@@ -228,7 +229,7 @@ const BannerEditor = () => {
         console.error('Erro ao carregar trabalho:', error);
         if (loadAttemptRef.current < maxLoadAttempts) {
           loadAttemptRef.current += 1;
-          setTimeout(loadWork, 1000);
+          setTimeout(loadWork, 2000 * loadAttemptRef.current);
           return;
         }
         
@@ -242,6 +243,7 @@ const BannerEditor = () => {
         }
       } finally {
         setIsLoading(false);
+        isLoadingRef.current = false;
       }
     };
 
