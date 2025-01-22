@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 
 const WorkInProgress = () => {
   const { user, signInWithGoogle } = useAuth();
@@ -16,12 +16,14 @@ const WorkInProgress = () => {
   const queryClient = useQueryClient();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  const setupRealtimeSubscription = useCallback(() => {
+  useEffect(() => {
+    // Only set up subscription if there's a user and no existing channel
     if (!user || channelRef.current) return;
 
     console.log('Setting up realtime subscription for user:', user.id);
     
-    channelRef.current = supabase
+    // Create the channel
+    const channel = supabase
       .channel('work_in_progress_changes')
       .on(
         'postgres_changes',
@@ -39,11 +41,11 @@ const WorkInProgress = () => {
       .subscribe((status) => {
         console.log('Subscription status:', status);
       });
-  }, [user, queryClient]);
 
-  useEffect(() => {
-    setupRealtimeSubscription();
+    // Store the channel reference
+    channelRef.current = channel;
 
+    // Cleanup function
     return () => {
       if (channelRef.current) {
         console.log('Cleaning up realtime subscription');
@@ -51,7 +53,7 @@ const WorkInProgress = () => {
         channelRef.current = null;
       }
     };
-  }, [setupRealtimeSubscription]);
+  }, [user?.id, queryClient]); // Only depend on user.id and queryClient
 
   const { data: workTypes } = useQuery({
     queryKey: ['academicWorkTypes'],
