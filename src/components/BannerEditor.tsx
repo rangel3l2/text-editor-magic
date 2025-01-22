@@ -32,6 +32,7 @@ const BannerEditor = () => {
   const loadAttemptRef = useRef(0);
   const maxLoadAttempts = 3;
   const isLoadingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   const {
     content,
@@ -147,9 +148,14 @@ const BannerEditor = () => {
 
   useEffect(() => {
     const loadWork = async () => {
-      // Evitar múltiplas chamadas simultâneas
       if (isLoadingRef.current) return;
       isLoadingRef.current = true;
+
+      // Cancel any existing request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
 
       try {
         if (!id) {
@@ -168,10 +174,11 @@ const BannerEditor = () => {
         setCurrentWorkId(id);
 
         if (!user) {
-          navigate('/', { replace: true });
+          navigate('/');
           return;
         }
 
+        console.log('Fetching work with ID:', id);
         const { data, error } = await supabase
           .from('work_in_progress')
           .select('*')
@@ -180,8 +187,8 @@ const BannerEditor = () => {
           .maybeSingle();
 
         if (error) {
+          console.error('Error fetching work:', error);
           if (error.message?.includes('JWT')) {
-            console.error('Erro de autenticação:', error);
             toast({
               title: "Sessão expirada",
               description: "Por favor, faça login novamente.",
@@ -192,7 +199,7 @@ const BannerEditor = () => {
           
           if (loadAttemptRef.current < maxLoadAttempts) {
             loadAttemptRef.current += 1;
-            setTimeout(loadWork, 2000 * loadAttemptRef.current); // Aumenta o tempo entre tentativas
+            setTimeout(loadWork, 2000 * loadAttemptRef.current);
             return;
           }
 
@@ -205,6 +212,7 @@ const BannerEditor = () => {
         }
 
         if (!data) {
+          console.log('No data found for work ID:', id);
           if (loadAttemptRef.current < maxLoadAttempts) {
             loadAttemptRef.current += 1;
             setTimeout(loadWork, 2000 * loadAttemptRef.current);
@@ -216,17 +224,18 @@ const BannerEditor = () => {
             description: "O trabalho que você selecionou não foi encontrado ou você não tem permissão para acessá-lo.",
             variant: "destructive",
           });
-          navigate('/', { replace: true });
+          navigate('/');
           return;
         }
         
+        console.log('Work data loaded:', data);
         if (data?.content) {
           setBannerContent(data.content);
           localStorage.removeItem(`banner_work_${user.id}_draft`);
           loadAttemptRef.current = 0;
         }
       } catch (error: any) {
-        console.error('Erro ao carregar trabalho:', error);
+        console.error('Error loading work:', error);
         if (loadAttemptRef.current < maxLoadAttempts) {
           loadAttemptRef.current += 1;
           setTimeout(loadWork, 2000 * loadAttemptRef.current);
@@ -257,6 +266,9 @@ const BannerEditor = () => {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, [id, user, setBannerContent, navigate, toast, hasShownFirstLoadError]);
 
@@ -278,11 +290,11 @@ const BannerEditor = () => {
           .eq('user_id', user.id);
 
         if (error) {
-          console.error('Erro ao salvar trabalho:', error);
+          console.error('Error saving work:', error);
           throw error;
         }
       } catch (error) {
-        console.error('Erro ao salvar trabalho:', error);
+        console.error('Error saving work:', error);
       }
     };
 
