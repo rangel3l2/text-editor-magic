@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 const WorkInProgress = () => {
   const { user, signInWithGoogle } = useAuth();
@@ -16,34 +16,34 @@ const WorkInProgress = () => {
   const queryClient = useQueryClient();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
+  const setupRealtimeSubscription = useCallback(() => {
+    if (!user || channelRef.current) return;
 
     console.log('Setting up realtime subscription for user:', user.id);
+    
+    channelRef.current = supabase
+      .channel('work_in_progress_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'work_in_progress',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Received realtime update:', payload);
+          queryClient.invalidateQueries({ queryKey: ['works', user.id] });
+        }
+      )
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
+  }, [user, queryClient]);
 
-    // Only create a new channel if one doesn't exist
-    if (!channelRef.current) {
-      channelRef.current = supabase
-        .channel('work_in_progress_changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'work_in_progress',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('Received realtime update:', payload);
-            queryClient.invalidateQueries({ queryKey: ['works', user.id] });
-          }
-        )
-        .subscribe((status) => {
-          console.log('Subscription status:', status);
-        });
-    }
+  useEffect(() => {
+    setupRealtimeSubscription();
 
-    // Cleanup function
     return () => {
       if (channelRef.current) {
         console.log('Cleaning up realtime subscription');
@@ -51,7 +51,7 @@ const WorkInProgress = () => {
         channelRef.current = null;
       }
     };
-  }, [user, queryClient]);
+  }, [setupRealtimeSubscription]);
 
   const { data: workTypes } = useQuery({
     queryKey: ['academicWorkTypes'],
@@ -139,7 +139,6 @@ const WorkInProgress = () => {
     console.log('Route:', fullRoute);
     
     try {
-      // Verificar se o trabalho ainda existe antes de navegar
       const { data, error } = await supabase
         .from('work_in_progress')
         .select('id')
@@ -159,7 +158,6 @@ const WorkInProgress = () => {
         return;
       }
 
-      // Se o trabalho existe, navegar para ele
       navigate(fullRoute);
     } catch (error) {
       console.error('Error checking work existence:', error);
