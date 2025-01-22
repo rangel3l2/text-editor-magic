@@ -7,41 +7,49 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const WorkInProgress = () => {
   const { user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     if (!user) return;
 
     console.log('Setting up realtime subscription for user:', user.id);
 
-    const channel = supabase
-      .channel('work_in_progress_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'work_in_progress',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Received realtime update:', payload);
-          queryClient.invalidateQueries({ queryKey: ['works', user.id] });
-        }
-      )
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-      });
+    // Only create a new channel if one doesn't exist
+    if (!channelRef.current) {
+      channelRef.current = supabase
+        .channel('work_in_progress_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'work_in_progress',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Received realtime update:', payload);
+            queryClient.invalidateQueries({ queryKey: ['works', user.id] });
+          }
+        )
+        .subscribe((status) => {
+          console.log('Subscription status:', status);
+        });
+    }
 
+    // Cleanup function
     return () => {
-      console.log('Cleaning up realtime subscription');
-      channel.unsubscribe();
+      if (channelRef.current) {
+        console.log('Cleaning up realtime subscription');
+        channelRef.current.unsubscribe();
+        channelRef.current = null;
+      }
     };
   }, [user, queryClient]);
 
