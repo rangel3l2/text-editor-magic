@@ -14,59 +14,34 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [hasShownFirstLoadError, setHasShownFirstLoadError] = useState(false);
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasLoadedRef = useRef(false);
   const loadAttemptRef = useRef(0);
   const maxLoadAttempts = 3;
-  const isLoadingRef = useRef(false);
-  const hasLoadedRef = useRef(false);
-  const workIdRef = useRef<string | undefined>(id);
-  const errorCountRef = useRef(0);
-  const MAX_ERRORS = 3;
-  const ERROR_RESET_TIMEOUT = 60000; // 1 minute
-
-  useEffect(() => {
-    // Reset loading state when work ID changes
-    if (workIdRef.current !== id) {
-      hasLoadedRef.current = false;
-      workIdRef.current = id;
-      errorCountRef.current = 0;
-    }
-  }, [id]);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const loadWork = async () => {
-      // Prevent concurrent loads and reloads of the same work
-      if (isLoadingRef.current || hasLoadedRef.current) {
-        console.log('Skipping load - already loading or loaded');
+      if (!id || !user || hasLoadedRef.current) {
+        setIsLoading(false);
         return;
       }
-      
+
       try {
-        isLoadingRef.current = true;
+        loadAttemptRef.current += 1;
+        console.log(`Attempt ${loadAttemptRef.current} to load work ${id}`);
 
-        if (!id) {
-          if (user) {
-            const localStorageKey = `banner_work_${user.id}_draft`;
-            const savedDraft = localStorage.getItem(localStorageKey);
-            if (savedDraft) {
-              const parsedDraft = JSON.parse(savedDraft);
-              setBannerContent(parsedDraft.content);
-            }
-          }
-          setIsLoading(false);
-          return;
-        }
-
-        setCurrentWorkId(id);
-
-        if (!user) {
+        if (loadAttemptRef.current > maxLoadAttempts) {
+          toast({
+            title: "Erro ao carregar trabalho",
+            description: "Número máximo de tentativas excedido. Por favor, tente novamente mais tarde.",
+            variant: "destructive",
+          });
           navigate('/');
           return;
         }
 
-        console.log('Fetching work with ID:', id);
+        setCurrentWorkId(id);
         const { data, error } = await supabase
           .from('work_in_progress')
           .select('*')
@@ -76,20 +51,10 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
 
         if (error) {
           console.error('Error fetching work:', error);
-          if (error.message?.includes('JWT')) {
-            toast({
-              title: "Sessão expirada",
-              description: "Por favor, faça login novamente.",
-              variant: "destructive",
-            });
-            return;
-          }
-          
           throw error;
         }
 
         if (!data) {
-          console.log('No data found for work ID:', id);
           toast({
             title: "Trabalho não encontrado",
             description: "O trabalho que você selecionou não foi encontrado ou você não tem permissão para acessá-lo.",
@@ -98,62 +63,49 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
           navigate('/');
           return;
         }
-        
+
         console.log('Work data loaded:', data);
         if (data?.content) {
           setBannerContent(data.content);
-          localStorage.removeItem(`banner_work_${user.id}_draft`);
           hasLoadedRef.current = true;
-          errorCountRef.current = 0;
+          localStorage.removeItem(`banner_work_${user.id}_draft`);
         }
       } catch (error: any) {
         console.error('Error loading work:', error);
-        errorCountRef.current++;
         
-        if (errorCountRef.current >= MAX_ERRORS) {
+        // Only retry if we haven't exceeded max attempts
+        if (loadAttemptRef.current < maxLoadAttempts) {
+          const retryDelay = Math.min(1000 * Math.pow(2, loadAttemptRef.current - 1), 5000);
+          retryTimeoutRef.current = setTimeout(loadWork, retryDelay);
+        } else {
           toast({
             title: "Erro ao carregar trabalho",
-            description: "Ocorreram muitos erros ao tentar carregar o trabalho. Por favor, tente novamente mais tarde.",
+            description: "Ocorreu um erro ao carregar o trabalho. Por favor, tente novamente mais tarde.",
             variant: "destructive",
           });
           navigate('/');
-          return;
-        }
-
-        // Schedule error count reset
-        setTimeout(() => {
-          errorCountRef.current = 0;
-        }, ERROR_RESET_TIMEOUT);
-        
-        if (!hasShownFirstLoadError) {
-          toast({
-            title: "Erro ao carregar trabalho",
-            description: "Ocorreu um erro ao tentar carregar o trabalho selecionado. Por favor, tente novamente.",
-            variant: "destructive",
-          });
-          setHasShownFirstLoadError(true);
         }
       } finally {
         setIsLoading(false);
-        isLoadingRef.current = false;
       }
     };
 
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
+    // Reset state when id changes
+    hasLoadedRef.current = false;
+    loadAttemptRef.current = 0;
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
     }
 
-    // Only load if we haven't loaded this work yet
-    if (!hasLoadedRef.current && errorCountRef.current < MAX_ERRORS) {
-      loadWork();
-    }
+    loadWork();
 
+    // Cleanup
     return () => {
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
       }
     };
-  }, [id, user, setBannerContent, navigate, toast, hasShownFirstLoadError]);
+  }, [id, user, setBannerContent, navigate, toast]);
 
   return {
     isLoading,
