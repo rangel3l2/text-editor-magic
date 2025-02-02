@@ -21,20 +21,24 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const maxLoadAttempts = 3;
   const isLoadingRef = useRef(false);
   const hasLoadedRef = useRef(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const workIdRef = useRef<string | undefined>(id);
+
+  useEffect(() => {
+    // Reset loading state when work ID changes
+    if (workIdRef.current !== id) {
+      hasLoadedRef.current = false;
+      workIdRef.current = id;
+    }
+  }, [id]);
 
   useEffect(() => {
     const loadWork = async () => {
       // Prevent concurrent loads and reloads of the same work
       if (isLoadingRef.current || hasLoadedRef.current) return;
-      isLoadingRef.current = true;
-
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      abortControllerRef.current = new AbortController();
-
+      
       try {
+        isLoadingRef.current = true;
+
         if (!id) {
           if (user) {
             const localStorageKey = `banner_work_${user.id}_draft`;
@@ -110,7 +114,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
           setBannerContent(data.content);
           localStorage.removeItem(`banner_work_${user.id}_draft`);
           loadAttemptRef.current = 0;
-          hasLoadedRef.current = true; // Mark as loaded successfully
+          hasLoadedRef.current = true;
         }
       } catch (error: any) {
         console.error('Error loading work:', error);
@@ -138,16 +142,15 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
       clearTimeout(loadingTimeoutRef.current);
     }
 
-    loadWork();
+    // Only load if we haven't loaded this work yet
+    if (!hasLoadedRef.current) {
+      loadWork();
+    }
 
     return () => {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      hasLoadedRef.current = false; // Reset on unmount
     };
   }, [id, user, setBannerContent, navigate, toast, hasShownFirstLoadError]);
 
