@@ -11,7 +11,7 @@ export const useEditorValidation = (sectionName: string) => {
   const validationTimeoutRef = useRef<NodeJS.Timeout>();
   const lastValidationRef = useRef<number>(0);
   const retryAttemptsRef = useRef<number>(0);
-  const MAX_RETRY_ATTEMPTS = 3;
+  const isValidatingRef = useRef(false);
   const MIN_VALIDATION_INTERVAL = 30000; // 30 seconds between validations
   const RESULTS_SECTION_INTERVAL = 60000; // 1 minute for Results section
   const RATE_LIMIT_BACKOFF = 45000; // 45 seconds backoff after rate limit
@@ -23,8 +23,8 @@ export const useEditorValidation = (sectionName: string) => {
   }, [sectionName]);
 
   const validateContent = useCallback(async (content: string) => {
-    if (!content?.trim()) {
-      console.log('Empty content, skipping validation');
+    if (!content?.trim() || isValidatingRef.current) {
+      console.log('Skipping validation - empty content or already validating');
       return;
     }
 
@@ -34,25 +34,13 @@ export const useEditorValidation = (sectionName: string) => {
     
     if (timeSinceLastValidation < validationInterval) {
       console.log('Validation throttled, waiting for cooldown');
-      const remainingTime = Math.ceil((validationInterval - timeSinceLastValidation) / 1000);
-      
-      const isResultsSection = sectionName.toLowerCase().includes('resultados') || 
-                              sectionName.toLowerCase().includes('discussão');
-      
-      if (isResultsSection) {
-        toast({
-          title: "Aguarde um momento",
-          description: <ToastDescription message={`Para evitar sobrecarga, aguarde ${remainingTime} segundos antes de validar a seção de ${sectionName}.`} />,
-          duration: 5000,
-        });
-      }
       return;
     }
 
     try {
+      isValidatingRef.current = true;
       setIsValidating(true);
       setCurrentSection(sectionName);
-      console.log(`Validating section: ${sectionName}`);
 
       const prompts = [];
       if (sectionName.toLowerCase().includes('título')) {
@@ -69,41 +57,6 @@ export const useEditorValidation = (sectionName: string) => {
       });
 
       if (error) {
-        console.error('Error in validation:', error);
-        
-        // Handle rate limit errors
-        if (error.status === 429 || (error.message && error.message.includes('RATE_LIMIT'))) {
-          const retryAfter = error.message?.includes('retryAfter') ? 
-            JSON.parse(error.message).retryAfter * 1000 : 
-            RATE_LIMIT_BACKOFF;
-          
-          retryAttemptsRef.current += 1;
-          
-          if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
-            const retryInSeconds = Math.ceil(retryAfter / 1000);
-            toast({
-              title: "Limite de requisições atingido",
-              description: <ToastDescription message={`Sistema sobrecarregado. Tentando novamente em ${retryInSeconds} segundos... (Tentativa ${retryAttemptsRef.current} de ${MAX_RETRY_ATTEMPTS})`} />,
-              duration: 8000,
-            });
-            
-            // Schedule retry with exponential backoff
-            setTimeout(() => {
-              validateContent(content);
-            }, retryAfter * Math.pow(2, retryAttemptsRef.current - 1));
-            return;
-          } else {
-            toast({
-              title: "Limite de requisições excedido",
-              description: <ToastDescription message="O sistema está processando muitas requisições. Por favor, aguarde alguns minutos antes de tentar novamente." />,
-              variant: "destructive",
-              duration: 8000,
-            });
-            retryAttemptsRef.current = 0;
-            return;
-          }
-        }
-        
         throw error;
       }
 
@@ -127,6 +80,7 @@ export const useEditorValidation = (sectionName: string) => {
         duration: 5000,
       });
     } finally {
+      isValidatingRef.current = false;
       setIsValidating(false);
       setCurrentSection('');
     }
@@ -137,15 +91,11 @@ export const useEditorValidation = (sectionName: string) => {
       clearTimeout(validationTimeoutRef.current);
     }
 
-    // Longer delay for Results section
-    const validationDelay = sectionName.toLowerCase().includes('resultados') ? 5000 : 3000;
-
     validationTimeoutRef.current = setTimeout(() => {
       validateContent(content);
-    }, validationDelay);
-  }, [validateContent, sectionName]);
+    }, 3000);
+  }, [validateContent]);
 
-  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (validationTimeoutRef.current) {

@@ -22,19 +22,26 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const isLoadingRef = useRef(false);
   const hasLoadedRef = useRef(false);
   const workIdRef = useRef<string | undefined>(id);
+  const errorCountRef = useRef(0);
+  const MAX_ERRORS = 3;
+  const ERROR_RESET_TIMEOUT = 60000; // 1 minute
 
   useEffect(() => {
     // Reset loading state when work ID changes
     if (workIdRef.current !== id) {
       hasLoadedRef.current = false;
       workIdRef.current = id;
+      errorCountRef.current = 0;
     }
   }, [id]);
 
   useEffect(() => {
     const loadWork = async () => {
       // Prevent concurrent loads and reloads of the same work
-      if (isLoadingRef.current || hasLoadedRef.current) return;
+      if (isLoadingRef.current || hasLoadedRef.current) {
+        console.log('Skipping load - already loading or loaded');
+        return;
+      }
       
       try {
         isLoadingRef.current = true;
@@ -78,28 +85,11 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
             return;
           }
           
-          if (loadAttemptRef.current < maxLoadAttempts) {
-            loadAttemptRef.current += 1;
-            setTimeout(loadWork, 2000 * loadAttemptRef.current);
-            return;
-          }
-
-          toast({
-            title: "Erro de conexão",
-            description: "Não foi possível conectar ao servidor. Por favor, verifique sua conexão e tente novamente.",
-            variant: "destructive",
-          });
-          return;
+          throw error;
         }
 
         if (!data) {
           console.log('No data found for work ID:', id);
-          if (loadAttemptRef.current < maxLoadAttempts) {
-            loadAttemptRef.current += 1;
-            setTimeout(loadWork, 2000 * loadAttemptRef.current);
-            return;
-          }
-          
           toast({
             title: "Trabalho não encontrado",
             description: "O trabalho que você selecionou não foi encontrado ou você não tem permissão para acessá-lo.",
@@ -113,16 +103,27 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         if (data?.content) {
           setBannerContent(data.content);
           localStorage.removeItem(`banner_work_${user.id}_draft`);
-          loadAttemptRef.current = 0;
           hasLoadedRef.current = true;
+          errorCountRef.current = 0;
         }
       } catch (error: any) {
         console.error('Error loading work:', error);
-        if (loadAttemptRef.current < maxLoadAttempts) {
-          loadAttemptRef.current += 1;
-          setTimeout(loadWork, 2000 * loadAttemptRef.current);
+        errorCountRef.current++;
+        
+        if (errorCountRef.current >= MAX_ERRORS) {
+          toast({
+            title: "Erro ao carregar trabalho",
+            description: "Ocorreram muitos erros ao tentar carregar o trabalho. Por favor, tente novamente mais tarde.",
+            variant: "destructive",
+          });
+          navigate('/');
           return;
         }
+
+        // Schedule error count reset
+        setTimeout(() => {
+          errorCountRef.current = 0;
+        }, ERROR_RESET_TIMEOUT);
         
         if (!hasShownFirstLoadError) {
           toast({
@@ -143,7 +144,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
     }
 
     // Only load if we haven't loaded this work yet
-    if (!hasLoadedRef.current) {
+    if (!hasLoadedRef.current && errorCountRef.current < MAX_ERRORS) {
       loadWork();
     }
 
