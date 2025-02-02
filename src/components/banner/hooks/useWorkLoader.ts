@@ -20,11 +20,13 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const loadAttemptRef = useRef(0);
   const maxLoadAttempts = 3;
   const isLoadingRef = useRef(false);
+  const hasLoadedRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const loadWork = async () => {
-      if (isLoadingRef.current) return;
+      // Prevent concurrent loads and reloads of the same work
+      if (isLoadingRef.current || hasLoadedRef.current) return;
       isLoadingRef.current = true;
 
       if (abortControllerRef.current) {
@@ -108,6 +110,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
           setBannerContent(data.content);
           localStorage.removeItem(`banner_work_${user.id}_draft`);
           loadAttemptRef.current = 0;
+          hasLoadedRef.current = true; // Mark as loaded successfully
         }
       } catch (error: any) {
         console.error('Error loading work:', error);
@@ -144,6 +147,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      hasLoadedRef.current = false; // Reset on unmount
     };
   }, [id, user, setBannerContent, navigate, toast, hasShownFirstLoadError]);
 
