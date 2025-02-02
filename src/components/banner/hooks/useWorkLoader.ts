@@ -18,11 +18,18 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const hasLoadedRef = useRef(false);
   const loadAttemptRef = useRef(0);
   const maxLoadAttempts = 3;
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+  const successfulLoadRef = useRef(false);
 
   useEffect(() => {
+    // Reset refs when id changes
+    hasLoadedRef.current = false;
+    loadAttemptRef.current = 0;
+    successfulLoadRef.current = false;
+    
     const loadWork = async () => {
-      if (!id || !user || hasLoadedRef.current) {
+      // Don't load if already loaded successfully or missing requirements
+      if (!id || !user || hasLoadedRef.current || successfulLoadRef.current || !isMountedRef.current) {
         setIsLoading(false);
         return;
       }
@@ -49,10 +56,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching work:', error);
-          throw error;
-        }
+        if (error) throw error;
 
         if (!data) {
           toast({
@@ -64,20 +68,21 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
           return;
         }
 
-        console.log('Work data loaded:', data);
-        if (data?.content) {
-          setBannerContent(data.content);
-          hasLoadedRef.current = true;
-          localStorage.removeItem(`banner_work_${user.id}_draft`);
+        if (isMountedRef.current) {
+          console.log('Work data loaded:', data);
+          if (data?.content) {
+            setBannerContent(data.content);
+            hasLoadedRef.current = true;
+            successfulLoadRef.current = true;
+            localStorage.removeItem(`banner_work_${user.id}_draft`);
+          }
         }
       } catch (error: any) {
         console.error('Error loading work:', error);
-        
-        // Only retry if we haven't exceeded max attempts
-        if (loadAttemptRef.current < maxLoadAttempts) {
+        if (isMountedRef.current && loadAttemptRef.current < maxLoadAttempts) {
           const retryDelay = Math.min(1000 * Math.pow(2, loadAttemptRef.current - 1), 5000);
-          retryTimeoutRef.current = setTimeout(loadWork, retryDelay);
-        } else {
+          setTimeout(loadWork, retryDelay);
+        } else if (isMountedRef.current) {
           toast({
             title: "Erro ao carregar trabalho",
             description: "Ocorreu um erro ao carregar o trabalho. Por favor, tente novamente mais tarde.",
@@ -86,24 +91,16 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
           navigate('/');
         }
       } finally {
-        setIsLoading(false);
+        if (isMountedRef.current) {
+          setIsLoading(false);
+        }
       }
     };
 
-    // Reset state when id changes
-    hasLoadedRef.current = false;
-    loadAttemptRef.current = 0;
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-    }
-
     loadWork();
 
-    // Cleanup
     return () => {
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-      }
+      isMountedRef.current = false;
     };
   }, [id, user, setBannerContent, navigate, toast]);
 
