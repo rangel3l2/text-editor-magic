@@ -19,10 +19,9 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const hasLoadedRef = useRef(false);
   const isMountedRef = useRef(true);
   const loadingRef = useRef(false);
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadWork = async (workId: string, userId: string) => {
-    // If already loading or component unmounted or already loaded successfully, don't proceed
+    // If already loading, component unmounted, or already loaded successfully, don't proceed
     if (loadingRef.current || !isMountedRef.current || hasLoadedRef.current) {
       return;
     }
@@ -63,28 +62,6 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
     } catch (error: any) {
       console.error('Error loading work:', error);
       
-      // Check if it's a resource error
-      if (error.message?.includes('ERR_INSUFFICIENT_RESOURCES')) {
-        if (isMountedRef.current) {
-          toast({
-            title: "Erro ao carregar trabalho",
-            description: "Ocorreu um erro ao carregar o trabalho. Por favor, aguarde um momento e tente novamente.",
-            variant: "destructive",
-          });
-        }
-        // Add a delay before retrying
-        if (retryTimeoutRef.current) {
-          clearTimeout(retryTimeoutRef.current);
-        }
-        retryTimeoutRef.current = setTimeout(() => {
-          if (isMountedRef.current && !hasLoadedRef.current) {
-            loadingRef.current = false;
-            loadWork(workId, userId);
-          }
-        }, 5000); // Wait 5 seconds before retrying
-        return;
-      }
-
       if (isMountedRef.current) {
         toast({
           title: "Erro ao carregar trabalho",
@@ -101,11 +78,16 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
     }
   };
 
-  // Create a debounced version of loadWork that only executes the first call
+  // Create a debounced version of loadWork that only executes once
   const debouncedLoadWork = useRef(
-    debounce((workId: string, userId: string) => loadWork(workId, userId), 1000, {
+    debounce((workId: string, userId: string) => {
+      if (!hasLoadedRef.current) {
+        loadWork(workId, userId);
+      }
+    }, 1000, {
       leading: true,
-      trailing: false
+      trailing: false,
+      maxWait: 1000
     })
   ).current;
 
@@ -123,12 +105,9 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
 
     return () => {
       isMountedRef.current = false;
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-      }
       debouncedLoadWork.cancel();
     };
-  }, [id, user, debouncedLoadWork]);
+  }, [id, user]);
 
   return {
     isLoading,
