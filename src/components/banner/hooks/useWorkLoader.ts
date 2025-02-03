@@ -17,25 +17,19 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
-  const loadAttemptRef = useRef(0);
-  const maxLoadAttempts = 3;
   const isMountedRef = useRef(true);
   const loadingRef = useRef(false);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadWork = async (workId: string, userId: string) => {
+    // If already loading or component unmounted or already loaded successfully, don't proceed
     if (loadingRef.current || !isMountedRef.current || hasLoadedRef.current) {
       return;
     }
 
-    loadingRef.current = true;
-    loadAttemptRef.current += 1;
-
     try {
-      console.log(`Loading work ${workId} (attempt ${loadAttemptRef.current})`);
-      
-      if (loadAttemptRef.current > maxLoadAttempts) {
-        throw new Error('Max attempts reached');
-      }
+      loadingRef.current = true;
+      console.log(`Loading work ${workId}`);
 
       const { data, error } = await supabase
         .from('work_in_progress')
@@ -69,30 +63,29 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
     } catch (error: any) {
       console.error('Error loading work:', error);
       
-      // Check if it's a resource error or max attempts reached
-      if (error.message?.includes('ERR_INSUFFICIENT_RESOURCES') || 
-          error.message === 'Max attempts reached') {
+      // Check if it's a resource error
+      if (error.message?.includes('ERR_INSUFFICIENT_RESOURCES')) {
         if (isMountedRef.current) {
           toast({
             title: "Erro ao carregar trabalho",
-            description: "Ocorreu um erro ao carregar o trabalho. Por favor, tente novamente mais tarde.",
+            description: "Ocorreu um erro ao carregar o trabalho. Por favor, aguarde um momento e tente novamente.",
             variant: "destructive",
           });
-          navigate('/');
         }
+        // Add a delay before retrying
+        if (retryTimeoutRef.current) {
+          clearTimeout(retryTimeoutRef.current);
+        }
+        retryTimeoutRef.current = setTimeout(() => {
+          if (isMountedRef.current && !hasLoadedRef.current) {
+            loadingRef.current = false;
+            loadWork(workId, userId);
+          }
+        }, 5000); // Wait 5 seconds before retrying
         return;
       }
 
-      // For other errors, retry with exponential backoff if attempts remain
-      if (isMountedRef.current && loadAttemptRef.current < maxLoadAttempts) {
-        const retryDelay = Math.min(1000 * Math.pow(2, loadAttemptRef.current - 1), 5000);
-        setTimeout(() => {
-          loadingRef.current = false;
-          if (isMountedRef.current && !hasLoadedRef.current) {
-            loadWork(workId, userId);
-          }
-        }, retryDelay);
-      } else if (isMountedRef.current) {
+      if (isMountedRef.current) {
         toast({
           title: "Erro ao carregar trabalho",
           description: "Ocorreu um erro ao carregar o trabalho. Por favor, tente novamente mais tarde.",
@@ -108,6 +101,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
     }
   };
 
+  // Create a debounced version of loadWork that only executes the first call
   const debouncedLoadWork = useRef(
     debounce((workId: string, userId: string) => loadWork(workId, userId), 1000, {
       leading: true,
@@ -116,9 +110,8 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   ).current;
 
   useEffect(() => {
-    // Reset state when id changes
+    isMountedRef.current = true;
     hasLoadedRef.current = false;
-    loadAttemptRef.current = 0;
     loadingRef.current = false;
     
     if (id && user && !hasLoadedRef.current) {
@@ -130,6 +123,9 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
 
     return () => {
       isMountedRef.current = false;
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
       debouncedLoadWork.cancel();
     };
   }, [id, user, debouncedLoadWork]);
