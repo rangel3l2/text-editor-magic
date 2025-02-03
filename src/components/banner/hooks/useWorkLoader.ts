@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
-import debounce from 'lodash/debounce';
 
 interface UseWorkLoaderProps {
   id: string | undefined;
@@ -18,16 +17,14 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
   const isMountedRef = useRef(true);
-  const loadingRef = useRef(false);
 
   const loadWork = async (workId: string, userId: string) => {
-    // If already loading, component unmounted, or already loaded successfully, don't proceed
-    if (loadingRef.current || !isMountedRef.current || hasLoadedRef.current) {
+    // If already loaded or component unmounted, don't proceed
+    if (hasLoadedRef.current || !isMountedRef.current) {
       return;
     }
 
     try {
-      loadingRef.current = true;
       console.log(`Loading work ${workId}`);
 
       const { data, error } = await supabase
@@ -51,7 +48,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         return;
       }
 
-      if (isMountedRef.current && !hasLoadedRef.current) {
+      if (isMountedRef.current) {
         console.log('Work data loaded:', data);
         if (data?.content) {
           setBannerContent(data.content);
@@ -73,39 +70,23 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
-        loadingRef.current = false;
       }
     }
   };
 
-  // Create a debounced version of loadWork that only executes once
-  const debouncedLoadWork = useRef(
-    debounce((workId: string, userId: string) => {
-      if (!hasLoadedRef.current) {
-        loadWork(workId, userId);
-      }
-    }, 1000, {
-      leading: true,
-      trailing: false,
-      maxWait: 1000
-    })
-  ).current;
-
   useEffect(() => {
     isMountedRef.current = true;
     hasLoadedRef.current = false;
-    loadingRef.current = false;
     
-    if (id && user && !hasLoadedRef.current) {
+    if (id && user) {
       setCurrentWorkId(id);
-      debouncedLoadWork(id, user.id);
+      loadWork(id, user.id);
     } else {
       setIsLoading(false);
     }
 
     return () => {
       isMountedRef.current = false;
-      debouncedLoadWork.cancel();
     };
   }, [id, user]);
 
