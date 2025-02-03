@@ -20,61 +20,59 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const loadAttemptRef = useRef(0);
   const maxLoadAttempts = 3;
   const isMountedRef = useRef(true);
-  const successfulLoadRef = useRef(false);
   const loadingRef = useRef(false);
 
-  // Create a debounced version of the load function
-  const debouncedLoadWork = useRef(
-    debounce(async (workId: string, userId: string) => {
-      if (loadingRef.current || !isMountedRef.current || successfulLoadRef.current) {
+  const loadWork = async (workId: string, userId: string) => {
+    if (loadingRef.current || !isMountedRef.current || hasLoadedRef.current) {
+      return;
+    }
+
+    loadingRef.current = true;
+    loadAttemptRef.current += 1;
+
+    try {
+      console.log(`Loading work ${workId} (attempt ${loadAttemptRef.current})`);
+      
+      if (loadAttemptRef.current > maxLoadAttempts) {
+        throw new Error('Max attempts reached');
+      }
+
+      const { data, error } = await supabase
+        .from('work_in_progress')
+        .select('*')
+        .eq('id', workId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        if (isMountedRef.current) {
+          toast({
+            title: "Trabalho não encontrado",
+            description: "O trabalho que você selecionou não foi encontrado ou você não tem permissão para acessá-lo.",
+            variant: "destructive",
+          });
+          navigate('/');
+        }
         return;
       }
 
-      loadingRef.current = true;
-      try {
-        console.log(`Loading work ${workId}`);
-        const { data, error } = await supabase
-          .from('work_in_progress')
-          .select('*')
-          .eq('id', workId)
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        if (error) throw error;
-
-        if (!data) {
-          if (isMountedRef.current) {
-            toast({
-              title: "Trabalho não encontrado",
-              description: "O trabalho que você selecionou não foi encontrado ou você não tem permissão para acessá-lo.",
-              variant: "destructive",
-            });
-            navigate('/');
-          }
-          return;
+      if (isMountedRef.current && !hasLoadedRef.current) {
+        console.log('Work data loaded:', data);
+        if (data?.content) {
+          setBannerContent(data.content);
+          hasLoadedRef.current = true;
+          localStorage.removeItem(`banner_work_${userId}_draft`);
         }
-
-        if (isMountedRef.current && !successfulLoadRef.current) {
-          console.log('Work data loaded:', data);
-          if (data?.content) {
-            setBannerContent(data.content);
-            hasLoadedRef.current = true;
-            successfulLoadRef.current = true;
-            localStorage.removeItem(`banner_work_${userId}_draft`);
-          }
-        }
-      } catch (error: any) {
-        console.error('Error loading work:', error);
-        if (isMountedRef.current && loadAttemptRef.current < maxLoadAttempts) {
-          loadAttemptRef.current += 1;
-          const retryDelay = Math.min(1000 * Math.pow(2, loadAttemptRef.current - 1), 5000);
-          setTimeout(() => {
-            loadingRef.current = false;
-            if (isMountedRef.current) {
-              debouncedLoadWork.current(workId, userId);
-            }
-          }, retryDelay);
-        } else if (isMountedRef.current) {
+      }
+    } catch (error: any) {
+      console.error('Error loading work:', error);
+      
+      // Check if it's a resource error or max attempts reached
+      if (error.message?.includes('ERR_INSUFFICIENT_RESOURCES') || 
+          error.message === 'Max attempts reached') {
+        if (isMountedRef.current) {
           toast({
             title: "Erro ao carregar trabalho",
             description: "Ocorreu um erro ao carregar o trabalho. Por favor, tente novamente mais tarde.",
@@ -82,23 +80,48 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
           });
           navigate('/');
         }
-      } finally {
-        if (isMountedRef.current) {
-          setIsLoading(false);
-          loadingRef.current = false;
-        }
+        return;
       }
-    }, 1000)
+
+      // For other errors, retry with exponential backoff if attempts remain
+      if (isMountedRef.current && loadAttemptRef.current < maxLoadAttempts) {
+        const retryDelay = Math.min(1000 * Math.pow(2, loadAttemptRef.current - 1), 5000);
+        setTimeout(() => {
+          loadingRef.current = false;
+          if (isMountedRef.current && !hasLoadedRef.current) {
+            loadWork(workId, userId);
+          }
+        }, retryDelay);
+      } else if (isMountedRef.current) {
+        toast({
+          title: "Erro ao carregar trabalho",
+          description: "Ocorreu um erro ao carregar o trabalho. Por favor, tente novamente mais tarde.",
+          variant: "destructive",
+        });
+        navigate('/');
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+        loadingRef.current = false;
+      }
+    }
+  };
+
+  const debouncedLoadWork = useRef(
+    debounce((workId: string, userId: string) => loadWork(workId, userId), 1000, {
+      leading: true,
+      trailing: false
+    })
   ).current;
 
   useEffect(() => {
-    // Reset refs when id changes
+    // Reset state when id changes
     hasLoadedRef.current = false;
     loadAttemptRef.current = 0;
-    successfulLoadRef.current = false;
     loadingRef.current = false;
     
-    if (id && user && !successfulLoadRef.current) {
+    if (id && user && !hasLoadedRef.current) {
       setCurrentWorkId(id);
       debouncedLoadWork(id, user.id);
     } else {
