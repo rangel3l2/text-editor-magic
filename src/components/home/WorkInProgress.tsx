@@ -1,59 +1,18 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookText, FileText, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useRef } from "react";
 
 const WorkInProgress = () => {
   const { user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-
-  useEffect(() => {
-    // Only set up subscription if there's a user and no existing channel
-    if (!user || channelRef.current) return;
-
-    console.log('Setting up realtime subscription for user:', user.id);
-    
-    // Create the channel
-    const channel = supabase
-      .channel('work_in_progress_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'work_in_progress',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Received realtime update:', payload);
-          queryClient.invalidateQueries({ queryKey: ['works', user.id] });
-        }
-      )
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-      });
-
-    // Store the channel reference
-    channelRef.current = channel;
-
-    // Cleanup function
-    return () => {
-      if (channelRef.current) {
-        console.log('Cleaning up realtime subscription');
-        channelRef.current.unsubscribe();
-        channelRef.current = null;
-      }
-    };
-  }, [user?.id, queryClient]); // Only depend on user.id and queryClient
 
   const { data: workTypes } = useQuery({
     queryKey: ['academicWorkTypes'],
@@ -63,49 +22,38 @@ const WorkInProgress = () => {
         .from('academic_work_types')
         .select('*');
       if (error) throw error;
-      console.log('Work types fetched:', data);
       return data;
     },
     staleTime: 1000 * 60 * 5,
   });
 
   const { data: works, isLoading } = useQuery({
-    queryKey: ['works', user?.id],
+    queryKey: ['works-basic', user?.id],
     queryFn: async () => {
-      try {
-        if (!user) return [];
+      if (!user) return [];
+      
+      console.log('Fetching basic work info for user:', user.id);
+      const { data: dbWorks, error } = await supabase
+        .from('work_in_progress')
+        .select('id, title, work_type, created_at, last_modified, content->isComplete')
+        .eq('user_id', user.id)
+        .order('last_modified', { ascending: false });
         
-        console.log('Fetching works for user:', user.id);
-        const { data: dbWorks, error } = await supabase
-          .from('work_in_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('last_modified', { ascending: false });
-          
-        if (error) {
-          console.error('Error fetching works:', error);
-          toast({
-            title: "Erro ao carregar trabalhos",
-            description: "Não foi possível carregar seus trabalhos do banco de dados.",
-            variant: "destructive",
-          });
-          return [];
-        }
-
-        console.log('Works fetched from DB:', dbWorks);
-        return dbWorks || [];
-      } catch (error) {
-        console.error('Error in queryFn:', error);
+      if (error) {
+        console.error('Error fetching works:', error);
         toast({
           title: "Erro ao carregar trabalhos",
-          description: "Ocorreu um erro ao carregar seus trabalhos.",
+          description: "Não foi possível carregar seus trabalhos do banco de dados.",
           variant: "destructive",
         });
         return [];
       }
+
+      console.log('Basic work info fetched:', dbWorks);
+      return dbWorks || [];
     },
     enabled: !!user,
-    staleTime: 0,
+    staleTime: 1000 * 60, // 1 minute
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
@@ -132,43 +80,12 @@ const WorkInProgress = () => {
     return route;
   };
 
-  const handleWorkClick = async (work: any) => {
+  const handleWorkClick = (work: any) => {
     if (!work) return;
     
     console.log('Navigating to work:', work);
     const route = getWorkTypeRoute(work.work_type);
-    const fullRoute = `/${route}/${work.id}`;
-    console.log('Route:', fullRoute);
-    
-    try {
-      const { data, error } = await supabase
-        .from('work_in_progress')
-        .select('id')
-        .eq('id', work.id)
-        .maybeSingle();
-
-      if (error) {
-        throw error;
-      }
-
-      if (!data) {
-        toast({
-          title: "Trabalho não encontrado",
-          description: "Este trabalho pode ter sido removido ou você não tem mais acesso a ele.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      navigate(fullRoute);
-    } catch (error) {
-      console.error('Error checking work existence:', error);
-      toast({
-        title: "Erro ao acessar trabalho",
-        description: "Não foi possível acessar este trabalho no momento. Tente novamente.",
-        variant: "destructive",
-      });
-    }
+    navigate(`/${route}/${work.id}`);
   };
 
   const formatDate = (dateString: string) => {
@@ -204,8 +121,8 @@ const WorkInProgress = () => {
     );
   }
 
-  const inProgressWorks = works?.filter(work => !work.content?.isComplete) || [];
-  const completedWorks = works?.filter(work => work.content?.isComplete) || [];
+  const inProgressWorks = works?.filter(work => !work.isComplete) || [];
+  const completedWorks = works?.filter(work => work.isComplete) || [];
 
   return (
     <div className="mb-16">
@@ -299,3 +216,4 @@ const WorkInProgress = () => {
 };
 
 export default WorkInProgress;
+
