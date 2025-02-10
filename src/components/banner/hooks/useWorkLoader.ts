@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
-import debounce from 'lodash/debounce';
 
 interface UseWorkLoaderProps {
   id: string | undefined;
@@ -19,14 +18,16 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
   const mounted = useRef(true);
   const loadedWorkId = useRef<string | null>(null);
+  const loadingRef = useRef(false);
 
   const loadWork = async (workId: string, userId: string) => {
-    // Skip if already loaded this work or unmounted
-    if (!mounted.current || loadedWorkId.current === workId) {
+    // Skip if already loaded this work, unmounted, or currently loading
+    if (!mounted.current || loadedWorkId.current === workId || loadingRef.current) {
       return;
     }
 
     try {
+      loadingRef.current = true;
       setIsLoading(true);
       console.log(`Loading work ${workId}`);
 
@@ -81,12 +82,14 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
       if (mounted.current) {
         setIsLoading(false);
       }
+      loadingRef.current = false;
     }
   };
 
   useEffect(() => {
     mounted.current = true;
     loadedWorkId.current = null;
+    loadingRef.current = false;
     
     const initLoad = async () => {
       if (id && user) {
@@ -101,6 +104,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
 
     return () => {
       mounted.current = false;
+      loadingRef.current = false;
     };
   }, [id, user]);
 
@@ -109,4 +113,3 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
     currentWorkId,
   };
 };
-
