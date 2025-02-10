@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -19,13 +20,19 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const isMountedRef = useRef(true);
 
   const loadWork = async (workId: string, userId: string) => {
-    // If already loaded or component unmounted, don't proceed
+    // Se já carregou ou componente foi desmontado, não prosseguir
     if (hasLoadedRef.current || !isMountedRef.current) {
       return;
     }
 
     try {
+      setIsLoading(true);
       console.log(`Loading work ${workId}`);
+
+      // Validar IDs antes de fazer a requisição
+      if (!workId || !userId) {
+        throw new Error('IDs inválidos');
+      }
 
       const { data, error } = await supabase
         .from('work_in_progress')
@@ -34,7 +41,10 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       if (!data) {
         if (isMountedRef.current) {
