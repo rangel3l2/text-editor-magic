@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
+import debounce from 'lodash/debounce';
 
 interface UseWorkLoaderProps {
   id: string | undefined;
@@ -18,18 +19,18 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
   const isMountedRef = useRef(true);
+  const requestInProgress = useRef(false);
 
   const loadWork = async (workId: string, userId: string) => {
-    // Se já carregou ou componente foi desmontado, não prosseguir
-    if (hasLoadedRef.current || !isMountedRef.current) {
+    if (hasLoadedRef.current || !isMountedRef.current || requestInProgress.current) {
       return;
     }
 
     try {
+      requestInProgress.current = true;
       setIsLoading(true);
       console.log(`Loading work ${workId}`);
 
-      // Validar IDs antes de fazer a requisição
       if (!workId || !userId) {
         throw new Error('IDs inválidos');
       }
@@ -81,24 +82,36 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
       if (isMountedRef.current) {
         setIsLoading(false);
       }
+      requestInProgress.current = false;
     }
   };
+
+  // Debounced version of loadWork to prevent multiple concurrent requests
+  const debouncedLoadWork = useRef(
+    debounce((workId: string, userId: string) => loadWork(workId, userId), 300, {
+      leading: true,
+      trailing: false,
+      maxWait: 1000
+    })
+  ).current;
 
   useEffect(() => {
     isMountedRef.current = true;
     hasLoadedRef.current = false;
+    requestInProgress.current = false;
     
     if (id && user) {
       setCurrentWorkId(id);
-      loadWork(id, user.id);
+      debouncedLoadWork(id, user.id);
     } else {
       setIsLoading(false);
     }
 
     return () => {
       isMountedRef.current = false;
+      debouncedLoadWork.cancel();
     };
-  }, [id, user]);
+  }, [id, user, debouncedLoadWork]);
 
   return {
     isLoading,
