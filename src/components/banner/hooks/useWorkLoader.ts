@@ -16,81 +16,63 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
-  const mounted = useRef(true);
+  const loadingRef = useRef(false);
 
   useEffect(() => {
-    mounted.current = true;
-    
     const loadWork = async () => {
-      if (!id || !user) {
+      if (!id || !user || loadingRef.current || currentWorkId === id) {
         setIsLoading(false);
         return;
       }
 
       try {
+        loadingRef.current = true;
         setIsLoading(true);
         console.log(`Loading work ${id}`);
 
         const { data, error } = await supabase
           .from('work_in_progress')
-          .select('*')
+          .select('content')
           .eq('id', id)
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (error) {
-          console.error('Supabase error:', error);
-          throw error;
-        }
+        if (error) throw error;
 
         if (!data) {
-          if (mounted.current) {
-            toast({
-              title: "Trabalho não encontrado",
-              description: "O trabalho que você selecionou não foi encontrado ou você não tem permissão para acessá-lo.",
-              variant: "destructive",
-            });
-            navigate('/');
-          }
-          return;
-        }
-
-        if (mounted.current) {
-          console.log('Work data loaded:', data);
-          if (data?.content) {
-            setBannerContent(data.content);
-            setCurrentWorkId(id);
-            localStorage.removeItem(`banner_work_${user.id}_draft`);
-          }
-        }
-      } catch (error: any) {
-        console.error('Error loading work:', error);
-        
-        if (mounted.current) {
           toast({
-            title: "Erro ao carregar trabalho",
-            description: "Ocorreu um erro ao carregar o trabalho. Por favor, tente novamente mais tarde.",
+            title: "Trabalho não encontrado",
+            description: "O trabalho que você selecionou não foi encontrado ou você não tem permissão para acessá-lo.",
             variant: "destructive",
           });
           navigate('/');
+          return;
         }
+
+        if (data?.content) {
+          setBannerContent(data.content);
+          setCurrentWorkId(id);
+          localStorage.removeItem(`banner_work_${user.id}_draft`);
+        }
+      } catch (error: any) {
+        console.error('Error loading work:', error);
+        toast({
+          title: "Erro ao carregar trabalho",
+          description: "Ocorreu um erro ao carregar o trabalho. Por favor, tente novamente mais tarde.",
+          variant: "destructive",
+        });
+        navigate('/');
       } finally {
-        if (mounted.current) {
-          setIsLoading(false);
-        }
+        loadingRef.current = false;
+        setIsLoading(false);
       }
     };
 
     loadWork();
-
-    return () => {
-      mounted.current = false;
-    };
-  }, [id, user, navigate, toast, setBannerContent]);
+  }, [id, user]);
 
   return {
     isLoading,
     currentWorkId,
   };
 };
-

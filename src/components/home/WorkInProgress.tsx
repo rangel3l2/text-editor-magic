@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookText, FileText, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +16,6 @@ const WorkInProgress = () => {
   const { data: workTypes } = useQuery({
     queryKey: ['academicWorkTypes'],
     queryFn: async () => {
-      console.log('Fetching work types...');
       const { data, error } = await supabase
         .from('academic_work_types')
         .select('*');
@@ -27,12 +25,11 @@ const WorkInProgress = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: works, isLoading } = useQuery({
+  const { data: works = [], isLoading } = useQuery({
     queryKey: ['works-basic', user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      console.log('Fetching basic work info for user:', user.id);
       const { data: dbWorks, error } = await supabase
         .from('work_in_progress')
         .select('id, title, work_type, created_at, last_modified, content->isComplete')
@@ -49,13 +46,10 @@ const WorkInProgress = () => {
         return [];
       }
 
-      console.log('Basic work info fetched:', dbWorks);
       return dbWorks || [];
     },
     enabled: !!user,
-    staleTime: 1000 * 60, // 1 minute
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60,
   });
 
   const getWorkTypeName = (workType: string) => {
@@ -121,8 +115,8 @@ const WorkInProgress = () => {
     );
   }
 
-  const inProgressWorks = works?.filter(work => !work.isComplete) || [];
-  const completedWorks = works?.filter(work => work.isComplete) || [];
+  const inProgressWorks = works.filter(work => !work.isComplete);
+  const completedWorks = works.filter(work => work.isComplete);
 
   return (
     <div className="mb-16">
@@ -216,4 +210,3 @@ const WorkInProgress = () => {
 };
 
 export default WorkInProgress;
-
