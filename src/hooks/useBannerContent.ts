@@ -6,9 +6,10 @@ const useBannerContent = (bannerId: string, isValidated: boolean) => {
   const [error, setError] = useState(null);
   const isFetching = useRef(false);
   const hasLoaded = useRef(false);
+  const fetchAttempted = useRef(false); // flag para evitar retries automáticos
 
   const loadBannerContent = async () => {
-    if (isFetching.current || hasLoaded.current) return; // guard against duplicate calls
+    if (isFetching.current || hasLoaded.current || fetchAttempted.current) return; // guard against duplicate calls
     isFetching.current = true;
     try {
       const { data, error } = await supabase
@@ -17,21 +18,24 @@ const useBannerContent = (bannerId: string, isValidated: boolean) => {
         .eq("id", bannerId)
         .eq("user_id", "your_user_id"); // replace "your_user_id" with the actual user id
       if (error) throw error;
-      if (data.length === 0) throw new Error("No content found");
+      if (!data || data.length === 0) throw new Error("No content found");
       setContent(data[0].content);
+      setError(null);
       hasLoaded.current = true; // mark as loaded to prevent repeated fetches
-    } catch (error) {
-      console.error("Error loading banner content:", error);
-      setError(error);
+    } catch (err) {
+      console.error("Error loading banner content:", err);
+      setError(err);
+      fetchAttempted.current = true;
     } finally {
       isFetching.current = false;
     }
   };
 
   useEffect(() => {
-    if (isValidated && bannerId && !hasLoaded.current) {
+    if (isValidated && bannerId && !hasLoaded.current && !fetchAttempted.current) {
       loadBannerContent();
     }
+    //oi
   }, [isValidated, bannerId]);
   
   return { content, error };
