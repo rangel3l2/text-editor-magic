@@ -1,7 +1,6 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -17,6 +16,7 @@ export interface BannerContent {
   conclusion: string;
   references: string;
   acknowledgments: string;
+  previewHtml?: string; // Added back to fix type error
 }
 
 export const useBannerContent = () => {
@@ -37,7 +37,8 @@ export const useBannerContent = () => {
     results: '',
     conclusion: '',
     references: '',
-    acknowledgments: ''
+    acknowledgments: '',
+    previewHtml: '' // Added to match interface
   };
 
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
