@@ -2,6 +2,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button";
 import { Menu, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 interface MobileMenuProps {
   isAdmin: boolean;
@@ -10,6 +11,7 @@ interface MobileMenuProps {
 
 const MobileMenu = ({ isAdmin, onSettingsClick }: MobileMenuProps) => {
   const navigate = useNavigate();
+  const [inputValue, setInputValue] = useState("");
 
   return (
     <Sheet>
@@ -23,6 +25,13 @@ const MobileMenu = ({ isAdmin, onSettingsClick }: MobileMenuProps) => {
           <SheetTitle>Menu</SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col gap-4 mt-4">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Digite algo..."
+            className="border p-2"
+          />
           <Button
             variant="ghost"
             className="justify-start"

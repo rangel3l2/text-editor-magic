@@ -1,10 +1,15 @@
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "../integrations/supabase/client";
+import { useToast } from "../components/ui/use-toast";
 import { User } from "@supabase/supabase-js";
 import { useQuery } from "@tanstack/react-query";
 
 export const useAdminStatus = (user: User | null) => {
   const { toast } = useToast();
+
+  if (!user) {
+    console.error("No user provided to useAdminStatus");
+    return null; // or return early to avoid running further logic
+  }
 
   return useQuery({
     queryKey: ["adminStatus", user?.id],

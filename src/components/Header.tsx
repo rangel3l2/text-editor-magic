@@ -15,6 +15,7 @@ const Header = () => {
   const { user } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { data: isAdmin, isLoading } = useAdminStatus(user);
+  const [inputValue, setInputValue] = useState("");
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b z-50">
@@ -39,6 +40,12 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <input 
+            type="text" 
+            value={inputValue} 
+            onChange={(e) => setInputValue(e.target.value)} 
+            className="border rounded px-2 py-1"
+          />
           <Button
             variant="ghost"
             size="icon"
