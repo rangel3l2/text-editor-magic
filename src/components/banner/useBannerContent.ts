@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,7 +17,6 @@ export interface BannerContent {
   conclusion: string;
   references: string;
   acknowledgments: string;
-  previewHtml?: string;
 }
 
 export const useBannerContent = () => {
@@ -42,40 +42,6 @@ export const useBannerContent = () => {
 
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
 
-  // Carregar dados do banner se existir um ID
-  useEffect(() => {
-    const loadBannerContent = async () => {
-      if (!id || !user) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('work_in_progress')
-          .select('content')
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) throw error;
-
-        if (data?.content) {
-          setBannerContent(prevContent => ({
-            ...initialBannerContent,
-            ...data.content
-          }));
-        }
-      } catch (error) {
-        console.error('Error loading banner content:', error);
-        toast({
-          title: "Erro ao carregar conteúdo",
-          description: "Não foi possível carregar o conteúdo do banner. Por favor, tente novamente.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    loadBannerContent();
-  }, [id, user, toast]);
-
   const handleChange = (field: string, value: string) => {
     setBannerContent(prev => ({
       ...prev,
@@ -85,7 +51,6 @@ export const useBannerContent = () => {
 
   const onImageConfigChange = (imageId: string, config: any) => {
     console.log('Image config changed:', imageId, config);
-    // Implementation for image configuration changes
   };
 
   return {

@@ -16,17 +16,17 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
-  const loadingRef = useRef(false);
+  const hasLoaded = useRef(false);
 
   useEffect(() => {
     const loadWork = async () => {
-      if (!id || !user || loadingRef.current || currentWorkId === id) {
+      // Evita carregamento duplicado
+      if (!id || !user || hasLoaded.current || currentWorkId === id) {
         setIsLoading(false);
         return;
       }
 
       try {
-        loadingRef.current = true;
         setIsLoading(true);
         console.log(`Loading work ${id}`);
 
@@ -52,7 +52,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         if (data?.content) {
           setBannerContent(data.content);
           setCurrentWorkId(id);
-          localStorage.removeItem(`banner_work_${user.id}_draft`);
+          hasLoaded.current = true;
         }
       } catch (error: any) {
         console.error('Error loading work:', error);
@@ -63,13 +63,17 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         });
         navigate('/');
       } finally {
-        loadingRef.current = false;
         setIsLoading(false);
       }
     };
 
     loadWork();
-  }, [id, user]);
+
+    // Limpa o estado quando o componente é desmontado
+    return () => {
+      hasLoaded.current = false;
+    };
+  }, [id, user]); // Dependências mínimas necessárias
 
   return {
     isLoading,
