@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookText, FileText, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,11 +8,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 
 const WorkInProgress = () => {
   const { user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showAllWorks, setShowAllWorks] = useState(false);
 
   const { data: workTypes } = useQuery({
     queryKey: ['academicWorkTypes'],
@@ -118,6 +121,13 @@ const WorkInProgress = () => {
   const inProgressWorks = works.filter(work => !work.isComplete);
   const completedWorks = works.filter(work => work.isComplete);
 
+  // Limita a exibição a 5 trabalhos se showAllWorks for false
+  const displayedInProgressWorks = showAllWorks ? inProgressWorks : inProgressWorks.slice(0, 5);
+  const displayedCompletedWorks = showAllWorks ? completedWorks : completedWorks.slice(0, 5);
+
+  // Verifica se há mais trabalhos além dos exibidos
+  const hasMoreWorks = inProgressWorks.length > 5 || completedWorks.length > 5;
+
   return (
     <div className="mb-16">
       <h2 className="text-2xl font-bold text-center mb-8">Meus Trabalhos</h2>
@@ -132,9 +142,9 @@ const WorkInProgress = () => {
           <CardContent>
             {isLoading ? (
               <p className="text-muted-foreground">Carregando...</p>
-            ) : inProgressWorks.length > 0 ? (
+            ) : displayedInProgressWorks.length > 0 ? (
               <div className="space-y-4">
-                {inProgressWorks.map((work) => (
+                {displayedInProgressWorks.map((work) => (
                   <div
                     key={work.id}
                     className="flex flex-col p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
@@ -173,9 +183,9 @@ const WorkInProgress = () => {
           <CardContent>
             {isLoading ? (
               <p className="text-muted-foreground">Carregando...</p>
-            ) : completedWorks.length > 0 ? (
+            ) : displayedCompletedWorks.length > 0 ? (
               <div className="space-y-4">
-                {completedWorks.map((work) => (
+                {displayedCompletedWorks.map((work) => (
                   <div
                     key={work.id}
                     className="flex flex-col p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
@@ -205,6 +215,18 @@ const WorkInProgress = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Botão Ver Mais */}
+      {hasMoreWorks && (
+        <div className="flex justify-center mt-6">
+          <Button
+            variant="outline"
+            onClick={() => setShowAllWorks(!showAllWorks)}
+          >
+            {showAllWorks ? "Ver menos" : "Ver mais"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
