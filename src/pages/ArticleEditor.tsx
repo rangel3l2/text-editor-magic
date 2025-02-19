@@ -1,16 +1,40 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useArticleContent } from "@/hooks/useArticleContent";
 import { Separator } from "@/components/ui/separator";
+import ArticlePreview from "@/components/article/ArticlePreview";
+import { useState } from "react";
+import { Eye } from "lucide-react";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
   const { content, handleChange } = useArticleContent();
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Editor de Artigo Científico</h2>
+        <Button 
+          onClick={() => setPreviewOpen(true)}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Eye className="w-4 h-4" />
+          Visualizar
+        </Button>
+      </div>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-7xl h-[90vh] overflow-y-auto">
+          <ArticlePreview content={content} />
+        </DialogContent>
+      </Dialog>
+
       <Card>
         <CardHeader>
           <CardTitle>Editor de Artigo Científico</CardTitle>
