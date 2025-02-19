@@ -20,7 +20,6 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
 
   useEffect(() => {
     const loadWork = async () => {
-      // Evita carregamento duplicado
       if (!id || !user || hasLoaded.current || currentWorkId === id) {
         setIsLoading(false);
         return;
@@ -69,11 +68,10 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
 
     loadWork();
 
-    // Limpa o estado quando o componente é desmontado
     return () => {
       hasLoaded.current = false;
     };
-  }, [id, user]); // Dependências mínimas necessárias
+  }, [id, user]);
 
   return {
     isLoading,
