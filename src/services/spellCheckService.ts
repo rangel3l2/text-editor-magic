@@ -14,15 +14,30 @@ export const checkSpelling = async (text: string): Promise<SpellCheckResult[]> =
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({ text }),
     });
 
     if (!response.ok) {
-      throw new Error('Falha na verificação ortográfica');
+      if (response.status === 404) {
+        console.error('Serviço de verificação ortográfica não encontrado');
+        return [];
+      }
+      
+      const errorText = await response.text();
+      console.error('Erro na resposta do servidor:', errorText);
+      return [];
     }
 
-    return await response.json();
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('Resposta inválida do servidor: Esperado JSON, recebido:', contentType);
+      return [];
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error('Erro na verificação ortográfica:', error);
     return [];
@@ -44,6 +59,7 @@ export const getSuggestions = async (word: string): Promise<string[]> => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
     });
 

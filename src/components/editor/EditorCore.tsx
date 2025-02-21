@@ -4,6 +4,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { checkSpelling } from "@/services/spellCheckService";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface EditorCoreProps {
   value: string;
@@ -27,6 +28,19 @@ const EditorCore = ({
   const editorRef = useRef<any>(null);
   const { toast } = useToast();
   const [spellingErrors, setSpellingErrors] = useState<any[]>([]);
+  const [contextMenu, setContextMenu] = useState<{
+    show: boolean;
+    x: number;
+    y: number;
+    word: string;
+    suggestions: string[];
+  }>({
+    show: false,
+    x: 0,
+    y: 0,
+    word: '',
+    suggestions: []
+  });
 
   // Função para obter texto puro do HTML
   const stripHtml = (html: string) => {
@@ -40,6 +54,12 @@ const EditorCore = ({
     try {
       const plainText = stripHtml(html);
       const errors = await checkSpelling(plainText);
+      
+      if (!Array.isArray(errors)) {
+        console.error('Resposta inválida do servidor de verificação ortográfica');
+        return;
+      }
+      
       setSpellingErrors(errors);
       
       if (editorRef.current) {
@@ -106,27 +126,6 @@ const EditorCore = ({
         cursor: pointer;
         background-color: rgba(255, 165, 0, 0.05);
       }
-      .ck-context-menu {
-        background: white;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        padding: 4px 0;
-        min-width: 150px;
-      }
-      .ck-context-menu__item {
-        padding: 8px 12px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-      }
-      .ck-context-menu__item:hover {
-        background-color: #f0f0f0;
-      }
-      .ck-context-menu__separator {
-        height: 1px;
-        background-color: #e0e0e0;
-        margin: 4px 0;
-      }
     `;
     document.head.appendChild(style);
     return () => {
@@ -155,127 +154,120 @@ const EditorCore = ({
   }, [value]);
 
   return (
-    <div className="border border-gray-200 rounded-lg">
-      <CKEditor
-        ref={editorRef}
-        editor={ClassicEditor}
-        data={value}
-        onChange={(_event, editor) => {
-          try {
-            const data = editor.getData();
-            onChange(data);
-          } catch (error) {
-            console.error('Error in editor onChange:', error);
-            toast({
-              title: "Erro no editor",
-              description: "Ocorreu um erro ao processar as alterações. Tente novamente.",
-              variant: "destructive",
-              duration: 3000,
-            });
-          }
-        }}
-        onReady={(editor) => {
-          editorRef.current = editor;
-          
-          // Configura o menu de contexto
-          editor.editing.view.document.on('click', (evt, data) => {
-            const domEvent = data.domEvent;
-            const targetElement = domEvent.target as HTMLElement;
-            
-            if (targetElement.classList.contains('spelling-error') || 
-                targetElement.classList.contains('grammar-error')) {
-              domEvent.preventDefault();
-              
-              // Remove menu anterior se existir
-              const oldMenu = document.querySelector('.ck-context-menu');
-              if (oldMenu) oldMenu.remove();
-              
-              const word = targetElement.getAttribute('data-word');
-              const suggestionsStr = targetElement.getAttribute('data-suggestions');
-              if (word && suggestionsStr) {
-                const suggestions = JSON.parse(suggestionsStr);
-                
-                // Cria o menu de sugestões
-                const menu = document.createElement('div');
-                menu.className = 'ck-context-menu';
-                menu.style.position = 'fixed';
-                menu.style.left = `${domEvent.clientX}px`;
-                menu.style.top = `${domEvent.clientY}px`;
-                menu.style.zIndex = '10000';
-
-                // Adiciona as sugestões
-                suggestions.forEach((suggestion: string) => {
-                  const item = document.createElement('div');
-                  item.className = 'ck-context-menu__item';
-                  item.textContent = suggestion;
-                  item.onclick = () => {
-                    const range = editor.model.createRange(
-                      editor.model.createPositionFromPath(
-                        editor.model.document.getRoot(),
-                        [0]
-                      )
-                    );
-                    editor.model.change(writer => {
-                      writer.insertText(suggestion, range);
-                    });
-                    targetElement.remove();
-                    menu.remove();
-                  };
-                  menu.appendChild(item);
-                });
-
-                // Adiciona separador
-                const separator = document.createElement('div');
-                separator.className = 'ck-context-menu__separator';
-                menu.appendChild(separator);
-
-                // Adiciona opções de ignorar
-                const ignoreItem = document.createElement('div');
-                ignoreItem.className = 'ck-context-menu__item';
-                ignoreItem.textContent = 'Ignorar';
-                ignoreItem.onclick = () => {
-                  const text = targetElement.textContent || '';
-                  const parent = targetElement.parentNode;
-                  if (parent) {
-                    parent.replaceChild(document.createTextNode(text), targetElement);
-                  }
-                  menu.remove();
-                };
-                menu.appendChild(ignoreItem);
-
-                document.body.appendChild(menu);
-
-                // Ajusta posição se estiver fora da tela
-                const rect = menu.getBoundingClientRect();
-                if (rect.right > window.innerWidth) {
-                  menu.style.left = `${window.innerWidth - rect.width - 10}px`;
-                }
-                if (rect.bottom > window.innerHeight) {
-                  menu.style.top = `${window.innerHeight - rect.height - 10}px`;
-                }
-
-                // Remove o menu quando clicar fora dele
-                document.addEventListener('click', function closeMenu(e) {
-                  if (!menu.contains(e.target as Node)) {
-                    menu.remove();
-                    document.removeEventListener('click', closeMenu);
-                  }
-                });
-              }
+    <>
+      <div className="border border-gray-200 rounded-lg">
+        <CKEditor
+          ref={editorRef}
+          editor={ClassicEditor}
+          data={value}
+          onChange={(_event, editor) => {
+            try {
+              const data = editor.getData();
+              onChange(data);
+            } catch (error) {
+              console.error('Error in editor onChange:', error);
+              toast({
+                title: "Erro no editor",
+                description: "Ocorreu um erro ao processar as alterações. Tente novamente.",
+                variant: "destructive",
+                duration: 3000,
+              });
             }
-          });
+          }}
+          onReady={(editor) => {
+            editorRef.current = editor;
+            
+            // Configura o menu de contexto
+            editor.editing.view.document.on('click', (evt, data) => {
+              const domEvent = data.domEvent;
+              const targetElement = domEvent.target as HTMLElement;
+              
+              if (targetElement.classList.contains('spelling-error') || 
+                  targetElement.classList.contains('grammar-error')) {
+                domEvent.preventDefault();
+                
+                const word = targetElement.getAttribute('data-word');
+                const suggestionsStr = targetElement.getAttribute('data-suggestions');
+                if (word && suggestionsStr) {
+                  try {
+                    const suggestions = JSON.parse(suggestionsStr);
+                    setContextMenu({
+                      show: true,
+                      x: domEvent.clientX,
+                      y: domEvent.clientY,
+                      word,
+                      suggestions
+                    });
+                  } catch (error) {
+                    console.error('Erro ao processar sugestões:', error);
+                  }
+                }
+              }
+            });
 
-          if (onReady) onReady(editor);
+            if (onReady) onReady(editor);
+          }}
+          onError={onError}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          config={{
+            ...config,
+            language: 'pt-br',
+          }}
+        />
+      </div>
+
+      <Dialog 
+        open={contextMenu.show} 
+        onOpenChange={(open) => {
+          if (!open) setContextMenu(prev => ({ ...prev, show: false }));
         }}
-        onError={onError}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        config={{
-          ...config,
-          language: 'pt-br',
-        }}
-      />
-    </div>
+      >
+        <DialogContent 
+          className="max-w-xs"
+          style={{
+            position: 'fixed',
+            left: contextMenu.x,
+            top: contextMenu.y
+          }}
+        >
+          <DialogTitle>Sugestões para "{contextMenu.word}"</DialogTitle>
+          <DialogDescription>
+            Selecione uma correção ou ignore o erro
+          </DialogDescription>
+          <div className="flex flex-col gap-2">
+            {contextMenu.suggestions.map((suggestion, index) => (
+              <button
+                key={index}
+                className="text-left px-4 py-2 hover:bg-gray-100 rounded"
+                onClick={() => {
+                  const elements = document.querySelectorAll(`[data-word="${contextMenu.word}"]`);
+                  elements.forEach(element => {
+                    element.textContent = suggestion;
+                    element.classList.remove('spelling-error', 'grammar-error');
+                  });
+                  setContextMenu(prev => ({ ...prev, show: false }));
+                }}
+              >
+                {suggestion}
+              </button>
+            ))}
+            <button
+              className="text-left px-4 py-2 hover:bg-gray-100 rounded text-gray-600"
+              onClick={() => {
+                const elements = document.querySelectorAll(`[data-word="${contextMenu.word}"]`);
+                elements.forEach(element => {
+                  element.classList.remove('spelling-error', 'grammar-error');
+                });
+                setContextMenu(prev => ({ ...prev, show: false }));
+              }}
+            >
+              Ignorar
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
