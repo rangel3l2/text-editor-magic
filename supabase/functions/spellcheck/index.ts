@@ -1,11 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -15,29 +11,22 @@ serve(async (req) => {
   try {
     const { text } = await req.json();
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'Você é um revisor de texto em português do Brasil. Analise o texto e retorne um array JSON com as palavras que têm erros ortográficos ou gramaticais. Para cada palavra, inclua sugestões de correção.'
-          },
-          {
-            role: 'user',
-            content: text
-          }
-        ]
-      }),
-    });
+    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    const data = await response.json();
-    const suggestions = JSON.parse(data.choices[0].message.content);
+    const prompt = `Você é um revisor de texto em português do Brasil. Analise o texto abaixo e retorne apenas um array JSON com os erros ortográficos e gramaticais encontrados. Para cada erro, inclua:
+    - a palavra com erro
+    - o tipo de erro (ortográfico ou gramatical)
+    - uma lista de sugestões de correção
+    
+    Texto para análise:
+    ${text}
+    
+    Retorne apenas o array JSON, sem nenhum outro texto.`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const suggestions = JSON.parse(response.text());
 
     return new Response(JSON.stringify(suggestions), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
