@@ -1,15 +1,23 @@
 
 import MainLayout from "@/components/layout/MainLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const InterventionProjectEditor = () => {
   return (
     <MainLayout showWorks={false}>
-      <div className="container mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Editor de Projeto de Intervenção</h1>
-        <p className="text-muted-foreground">
-          Esta funcionalidade está em desenvolvimento.
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Editor de Projeto de Intervenção</CardTitle>
+          <CardDescription>
+            Estruture seu projeto de intervenção de forma profissional
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Editor de projeto de intervenção em desenvolvimento...
+          </p>
+        </CardContent>
+      </Card>
     </MainLayout>
   );
 };
