@@ -1,7 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { corsHeaders } from "../_shared/cors.ts";
+
+const LANGUAGE_TOOL_API = "https://api.languagetool.org/v2/check";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,27 +12,41 @@ serve(async (req) => {
   try {
     const { text } = await req.json();
 
-    const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const params = new URLSearchParams({
+      text: text,
+      language: 'pt-BR',
+      enabledOnly: 'false'
+    });
 
-    const prompt = `Você é um revisor de texto em português do Brasil. Analise o texto abaixo e retorne apenas um array JSON com os erros ortográficos e gramaticais encontrados. Para cada erro, inclua:
-    - a palavra com erro
-    - o tipo de erro (ortográfico ou gramatical)
-    - uma lista de sugestões de correção
-    
-    Texto para análise:
-    ${text}
-    
-    Retorne apenas o array JSON, sem nenhum outro texto.`;
+    const response = await fetch(LANGUAGE_TOOL_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString()
+    });
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const suggestions = JSON.parse(response.text());
+    if (!response.ok) {
+      throw new Error('Falha na verificação ortográfica');
+    }
+
+    const data = await response.json();
+    
+    // Converte o formato do LanguageTool para nosso formato
+    const suggestions = data.matches.map((match: any) => ({
+      word: match.context.text.substring(match.context.offset, match.context.offset + match.context.length),
+      type: match.rule.category.id.includes('SPELL') ? 'spelling' : 'grammar',
+      suggestions: match.replacements.map((r: any) => r.value),
+      message: match.message,
+      offset: match.offset,
+      length: match.length
+    }));
 
     return new Response(JSON.stringify(suggestions), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    console.error('Error in spellcheck:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

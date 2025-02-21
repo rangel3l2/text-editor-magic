@@ -3,6 +3,9 @@ interface SpellCheckResult {
   word: string;
   suggestions: string[];
   type: 'spelling' | 'grammar';
+  message: string;
+  offset: number;
+  length: number;
 }
 
 export const checkSpelling = async (text: string): Promise<SpellCheckResult[]> => {
