@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookText, FileText, LogIn, Download, Share2 } from "lucide-react";
+import { BookText, FileText, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
@@ -55,79 +55,34 @@ const WorkInProgress = () => {
     staleTime: 1000 * 60,
   });
 
-  const handleDownloadPDF = async (work: any) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
-        body: { content: work.content }
-      });
-
-      if (error) throw error;
-
-      const pdfBlob = new Blob([Buffer.from(data.pdf, 'base64')], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${work.title.toLowerCase().replace(/\s+/g, '-')}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      toast({
-        title: "Download iniciado",
-        description: "Seu arquivo PDF foi gerado com sucesso",
-      });
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      toast({
-        title: "Erro ao baixar PDF",
-        description: "Não foi possível gerar o arquivo PDF",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleShare = async (work: any) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
-        body: { content: work.content }
-      });
-
-      if (error) throw error;
-
-      const pdfBlob = new Blob([Buffer.from(data.pdf, 'base64')], { type: 'application/pdf' });
-      const file = new File([pdfBlob], `${work.title}.pdf`, { type: 'application/pdf' });
-
-      if (navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: work.title,
-          text: 'Compartilhar trabalho acadêmico'
-        });
-        
-        toast({
-          title: "Compartilhamento iniciado",
-          description: "Escolha como deseja compartilhar seu trabalho",
-        });
-      } else {
-        // Fallback para WhatsApp Web se o compartilhamento nativo não estiver disponível
-        const url = window.URL.createObjectURL(pdfBlob);
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${work.title}\n${url}`)}`;
-        window.open(whatsappUrl, '_blank');
-      }
-    } catch (error) {
-      console.error('Error sharing:', error);
-      toast({
-        title: "Erro ao compartilhar",
-        description: "Não foi possível compartilhar o arquivo",
-        variant: "destructive",
-      });
-    }
-  };
-
   const getWorkTypeName = (workType: string) => {
     const type = workTypes?.find(t => t.name.toLowerCase().replace(/\s+/g, '') === workType.toLowerCase());
     return type?.name || workType;
+  };
+
+  const getWorkTypeRoute = (workType: string): string => {
+    const workTypeRoutes: { [key: string]: string } = {
+      'banner': 'banner',
+      'article': 'article',
+      'thesis': 'thesis',
+      'monography': 'monography',
+      'intervention': 'intervention-project'
+    };
+
+    const route = workTypeRoutes[workType.toLowerCase()];
+    if (!route) {
+      console.error('Unknown work type:', workType);
+      return 'banner';
+    }
+    return route;
+  };
+
+  const handleWorkClick = (work: any) => {
+    if (!work) return;
+    
+    console.log('Navigating to work:', work);
+    const route = getWorkTypeRoute(work.work_type);
+    navigate(`/${route}/${work.id}`);
   };
 
   const formatDate = (dateString: string) => {
@@ -163,11 +118,20 @@ const WorkInProgress = () => {
     );
   }
 
+  const inProgressWorks = works.filter(work => !work.isComplete);
+  const completedWorks = works.filter(work => work.isComplete);
+
+  // Limita a exibição a 5 trabalhos se showAllWorks for false
+  const displayedInProgressWorks = showAllWorks ? inProgressWorks : inProgressWorks.slice(0, 5);
+  const displayedCompletedWorks = showAllWorks ? completedWorks : completedWorks.slice(0, 5);
+
+  // Verifica se há mais trabalhos além dos exibidos
+  const hasMoreWorks = inProgressWorks.length > 5 || completedWorks.length > 5;
+
   return (
     <div className="mb-16">
       <h2 className="text-2xl font-bold text-center mb-8">Meus Trabalhos</h2>
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Trabalhos em Andamento */}
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -178,61 +142,37 @@ const WorkInProgress = () => {
           <CardContent>
             {isLoading ? (
               <p className="text-muted-foreground">Carregando...</p>
-            ) : works.filter(w => !w.isComplete).length > 0 ? (
+            ) : displayedInProgressWorks.length > 0 ? (
               <div className="space-y-4">
-                {works
-                  .filter(w => !w.isComplete)
-                  .slice(0, showAllWorks ? undefined : 5)
-                  .map((work) => (
-                    <div
-                      key={work.id}
-                      className="flex flex-col p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <p className="font-medium">{work.title}</p>
-                          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                            <Badge variant="outline">
-                              {getWorkTypeName(work.work_type)}
-                            </Badge>
-                          </div>
+                {displayedInProgressWorks.map((work) => (
+                  <div
+                    key={work.id}
+                    className="flex flex-col p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                    onClick={() => handleWorkClick(work)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <p className="font-medium">{work.title}</p>
+                        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                          <Badge variant="outline">
+                            {getWorkTypeName(work.work_type)}
+                          </Badge>
+                          <p>ID: {work.id.slice(0, 8)}</p>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleShare(work);
-                            }}
-                          >
-                            <Share2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDownloadPDF(work);
-                            }}
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        <p>Última modificação: {formatDate(work.last_modified)}</p>
                       </div>
                     </div>
-                  ))}
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      <p>Criado em: {formatDate(work.created_at)}</p>
+                      <p>Última modificação: {formatDate(work.last_modified)}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <p className="text-muted-foreground">Nenhum trabalho em andamento</p>
             )}
           </CardContent>
         </Card>
-
-        {/* Trabalhos Concluídos */}
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -243,53 +183,31 @@ const WorkInProgress = () => {
           <CardContent>
             {isLoading ? (
               <p className="text-muted-foreground">Carregando...</p>
-            ) : works.filter(w => w.isComplete).length > 0 ? (
+            ) : displayedCompletedWorks.length > 0 ? (
               <div className="space-y-4">
-                {works
-                  .filter(w => w.isComplete)
-                  .slice(0, showAllWorks ? undefined : 5)
-                  .map((work) => (
-                    <div
-                      key={work.id}
-                      className="flex flex-col p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <p className="font-medium">{work.title}</p>
-                          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                            <Badge variant="outline">
-                              {getWorkTypeName(work.work_type)}
-                            </Badge>
-                          </div>
+                {displayedCompletedWorks.map((work) => (
+                  <div
+                    key={work.id}
+                    className="flex flex-col p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
+                    onClick={() => handleWorkClick(work)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <p className="font-medium">{work.title}</p>
+                        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                          <Badge variant="outline">
+                            {getWorkTypeName(work.work_type)}
+                          </Badge>
+                          <p>ID: {work.id.slice(0, 8)}</p>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleShare(work);
-                            }}
-                          >
-                            <Share2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDownloadPDF(work);
-                            }}
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        <p>Concluído em: {formatDate(work.last_modified)}</p>
                       </div>
                     </div>
-                  ))}
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      <p>Criado em: {formatDate(work.created_at)}</p>
+                      <p>Última modificação: {formatDate(work.last_modified)}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <p className="text-muted-foreground">Nenhum trabalho concluído</p>
@@ -297,8 +215,9 @@ const WorkInProgress = () => {
           </CardContent>
         </Card>
       </div>
-
-      {works.length > 5 && (
+      
+      {/* Botão Ver Mais */}
+      {hasMoreWorks && (
         <div className="flex justify-center mt-6">
           <Button
             variant="outline"

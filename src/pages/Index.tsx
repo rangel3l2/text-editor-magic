@@ -1,19 +1,23 @@
-
+import { useNavigate } from "react-router-dom";
+import Header from "@/components/Header";
 import HomeHeader from "@/components/home/HomeHeader";
+import WorkInProgress from "@/components/home/WorkInProgress";
 import AvailableWorkTypes from "@/components/home/AvailableWorkTypes";
 import WhyChooseSection from "@/components/home/WhyChooseSection";
-import MainLayout from "@/components/layout/MainLayout";
-import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <MainLayout>
-      <HomeHeader />
-      <AvailableWorkTypes onStart={navigate} />
-      <WhyChooseSection />
-    </MainLayout>
+    <>
+      <Header />
+      <div className="container mx-auto p-6 pt-16">
+        <HomeHeader />
+        <WorkInProgress />
+        <AvailableWorkTypes onStart={navigate} />
+        <WhyChooseSection />
+      </div>
+    </>
   );
 };
 
