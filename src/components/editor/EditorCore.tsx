@@ -1,3 +1,4 @@
+
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { useEffect, useRef } from 'react';
@@ -34,6 +35,42 @@ const EditorCore = ({
     };
   }, []);
 
+  // Configuração da verificação ortográfica
+  const editorConfig = {
+    ...config,
+    language: {
+      ui: 'pt-br',
+      content: 'pt-br'
+    },
+    spellChecker: {
+      languageCode: 'pt-br',
+      suggestionMenuItems: ['suggest', 'accept', 'ignore', 'ignoreAll'],
+      checkUrl: '/api/spellcheck',  // Endpoint para verificação ortográfica
+      suggestionsLimit: 5,
+      minCharacters: 3,
+      spellcheckWhileTyping: true
+    }
+  };
+
+  // Adiciona estilos CSS para palavras com erro
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .ck-content .spelling-error {
+        border-bottom: 2px solid #ff0000;
+        cursor: pointer;
+      }
+      .ck-content .grammar-error {
+        border-bottom: 2px solid #ffa500;
+        cursor: pointer;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   return (
     <div className="border border-gray-200 rounded-lg">
       <CKEditor
@@ -56,12 +93,34 @@ const EditorCore = ({
         }}
         onReady={(editor) => {
           editorRef.current = editor;
+          
+          // Configuração do menu de sugestões
+          editor.plugins.get('ContextMenu').addItems([
+            {
+              name: 'spellCheckSuggestions',
+              label: 'Sugestões',
+              icon: 'spell-check',
+              items: []
+            }
+          ]);
+
+          // Manipulador de evento para verificação ortográfica
+          editor.editing.view.document.on('click', (evt, data) => {
+            const element = data.target;
+            if (element.hasClass('spelling-error') || element.hasClass('grammar-error')) {
+              const word = element.getCustomProperty('word');
+              // Aqui você chamaria sua API de verificação ortográfica
+              // para obter sugestões para a palavra
+              console.log('Palavra com erro:', word);
+            }
+          });
+
           if (onReady) onReady(editor);
         }}
         onError={onError}
         onFocus={onFocus}
         onBlur={onBlur}
-        config={config}
+        config={editorConfig}
       />
     </div>
   );
