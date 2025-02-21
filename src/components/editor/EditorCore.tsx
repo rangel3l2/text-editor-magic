@@ -3,7 +3,7 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { checkSpelling } from "@/services/spellCheckService";
+import { checkSpelling, ignoreMisspelling } from "@/services/spellCheckService";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface EditorCoreProps {
@@ -27,7 +27,6 @@ const EditorCore = ({
 }: EditorCoreProps) => {
   const editorRef = useRef<any>(null);
   const { toast } = useToast();
-  const [spellingErrors, setSpellingErrors] = useState<any[]>([]);
   const [contextMenu, setContextMenu] = useState<{
     show: boolean;
     x: number;
@@ -55,18 +54,11 @@ const EditorCore = ({
       const plainText = stripHtml(html);
       const errors = await checkSpelling(plainText);
       
-      if (!Array.isArray(errors)) {
-        console.error('Resposta inválida do servidor de verificação ortográfica');
-        return;
-      }
-      
-      setSpellingErrors(errors);
-      
       if (editorRef.current) {
         const editorContent = editorRef.current.editing.view.getDomRoot();
         
         // Remove marcações anteriores
-        const oldMarks = editorContent.querySelectorAll('.spelling-error, .grammar-error');
+        const oldMarks = editorContent.querySelectorAll('.spelling-error');
         oldMarks.forEach((mark: Element) => {
           const parent = mark.parentNode;
           if (parent) {
@@ -97,10 +89,10 @@ const EditorCore = ({
               range.setEnd(node, position + searchText.length);
               
               const span = document.createElement('span');
-              span.className = error.type === 'spelling' ? 'spelling-error' : 'grammar-error';
+              span.className = 'spelling-error';
               span.setAttribute('data-suggestions', JSON.stringify(error.suggestions));
               span.setAttribute('data-word', searchText);
-              span.setAttribute('title', error.message || 'Erro encontrado');
+              span.setAttribute('title', error.message);
               
               range.surroundContents(span);
               break;
@@ -119,12 +111,10 @@ const EditorCore = ({
       .spelling-error {
         border-bottom: 2px solid #ff0000;
         cursor: pointer;
-        background-color: rgba(255, 0, 0, 0.05);
+        background-color: transparent;
       }
-      .grammar-error {
-        border-bottom: 2px solid #ffa500;
-        cursor: pointer;
-        background-color: rgba(255, 165, 0, 0.05);
+      .spelling-error:hover {
+        background-color: rgba(255, 0, 0, 0.05);
       }
     `;
     document.head.appendChild(style);
@@ -141,7 +131,7 @@ const EditorCore = ({
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
         checkText(text);
-      }, 1000);
+      }, 500);
     };
 
     if (value) {
@@ -182,8 +172,7 @@ const EditorCore = ({
               const domEvent = data.domEvent;
               const targetElement = domEvent.target as HTMLElement;
               
-              if (targetElement.classList.contains('spelling-error') || 
-                  targetElement.classList.contains('grammar-error')) {
+              if (targetElement.classList.contains('spelling-error')) {
                 domEvent.preventDefault();
                 
                 const word = targetElement.getAttribute('data-word');
@@ -241,11 +230,15 @@ const EditorCore = ({
                 key={index}
                 className="text-left px-4 py-2 hover:bg-gray-100 rounded"
                 onClick={() => {
-                  const elements = document.querySelectorAll(`[data-word="${contextMenu.word}"]`);
-                  elements.forEach(element => {
-                    element.textContent = suggestion;
-                    element.classList.remove('spelling-error', 'grammar-error');
-                  });
+                  if (editorRef.current) {
+                    const elements = document.querySelectorAll(`[data-word="${contextMenu.word}"]`);
+                    elements.forEach(element => {
+                      if (element.textContent) {
+                        element.textContent = suggestion;
+                      }
+                      element.classList.remove('spelling-error');
+                    });
+                  }
                   setContextMenu(prev => ({ ...prev, show: false }));
                 }}
               >
@@ -255,9 +248,10 @@ const EditorCore = ({
             <button
               className="text-left px-4 py-2 hover:bg-gray-100 rounded text-gray-600"
               onClick={() => {
+                ignoreMisspelling(contextMenu.word);
                 const elements = document.querySelectorAll(`[data-word="${contextMenu.word}"]`);
                 elements.forEach(element => {
-                  element.classList.remove('spelling-error', 'grammar-error');
+                  element.classList.remove('spelling-error');
                 });
                 setContextMenu(prev => ({ ...prev, show: false }));
               }}

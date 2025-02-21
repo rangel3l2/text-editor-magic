@@ -8,68 +8,71 @@ interface SpellCheckResult {
   length: number;
 }
 
-export const checkSpelling = async (text: string): Promise<SpellCheckResult[]> => {
-  try {
-    const response = await fetch('/api/spellcheck', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ text }),
-    });
+// Dicionário básico em português (poderia ser expandido)
+const dictionary = new Set([
+  'o', 'a', 'os', 'as', 'um', 'uma', 'uns', 'umas',
+  'e', 'ou', 'mas', 'porém', 'contudo',
+  'título', 'subtítulo', 'introdução', 'desenvolvimento', 'conclusão',
+  'artigo', 'científico', 'acadêmico', 'pesquisa',
+  'autor', 'autores', 'orientador', 'orientadores',
+  'resumo', 'abstract', 'palavras-chave', 'keywords',
+  // Adicione mais palavras conforme necessário
+]);
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        console.error('Serviço de verificação ortográfica não encontrado');
-        return [];
-      }
-      
-      const errorText = await response.text();
-      console.error('Erro na resposta do servidor:', errorText);
-      return [];
-    }
+// Função para obter sugestões simples
+const getSuggestionForWord = (word: string): string[] => {
+  const suggestions: string[] = [];
+  
+  // Verifica se a palavra tem acento faltando
+  const accentedVersions: {[key: string]: string} = {
+    'titulo': 'título',
+    'introducao': 'introdução',
+    'conclusao': 'conclusão',
+    'cientifica': 'científica',
+    'academico': 'acadêmico',
+    'pesquisa': 'pesquisa',
+    // Adicione mais mapeamentos conforme necessário
+  };
 
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      console.error('Resposta inválida do servidor: Esperado JSON, recebido:', contentType);
-      return [];
-    }
-
-    const data = await response.json();
-    return Array.isArray(data) ? data : [];
-  } catch (error) {
-    console.error('Erro na verificação ortográfica:', error);
-    return [];
+  if (accentedVersions[word.toLowerCase()]) {
+    suggestions.push(accentedVersions[word.toLowerCase()]);
   }
+
+  return suggestions;
+};
+
+// Lista de palavras ignoradas pelo usuário
+let ignoredWords = new Set<string>();
+
+export const checkSpelling = async (text: string): Promise<SpellCheckResult[]> => {
+  const words = text.split(/\s+/);
+  const errors: SpellCheckResult[] = [];
+  let offset = 0;
+
+  for (const word of words) {
+    const cleanWord = word.toLowerCase().replace(/[.,!?;:"']/g, '');
+    
+    if (!dictionary.has(cleanWord) && !ignoredWords.has(cleanWord)) {
+      errors.push({
+        word: word,
+        suggestions: getSuggestionForWord(cleanWord),
+        type: 'spelling',
+        message: 'Palavra não encontrada no dicionário',
+        offset: offset,
+        length: word.length
+      });
+    }
+    
+    offset += word.length + 1; // +1 para o espaço
+  }
+
+  return errors;
 };
 
 export const ignoreMisspelling = (word: string) => {
-  // Adiciona a palavra ao dicionário local de palavras ignoradas
-  const ignoredWords = JSON.parse(localStorage.getItem('ignoredWords') || '[]');
-  if (!ignoredWords.includes(word)) {
-    ignoredWords.push(word);
-    localStorage.setItem('ignoredWords', JSON.stringify(ignoredWords));
-  }
+  ignoredWords.add(word.toLowerCase());
 };
 
 export const getSuggestions = async (word: string): Promise<string[]> => {
-  try {
-    const response = await fetch(`/api/suggestions?word=${encodeURIComponent(word)}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Falha ao obter sugestões');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Erro ao obter sugestões:', error);
-    return [];
-  }
+  return getSuggestionForWord(word);
 };
