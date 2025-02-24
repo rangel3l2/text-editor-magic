@@ -22,6 +22,12 @@ export const checkSpelling = async (text: string): Promise<SpellCheckResult[]> =
       throw new Error('Falha na verificação ortográfica');
     }
 
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('Resposta não é JSON:', await response.text());
+      return [];
+    }
+
     return await response.json();
   } catch (error) {
     console.error('Erro na verificação ortográfica:', error);
@@ -30,7 +36,6 @@ export const checkSpelling = async (text: string): Promise<SpellCheckResult[]> =
 };
 
 export const ignoreMisspelling = (word: string) => {
-  // Adiciona a palavra ao dicionário local de palavras ignoradas
   const ignoredWords = JSON.parse(localStorage.getItem('ignoredWords') || '[]');
   if (!ignoredWords.includes(word)) {
     ignoredWords.push(word);
