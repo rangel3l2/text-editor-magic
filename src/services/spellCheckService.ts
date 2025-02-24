@@ -1,4 +1,6 @@
 
+import { supabase } from "@/integrations/supabase/client";
+
 interface SpellCheckResult {
   word: string;
   suggestions: string[];
@@ -10,25 +12,16 @@ interface SpellCheckResult {
 
 export const checkSpelling = async (text: string): Promise<SpellCheckResult[]> => {
   try {
-    const response = await fetch('/api/spellcheck', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text }),
+    const { data, error } = await supabase.functions.invoke('spellcheck', {
+      body: { text }
     });
 
-    if (!response.ok) {
-      throw new Error('Falha na verificação ortográfica');
-    }
-
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      console.error('Resposta não é JSON:', await response.text());
+    if (error) {
+      console.error('Erro na verificação ortográfica:', error);
       return [];
     }
 
-    return await response.json();
+    return data || [];
   } catch (error) {
     console.error('Erro na verificação ortográfica:', error);
     return [];
@@ -45,18 +38,16 @@ export const ignoreMisspelling = (word: string) => {
 
 export const getSuggestions = async (word: string): Promise<string[]> => {
   try {
-    const response = await fetch(`/api/suggestions?word=${encodeURIComponent(word)}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const { data, error } = await supabase.functions.invoke('spellcheck', {
+      body: { text: word }
     });
 
-    if (!response.ok) {
-      throw new Error('Falha ao obter sugestões');
+    if (error) {
+      console.error('Erro ao obter sugestões:', error);
+      return [];
     }
 
-    return await response.json();
+    return (data || []).flatMap(result => result.suggestions);
   } catch (error) {
     console.error('Erro ao obter sugestões:', error);
     return [];
