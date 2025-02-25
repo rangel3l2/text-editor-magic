@@ -10,7 +10,7 @@ const MainLayout = ({ children, showWorks = true }: MainLayoutProps) => {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen bg-background pt-14">
         {children}
       </main>
     </>
