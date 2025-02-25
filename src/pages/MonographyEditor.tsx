@@ -1,5 +1,5 @@
 import MainLayout from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useMonographyContent } from "@/hooks/useMonographyContent";
 import { useState } from "react";
 import EditorHeader from "@/components/editor/EditorHeader";
@@ -53,9 +53,6 @@ const MonographyEditor = () => {
         </Dialog>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Editor de Monografia</CardTitle>
-          </CardHeader>
           <CardContent className="space-y-6">
             {/* Elementos Pré-textuais */}
             <div className="space-y-4">

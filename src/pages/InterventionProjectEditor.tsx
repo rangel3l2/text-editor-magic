@@ -1,5 +1,5 @@
 import MainLayout from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useState } from "react";
@@ -82,12 +82,6 @@ const InterventionProjectEditor = () => {
 
           <TabsContent value="context">
             <Card>
-              <CardHeader>
-                <CardTitle>Contexto</CardTitle>
-                <CardDescription>
-                  Descreva o contexto onde a intervenção será realizada
-                </CardDescription>
-              </CardHeader>
               <CardContent>
                 <RichTextEditor
                   value={content.context}

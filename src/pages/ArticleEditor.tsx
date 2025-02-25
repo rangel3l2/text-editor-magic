@@ -1,6 +1,5 @@
-
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useArticleContent } from "@/hooks/useArticleContent";
@@ -31,7 +30,6 @@ const ArticleEditor = () => {
   };
 
   const handleClear = () => {
-    // Implementar limpeza dos campos
     toast({
       title: "Limpar",
       description: "Todos os campos foram limpos.",
@@ -56,9 +54,6 @@ const ArticleEditor = () => {
         </Dialog>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Editor de Artigo Científico</CardTitle>
-          </CardHeader>
           <CardContent className="space-y-6">
             {/* Título e Subtítulo */}
             <div className="space-y-4">
