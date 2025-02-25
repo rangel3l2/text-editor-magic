@@ -1,5 +1,6 @@
+
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useArticleContent } from "@/hooks/useArticleContent";
@@ -53,9 +54,12 @@ const ArticleEditor = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Elementos Pré-textuais */}
         <Card>
+          <CardHeader>
+            <CardTitle>Elementos Pré-textuais</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-6">
-            {/* Título e Subtítulo */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Título e Subtítulo</h3>
               <RichTextEditor
@@ -78,7 +82,6 @@ const ArticleEditor = () => {
 
             <Separator />
 
-            {/* Autores */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Autores</h3>
               <RichTextEditor
@@ -101,7 +104,6 @@ const ArticleEditor = () => {
 
             <Separator />
 
-            {/* Resumo */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Resumo</h3>
               <RichTextEditor
@@ -124,7 +126,6 @@ const ArticleEditor = () => {
 
             <Separator />
 
-            {/* Abstract */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Abstract</h3>
               <RichTextEditor
@@ -144,10 +145,15 @@ const ArticleEditor = () => {
                 placeholder="Type the keywords (3 to 5 words, separated by dots)..."
               />
             </div>
+          </CardContent>
+        </Card>
 
-            <Separator />
-
-            {/* Introdução */}
+        {/* Elementos Textuais */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Elementos Textuais</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">1 Introdução</h3>
               <RichTextEditor
@@ -160,7 +166,6 @@ const ArticleEditor = () => {
               />
             </div>
 
-            {/* Desenvolvimento */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">2 Desenvolvimento</h3>
               <RichTextEditor
@@ -173,7 +178,6 @@ const ArticleEditor = () => {
               />
             </div>
 
-            {/* Conclusão */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">3 Conclusão</h3>
               <RichTextEditor
@@ -185,8 +189,15 @@ const ArticleEditor = () => {
                 placeholder="Digite a conclusão do artigo..."
               />
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Referências */}
+        {/* Elementos Pós-textuais */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Elementos Pós-textuais</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Referências</h3>
               <RichTextEditor
