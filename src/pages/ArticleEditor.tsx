@@ -1,34 +1,53 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useArticleContent } from "@/hooks/useArticleContent";
 import { Separator } from "@/components/ui/separator";
 import ArticlePreview from "@/components/article/ArticlePreview";
 import { useState } from "react";
-import { Eye } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
+import EditorHeader from "@/components/editor/EditorHeader";
+import { toast } from "@/components/ui/use-toast";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
   const { content, handleChange } = useArticleContent();
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  const handleDownload = () => {
+    toast({
+      title: "Download",
+      description: "Função de download em desenvolvimento...",
+    });
+  };
+
+  const handleShare = () => {
+    toast({
+      title: "Compartilhar",
+      description: "Função de compartilhamento em desenvolvimento...",
+    });
+  };
+
+  const handleClear = () => {
+    // Implementar limpeza dos campos
+    toast({
+      title: "Limpar",
+      description: "Todos os campos foram limpos.",
+    });
+  };
+
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Editor de Artigo Científico</h2>
-          <Button 
-            onClick={() => setPreviewOpen(true)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Eye className="w-4 h-4" />
-            Visualizar
-          </Button>
-        </div>
+        <EditorHeader
+          title="Novo Artigo Científico"
+          onDownload={handleDownload}
+          onShare={handleShare}
+          onPreview={() => setPreviewOpen(true)}
+          onClear={handleClear}
+        />
 
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
           <DialogContent className="max-w-7xl h-[90vh] overflow-y-auto">

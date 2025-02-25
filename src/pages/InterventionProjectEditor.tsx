@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useState } from "react";
+import EditorHeader from "@/components/editor/EditorHeader";
+import { toast } from "@/components/ui/use-toast";
 
 const InterventionProjectEditor = () => {
   const [content, setContent] = useState({
@@ -25,13 +27,44 @@ const InterventionProjectEditor = () => {
     }));
   };
 
+  const handleDownload = () => {
+    toast({
+      title: "Download",
+      description: "Função de download em desenvolvimento...",
+    });
+  };
+
+  const handleShare = () => {
+    toast({
+      title: "Compartilhar",
+      description: "Função de compartilhamento em desenvolvimento...",
+    });
+  };
+
+  const handlePreview = () => {
+    toast({
+      title: "Visualizar",
+      description: "Função de visualização em desenvolvimento...",
+    });
+  };
+
+  const handleClear = () => {
+    toast({
+      title: "Limpar",
+      description: "Todos os campos foram limpos.",
+    });
+  };
+
   return (
     <MainLayout showWorks={false}>
       <div className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-4">Editor de Projeto de Intervenção</h1>
-        <p className="text-muted-foreground mb-6">
-          Estruture seu projeto de intervenção de forma profissional
-        </p>
+        <EditorHeader
+          title="Novo Projeto de Intervenção"
+          onDownload={handleDownload}
+          onShare={handleShare}
+          onPreview={handlePreview}
+          onClear={handleClear}
+        />
 
         <Tabs defaultValue="context" className="space-y-4">
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 gap-2">
