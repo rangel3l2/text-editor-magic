@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -11,10 +10,11 @@ import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import EditorHeader from "@/components/editor/EditorHeader";
 import { toast } from "@/components/ui/use-toast";
+import TheoreticalFramework from "@/components/article/TheoreticalFramework";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
-  const { content, handleChange } = useArticleContent();
+  const { content, handleChange, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleDownload = () => {
@@ -184,68 +184,72 @@ const ArticleEditor = () => {
 
                 <Separator />
 
-                {/* Desenvolvimento */}
+                {/* Referencial Teórico */}
+                <TheoreticalFramework
+                  topics={content.theoreticalTopics}
+                  onAddTopic={addTheoreticalTopic}
+                  onUpdateTopic={updateTheoreticalTopic}
+                  onRemoveTopic={removeTheoreticalTopic}
+                />
+
+                <Separator />
+
+                {/* Metodologia */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">2. Desenvolvimento</h3>
-                  
-                  {/* Fundamentação Teórica */}
-                  <div className="pl-4">
-                    <h4 className="text-md font-medium mb-2">2.1. Fundamentação Teórica</h4>
-                    <RichTextEditor
-                      value={content.theoreticalFramework}
-                      onChange={(value) => handleChange('theoreticalFramework', value)}
-                      maxLines={50}
-                      minLines={10}
-                      sectionName="fundamentação teórica"
-                      placeholder="Digite a fundamentação teórica..."
-                    />
-                  </div>
+                  <h3 className="text-lg font-semibold">
+                    {2 + content.theoreticalTopics.length}. Metodologia
+                  </h3>
+                  <RichTextEditor
+                    value={content.methodology}
+                    onChange={(value) => handleChange('methodology', value)}
+                    maxLines={30}
+                    minLines={10}
+                    sectionName="metodologia"
+                    placeholder="Digite a metodologia..."
+                  />
+                </div>
 
-                  {/* Metodologia */}
-                  <div className="pl-4">
-                    <h4 className="text-md font-medium mb-2">2.2. Metodologia</h4>
-                    <RichTextEditor
-                      value={content.methodology}
-                      onChange={(value) => handleChange('methodology', value)}
-                      maxLines={30}
-                      minLines={10}
-                      sectionName="metodologia"
-                      placeholder="Digite a metodologia..."
-                    />
-                  </div>
+                <Separator />
 
-                  {/* Resultados */}
-                  <div className="pl-4">
-                    <h4 className="text-md font-medium mb-2">2.3. Resultados</h4>
-                    <RichTextEditor
-                      value={content.results}
-                      onChange={(value) => handleChange('results', value)}
-                      maxLines={50}
-                      minLines={10}
-                      sectionName="resultados"
-                      placeholder="Digite os resultados..."
-                    />
-                  </div>
+                {/* Resultados */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">
+                    {3 + content.theoreticalTopics.length}. Resultados
+                  </h3>
+                  <RichTextEditor
+                    value={content.results}
+                    onChange={(value) => handleChange('results', value)}
+                    maxLines={50}
+                    minLines={10}
+                    sectionName="resultados"
+                    placeholder="Digite os resultados..."
+                  />
+                </div>
 
-                  {/* Discussão */}
-                  <div className="pl-4">
-                    <h4 className="text-md font-medium mb-2">2.4. Discussão</h4>
-                    <RichTextEditor
-                      value={content.discussion}
-                      onChange={(value) => handleChange('discussion', value)}
-                      maxLines={50}
-                      minLines={10}
-                      sectionName="discussão"
-                      placeholder="Digite a discussão dos resultados..."
-                    />
-                  </div>
+                <Separator />
+
+                {/* Discussão */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">
+                    {4 + content.theoreticalTopics.length}. Discussão
+                  </h3>
+                  <RichTextEditor
+                    value={content.discussion}
+                    onChange={(value) => handleChange('discussion', value)}
+                    maxLines={50}
+                    minLines={10}
+                    sectionName="discussão"
+                    placeholder="Digite a discussão dos resultados..."
+                  />
                 </div>
 
                 <Separator />
 
                 {/* Conclusão */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">3. Conclusão</h3>
+                  <h3 className="text-lg font-semibold">
+                    {5 + content.theoreticalTopics.length}. Conclusão
+                  </h3>
                   <RichTextEditor
                     value={content.conclusion}
                     onChange={(value) => handleChange('conclusion', value)}

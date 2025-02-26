@@ -1,9 +1,15 @@
-
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+
+export interface TheoreticalTopic {
+  id: string;
+  title: string;
+  content: string;
+  order: number;
+}
 
 export interface ArticleContent {
   title: string;
@@ -16,11 +22,10 @@ export interface ArticleContent {
   englishAbstract: string;
   englishKeywords: string;
   introduction: string;
-  theoreticalFramework: string;
+  theoreticalTopics: TheoreticalTopic[];
   methodology: string;
   results: string;
   discussion: string;
-  development: string;
   conclusion: string;
   references: string;
   appendices?: string;
@@ -44,11 +49,10 @@ export const useArticleContent = () => {
     englishAbstract: '',
     englishKeywords: '',
     introduction: '',
-    theoreticalFramework: '',
+    theoreticalTopics: [],
     methodology: '',
     results: '',
     discussion: '',
-    development: '',
     conclusion: '',
     references: '',
     appendices: '',
@@ -58,7 +62,7 @@ export const useArticleContent = () => {
 
   const [content, setContent] = useState<ArticleContent>(initialArticleContent);
 
-  const handleChange = (field: keyof ArticleContent, value: string) => {
+  const handleChange = (field: keyof ArticleContent, value: string | TheoreticalTopic[]) => {
     setContent(prev => ({
       ...prev,
       [field]: value
@@ -89,6 +93,57 @@ export const useArticleContent = () => {
 
       saveContent();
     }
+  };
+
+  const addTheoreticalTopic = () => {
+    const newTopic: TheoreticalTopic = {
+      id: crypto.randomUUID(),
+      title: '',
+      content: '',
+      order: content.theoreticalTopics.length + 2, // +2 porque a introdução é 1
+    };
+
+    const updatedTopics = [...content.theoreticalTopics, newTopic];
+    handleChange('theoreticalTopics', updatedTopics);
+  };
+
+  const updateTheoreticalTopic = (topicId: string, field: 'title' | 'content', value: string) => {
+    const updatedTopics = content.theoreticalTopics.map(topic => {
+      if (topic.id === topicId) {
+        return { ...topic, [field]: value };
+      }
+      return topic;
+    });
+    handleChange('theoreticalTopics', updatedTopics);
+  };
+
+  const removeTheoreticalTopic = (topicId: string) => {
+    const updatedTopics = content.theoreticalTopics
+      .filter(topic => topic.id !== topicId)
+      .map((topic, index) => ({
+        ...topic,
+        order: index + 2 // Reordenar após remover
+      }));
+    handleChange('theoreticalTopics', updatedTopics);
+  };
+
+  const reorderTheoreticalTopics = (topicId: string, newOrder: number) => {
+    const topic = content.theoreticalTopics.find(t => t.id === topicId);
+    if (!topic) return;
+
+    const updatedTopics = content.theoreticalTopics
+      .map(t => {
+        if (t.id === topicId) {
+          return { ...t, order: newOrder };
+        }
+        if (t.order >= newOrder && t.id !== topicId) {
+          return { ...t, order: t.order + 1 };
+        }
+        return t;
+      })
+      .sort((a, b) => a.order - b.order);
+
+    handleChange('theoreticalTopics', updatedTopics);
   };
 
   useEffect(() => {
@@ -123,5 +178,9 @@ export const useArticleContent = () => {
   return {
     content,
     handleChange,
+    addTheoreticalTopic,
+    updateTheoreticalTopic,
+    removeTheoreticalTopic,
+    reorderTheoreticalTopics,
   };
 };
