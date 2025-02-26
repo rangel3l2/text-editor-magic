@@ -1,7 +1,8 @@
 
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useArticleContent } from "@/hooks/useArticleContent";
 import { Separator } from "@/components/ui/separator";
@@ -54,163 +55,169 @@ const ArticleEditor = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Elementos Pré-textuais */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Elementos Pré-textuais</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Título e Subtítulo</h3>
-              <RichTextEditor
-                value={content.title}
-                onChange={(value) => handleChange('title', value)}
-                maxLines={3}
-                minLines={1}
-                sectionName="título"
-                placeholder="Digite o título do artigo..."
-              />
-              <RichTextEditor
-                value={content.subtitle}
-                onChange={(value) => handleChange('subtitle', value)}
-                maxLines={2}
-                minLines={0}
-                sectionName="subtítulo"
-                placeholder="Digite o subtítulo (se houver)..."
-              />
-            </div>
+        <Tabs defaultValue="pre-textual" className="w-full space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="pre-textual">Elementos Pré-textuais</TabsTrigger>
+            <TabsTrigger value="textual">Elementos Textuais</TabsTrigger>
+            <TabsTrigger value="post-textual">Elementos Pós-textuais</TabsTrigger>
+          </TabsList>
 
-            <Separator />
+          <TabsContent value="pre-textual">
+            <Card>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Título e Subtítulo</h3>
+                  <RichTextEditor
+                    value={content.title}
+                    onChange={(value) => handleChange('title', value)}
+                    maxLines={3}
+                    minLines={1}
+                    sectionName="título"
+                    placeholder="Digite o título do artigo..."
+                  />
+                  <RichTextEditor
+                    value={content.subtitle}
+                    onChange={(value) => handleChange('subtitle', value)}
+                    maxLines={2}
+                    minLines={0}
+                    sectionName="subtítulo"
+                    placeholder="Digite o subtítulo (se houver)..."
+                  />
+                </div>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Autores</h3>
-              <RichTextEditor
-                value={content.authors}
-                onChange={(value) => handleChange('authors', value)}
-                maxLines={4}
-                minLines={1}
-                sectionName="autores"
-                placeholder="Digite os nomes dos autores (um por linha)..."
-              />
-              <RichTextEditor
-                value={content.advisors}
-                onChange={(value) => handleChange('advisors', value)}
-                maxLines={2}
-                minLines={1}
-                sectionName="orientadores"
-                placeholder="Digite os nomes dos orientadores..."
-              />
-            </div>
+                <Separator />
 
-            <Separator />
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Autores</h3>
+                  <RichTextEditor
+                    value={content.authors}
+                    onChange={(value) => handleChange('authors', value)}
+                    maxLines={4}
+                    minLines={1}
+                    sectionName="autores"
+                    placeholder="Digite os nomes dos autores (um por linha)..."
+                  />
+                  <RichTextEditor
+                    value={content.advisors}
+                    onChange={(value) => handleChange('advisors', value)}
+                    maxLines={2}
+                    minLines={1}
+                    sectionName="orientadores"
+                    placeholder="Digite os nomes dos orientadores..."
+                  />
+                </div>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Resumo</h3>
-              <RichTextEditor
-                value={content.abstract}
-                onChange={(value) => handleChange('abstract', value)}
-                maxLines={15}
-                minLines={5}
-                sectionName="resumo"
-                placeholder="Digite o resumo (100 a 250 palavras)..."
-              />
-              <RichTextEditor
-                value={content.keywords}
-                onChange={(value) => handleChange('keywords', value)}
-                maxLines={2}
-                minLines={1}
-                sectionName="palavras-chave"
-                placeholder="Digite as palavras-chave (3 a 5 palavras, separadas por ponto)..."
-              />
-            </div>
+                <Separator />
 
-            <Separator />
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Resumo</h3>
+                  <RichTextEditor
+                    value={content.abstract}
+                    onChange={(value) => handleChange('abstract', value)}
+                    maxLines={15}
+                    minLines={5}
+                    sectionName="resumo"
+                    placeholder="Digite o resumo (100 a 250 palavras)..."
+                  />
+                  <RichTextEditor
+                    value={content.keywords}
+                    onChange={(value) => handleChange('keywords', value)}
+                    maxLines={2}
+                    minLines={1}
+                    sectionName="palavras-chave"
+                    placeholder="Digite as palavras-chave (3 a 5 palavras, separadas por ponto)..."
+                  />
+                </div>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Abstract</h3>
-              <RichTextEditor
-                value={content.englishAbstract}
-                onChange={(value) => handleChange('englishAbstract', value)}
-                maxLines={15}
-                minLines={5}
-                sectionName="abstract"
-                placeholder="Type the abstract..."
-              />
-              <RichTextEditor
-                value={content.englishKeywords}
-                onChange={(value) => handleChange('englishKeywords', value)}
-                maxLines={2}
-                minLines={1}
-                sectionName="keywords"
-                placeholder="Type the keywords (3 to 5 words, separated by dots)..."
-              />
-            </div>
-          </CardContent>
-        </Card>
+                <Separator />
 
-        {/* Elementos Textuais */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Elementos Textuais</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">1 Introdução</h3>
-              <RichTextEditor
-                value={content.introduction}
-                onChange={(value) => handleChange('introduction', value)}
-                maxLines={30}
-                minLines={10}
-                sectionName="introdução"
-                placeholder="Digite a introdução do artigo..."
-              />
-            </div>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Abstract</h3>
+                  <RichTextEditor
+                    value={content.englishAbstract}
+                    onChange={(value) => handleChange('englishAbstract', value)}
+                    maxLines={15}
+                    minLines={5}
+                    sectionName="abstract"
+                    placeholder="Type the abstract..."
+                  />
+                  <RichTextEditor
+                    value={content.englishKeywords}
+                    onChange={(value) => handleChange('englishKeywords', value)}
+                    maxLines={2}
+                    minLines={1}
+                    sectionName="keywords"
+                    placeholder="Type the keywords (3 to 5 words, separated by dots)..."
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">2 Desenvolvimento</h3>
-              <RichTextEditor
-                value={content.development}
-                onChange={(value) => handleChange('development', value)}
-                maxLines={100}
-                minLines={20}
-                sectionName="desenvolvimento"
-                placeholder="Digite o desenvolvimento do artigo..."
-              />
-            </div>
+          <TabsContent value="textual">
+            <Card>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">1 Introdução</h3>
+                  <RichTextEditor
+                    value={content.introduction}
+                    onChange={(value) => handleChange('introduction', value)}
+                    maxLines={30}
+                    minLines={10}
+                    sectionName="introdução"
+                    placeholder="Digite a introdução do artigo..."
+                  />
+                </div>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">3 Conclusão</h3>
-              <RichTextEditor
-                value={content.conclusion}
-                onChange={(value) => handleChange('conclusion', value)}
-                maxLines={20}
-                minLines={5}
-                sectionName="conclusão"
-                placeholder="Digite a conclusão do artigo..."
-              />
-            </div>
-          </CardContent>
-        </Card>
+                <Separator />
 
-        {/* Elementos Pós-textuais */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Elementos Pós-textuais</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Referências</h3>
-              <RichTextEditor
-                value={content.references}
-                onChange={(value) => handleChange('references', value)}
-                maxLines={50}
-                minLines={5}
-                sectionName="referências"
-                placeholder="Digite as referências do artigo..."
-              />
-            </div>
-          </CardContent>
-        </Card>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">2 Desenvolvimento</h3>
+                  <RichTextEditor
+                    value={content.development}
+                    onChange={(value) => handleChange('development', value)}
+                    maxLines={100}
+                    minLines={20}
+                    sectionName="desenvolvimento"
+                    placeholder="Digite o desenvolvimento do artigo..."
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">3 Conclusão</h3>
+                  <RichTextEditor
+                    value={content.conclusion}
+                    onChange={(value) => handleChange('conclusion', value)}
+                    maxLines={20}
+                    minLines={5}
+                    sectionName="conclusão"
+                    placeholder="Digite a conclusão do artigo..."
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="post-textual">
+            <Card>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Referências</h3>
+                  <RichTextEditor
+                    value={content.references}
+                    onChange={(value) => handleChange('references', value)}
+                    maxLines={50}
+                    minLines={5}
+                    sectionName="referências"
+                    placeholder="Digite as referências do artigo..."
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </MainLayout>
   );
