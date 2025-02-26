@@ -9,15 +9,22 @@ export interface ArticleContent {
   title: string;
   subtitle?: string;
   authors: string;
+  institution: string;
   advisors: string;
   abstract: string;
   keywords: string;
   englishAbstract: string;
   englishKeywords: string;
   introduction: string;
+  theoreticalFramework: string;
+  methodology: string;
+  results: string;
+  discussion: string;
   development: string;
   conclusion: string;
   references: string;
+  appendices?: string;
+  attachments?: string;
   approvalDate?: string;
 }
 
@@ -30,15 +37,22 @@ export const useArticleContent = () => {
     title: '',
     subtitle: '',
     authors: '',
+    institution: '',
     advisors: '',
     abstract: '',
     keywords: '',
     englishAbstract: '',
     englishKeywords: '',
     introduction: '',
+    theoreticalFramework: '',
+    methodology: '',
+    results: '',
+    discussion: '',
     development: '',
     conclusion: '',
     references: '',
+    appendices: '',
+    attachments: '',
     approvalDate: '',
   };
 
@@ -50,7 +64,6 @@ export const useArticleContent = () => {
       [field]: value
     }));
 
-    // Auto-save to work_in_progress table
     if (user && id) {
       const saveContent = async () => {
         try {
@@ -78,7 +91,6 @@ export const useArticleContent = () => {
     }
   };
 
-  // Load existing content if editing
   useEffect(() => {
     if (user && id) {
       const loadContent = async () => {

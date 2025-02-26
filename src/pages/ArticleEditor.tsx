@@ -65,6 +65,7 @@ const ArticleEditor = () => {
           <TabsContent value="pre-textual">
             <Card>
               <CardContent className="space-y-6">
+                {/* Título e Subtítulo */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Título e Subtítulo</h3>
                   <RichTextEditor
@@ -87,8 +88,9 @@ const ArticleEditor = () => {
 
                 <Separator />
 
+                {/* Autores e Instituição */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Autores</h3>
+                  <h3 className="text-lg font-semibold">Autores e Instituição</h3>
                   <RichTextEditor
                     value={content.authors}
                     onChange={(value) => handleChange('authors', value)}
@@ -96,6 +98,14 @@ const ArticleEditor = () => {
                     minLines={1}
                     sectionName="autores"
                     placeholder="Digite os nomes dos autores (um por linha)..."
+                  />
+                  <RichTextEditor
+                    value={content.institution}
+                    onChange={(value) => handleChange('institution', value)}
+                    maxLines={2}
+                    minLines={1}
+                    sectionName="instituição"
+                    placeholder="Digite o nome da instituição..."
                   />
                   <RichTextEditor
                     value={content.advisors}
@@ -109,6 +119,7 @@ const ArticleEditor = () => {
 
                 <Separator />
 
+                {/* Resumo em Português */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Resumo</h3>
                   <RichTextEditor
@@ -131,6 +142,7 @@ const ArticleEditor = () => {
 
                 <Separator />
 
+                {/* Abstract */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Abstract</h3>
                   <RichTextEditor
@@ -139,7 +151,7 @@ const ArticleEditor = () => {
                     maxLines={15}
                     minLines={5}
                     sectionName="abstract"
-                    placeholder="Type the abstract..."
+                    placeholder="Type the abstract (100 to 250 words)..."
                   />
                   <RichTextEditor
                     value={content.englishKeywords}
@@ -157,8 +169,9 @@ const ArticleEditor = () => {
           <TabsContent value="textual">
             <Card>
               <CardContent className="space-y-6">
+                {/* Introdução */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">1 Introdução</h3>
+                  <h3 className="text-lg font-semibold">1. Introdução</h3>
                   <RichTextEditor
                     value={content.introduction}
                     onChange={(value) => handleChange('introduction', value)}
@@ -171,22 +184,68 @@ const ArticleEditor = () => {
 
                 <Separator />
 
+                {/* Desenvolvimento */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">2 Desenvolvimento</h3>
-                  <RichTextEditor
-                    value={content.development}
-                    onChange={(value) => handleChange('development', value)}
-                    maxLines={100}
-                    minLines={20}
-                    sectionName="desenvolvimento"
-                    placeholder="Digite o desenvolvimento do artigo..."
-                  />
+                  <h3 className="text-lg font-semibold">2. Desenvolvimento</h3>
+                  
+                  {/* Fundamentação Teórica */}
+                  <div className="pl-4">
+                    <h4 className="text-md font-medium mb-2">2.1. Fundamentação Teórica</h4>
+                    <RichTextEditor
+                      value={content.theoreticalFramework}
+                      onChange={(value) => handleChange('theoreticalFramework', value)}
+                      maxLines={50}
+                      minLines={10}
+                      sectionName="fundamentação teórica"
+                      placeholder="Digite a fundamentação teórica..."
+                    />
+                  </div>
+
+                  {/* Metodologia */}
+                  <div className="pl-4">
+                    <h4 className="text-md font-medium mb-2">2.2. Metodologia</h4>
+                    <RichTextEditor
+                      value={content.methodology}
+                      onChange={(value) => handleChange('methodology', value)}
+                      maxLines={30}
+                      minLines={10}
+                      sectionName="metodologia"
+                      placeholder="Digite a metodologia..."
+                    />
+                  </div>
+
+                  {/* Resultados */}
+                  <div className="pl-4">
+                    <h4 className="text-md font-medium mb-2">2.3. Resultados</h4>
+                    <RichTextEditor
+                      value={content.results}
+                      onChange={(value) => handleChange('results', value)}
+                      maxLines={50}
+                      minLines={10}
+                      sectionName="resultados"
+                      placeholder="Digite os resultados..."
+                    />
+                  </div>
+
+                  {/* Discussão */}
+                  <div className="pl-4">
+                    <h4 className="text-md font-medium mb-2">2.4. Discussão</h4>
+                    <RichTextEditor
+                      value={content.discussion}
+                      onChange={(value) => handleChange('discussion', value)}
+                      maxLines={50}
+                      minLines={10}
+                      sectionName="discussão"
+                      placeholder="Digite a discussão dos resultados..."
+                    />
+                  </div>
                 </div>
 
                 <Separator />
 
+                {/* Conclusão */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">3 Conclusão</h3>
+                  <h3 className="text-lg font-semibold">3. Conclusão</h3>
                   <RichTextEditor
                     value={content.conclusion}
                     onChange={(value) => handleChange('conclusion', value)}
@@ -203,6 +262,7 @@ const ArticleEditor = () => {
           <TabsContent value="post-textual">
             <Card>
               <CardContent className="space-y-6">
+                {/* Referências */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Referências</h3>
                   <RichTextEditor
@@ -212,6 +272,36 @@ const ArticleEditor = () => {
                     minLines={5}
                     sectionName="referências"
                     placeholder="Digite as referências do artigo..."
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Apêndices */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Apêndices</h3>
+                  <RichTextEditor
+                    value={content.appendices}
+                    onChange={(value) => handleChange('appendices', value)}
+                    maxLines={30}
+                    minLines={0}
+                    sectionName="apêndices"
+                    placeholder="Digite os apêndices (se houver)..."
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Anexos */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Anexos</h3>
+                  <RichTextEditor
+                    value={content.attachments}
+                    onChange={(value) => handleChange('attachments', value)}
+                    maxLines={30}
+                    minLines={0}
+                    sectionName="anexos"
+                    placeholder="Digite os anexos (se houver)..."
                   />
                 </div>
               </CardContent>
