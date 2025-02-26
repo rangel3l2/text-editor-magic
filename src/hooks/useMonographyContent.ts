@@ -5,6 +5,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface TheoreticalTopic {
+  id: string;
+  title: string;
+  content: string;
+  order: number;
+}
+
 export interface MonographyContent {
   institution: string;
   campus: string;
@@ -19,6 +26,7 @@ export interface MonographyContent {
   abstract: string;
   keywords: string;
   introduction: string;
+  theoreticalTopics: TheoreticalTopic[];
   development: string;
   conclusion: string;
   references: string;
@@ -44,6 +52,7 @@ export const useMonographyContent = () => {
     abstract: '',
     keywords: '',
     introduction: '',
+    theoreticalTopics: [],
     development: '',
     conclusion: '',
     references: '',
@@ -52,7 +61,7 @@ export const useMonographyContent = () => {
 
   const [content, setContent] = useState<MonographyContent>(initialMonographyContent);
 
-  const handleChange = (field: keyof MonographyContent, value: string) => {
+  const handleChange = (field: keyof MonographyContent, value: string | TheoreticalTopic[]) => {
     setContent(prev => ({
       ...prev,
       [field]: value
@@ -83,6 +92,57 @@ export const useMonographyContent = () => {
 
       saveContent();
     }
+  };
+
+  const addTheoreticalTopic = () => {
+    const newTopic: TheoreticalTopic = {
+      id: crypto.randomUUID(),
+      title: '',
+      content: '',
+      order: content.theoreticalTopics.length + 2, // +2 porque a introdução é 1
+    };
+
+    const updatedTopics = [...content.theoreticalTopics, newTopic];
+    handleChange('theoreticalTopics', updatedTopics);
+  };
+
+  const updateTheoreticalTopic = (topicId: string, field: 'title' | 'content', value: string) => {
+    const updatedTopics = content.theoreticalTopics.map(topic => {
+      if (topic.id === topicId) {
+        return { ...topic, [field]: value };
+      }
+      return topic;
+    });
+    handleChange('theoreticalTopics', updatedTopics);
+  };
+
+  const removeTheoreticalTopic = (topicId: string) => {
+    const updatedTopics = content.theoreticalTopics
+      .filter(topic => topic.id !== topicId)
+      .map((topic, index) => ({
+        ...topic,
+        order: index + 2 // Reordenar após remover
+      }));
+    handleChange('theoreticalTopics', updatedTopics);
+  };
+
+  const reorderTheoreticalTopics = (topicId: string, newOrder: number) => {
+    const topic = content.theoreticalTopics.find(t => t.id === topicId);
+    if (!topic) return;
+
+    const updatedTopics = content.theoreticalTopics
+      .map(t => {
+        if (t.id === topicId) {
+          return { ...t, order: newOrder };
+        }
+        if (t.order >= newOrder && t.id !== topicId) {
+          return { ...t, order: t.order + 1 };
+        }
+        return t;
+      })
+      .sort((a, b) => a.order - b.order);
+
+    handleChange('theoreticalTopics', updatedTopics);
   };
 
   useEffect(() => {
@@ -117,5 +177,9 @@ export const useMonographyContent = () => {
   return {
     content,
     handleChange,
+    addTheoreticalTopic,
+    updateTheoreticalTopic,
+    removeTheoreticalTopic,
+    reorderTheoreticalTopics,
   };
 };

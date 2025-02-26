@@ -10,9 +10,16 @@ import MonographyPreview from "@/components/monography/MonographyPreview";
 import RichTextEditor from "@/components/RichTextEditor";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TheoreticalFramework from "@/components/article/TheoreticalFramework";
 
 const MonographyEditor = () => {
-  const { content, handleChange } = useMonographyContent();
+  const { 
+    content, 
+    handleChange, 
+    addTheoreticalTopic, 
+    updateTheoreticalTopic, 
+    removeTheoreticalTopic 
+  } = useMonographyContent();
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleDownload = () => {
@@ -184,8 +191,9 @@ const MonographyEditor = () => {
           <TabsContent value="textual">
             <Card>
               <CardContent className="space-y-6">
+                {/* Introdução */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">1 Introdução</h3>
+                  <h3 className="text-lg font-semibold">1 INTRODUÇÃO</h3>
                   <RichTextEditor
                     value={content.introduction}
                     onChange={(value) => handleChange('introduction', value)}
@@ -198,8 +206,21 @@ const MonographyEditor = () => {
 
                 <Separator />
 
+                {/* Referencial Teórico */}
+                <TheoreticalFramework
+                  topics={content.theoreticalTopics}
+                  onAddTopic={addTheoreticalTopic}
+                  onUpdateTopic={updateTheoreticalTopic}
+                  onRemoveTopic={removeTheoreticalTopic}
+                />
+
+                <Separator />
+
+                {/* Desenvolvimento */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">2 Desenvolvimento</h3>
+                  <h3 className="text-lg font-semibold">
+                    {2 + content.theoreticalTopics.length} DESENVOLVIMENTO
+                  </h3>
                   <RichTextEditor
                     value={content.development}
                     onChange={(value) => handleChange('development', value)}
@@ -212,8 +233,11 @@ const MonographyEditor = () => {
 
                 <Separator />
 
+                {/* Conclusão */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">3 Conclusão</h3>
+                  <h3 className="text-lg font-semibold">
+                    {3 + content.theoreticalTopics.length} CONCLUSÃO
+                  </h3>
                   <RichTextEditor
                     value={content.conclusion}
                     onChange={(value) => handleChange('conclusion', value)}
