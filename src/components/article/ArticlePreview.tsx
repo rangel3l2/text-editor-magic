@@ -55,15 +55,43 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         <div dangerouslySetInnerHTML={{ __html: content.introduction }} />
       </div>
 
-      {/* Desenvolvimento */}
+      {/* Tópicos do Referencial Teórico */}
+      {content.theoreticalTopics.map((topic, index) => (
+        <div key={topic.id} className="mb-8">
+          <h2 className="text-lg font-bold mb-2">{topic.order} {topic.title.toUpperCase()}</h2>
+          <div dangerouslySetInnerHTML={{ __html: topic.content }} />
+        </div>
+      ))}
+
+      {/* Metodologia */}
       <div className="mb-8">
-        <h2 className="text-lg font-bold mb-2">2 DESENVOLVIMENTO</h2>
-        <div dangerouslySetInnerHTML={{ __html: content.development }} />
+        <h2 className="text-lg font-bold mb-2">
+          {2 + content.theoreticalTopics.length} METODOLOGIA
+        </h2>
+        <div dangerouslySetInnerHTML={{ __html: content.methodology }} />
+      </div>
+
+      {/* Resultados */}
+      <div className="mb-8">
+        <h2 className="text-lg font-bold mb-2">
+          {3 + content.theoreticalTopics.length} RESULTADOS
+        </h2>
+        <div dangerouslySetInnerHTML={{ __html: content.results }} />
+      </div>
+
+      {/* Discussão */}
+      <div className="mb-8">
+        <h2 className="text-lg font-bold mb-2">
+          {4 + content.theoreticalTopics.length} DISCUSSÃO
+        </h2>
+        <div dangerouslySetInnerHTML={{ __html: content.discussion }} />
       </div>
 
       {/* Conclusão */}
       <div className="mb-8">
-        <h2 className="text-lg font-bold mb-2">3 CONCLUSÃO</h2>
+        <h2 className="text-lg font-bold mb-2">
+          {5 + content.theoreticalTopics.length} CONCLUSÃO
+        </h2>
         <div dangerouslySetInnerHTML={{ __html: content.conclusion }} />
       </div>
 
