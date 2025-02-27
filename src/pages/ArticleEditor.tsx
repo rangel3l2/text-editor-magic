@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -11,6 +12,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import EditorHeader from "@/components/editor/EditorHeader";
 import { toast } from "@/components/ui/use-toast";
 import TheoreticalFramework from "@/components/article/TheoreticalFramework";
+import IntroductionEditor from "@/components/academic/IntroductionEditor";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
@@ -169,16 +171,14 @@ const ArticleEditor = () => {
           <TabsContent value="textual">
             <Card>
               <CardContent className="space-y-6">
-                {/* Introdução */}
+                {/* Introdução com editor guiado */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">1. Introdução</h3>
-                  <RichTextEditor
+                  <IntroductionEditor
                     value={content.introduction}
                     onChange={(value) => handleChange('introduction', value)}
                     maxLines={30}
                     minLines={10}
-                    sectionName="introdução"
-                    placeholder="Digite a introdução do artigo..."
                   />
                 </div>
 

@@ -67,21 +67,33 @@ const MonographyPreview = ({ content }: MonographyPreviewProps) => {
 
       {/* Elementos Textuais */}
       <div className="space-y-8">
+        {/* Introdução como texto corrido */}
         <section>
           <h2 className="text-lg font-bold mb-4">1 INTRODUÇÃO</h2>
           <div className="text-justify" dangerouslySetInnerHTML={{ __html: content.introduction }} />
         </section>
 
+        {/* Tópicos do Referencial Teórico */}
+        {content.theoreticalTopics.map((topic) => (
+          <section key={topic.id}>
+            <h2 className="text-lg font-bold mb-4">{topic.order} {topic.title.toUpperCase()}</h2>
+            <div className="text-justify" dangerouslySetInnerHTML={{ __html: topic.content }} />
+          </section>
+        ))}
+
+        {/* Desenvolvimento */}
         <section>
-          <h2 className="text-lg font-bold mb-4">2 DESENVOLVIMENTO</h2>
+          <h2 className="text-lg font-bold mb-4">{2 + content.theoreticalTopics.length} DESENVOLVIMENTO</h2>
           <div className="text-justify" dangerouslySetInnerHTML={{ __html: content.development }} />
         </section>
 
+        {/* Conclusão */}
         <section>
-          <h2 className="text-lg font-bold mb-4">3 CONCLUSÃO</h2>
+          <h2 className="text-lg font-bold mb-4">{3 + content.theoreticalTopics.length} CONCLUSÃO</h2>
           <div className="text-justify" dangerouslySetInnerHTML={{ __html: content.conclusion }} />
         </section>
 
+        {/* Referências */}
         <section>
           <h2 className="text-lg font-bold mb-4">REFERÊNCIAS</h2>
           <div dangerouslySetInnerHTML={{ __html: content.references }} />

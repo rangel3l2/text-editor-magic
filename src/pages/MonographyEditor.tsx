@@ -11,6 +11,7 @@ import RichTextEditor from "@/components/RichTextEditor";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TheoreticalFramework from "@/components/article/TheoreticalFramework";
+import IntroductionEditor from "@/components/academic/IntroductionEditor";
 
 const MonographyEditor = () => {
   const { 
@@ -191,16 +192,14 @@ const MonographyEditor = () => {
           <TabsContent value="textual">
             <Card>
               <CardContent className="space-y-6">
-                {/* Introdução */}
+                {/* Introdução com editor guiado */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">1 INTRODUÇÃO</h3>
-                  <RichTextEditor
+                  <IntroductionEditor
                     value={content.introduction}
                     onChange={(value) => handleChange('introduction', value)}
                     maxLines={50}
                     minLines={10}
-                    sectionName="introdução"
-                    placeholder="Digite a introdução..."
                   />
                 </div>
 
