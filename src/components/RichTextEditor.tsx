@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { uploadAdapterPlugin } from '@/utils/uploadAdapter';
 import EditorCore from './editor/EditorCore';
@@ -28,6 +29,8 @@ const RichTextEditor = ({
 }: RichTextEditorProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [editorInstance, setEditorInstance] = useState<any>(null);
+  const [shouldValidate, setShouldValidate] = useState(false);
+  const [contentToValidate, setContentToValidate] = useState('');
 
   const {
     validationResult,
@@ -43,12 +46,18 @@ const RichTextEditor = ({
     handleContentChange
   } = useEditorProgress(maxLines, minLines);
 
-  // Validar conteúdo inicial quando carregado dos cookies
+  // Validar conteúdo com debounce
   useEffect(() => {
-    if (value && value.trim()) {
-      validateContent(value);
+    if (shouldValidate && contentToValidate) {
+      const timeout = setTimeout(() => {
+        validateContent(contentToValidate);
+        setShouldValidate(false);
+        setContentToValidate('');
+      }, 2000);
+      
+      return () => clearTimeout(timeout);
     }
-  }, []); // Executar apenas uma vez na montagem
+  }, [shouldValidate, contentToValidate, validateContent]);
 
   const { handleImageUpload } = ImageUploadHandler({
     onSuccess: (imageUrl) => {
@@ -78,11 +87,24 @@ const RichTextEditor = ({
     
     if (!isOverLimit) {
       onChange(data);
-      scheduleValidation(data);
+      
+      // Agendar validação com debounce
+      if (data.trim().length > 20) {
+        setContentToValidate(data);
+        setShouldValidate(true);
+      }
     } else {
       if (editorInstance) {
         editorInstance.setData(value);
       }
+    }
+  };
+
+  // Validar quando o usuário sai do campo (blur)
+  const handleBlur = () => {
+    setIsFocused(false);
+    if (value && value.trim().length > 50) {
+      validateContent(value);
     }
   };
 
@@ -99,7 +121,7 @@ const RichTextEditor = ({
           console.error('CKEditor error:', error);
         }}
         onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onBlur={handleBlur}
         config={editorConfig}
       />
       

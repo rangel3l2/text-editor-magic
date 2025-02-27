@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -12,6 +13,7 @@ export const useEditorValidation = (sectionName: string) => {
   const lastValidationRef = useRef<number>(0);
   const retryAttemptsRef = useRef<number>(0);
   const isValidatingRef = useRef(false);
+  const MAX_RETRY_ATTEMPTS = 3;
   const MIN_VALIDATION_INTERVAL = 30000; // 30 seconds between validations
   const RESULTS_SECTION_INTERVAL = 60000; // 1 minute for Results section
   const RATE_LIMIT_BACKOFF = 45000; // 45 seconds backoff after rate limit
@@ -57,6 +59,17 @@ export const useEditorValidation = (sectionName: string) => {
       });
 
       if (error) {
+        console.error('Validation error:', error);
+        if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
+          retryAttemptsRef.current++;
+          const backoffTime = RATE_LIMIT_BACKOFF * retryAttemptsRef.current;
+          console.log(`Retrying validation in ${backoffTime/1000} seconds (attempt ${retryAttemptsRef.current})`);
+          
+          setTimeout(() => {
+            validateContent(content);
+          }, backoffTime);
+          return;
+        }
         throw error;
       }
 

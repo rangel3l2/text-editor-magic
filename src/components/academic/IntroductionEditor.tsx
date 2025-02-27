@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import RichTextEditor from "@/components/RichTextEditor";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,59 +24,94 @@ const IntroductionEditor = ({
   const [themePart, setThemePart] = useState<string>("");
   const [problemPart, setProblemPart] = useState<string>("");
   const [objectivesPart, setObjectivesPart] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Atualiza as partes quando o valor completo muda externamente
+  useEffect(() => {
+    if (activeTab === "guided" && value && !isProcessing) {
+      extractPartsFromIntroduction();
+    }
+  }, [value, activeTab]);
 
   // Função para combinar as partes em um texto único
   const combinePartsIntoIntroduction = () => {
-    let combinedText = "";
-    
-    if (themePart) {
-      combinedText += themePart + "\n\n";
+    try {
+      setIsProcessing(true);
+      let combinedText = "";
+      
+      if (themePart) {
+        combinedText += themePart + "\n\n";
+      }
+      
+      if (problemPart) {
+        combinedText += problemPart + "\n\n";
+      }
+      
+      if (objectivesPart) {
+        combinedText += objectivesPart;
+      }
+      
+      onChange(combinedText.trim());
+      toast({
+        title: "Introdução combinada",
+        description: "As partes foram unidas em um texto único",
+      });
+      setActiveTab("editor");
+    } catch (error) {
+      console.error("Erro ao combinar partes:", error);
+      toast({
+        title: "Erro ao combinar",
+        description: "Ocorreu um erro ao combinar as partes. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
     }
-    
-    if (problemPart) {
-      combinedText += problemPart + "\n\n";
-    }
-    
-    if (objectivesPart) {
-      combinedText += objectivesPart;
-    }
-    
-    onChange(combinedText.trim());
-    toast({
-      title: "Introdução combinada",
-      description: "As partes foram unidas em um texto único",
-    });
-    setActiveTab("editor");
   };
 
   // Função para extrair partes do texto completo
   const extractPartsFromIntroduction = () => {
-    // Tentativa simples de dividir o texto em 3 partes
-    const paragraphs = value.split(/\n\s*\n/);
-    
-    if (paragraphs.length >= 3) {
-      setThemePart(paragraphs[0]);
-      setProblemPart(paragraphs[1]);
-      setObjectivesPart(paragraphs.slice(2).join("\n\n"));
-    } else if (paragraphs.length === 2) {
-      setThemePart(paragraphs[0]);
-      setProblemPart(paragraphs[1]);
-      setObjectivesPart("");
-    } else if (paragraphs.length === 1 && paragraphs[0]) {
-      setThemePart(paragraphs[0]);
-      setProblemPart("");
-      setObjectivesPart("");
-    } else {
-      setThemePart("");
-      setProblemPart("");
-      setObjectivesPart("");
+    try {
+      setIsProcessing(true);
+      // Tentativa simples de dividir o texto em 3 partes
+      const paragraphs = value.split(/\n\s*\n/);
+      
+      if (paragraphs.length >= 3) {
+        setThemePart(paragraphs[0]);
+        setProblemPart(paragraphs[1]);
+        setObjectivesPart(paragraphs.slice(2).join("\n\n"));
+      } else if (paragraphs.length === 2) {
+        setThemePart(paragraphs[0]);
+        setProblemPart(paragraphs[1]);
+        setObjectivesPart("");
+      } else if (paragraphs.length === 1 && paragraphs[0]) {
+        setThemePart(paragraphs[0]);
+        setProblemPart("");
+        setObjectivesPart("");
+      } else {
+        setThemePart("");
+        setProblemPart("");
+        setObjectivesPart("");
+      }
+      
+      toast({
+        title: "Introdução dividida",
+        description: "O texto foi dividido em partes para edição",
+      });
+      
+      if (activeTab !== "guided") {
+        setActiveTab("guided");
+      }
+    } catch (error) {
+      console.error("Erro ao extrair partes:", error);
+      toast({
+        title: "Erro ao dividir",
+        description: "Ocorreu um erro ao dividir o texto. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
     }
-    
-    toast({
-      title: "Introdução dividida",
-      description: "O texto foi dividido em partes para edição",
-    });
-    setActiveTab("guided");
   };
 
   return (
@@ -101,7 +136,7 @@ const IntroductionEditor = ({
                   variant="secondary"
                   size="sm"
                   onClick={extractPartsFromIntroduction}
-                  disabled={!value}
+                  disabled={!value || isProcessing}
                 >
                   Dividir em Partes
                 </Button>
@@ -112,6 +147,7 @@ const IntroductionEditor = ({
                   variant="secondary"
                   size="sm"
                   onClick={combinePartsIntoIntroduction}
+                  disabled={isProcessing}
                 >
                   Combinar Partes
                 </Button>
