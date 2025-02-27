@@ -20,7 +20,7 @@ const IntroductionEditor = ({
   maxLines = 50,
   minLines = 10,
 }: IntroductionEditorProps) => {
-  const [activeTab, setActiveTab] = useState<string>("editor");
+  const [activeTab, setActiveTab] = useState<string>("guided");
   const [themePart, setThemePart] = useState<string>("");
   const [problemPart, setProblemPart] = useState<string>("");
   const [objectivesPart, setObjectivesPart] = useState<string>("");
@@ -32,6 +32,13 @@ const IntroductionEditor = ({
       extractPartsFromIntroduction();
     }
   }, [value, activeTab]);
+
+  // Efeito para extrair as partes quando o componente é montado pela primeira vez
+  useEffect(() => {
+    if (value && !isProcessing && themePart === "" && problemPart === "" && objectivesPart === "") {
+      extractPartsFromIntroduction();
+    }
+  }, []);
 
   // Função para combinar as partes em um texto único
   const combinePartsIntoIntroduction = () => {
@@ -98,10 +105,6 @@ const IntroductionEditor = ({
         title: "Introdução dividida",
         description: "O texto foi dividido em partes para edição",
       });
-      
-      if (activeTab !== "guided") {
-        setActiveTab("guided");
-      }
     } catch (error) {
       console.error("Erro ao extrair partes:", error);
       toast({
@@ -126,8 +129,8 @@ const IntroductionEditor = ({
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="flex justify-between items-center mb-4">
             <TabsList>
-              <TabsTrigger value="editor">Editor Completo</TabsTrigger>
               <TabsTrigger value="guided">Editor Guiado</TabsTrigger>
+              <TabsTrigger value="editor">Editor Completo</TabsTrigger>
             </TabsList>
             
             <div className="flex gap-2">
@@ -155,19 +158,8 @@ const IntroductionEditor = ({
             </div>
           </div>
           
-          <TabsContent value="editor" className="mt-0">
-            <RichTextEditor
-              value={value}
-              onChange={onChange}
-              maxLines={maxLines}
-              minLines={minLines}
-              sectionName="introdução"
-              placeholder="Digite a introdução completa, contextualizando o tema, problema de pesquisa e objetivos..."
-            />
-          </TabsContent>
-          
           <TabsContent value="guided" className="mt-0">
-            <Accordion type="multiple" className="w-full space-y-4">
+            <Accordion type="multiple" defaultValue={["theme", "problem", "objectives"]} className="w-full space-y-4">
               <AccordionItem value="theme" className="border rounded-lg p-2">
                 <AccordionTrigger className="py-2 px-4 hover:bg-muted/50 rounded-md">
                   Apresentação do Tema
@@ -225,6 +217,17 @@ const IntroductionEditor = ({
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+          </TabsContent>
+          
+          <TabsContent value="editor" className="mt-0">
+            <RichTextEditor
+              value={value}
+              onChange={onChange}
+              maxLines={maxLines}
+              minLines={minLines}
+              sectionName="introdução"
+              placeholder="Digite a introdução completa, contextualizando o tema, problema de pesquisa e objetivos..."
+            />
           </TabsContent>
         </Tabs>
       </CardContent>
