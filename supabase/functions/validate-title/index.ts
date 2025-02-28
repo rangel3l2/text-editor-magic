@@ -57,6 +57,7 @@ serve(async (req) => {
       );
     }
 
+    // Usar a chave da API Gemini do ambiente
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     
     if (!geminiApiKey) {
@@ -65,45 +66,47 @@ serve(async (req) => {
     }
 
     console.log('Inicializando modelo Gemini');
-    const genAI = new GoogleGenerativeAI(geminiApiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-    const prompt = `
-      Você é um especialista em análise de títulos acadêmicos.
-      Analise o seguinte título de banner acadêmico:
-      "${cleanTitle}"
-      
-      Critérios de análise:
-      1. Clareza e Objetividade:
-         - O título deve ser claro e direto
-         - Deve informar o tema principal do trabalho
-         - Evitar termos ambíguos ou muito técnicos (exceto se for para público especializado)
-      
-      2. Número de Palavras:
-         - Ideal: entre 6 e 12 palavras
-      
-      3. Aspectos Técnicos:
-         - Verificar erros ortográficos
-         - Analisar coesão e coerência
-         - Verificar pontuação
-      
-      Forneça uma análise detalhada e sugestões de melhoria.
-      
-      IMPORTANTE: Sua resposta DEVE ser um objeto JSON com esta estrutura:
-      {
-        "isValid": boolean,
-        "overallFeedback": "feedback geral em português",
-        "details": {
-          "spellingErrors": [],
-          "coherenceIssues": [],
-          "suggestions": [],
-          "improvedVersions": []
-        }
-      }
-    `;
-
-    console.log('Analisando título:', cleanTitle);
+    
     try {
+      const genAI = new GoogleGenerativeAI(geminiApiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+      const prompt = `
+        Você é um especialista em análise de títulos acadêmicos.
+        Analise o seguinte título de banner acadêmico:
+        "${cleanTitle}"
+        
+        Critérios de análise:
+        1. Clareza e Objetividade:
+           - O título deve ser claro e direto
+           - Deve informar o tema principal do trabalho
+           - Evitar termos ambíguos ou muito técnicos (exceto se for para público especializado)
+        
+        2. Número de Palavras:
+           - Ideal: entre 6 e 12 palavras
+        
+        3. Aspectos Técnicos:
+           - Verificar erros ortográficos
+           - Analisar coesão e coerência
+           - Verificar pontuação
+        
+        Forneça uma análise detalhada e sugestões de melhoria.
+        
+        IMPORTANTE: Sua resposta DEVE ser um objeto JSON com esta estrutura:
+        {
+          "isValid": boolean,
+          "overallFeedback": "feedback geral em português",
+          "details": {
+            "spellingErrors": [],
+            "coherenceIssues": [],
+            "suggestions": [],
+            "improvedVersions": []
+          }
+        }
+      `;
+
+      console.log('Analisando título:', cleanTitle);
+      
       const result = await model.generateContent(prompt);
       const response = result.response;
       const text = response.text();
@@ -146,8 +149,19 @@ serve(async (req) => {
           }
         }
       );
-    } catch (error) {
-      console.error('Erro ao chamar API do Gemini:', error);
+    } catch (apiError) {
+      console.error('Erro ao chamar API do Gemini:', apiError);
+      
+      // Verifica se é um erro de autenticação
+      const isAuthError = apiError.message?.includes('authentication') || 
+                        apiError.message?.includes('API key') ||
+                        apiError.message?.includes('credentials');
+      
+      if (isAuthError) {
+        console.error('Erro de autenticação com a API Gemini - chave inválida');
+        throw new Error('Chave API do Gemini inválida ou expirada');
+      }
+      
       throw new Error('Erro ao processar o título com a API Gemini');
     }
   } catch (error) {
