@@ -57,7 +57,7 @@ serve(async (req) => {
       );
     }
 
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY') || 'AIzaSyD1MOJwy4aj91ZThQsOplN-DQfKHz9DN88';
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     
     if (!geminiApiKey) {
       console.error('GEMINI_API_KEY não configurada');
@@ -108,23 +108,33 @@ serve(async (req) => {
       const response = result.response;
       const text = response.text();
       
-      console.log('Resposta do Gemini:', text);
+      console.log('Resposta do Gemini recebida');
       
       // Extract JSON from response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
       let analysis;
-      
-      if (jsonMatch) {
-        try {
+      try {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        
+        if (jsonMatch) {
           analysis = JSON.parse(jsonMatch[0]);
           console.log('JSON analisado com sucesso');
-        } catch (error) {
-          console.error('Erro ao analisar JSON:', error);
+        } else {
+          console.error('Nenhum JSON encontrado na resposta');
           throw new Error('Formato de resposta inválido');
         }
-      } else {
-        console.error('Nenhum JSON encontrado na resposta');
-        throw new Error('Formato de resposta inválido');
+      } catch (parseError) {
+        console.error('Erro ao analisar JSON:', parseError, 'Texto recebido:', text);
+        // Em caso de erro de parsing, tente criar uma resposta simplificada
+        analysis = {
+          isValid: false,
+          overallFeedback: "Não foi possível analisar completamente o título devido a um erro técnico.",
+          details: {
+            spellingErrors: [],
+            coherenceIssues: [],
+            suggestions: ["Tente novamente em alguns instantes."],
+            improvedVersions: []
+          }
+        };
       }
 
       return new Response(

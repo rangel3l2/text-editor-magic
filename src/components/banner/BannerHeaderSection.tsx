@@ -45,14 +45,14 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       console.log('Resposta de validação:', data);
       setTitleValidation(data);
 
-      if (!data.isValid) {
+      if (data?.isValid === false) {
         toast({
           title: "Sugestões para o título",
           description: "Verifique as sugestões de melhoria abaixo do editor.",
           variant: "destructive",
           duration: 5000,
         });
-      } else {
+      } else if (data?.isValid === true) {
         toast({
           title: "Título validado",
           description: "O título está adequado para o banner.",
