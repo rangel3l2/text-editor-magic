@@ -1,7 +1,9 @@
 
-import { corsHeaders } from '../_shared/cors';
-import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { corsHeaders } from '../_shared/cors.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.31.0';
+
+// Importação correta para Deno/Edge Functions (usando esm.sh como CDN)
+import { GoogleGenerativeAI } from 'https://esm.sh/@google/generative-ai@0.1.3';
 
 // Criação do cliente Supabase
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
