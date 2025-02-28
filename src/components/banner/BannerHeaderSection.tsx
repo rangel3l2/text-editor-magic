@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import LogoUpload from './header/LogoUpload';
 import InstitutionInput from './header/InstitutionInput';
@@ -31,18 +32,17 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     
     setIsValidatingTitle(true);
     try {
-      console.log('Validating title:', title);
+      console.log('Validando título:', title);
       const { data, error } = await supabase.functions.invoke('validate-title', {
-        body: { title },
-        method: 'POST'
+        body: { title }
       });
 
       if (error) {
-        console.error('Validation error:', error);
+        console.error('Erro na validação:', error);
         throw error;
       }
 
-      console.log('Validation response:', data);
+      console.log('Resposta de validação:', data);
       setTitleValidation(data);
 
       if (!data.isValid) {
@@ -60,7 +60,13 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
         });
       }
     } catch (error) {
-      console.error('Error validating title:', error);
+      console.error('Erro ao validar título:', error);
+      setTitleValidation({
+        error: "Não foi possível validar o título. Tente novamente mais tarde.",
+        isValid: false,
+        overallFeedback: "Ocorreu um erro técnico durante a validação."
+      });
+      
       toast({
         title: "Erro na validação",
         description: "Não foi possível validar o título. Tente novamente.",
@@ -93,24 +99,23 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     
     try {
       setIsFormatting(true);
-      console.log('Formatting authors:', authorsText);
+      console.log('Formatando autores:', authorsText);
       
       const { data, error } = await supabase.functions.invoke('format-authors', {
-        body: { authors: authorsText },
-        method: 'POST'
+        body: { authors: authorsText }
       });
 
       if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error(`Failed to format authors: ${error.message}`);
+        console.error('Erro na função do Supabase:', error);
+        throw new Error(`Falha ao formatar autores: ${error.message}`);
       }
 
       if (!data?.formattedAuthors) {
-        console.error('Invalid response format:', data);
-        throw new Error('Invalid response from formatting service');
+        console.error('Formato de resposta inválido:', data);
+        throw new Error('Resposta inválida do serviço de formatação');
       }
 
-      console.log('Formatted authors:', data.formattedAuthors);
+      console.log('Autores formatados:', data.formattedAuthors);
       handleChange('authors', data.formattedAuthors);
 
       toast({
@@ -119,7 +124,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
         duration: 3000,
       });
     } catch (error: any) {
-      console.error('Error formatting authors:', error);
+      console.error('Erro ao formatar autores:', error);
       toast({
         title: "Erro ao formatar nomes",
         description: error.message || "Não foi possível formatar os nomes automaticamente",
