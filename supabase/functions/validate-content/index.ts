@@ -1,237 +1,301 @@
 
-import { corsHeaders } from '../_shared/cors.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.31.0';
-import { GoogleGenerativeAI } from 'https://esm.sh/@google/generative-ai@0.1.3';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.1";
+import { corsHeaders } from "../_shared/cors.ts";
+import { rateLimiter } from "../_shared/rateLimiter.ts";
 
-// Criação do cliente Supabase
-const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+const RATE_LIMIT_PERIOD = 30000; // 30 segundos
 
-// Configuração da API do Gemini
-const geminiApiKey = Deno.env.get('GEMINI_API_KEY') ?? 'AIzaSyD1MOJwy4aj91ZThQsOplN-DQfKHz9DN88';
-const genAI = new GoogleGenerativeAI(geminiApiKey);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-// Interface para o resultado da validação
-interface ValidationResult {
-  isValid: boolean;
-  overallFeedback: string;
-  details?: {
-    spelling?: any[];
-    grammar?: any[];
-    clarity?: any[];
-    suggestions?: string[];
-  };
-}
-
-// Função para validar um título
-async function validateTitle(title: string): Promise<ValidationResult> {
-  if (!title || title.trim().length < 5) {
-    return {
-      isValid: false,
-      overallFeedback: "O título é muito curto. Por favor, forneça um título mais descritivo."
-    };
-  }
-
-  try {
-    console.log('Validando título:', title);
-    // Limpar o título de tags HTML
-    const cleanTitle = title.replace(/<[^>]*>/g, '').trim();
-
-    const prompt = `
-    Você é um especialista em redação acadêmica. Avalie o seguinte título de trabalho acadêmico e forneça feedback:
-    
-    Título: "${cleanTitle}"
-    
-    Analise os seguintes aspectos e forneça uma resposta APENAS em formato JSON:
-    1. Se o título é claro e específico
-    2. Se o título representa adequadamente um trabalho acadêmico
-    3. Se há erros gramaticais ou de formatação
-    
-    Formato da resposta JSON:
-    {
-      "isValid": boolean,
-      "overallFeedback": "feedback geral em português",
-      "details": {
-        "suggestions": ["sugestão 1", "sugestão 2"]
-      }
-    }
-    `;
-
-    const result = await model.generateContent(prompt);
-    console.log('Resposta da API do Gemini recebida');
-    
-    const resultText = result.response.text();
-    // Extrair apenas o JSON da resposta
-    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-    
-    if (jsonMatch) {
-      const validationResult = JSON.parse(jsonMatch[0]) as ValidationResult;
-      return validationResult;
-    } else {
-      console.error('Formato de resposta inesperado:', resultText);
-      return {
-        isValid: true,
-        overallFeedback: "O título parece adequado, mas não foi possível realizar uma análise detalhada."
-      };
-    }
-  } catch (error) {
-    console.error('Erro ao validar título:', error);
-    return {
-      isValid: true,
-      overallFeedback: "Não foi possível validar o título devido a um erro técnico. Considere as práticas recomendadas para títulos acadêmicos."
-    };
-  }
-}
-
-// Função para validar o conteúdo de uma seção
-async function validateContent(content: string, section: string): Promise<ValidationResult> {
-  if (!content || content.trim().length < 20) {
-    return {
-      isValid: false,
-      overallFeedback: `O conteúdo da seção "${section}" é muito curto. Por favor, desenvolva mais o texto.`
-    };
-  }
-
-  try {
-    console.log(`Validando conteúdo da seção "${section}"`);
-    // Limpar o conteúdo de tags HTML
-    const cleanContent = content.replace(/<[^>]*>/g, '').trim();
-    console.log(`Tamanho do conteúdo limpo: ${cleanContent.length} caracteres`);
-
-    // Usar um prompt mais simples para evitar complexidade excessiva
-    const prompt = `
-    Você é um especialista em redação acadêmica. Avalie o seguinte texto para a seção "${section}" de um trabalho acadêmico:
-    
-    "${cleanContent.substring(0, 1000)}${cleanContent.length > 1000 ? '...' : ''}"
-    
-    Forneça uma resposta APENAS em formato JSON seguindo o modelo:
-    {
-      "isValid": true,
-      "overallFeedback": "O texto está bem estruturado e adequado para uma seção acadêmica."
-    }
-    
-    Se encontrar problemas, retorne:
-    {
-      "isValid": false,
-      "overallFeedback": "Feedback específico sobre os problemas encontrados."
-    }
-    `;
-
-    const result = await model.generateContent(prompt);
-    console.log('Resposta recebida da API');
-    
-    const resultText = result.response.text();
-    // Extrair apenas o JSON da resposta
-    const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-    
-    if (jsonMatch) {
-      const validationResult = JSON.parse(jsonMatch[0]) as ValidationResult;
-      return validationResult;
-    } else {
-      console.error('Formato de resposta inesperado:', resultText);
-      return {
-        isValid: true,
-        overallFeedback: `O conteúdo da seção "${section}" parece adequado, mas não foi possível realizar uma análise detalhada.`
-      };
-    }
-  } catch (error) {
-    console.error(`Erro ao validar conteúdo da seção "${section}":`, error);
-    return {
-      isValid: true,
-      overallFeedback: `Não foi possível validar o conteúdo da seção "${section}" devido a um erro técnico. Continue escrevendo seguindo as práticas acadêmicas.`
-    };
-  }
-}
-
-Deno.serve(async (req) => {
-  // Verificar o método da requisição
+serve(async (req) => {
+  // Verificar CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log('Solicitação recebida em validate-content:', req.method);
-    
-    // Tentar verificar se há conteúdo no corpo
-    let body;
-    try {
-      body = await req.json();
-      console.log('Corpo da requisição analizado com sucesso');
-    } catch (error) {
-      console.error('Erro ao analisar o corpo da requisição:', error);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Não foi possível analisar o corpo da requisição. Certifique-se de enviar um JSON válido.' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-          status: 400 
-        }
-      );
+    // Verificar rate-limit
+    const rateLimited = await rateLimiter(req, RATE_LIMIT_PERIOD);
+    if (rateLimited) {
+      return rateLimited;
     }
+
+    const { content, prompts } = await req.json();
     
-    const { content, prompts } = body;
-    
-    // Validação mais tolerante dos parâmetros
+    // Validação do formato dos dados de entrada
     if (!content) {
-      console.error('Parâmetro content não fornecido ou vazio');
+      console.error('Erro: Conteúdo ausente ou vazio');
       return new Response(
-        JSON.stringify({ 
-          error: 'O parâmetro "content" é obrigatório.' 
+        JSON.stringify({
+          error: 'Conteúdo ausente ou vazio',
+          isValid: false,
+          overallFeedback: "Não foi possível validar: o conteúdo está vazio."
         }),
         { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-          status: 400 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
-    
-    // Se prompts não for fornecido ou não for um array, crie um array padrão para section
-    const validPrompts = Array.isArray(prompts) && prompts.length > 0 
-      ? prompts 
-      : [{ type: 'content', section: 'texto' }];
-    
-    console.log('Prompts validados:', validPrompts);
 
-    // Processar cada prompt
-    let results;
-    for (const prompt of validPrompts) {
-      if (prompt.type === 'title') {
-        results = await validateTitle(content);
-      } else if (prompt.type === 'content') {
-        const section = prompt.section || 'texto';
-        results = await validateContent(content, section);
-      }
+    if (!prompts || !Array.isArray(prompts) || prompts.length === 0) {
+      console.error('Erro: Prompts ausentes ou inválidos', { prompts });
+      return new Response(
+        JSON.stringify({
+          error: 'Prompts ausentes ou inválidos',
+          isValid: false,
+          overallFeedback: "Não foi possível validar: configuração incorreta."
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    // Se nenhum tipo de validação foi processado
-    if (!results) {
-      results = {
-        isValid: true,
-        overallFeedback: "Não foi possível realizar uma análise específica. O texto parece adequado em geral."
-      };
+    // Verificar a chave da API
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!geminiApiKey) {
+      console.error('Erro: Chave da API Gemini não configurada');
+      return new Response(
+        JSON.stringify({
+          error: 'Configuração da API Gemini ausente',
+          isValid: false,
+          overallFeedback: "Não foi possível validar: configuração de API ausente."
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    console.log('Enviando resultados da validação:', results);
-    return new Response(
-      JSON.stringify(results),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    // Inicializar a API Gemini com tratamento de erros
+    let genAI, model;
+    try {
+      console.log('Inicializando modelo Gemini...');
+      genAI = new GoogleGenerativeAI(geminiApiKey);
+      model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    } catch (initError) {
+      console.error('Erro ao inicializar a API Gemini:', initError);
+      return new Response(
+        JSON.stringify({
+          error: 'Falha ao inicializar a API Gemini',
+          isValid: false,
+          overallFeedback: "Erro técnico na inicialização do serviço de validação."
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Extrair informações do prompt
+    const prompt = prompts[0];
+    const contentType = prompt.type;
+    const sectionName = prompt.section || 'conteúdo';
+
+    // Log para debug
+    console.log(`Validando conteúdo da seção "${sectionName}"\n`);
+    
+    // Construir o prompt baseado no tipo de conteúdo
+    let promptText;
+    if (contentType === 'title') {
+      promptText = buildTitlePrompt(content);
+    } else {
+      promptText = buildContentPrompt(content, sectionName);
+    }
+    
+    // Log do prompt para debug (truncado para não sobrecarregar os logs)
+    const truncatedContent = content.length > 100 
+      ? content.substring(0, 100) + '...' 
+      : content;
+    console.log(`Enviando prompt para ${sectionName} com conteúdo: ${truncatedContent}`);
+
+    try {
+      // Chamar a API do Gemini com timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout ao chamar a API do Gemini')), 15000);
+      });
+      
+      const resultPromise = model.generateContent(promptText);
+      const result = await Promise.race([resultPromise, timeoutPromise]);
+      
+      const response = result.response;
+      const text = response.text();
+      
+      // Log da resposta para debug (truncado)
+      const truncatedResponse = text.length > 200 
+        ? text.substring(0, 200) + '...' 
+        : text;
+      console.log(`Resposta recebida: ${truncatedResponse}`);
+      
+      // Tentar extrair JSON da resposta
+      try {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('Resposta não contém JSON válido');
+        }
+        
+        const jsonString = jsonMatch[0];
+        const parsedResponse = JSON.parse(jsonString);
+        
+        console.log('Resposta processada com sucesso');
+        
+        // Validar os campos obrigatórios
+        if (parsedResponse.isValid === undefined || parsedResponse.overallFeedback === undefined) {
+          throw new Error('Resposta incompleta: campos obrigatórios ausentes');
+        }
+        
+        // Enviar resultado
+        return new Response(
+          JSON.stringify(parsedResponse),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (jsonError) {
+        console.error('Erro ao processar JSON da resposta:', jsonError, '\nTexto da resposta:', text);
+        
+        // Tentar extrair feedback mesmo com erro de parsing
+        const feedback = text.includes('feedback') 
+          ? text.substring(text.indexOf('feedback') + 10, text.indexOf(',', text.indexOf('feedback')))
+          : "Resposta da API em formato inválido";
+          
+        return new Response(
+          JSON.stringify({
+            error: 'Erro ao processar resposta',
+            rawResponse: truncatedResponse,
+            isValid: false,
+            overallFeedback: "Erro técnico ao processar a validação. " + feedback
+          }),
+          { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
       }
-    );
+    } catch (apiError) {
+      console.error('Erro ao chamar a API do Gemini:', apiError);
+      
+      // Verificar tipo de erro
+      let errorMessage = 'Erro ao processar o conteúdo';
+      let statusCode = 500;
+      
+      // Identificar erros específicos
+      if (apiError.message?.includes('API key') || 
+          apiError.message?.includes('authentication') || 
+          apiError.message?.includes('credentials')) {
+        errorMessage = 'Erro de autenticação na API Gemini';
+        console.error('Erro de chave API inválida ou expirada');
+      } else if (apiError.message?.includes('Timeout')) {
+        errorMessage = 'Tempo limite excedido ao chamar a API';
+        console.error('Timeout na chamada à API Gemini');
+      } else if (apiError.message?.includes('rate limit')) {
+        errorMessage = 'Limite de requisições excedido';
+        statusCode = 429;
+        console.error('Limite de requisições excedido na API Gemini');
+      }
+      
+      return new Response(
+        JSON.stringify({
+          error: errorMessage,
+          isValid: false,
+          overallFeedback: `Não foi possível validar devido a um erro técnico: ${errorMessage}`
+        }),
+        { 
+          status: statusCode,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
   } catch (error) {
-    console.error('Erro ao processar requisição:', error);
-    
+    console.error('Erro geral na função de validação:', error);
     return new Response(
-      JSON.stringify({ 
-        isValid: true,
-        overallFeedback: "Ocorreu um erro técnico durante a validação, mas você pode continuar escrevendo."
+      JSON.stringify({
+        error: error.message || 'Erro interno no servidor',
+        isValid: false,
+        overallFeedback: "Ocorreu um erro técnico durante a validação."
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
   }
 });
+
+// Função auxiliar para construir o prompt de título
+function buildTitlePrompt(title) {
+  const cleanTitle = title.replace(/<[^>]*>/g, '').trim();
+  
+  return `
+    Você é um especialista em análise de títulos acadêmicos.
+    Analise o seguinte título de banner acadêmico:
+    "${cleanTitle}"
+    
+    Critérios de análise:
+    1. Clareza e Objetividade:
+       - O título deve ser claro e direto
+       - Deve informar o tema principal do trabalho
+       - Evitar termos ambíguos ou muito técnicos (exceto se for para público especializado)
+    
+    2. Número de Palavras:
+       - Ideal: entre 6 e 12 palavras
+    
+    3. Aspectos Técnicos:
+       - Verificar erros ortográficos
+       - Analisar coesão e coerência
+       - Verificar pontuação
+    
+    Forneça uma análise detalhada e sugestões de melhoria.
+    
+    IMPORTANTE: Sua resposta DEVE ser um objeto JSON válido com esta estrutura:
+    {
+      "isValid": boolean,
+      "overallFeedback": "feedback geral em português",
+      "details": {
+        "spellingErrors": [],
+        "coherenceIssues": [],
+        "suggestions": [],
+        "improvedVersions": []
+      }
+    }
+  `;
+}
+
+// Função auxiliar para construir o prompt de conteúdo
+function buildContentPrompt(content, section) {
+  const cleanContent = content.replace(/<[^>]*>/g, '').trim();
+  
+  return `
+    Você é um especialista em textos acadêmicos.
+    Analise o seguinte conteúdo da seção "${section}" de um banner acadêmico:
+    
+    "${cleanContent}"
+    
+    Critérios de análise:
+    1. Clareza e Precisão:
+       - O texto deve ser claro e preciso
+       - Deve estar adequado para a seção "${section}"
+       - Deve utilizar linguagem científica adequada
+    
+    2. Coesão e Coerência:
+       - Verificar se as ideias estão bem conectadas e fazem sentido
+    
+    3. Aspectos Técnicos:
+       - Verificar erros ortográficos e gramaticais
+       - Analisar a estrutura das frases
+    
+    Forneça uma análise detalhada e sugestões de melhoria.
+    
+    IMPORTANTE: Sua resposta DEVE ser um objeto JSON válido com esta estrutura:
+    {
+      "isValid": boolean,
+      "overallFeedback": "feedback geral em português",
+      "details": {
+        "strengths": [],
+        "weaknesses": [],
+        "suggestions": []
+      }
+    }
+  `;
+}

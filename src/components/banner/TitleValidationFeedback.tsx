@@ -1,119 +1,125 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle2, Lightbulb, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, RefreshCcw } from "lucide-react";
 
 interface TitleValidationFeedbackProps {
   validationResult: any;
   isValidating: boolean;
+  errorMessage?: string | null;
 }
 
-const TitleValidationFeedback = ({ validationResult, isValidating }: TitleValidationFeedbackProps) => {
+const TitleValidationFeedback = ({ 
+  validationResult, 
+  isValidating,
+  errorMessage
+}: TitleValidationFeedbackProps) => {
   if (isValidating) {
     return (
-      <Alert>
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <AlertTitle>Validando título...</AlertTitle>
-        </div>
+      <Alert className="bg-blue-50 text-blue-800 border-blue-200">
+        <RefreshCcw className="h-4 w-4 animate-spin text-blue-500" />
+        <AlertTitle>Validando título...</AlertTitle>
         <AlertDescription>
-          Aguarde enquanto analisamos o título.
+          Estamos analisando seu título quanto à clareza, objetividade e normas acadêmicas.
         </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Se temos uma mensagem de erro específica
+  if (errorMessage) {
+    return (
+      <Alert variant="destructive" className="bg-red-50">
+        <AlertCircle className="h-4 w-4 text-red-600" />
+        <AlertTitle>Erro na validação</AlertTitle>
+        <AlertDescription>{errorMessage}</AlertDescription>
       </Alert>
     );
   }
 
   if (!validationResult) return null;
-  
-  // Verificar se há erro na resposta
-  if (validationResult.error) {
+
+  const { isValid, overallFeedback, details, error } = validationResult;
+
+  // Se temos um erro genérico
+  if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
+      <Alert variant="destructive" className="bg-red-50">
+        <AlertCircle className="h-4 w-4 text-red-600" />
         <AlertTitle>Erro na validação</AlertTitle>
-        <AlertDescription>
-          {validationResult.error || "Não foi possível validar o título. Tente novamente mais tarde."}
-        </AlertDescription>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
   }
 
+  // Título válido
+  if (isValid) {
+    return (
+      <Alert className="bg-green-50 text-green-800 border-green-200">
+        <CheckCircle2 className="h-4 w-4 text-green-600" />
+        <AlertTitle>Título validado</AlertTitle>
+        <AlertDescription>{overallFeedback}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Título inválido com feedback
   return (
     <div className="space-y-4">
-      <Alert variant={validationResult.isValid ? "default" : "destructive"}>
-        {validationResult.isValid ? (
-          <CheckCircle2 className="h-4 w-4" />
-        ) : (
-          <AlertCircle className="h-4 w-4" />
-        )}
-        <AlertTitle>
-          {validationResult.isValid ? "Título adequado" : "Atenção: melhorias sugeridas"}
-        </AlertTitle>
-        <AlertDescription>
-          {validationResult.overallFeedback || "Avaliação concluída."}
+      <Alert variant="destructive" className="bg-red-50">
+        <AlertCircle className="h-4 w-4 text-red-600" />
+        <AlertTitle>Sugestões de melhoria</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>{overallFeedback}</p>
+          
+          {details && (
+            <div className="mt-2">
+              {details.spellingErrors && details.spellingErrors.length > 0 && (
+                <div className="mt-1">
+                  <p className="font-semibold text-sm">Possíveis erros ortográficos:</p>
+                  <ul className="list-disc list-inside text-sm pl-2">
+                    {details.spellingErrors.map((error: string, i: number) => (
+                      <li key={`spell-${i}`}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {details.coherenceIssues && details.coherenceIssues.length > 0 && (
+                <div className="mt-1">
+                  <p className="font-semibold text-sm">Problemas de coerência:</p>
+                  <ul className="list-disc list-inside text-sm pl-2">
+                    {details.coherenceIssues.map((issue: string, i: number) => (
+                      <li key={`coh-${i}`}>{issue}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {details.suggestions && details.suggestions.length > 0 && (
+                <div className="mt-1">
+                  <p className="font-semibold text-sm">Sugestões:</p>
+                  <ul className="list-disc list-inside text-sm pl-2">
+                    {details.suggestions.map((suggestion: string, i: number) => (
+                      <li key={`sug-${i}`}>{suggestion}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {details.improvedVersions && details.improvedVersions.length > 0 && (
+                <div className="mt-2">
+                  <p className="font-semibold text-sm">Versões melhoradas:</p>
+                  <ul className="list-disc list-inside text-sm pl-2">
+                    {details.improvedVersions.map((version: string, i: number) => (
+                      <li key={`ver-${i}`}>{version}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </AlertDescription>
       </Alert>
-
-      {!validationResult.isValid && validationResult.details && (
-        <div className="space-y-2">
-          {validationResult.details.spellingErrors?.length > 0 && (
-            <div>
-              <h4 className="font-semibold">Erros ortográficos:</h4>
-              <ul className="list-disc pl-5">
-                {validationResult.details.spellingErrors.map((error: string, index: number) => (
-                  <li key={`spelling-${index}`} className="text-sm text-gray-600">{error}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {validationResult.details.coherenceIssues?.length > 0 && (
-            <div>
-              <h4 className="font-semibold">Problemas de coerência:</h4>
-              <ul className="list-disc pl-5">
-                {validationResult.details.coherenceIssues.map((issue: string, index: number) => (
-                  <li key={`coherence-${index}`} className="text-sm text-gray-600">{issue}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {validationResult.details.suggestions?.length > 0 && (
-            <div>
-              <h4 className="font-semibold">Sugestões de melhoria:</h4>
-              <ul className="list-disc pl-5">
-                {validationResult.details.suggestions.map((suggestion: string, index: number) => (
-                  <li key={`suggestion-${index}`} className="text-sm text-gray-600">{suggestion}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {validationResult.details.improvedVersions?.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="font-semibold flex items-center gap-2">
-                <Lightbulb className="h-4 w-4" />
-                Versões sugeridas:
-              </h4>
-              <div className="grid gap-2">
-                {validationResult.details.improvedVersions.map((version: string, index: number) => (
-                  <Button
-                    key={`version-${index}`}
-                    variant="outline"
-                    className="text-left h-auto py-2"
-                    onClick={() => {
-                      // Você pode implementar esta funcionalidade posteriormente, se necessário
-                      console.log('Versão selecionada:', version);
-                    }}
-                  >
-                    {version}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };

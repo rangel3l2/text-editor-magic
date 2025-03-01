@@ -1,5 +1,4 @@
-
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import LogoUpload from './header/LogoUpload';
 import InstitutionInput from './header/InstitutionInput';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -25,7 +24,25 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
   const [formatTimeout, setFormatTimeout] = useState<NodeJS.Timeout | null>(null);
   const [titleValidation, setTitleValidation] = useState<any>(null);
   const [isValidatingTitle, setIsValidatingTitle] = useState(false);
+  const [validationAttempts, setValidationAttempts] = useState(0);
+  const [lastValidationError, setLastValidationError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Limpar feedback de validação quando o título muda significativamente
+  useEffect(() => {
+    if (titleValidation && content.title) {
+      const titleText = content.title.replace(/<[^>]*>/g, '').trim();
+      const prevTitleText = titleValidation.originalTitle?.replace(/<[^>]*>/g, '').trim() || '';
+      
+      // Se o título mudou significativamente (mais de 5 caracteres), limpar o feedback
+      if (Math.abs(titleText.length - prevTitleText.length) > 5 || 
+          !titleText.includes(prevTitleText.substring(0, 10))) {
+        setTitleValidation(null);
+        setLastValidationError(null);
+        setValidationAttempts(0);
+      }
+    }
+  }, [content.title, titleValidation]);
 
   const validateTitle = async (title: string) => {
     if (!title.trim()) return;
@@ -33,17 +50,57 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     setIsValidatingTitle(true);
     try {
       console.log('Validando título:', title);
+      
+      // Adicionar originalTitle ao estado para comparação posterior
+      const cleanTitle = title.replace(/<[^>]*>/g, '').trim();
+      
       const { data, error } = await supabase.functions.invoke('validate-title', {
         body: { title }
       });
 
       if (error) {
         console.error('Erro na validação:', error);
-        throw error;
+        
+        // Incrementar contador de tentativas
+        setValidationAttempts(prev => prev + 1);
+        
+        let errorMessage = "Não foi possível validar o título. Tente novamente mais tarde.";
+        
+        // Customizar mensagem com base no tipo de erro
+        if (error.message?.includes('429') || error.message?.includes('limit')) {
+          errorMessage = "Muitas requisições. Aguarde alguns minutos e tente novamente.";
+        } else if (error.message?.includes('401') || error.message?.includes('authentication')) {
+          errorMessage = "Erro de autenticação com o serviço de validação.";
+        } else if (error.message?.includes('timeout') || error.message?.includes('504')) {
+          errorMessage = "Tempo de resposta excedido. Tente novamente mais tarde.";
+        }
+        
+        setLastValidationError(errorMessage);
+        
+        // Mostrar toast apenas na primeira ou segunda tentativa
+        if (validationAttempts < 2) {
+          toast({
+            title: "Erro na validação",
+            description: errorMessage,
+            variant: "destructive",
+            duration: 5000,
+          });
+        }
+        
+        throw new Error(errorMessage);
       }
 
       console.log('Resposta de validação:', data);
-      setTitleValidation(data);
+      
+      // Adicionar o título original ao resultado para comparação posterior
+      setTitleValidation({
+        ...data,
+        originalTitle: cleanTitle
+      });
+      
+      // Resetar contadores de erro quando sucesso
+      setValidationAttempts(0);
+      setLastValidationError(null);
 
       if (data?.isValid === false) {
         toast({
@@ -61,18 +118,15 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       }
     } catch (error) {
       console.error('Erro ao validar título:', error);
-      setTitleValidation({
-        error: "Não foi possível validar o título. Tente novamente mais tarde.",
-        isValid: false,
-        overallFeedback: "Ocorreu um erro técnico durante a validação."
-      });
       
-      toast({
-        title: "Erro na validação",
-        description: "Não foi possível validar o título. Tente novamente.",
-        variant: "destructive",
-        duration: 3000,
-      });
+      // Não sobrescrever o estado se já temos um erro específico
+      if (!lastValidationError) {
+        setTitleValidation({
+          error: "Não foi possível validar o título. Tente novamente mais tarde.",
+          isValid: false,
+          overallFeedback: "Ocorreu um erro técnico durante a validação."
+        });
+      }
     } finally {
       setIsValidatingTitle(false);
     }
@@ -86,7 +140,8 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     }
     
     const newTimeout = setTimeout(() => {
-      if (value && value.replace(/<[^>]*>/g, '').trim()) {
+      const cleanValue = value.replace(/<[^>]*>/g, '').trim();
+      if (cleanValue && cleanValue.length > 10) {
         validateTitle(value);
       }
     }, 2000);
@@ -168,6 +223,15 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     setFormatTimeout(newTimeout);
   }, [handleChange, formatAuthors, formatTimeout]);
 
+  // Limpar timeouts ao desmontar
+  useEffect(() => {
+    return () => {
+      if (formatTimeout) {
+        clearTimeout(formatTimeout);
+      }
+    };
+  }, [formatTimeout]);
+
   return (
     <div className="space-y-6">
       <LogoUpload 
@@ -200,6 +264,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
           <TitleValidationFeedback 
             validationResult={titleValidation}
             isValidating={isValidatingTitle}
+            errorMessage={lastValidationError}
           />
         </CardContent>
       </Card>
