@@ -44,12 +44,12 @@ const TitleValidationFeedback = ({
         )}
         <AlertTitle>
           {isCorsOrConnectionError 
-            ? "Erro de conexão com o serviço de validação" 
+            ? "Erro de conexão com o orientador virtual" 
             : "Erro na validação"}
         </AlertTitle>
         <AlertDescription>
           {isCorsOrConnectionError 
-            ? "Não foi possível conectar ao serviço de validação. Você pode continuar trabalhando normalmente enquanto nossa equipe resolve o problema." 
+            ? "Não foi possível conectar ao orientador virtual. Você pode continuar trabalhando normalmente enquanto nossa equipe resolve o problema." 
             : errorMessage}
         </AlertDescription>
       </Alert>
