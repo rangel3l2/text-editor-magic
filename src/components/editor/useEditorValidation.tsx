@@ -15,9 +15,9 @@ export const useEditorValidation = (sectionName: string) => {
   const retryAttemptsRef = useRef<number>(0);
   const isValidatingRef = useRef(false);
   const MAX_RETRY_ATTEMPTS = 3;
-  const MIN_VALIDATION_INTERVAL = 30000; // 30 seconds between validations
-  const RESULTS_SECTION_INTERVAL = 60000; // 1 minute for Results section
-  const RATE_LIMIT_BACKOFF = 45000; // 45 seconds backoff after rate limit
+  const MIN_VALIDATION_INTERVAL = 30000; // 30 segundos entre validações
+  const RESULTS_SECTION_INTERVAL = 60000; // 1 minuto para seção de Resultados
+  const RATE_LIMIT_BACKOFF = 45000; // 45 segundos de espera após limite de taxa
 
   const getValidationInterval = useCallback(() => {
     const isResultsSection = sectionName.toLowerCase().includes('resultados') || 
@@ -27,7 +27,7 @@ export const useEditorValidation = (sectionName: string) => {
 
   const validateContent = useCallback(async (content: string) => {
     if (!content?.trim() || isValidatingRef.current) {
-      console.log('Skipping validation - empty content or already validating');
+      console.log('Pulando validação - conteúdo vazio ou já validando');
       return;
     }
 
@@ -36,7 +36,7 @@ export const useEditorValidation = (sectionName: string) => {
     const timeSinceLastValidation = now - lastValidationRef.current;
     
     if (timeSinceLastValidation < validationInterval) {
-      console.log('Validation throttled, waiting for cooldown');
+      console.log('Validação limitada, aguardando resfriamento');
       return;
     }
 
@@ -53,7 +53,7 @@ export const useEditorValidation = (sectionName: string) => {
         prompts.push({ type: 'content', section: sectionName });
       }
 
-      console.log(`Validating ${sectionName} content with length ${content.length}`);
+      console.log(`Validando conteúdo de ${sectionName} com tamanho ${content.length}`);
       
       const { data, error } = await supabase.functions.invoke('validate-content', {
         body: { 
@@ -63,7 +63,7 @@ export const useEditorValidation = (sectionName: string) => {
       });
 
       if (error) {
-        console.error('Validation error:', error);
+        console.error('Erro de validação:', error);
         
         // Verificar se é erro de CORS ou conexão
         const errorStr = error.toString();
@@ -76,7 +76,7 @@ export const useEditorValidation = (sectionName: string) => {
           
           // Não tenta retry para erros de CORS - isso só geraria mais erros
           if (errorStr.includes('CORS')) {
-            console.log('CORS error detected, not retrying');
+            console.log('Erro de CORS detectado, não tentando novamente');
             throw new Error(`Erro de CORS detectado: ${errorStr}`);
           }
         } else {
@@ -86,7 +86,7 @@ export const useEditorValidation = (sectionName: string) => {
         if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
           retryAttemptsRef.current++;
           const backoffTime = RATE_LIMIT_BACKOFF * retryAttemptsRef.current;
-          console.log(`Retrying validation in ${backoffTime/1000} seconds (attempt ${retryAttemptsRef.current})`);
+          console.log(`Tentando validação novamente em ${backoffTime/1000} segundos (tentativa ${retryAttemptsRef.current})`);
           
           setTimeout(() => {
             validateContent(content);
@@ -110,7 +110,7 @@ export const useEditorValidation = (sectionName: string) => {
         });
       }
     } catch (error) {
-      console.error('Error validating content:', error);
+      console.error('Erro ao validar conteúdo:', error);
       
       const errorMessage = error instanceof Error ? error.message : String(error);
       setErrorMessage(errorMessage);
