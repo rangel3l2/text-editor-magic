@@ -1,6 +1,6 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, RefreshCcw } from "lucide-react";
+import { AlertCircle, CheckCircle2, RefreshCcw, WifiOff } from "lucide-react";
 
 interface TitleValidationFeedbackProps {
   validationResult: any;
@@ -13,6 +13,7 @@ const TitleValidationFeedback = ({
   isValidating,
   errorMessage
 }: TitleValidationFeedbackProps) => {
+  // Verifica se está no processo de validação
   if (isValidating) {
     return (
       <Alert className="bg-blue-50 text-blue-800 border-blue-200">
@@ -25,13 +26,32 @@ const TitleValidationFeedback = ({
     );
   }
 
-  // Se temos uma mensagem de erro específica
+  // Se temos uma mensagem de erro específica (inclui erros de CORS)
   if (errorMessage) {
+    // Identifica se é erro de CORS ou conexão
+    const isCorsOrConnectionError = 
+      errorMessage.includes('CORS') || 
+      errorMessage.includes('Failed to fetch') || 
+      errorMessage.includes('Network Error') ||
+      errorMessage.includes('Edge Function');
+    
     return (
       <Alert variant="destructive" className="bg-red-50">
-        <AlertCircle className="h-4 w-4 text-red-600" />
-        <AlertTitle>Erro na validação</AlertTitle>
-        <AlertDescription>{errorMessage}</AlertDescription>
+        {isCorsOrConnectionError ? (
+          <WifiOff className="h-4 w-4 text-red-600" />
+        ) : (
+          <AlertCircle className="h-4 w-4 text-red-600" />
+        )}
+        <AlertTitle>
+          {isCorsOrConnectionError 
+            ? "Erro de conexão com o serviço de validação" 
+            : "Erro na validação"}
+        </AlertTitle>
+        <AlertDescription>
+          {isCorsOrConnectionError 
+            ? "Não foi possível conectar ao serviço de validação. Você pode continuar trabalhando normalmente enquanto nossa equipe resolve o problema." 
+            : errorMessage}
+        </AlertDescription>
       </Alert>
     );
   }

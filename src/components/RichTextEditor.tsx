@@ -35,6 +35,7 @@ const RichTextEditor = ({
   const {
     validationResult,
     isValidating,
+    errorMessage,
     validateContent,
     scheduleValidation,
     currentSection
@@ -137,6 +138,7 @@ const RichTextEditor = ({
       <ValidationFeedback 
         validationResult={validationResult}
         isValidating={isValidating}
+        errorMessage={errorMessage}
         currentSection={currentSection}
       />
     </div>

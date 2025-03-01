@@ -7,6 +7,7 @@ import { ToastDescription } from './ToastDescription';
 export const useEditorValidation = (sectionName: string) => {
   const [validationResult, setValidationResult] = useState<any>(null);
   const [isValidating, setIsValidating] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [currentSection, setCurrentSection] = useState<string>('');
   const { toast } = useToast();
   const validationTimeoutRef = useRef<NodeJS.Timeout>();
@@ -43,6 +44,7 @@ export const useEditorValidation = (sectionName: string) => {
       isValidatingRef.current = true;
       setIsValidating(true);
       setCurrentSection(sectionName);
+      setErrorMessage(null);
 
       const prompts = [];
       if (sectionName.toLowerCase().includes('título')) {
@@ -51,6 +53,8 @@ export const useEditorValidation = (sectionName: string) => {
         prompts.push({ type: 'content', section: sectionName });
       }
 
+      console.log(`Validating ${sectionName} content with length ${content.length}`);
+      
       const { data, error } = await supabase.functions.invoke('validate-content', {
         body: { 
           content: content.trim(),
@@ -60,6 +64,25 @@ export const useEditorValidation = (sectionName: string) => {
 
       if (error) {
         console.error('Validation error:', error);
+        
+        // Verificar se é erro de CORS ou conexão
+        const errorStr = error.toString();
+        if (errorStr.includes('CORS') || 
+            errorStr.includes('Failed to fetch') || 
+            errorStr.includes('Failed to send a request') ||
+            errorStr.includes('Edge Function')) {
+          
+          setErrorMessage(`Erro de conexão: ${errorStr}`);
+          
+          // Não tenta retry para erros de CORS - isso só geraria mais erros
+          if (errorStr.includes('CORS')) {
+            console.log('CORS error detected, not retrying');
+            throw new Error(`Erro de CORS detectado: ${errorStr}`);
+          }
+        } else {
+          setErrorMessage(errorStr);
+        }
+        
         if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
           retryAttemptsRef.current++;
           const backoffTime = RATE_LIMIT_BACKOFF * retryAttemptsRef.current;
@@ -70,10 +93,12 @@ export const useEditorValidation = (sectionName: string) => {
           }, backoffTime);
           return;
         }
+        
         throw error;
       }
 
       setValidationResult(data);
+      setErrorMessage(null);
       lastValidationRef.current = now;
       retryAttemptsRef.current = 0;
 
@@ -86,12 +111,19 @@ export const useEditorValidation = (sectionName: string) => {
       }
     } catch (error) {
       console.error('Error validating content:', error);
-      toast({
-        title: "Erro na validação",
-        description: <ToastDescription message="Não foi possível validar o conteúdo. Tente novamente em alguns instantes." />,
-        variant: "destructive",
-        duration: 5000,
-      });
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setErrorMessage(errorMessage);
+      
+      // Só mostra toast para erros não relacionados à CORS/conexão
+      if (!errorMessage.includes('CORS') && !errorMessage.includes('Failed to fetch')) {
+        toast({
+          title: "Erro na validação",
+          description: <ToastDescription message="Não foi possível validar o conteúdo. Você pode continuar trabalhando normalmente." />,
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
     } finally {
       isValidatingRef.current = false;
       setIsValidating(false);
@@ -120,6 +152,7 @@ export const useEditorValidation = (sectionName: string) => {
   return {
     validationResult,
     isValidating,
+    errorMessage,
     validateContent,
     scheduleValidation,
     currentSection

@@ -1,117 +1,151 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, RefreshCcw, WifiOff } from "lucide-react";
 
 interface ValidationFeedbackProps {
   validationResult: any;
   isValidating: boolean;
-  currentSection?: string;
+  errorMessage?: string | null;
+  currentSection: string;
 }
 
-const ValidationFeedback = ({ validationResult, isValidating, currentSection }: ValidationFeedbackProps) => {
+const ValidationFeedback = ({ 
+  validationResult, 
+  isValidating, 
+  errorMessage,
+  currentSection 
+}: ValidationFeedbackProps) => {
+  // Se não está validando a seção atual ou não há resultado, não mostra nada
+  if (!isValidating && !validationResult && !errorMessage) return null;
+
+  // Está validando
   if (isValidating) {
     return (
-      <Alert>
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <AlertTitle>Validando {currentSection || 'conteúdo'}...</AlertTitle>
-        </div>
+      <Alert className="bg-blue-50 text-blue-800 border-blue-200">
+        <RefreshCcw className="h-4 w-4 animate-spin text-blue-500" />
+        <AlertTitle>Validando seção: {currentSection}</AlertTitle>
         <AlertDescription>
-          Aguarde enquanto analisamos o texto.
+          Estamos analisando seu texto quanto à clareza, coerência e normas acadêmicas.
         </AlertDescription>
       </Alert>
     );
   }
 
-  if (!validationResult) return null;
-  
-  // Verificar se há erro na resposta
-  if (validationResult.error) {
+  // Se temos uma mensagem de erro específica (inclui erros de CORS)
+  if (errorMessage) {
+    // Identifica se é erro de CORS ou conexão
+    const isCorsOrConnectionError = 
+      errorMessage.includes('CORS') || 
+      errorMessage.includes('Failed to fetch') || 
+      errorMessage.includes('Network Error') ||
+      errorMessage.includes('Edge Function');
+    
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erro na validação</AlertTitle>
-        <AlertDescription>
-          {validationResult.error || "Não foi possível validar o conteúdo. Tente novamente mais tarde."}
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <Alert variant={validationResult.isValid ? "default" : "destructive"}>
-        {validationResult.isValid ? (
-          <CheckCircle2 className="h-4 w-4" />
+      <Alert variant="destructive" className="bg-red-50">
+        {isCorsOrConnectionError ? (
+          <WifiOff className="h-4 w-4 text-red-600" />
         ) : (
-          <AlertCircle className="h-4 w-4" />
+          <AlertCircle className="h-4 w-4 text-red-600" />
         )}
         <AlertTitle>
-          {validationResult.isValid ? "Conteúdo adequado" : "Atenção: problemas encontrados"}
+          {isCorsOrConnectionError 
+            ? "Erro de conexão com o serviço de validação" 
+            : "Erro na validação"}
         </AlertTitle>
         <AlertDescription>
-          {validationResult.overallFeedback || "Avaliação concluída."}
+          {isCorsOrConnectionError 
+            ? "Não foi possível conectar ao serviço de validação. Você pode continuar trabalhando normalmente enquanto resolvemos o problema." 
+            : errorMessage}
         </AlertDescription>
       </Alert>
+    );
+  }
 
-      {!validationResult.isValid && (
-        <div className="space-y-2">
-          {validationResult.redundancyIssues?.length > 0 && (
-            <div>
-              <h4 className="font-semibold">Problemas de redundância:</h4>
-              <ul className="list-disc pl-5">
-                {validationResult.redundancyIssues.map((issue: string, index: number) => (
-                  <li key={`redundancy-${index}`} className="text-sm text-gray-600">{issue}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+  // Se não temos resultado, não mostra nada
+  if (!validationResult) return null;
 
-          {validationResult.contextIssues?.length > 0 && (
-            <div>
-              <h4 className="font-semibold">Problemas de contextualização:</h4>
-              <ul className="list-disc pl-5">
-                {validationResult.contextIssues.map((issue: string, index: number) => (
-                  <li key={`context-${index}`} className="text-sm text-gray-600">{issue}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+  const { isValid, overallFeedback, details, error } = validationResult;
 
-          {validationResult.grammarErrors?.length > 0 && (
-            <div>
-              <h4 className="font-semibold">Erros gramaticais:</h4>
-              <ul className="list-disc pl-5">
-                {validationResult.grammarErrors.map((error: string, index: number) => (
-                  <li key={`grammar-${index}`} className="text-sm text-gray-600">{error}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+  // Se temos um erro genérico do serviço
+  if (error) {
+    return (
+      <Alert variant="destructive" className="bg-red-50">
+        <AlertCircle className="h-4 w-4 text-red-600" />
+        <AlertTitle>Erro na validação</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
-          {validationResult.suggestions?.length > 0 && (
-            <div>
-              <h4 className="font-semibold">Sugestões de melhoria:</h4>
-              <ul className="list-disc pl-5">
-                {validationResult.suggestions.map((suggestion: string, index: number) => (
-                  <li key={`suggestion-${index}`} className="text-sm text-gray-600">{suggestion}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+  // Conteúdo válido
+  if (isValid) {
+    return (
+      <Alert className="bg-green-50 text-green-800 border-green-200">
+        <CheckCircle2 className="h-4 w-4 text-green-600" />
+        <AlertTitle>Seção validada com sucesso</AlertTitle>
+        <AlertDescription>{overallFeedback}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Conteúdo inválido com feedback
+  return (
+    <div className="space-y-4">
+      <Alert variant="destructive" className="bg-red-50">
+        <AlertCircle className="h-4 w-4 text-red-600" />
+        <AlertTitle>Sugestões de melhoria</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>{overallFeedback}</p>
           
-          {validationResult.details?.suggestions?.length > 0 && (
-            <div>
-              <h4 className="font-semibold">Sugestões de melhoria:</h4>
-              <ul className="list-disc pl-5">
-                {validationResult.details.suggestions.map((suggestion: string, index: number) => (
-                  <li key={`detail-suggestion-${index}`} className="text-sm text-gray-600">{suggestion}</li>
-                ))}
-              </ul>
+          {details && (
+            <div className="mt-2">
+              {details.spellingErrors && details.spellingErrors.length > 0 && (
+                <div className="mt-1">
+                  <p className="font-semibold text-sm">Possíveis erros ortográficos:</p>
+                  <ul className="list-disc list-inside text-sm pl-2">
+                    {details.spellingErrors.map((error: string, i: number) => (
+                      <li key={`spell-${i}`}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {details.coherenceIssues && details.coherenceIssues.length > 0 && (
+                <div className="mt-1">
+                  <p className="font-semibold text-sm">Problemas de coerência:</p>
+                  <ul className="list-disc list-inside text-sm pl-2">
+                    {details.coherenceIssues.map((issue: string, i: number) => (
+                      <li key={`coh-${i}`}>{issue}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {details.suggestions && details.suggestions.length > 0 && (
+                <div className="mt-1">
+                  <p className="font-semibold text-sm">Sugestões:</p>
+                  <ul className="list-disc list-inside text-sm pl-2">
+                    {details.suggestions.map((suggestion: string, i: number) => (
+                      <li key={`sug-${i}`}>{suggestion}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {details.improvedVersions && details.improvedVersions.length > 0 && (
+                <div className="mt-2">
+                  <p className="font-semibold text-sm">Versões melhoradas:</p>
+                  <ul className="list-disc list-inside text-sm pl-2">
+                    {details.improvedVersions.map((version: string, i: number) => (
+                      <li key={`ver-${i}`}>{version}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
+        </AlertDescription>
+      </Alert>
     </div>
   );
 };
