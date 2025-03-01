@@ -72,7 +72,7 @@ export const useEditorValidation = (sectionName: string) => {
             errorStr.includes('Failed to send a request') ||
             errorStr.includes('Edge Function')) {
           
-          setErrorMessage(`Erro de conexão: ${errorStr}`);
+          setErrorMessage(`Erro de conexão: O orientador virtual está temporariamente indisponível.`);
           
           // Não tenta retry para erros de CORS - isso só geraria mais erros
           if (errorStr.includes('CORS')) {
@@ -104,7 +104,7 @@ export const useEditorValidation = (sectionName: string) => {
 
       if (!data.isValid) {
         toast({
-          title: `Validação da seção: ${sectionName}`,
+          title: `Orientação para: ${sectionName}`,
           description: <ToastDescription message={data.overallFeedback} />,
           duration: 5000,
         });
@@ -118,8 +118,8 @@ export const useEditorValidation = (sectionName: string) => {
       // Só mostra toast para erros não relacionados à CORS/conexão
       if (!errorMessage.includes('CORS') && !errorMessage.includes('Failed to fetch')) {
         toast({
-          title: "Erro na validação",
-          description: <ToastDescription message="Não foi possível validar o conteúdo. Você pode continuar trabalhando normalmente." />,
+          title: "Orientador virtual indisponível",
+          description: <ToastDescription message="O orientador virtual está temporariamente indisponível. Você pode continuar trabalhando normalmente." />,
           variant: "destructive",
           duration: 5000,
         });
