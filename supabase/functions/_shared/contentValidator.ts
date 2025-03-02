@@ -6,14 +6,17 @@ const rateLimiter = new RateLimiter(10, 60000); // 10 requests per minute
 
 export async function validateContent(content: string, prompt: any) {
   try {
+    console.log("Iniciando validação de conteúdo...");
     const model = createGeminiClient();
     
     // Prepare the validation prompt
     const validationPrompt = buildValidationPrompt(content, prompt);
+    console.log("Prompt de validação preparado, chamando API do Gemini...");
     
     // Call Gemini API
     const result = await model.generateContent(validationPrompt);
     const responseText = result.response.text();
+    console.log("Resposta do Gemini recebida:", responseText.substring(0, 100) + "...");
     
     // Parse the response
     return parseValidationResponse(responseText);
