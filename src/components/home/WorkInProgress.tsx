@@ -1,20 +1,31 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookText, FileText, LogIn } from "lucide-react";
+import { BookText, FileText, LogIn, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const WorkInProgress = () => {
   const { user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showAllWorks, setShowAllWorks] = useState(false);
+  const [deleteWorkId, setDeleteWorkId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: workTypes } = useQuery({
     queryKey: ['academicWorkTypes'],
@@ -95,6 +106,37 @@ const WorkInProgress = () => {
     });
   };
 
+  const handleDeleteWork = async () => {
+    if (!deleteWorkId || !user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('work_in_progress')
+        .delete()
+        .eq('id', deleteWorkId)
+        .eq('user_id', user.id);
+        
+      if (error) throw error;
+      
+      // Atualiza a cache do React Query
+      queryClient.invalidateQueries({ queryKey: ['works-basic', user.id] });
+      
+      toast({
+        title: "Trabalho excluído",
+        description: "O trabalho foi excluído com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error deleting work:', error);
+      toast({
+        title: "Erro ao excluir trabalho",
+        description: "Não foi possível excluir o trabalho.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteWorkId(null);
+    }
+  };
+
   if (!user) {
     return (
       <div className="mb-16">
@@ -147,24 +189,39 @@ const WorkInProgress = () => {
                 {displayedInProgressWorks.map((work) => (
                   <div
                     key={work.id}
-                    className="flex flex-col p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
-                    onClick={() => handleWorkClick(work)}
+                    className="flex flex-col p-4 rounded-lg border hover:bg-accent transition-colors relative"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <p className="font-medium">{work.title}</p>
-                        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                          <Badge variant="outline">
-                            {getWorkTypeName(work.work_type)}
-                          </Badge>
-                          <p>ID: {work.id.slice(0, 8)}</p>
+                    <div 
+                      className="flex-1 cursor-pointer"
+                      onClick={() => handleWorkClick(work)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <p className="font-medium">{work.title}</p>
+                          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                            <Badge variant="outline">
+                              {getWorkTypeName(work.work_type)}
+                            </Badge>
+                            <p>ID: {work.id.slice(0, 8)}</p>
+                          </div>
                         </div>
                       </div>
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        <p>Criado em: {formatDate(work.created_at)}</p>
+                        <p>Última modificação: {formatDate(work.last_modified)}</p>
+                      </div>
                     </div>
-                    <div className="mt-2 text-sm text-muted-foreground">
-                      <p>Criado em: {formatDate(work.created_at)}</p>
-                      <p>Última modificação: {formatDate(work.last_modified)}</p>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteWorkId(work.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -188,24 +245,39 @@ const WorkInProgress = () => {
                 {displayedCompletedWorks.map((work) => (
                   <div
                     key={work.id}
-                    className="flex flex-col p-4 rounded-lg border hover:bg-accent cursor-pointer transition-colors"
-                    onClick={() => handleWorkClick(work)}
+                    className="flex flex-col p-4 rounded-lg border hover:bg-accent transition-colors relative"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <p className="font-medium">{work.title}</p>
-                        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                          <Badge variant="outline">
-                            {getWorkTypeName(work.work_type)}
-                          </Badge>
-                          <p>ID: {work.id.slice(0, 8)}</p>
+                    <div 
+                      className="flex-1 cursor-pointer"
+                      onClick={() => handleWorkClick(work)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <p className="font-medium">{work.title}</p>
+                          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                            <Badge variant="outline">
+                              {getWorkTypeName(work.work_type)}
+                            </Badge>
+                            <p>ID: {work.id.slice(0, 8)}</p>
+                          </div>
                         </div>
                       </div>
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        <p>Criado em: {formatDate(work.created_at)}</p>
+                        <p>Última modificação: {formatDate(work.last_modified)}</p>
+                      </div>
                     </div>
-                    <div className="mt-2 text-sm text-muted-foreground">
-                      <p>Criado em: {formatDate(work.created_at)}</p>
-                      <p>Última modificação: {formatDate(work.last_modified)}</p>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteWorkId(work.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -227,6 +299,25 @@ const WorkInProgress = () => {
           </Button>
         </div>
       )}
+
+      {/* Diálogo de confirmação de exclusão */}
+      <AlertDialog open={!!deleteWorkId} onOpenChange={(open) => !open && setDeleteWorkId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o trabalho
+              selecionado e removerá todos os dados do nosso servidor.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteWork} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
