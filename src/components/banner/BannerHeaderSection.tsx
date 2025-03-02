@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import LogoUpload from './header/LogoUpload';
 import InstitutionInput from './header/InstitutionInput';
@@ -7,6 +8,7 @@ import editorConfig from '@/config/editorConfig';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import TitleValidationFeedback from './TitleValidationFeedback';
+import { cleanHtmlTags } from '@/utils/latexProcessor';
 
 interface BannerHeaderSectionProps {
   content: {
@@ -52,10 +54,13 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       console.log('Validando título:', title);
       
       // Adicionar originalTitle ao estado para comparação posterior
-      const cleanTitle = title.replace(/<[^>]*>/g, '').trim();
+      const cleanTitle = cleanHtmlTags(title);
       
       const { data, error } = await supabase.functions.invoke('validate-title', {
-        body: { title }
+        body: { 
+          title: cleanTitle,
+          sectionName: "Título" 
+        }
       });
 
       if (error) {
@@ -260,6 +265,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
             minLines={2}
             config={editorConfig}
             placeholder="Digite um título breve e atrativo que indique o tema principal do trabalho..."
+            sectionName="Título"
           />
           <TitleValidationFeedback 
             validationResult={titleValidation}
@@ -282,6 +288,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
             minLines={1}
             config={editorConfig}
             placeholder="Nome dos alunos autores do trabalho..."
+            sectionName="Discentes"
           />
         </CardContent>
       </Card>
@@ -299,6 +306,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
             minLines={1}
             config={editorConfig}
             placeholder="Nome dos professores orientadores..."
+            sectionName="Docentes"
           />
         </CardContent>
       </Card>

@@ -49,7 +49,7 @@ export const useEditorValidation = (sectionName: string) => {
 
       const prompts = [];
       if (sectionName.toLowerCase().includes('título')) {
-        prompts.push({ type: 'title' });
+        prompts.push({ type: 'title', sectionName });
       } else {
         prompts.push({ type: 'content', section: sectionName });
       }
@@ -61,7 +61,8 @@ export const useEditorValidation = (sectionName: string) => {
       const { data, error } = await supabase.functions.invoke('validate-content', {
         body: { 
           content: cleanedContent,
-          prompts
+          prompts,
+          sectionName
         }
       });
 
