@@ -3,6 +3,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { ToastDescription } from './ToastDescription';
+import { cleanHtmlTags } from '@/utils/latexProcessor';
 
 export const useEditorValidation = (sectionName: string) => {
   const [validationResult, setValidationResult] = useState<any>(null);
@@ -53,11 +54,13 @@ export const useEditorValidation = (sectionName: string) => {
         prompts.push({ type: 'content', section: sectionName });
       }
 
-      console.log(`Validando conteúdo de ${sectionName} com tamanho ${content.length}`);
+      // Limpa as tags HTML do conteúdo antes de enviar para validação
+      const cleanedContent = cleanHtmlTags(content.trim());
+      console.log(`Validando conteúdo de ${sectionName} com tamanho ${cleanedContent.length}`);
       
       const { data, error } = await supabase.functions.invoke('validate-content', {
         body: { 
-          content: content.trim(),
+          content: cleanedContent,
           prompts
         }
       });

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { validateContent, isRateLimited, getRemainingRequests, getNextAvailableTime } from "../_shared/contentValidator.ts";
 
@@ -8,6 +7,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Função para limpar tags HTML do conteúdo
+const cleanHtmlTags = (text: string) => {
+  if (!text) return '';
+  return text.replace(/<[^>]*>/g, '').trim();
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -15,14 +20,12 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Função validate-content iniciada");
     const { content, prompts } = await req.json();
     
-    if (!content || !prompts || !Array.isArray(prompts) || prompts.length === 0) {
-      console.error("Requisição inválida: conteúdo ou prompts não fornecidos");
+    if (!content) {
       return new Response(
         JSON.stringify({
-          error: "Conteúdo ou prompts não fornecidos.",
+          error: "Conteúdo não fornecido.",
         }),
         {
           status: 400,
@@ -30,6 +33,12 @@ serve(async (req) => {
         }
       );
     }
+
+    // Limpa tags HTML do conteúdo antes de validar
+    const cleanedContent = cleanHtmlTags(content);
+    
+    // Resto do código de validação usando o conteúdo limpo
+    console.log("Função validate-content iniciada");
 
     // Client ID for rate limiting (use IP address)
     const clientId = req.headers.get("x-forwarded-for") || "unknown";
@@ -54,23 +63,13 @@ serve(async (req) => {
       );
     }
 
-    // Validate the content for each prompt
-    console.log(`Processando ${prompts.length} prompts`);
-    const results = [];
-    
-    for (const prompt of prompts) {
-      console.log(`Validando conteúdo para prompt tipo: ${prompt.type}, seção: ${prompt.section || 'N/A'}`);
-      const result = await validateContent(content, prompt);
-      results.push({
-        ...result,
-        promptType: prompt.type,
-        section: prompt.section,
-      });
-    }
+    // Validate the content
+    console.log("Validando conteúdo");
+    const result = await validateContent(cleanedContent, prompts);
 
-    console.log("Validação concluída com sucesso");
+    console.log("Validação de conteúdo concluída com sucesso");
     return new Response(
-      JSON.stringify(results.length === 1 ? results[0] : results),
+      JSON.stringify(result),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }

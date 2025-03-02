@@ -1,6 +1,7 @@
 
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cleanHtmlTags } from "@/utils/latexProcessor";
 
 const ThesisEditor = () => {
   return (

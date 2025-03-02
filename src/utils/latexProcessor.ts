@@ -23,6 +23,16 @@ export const cleanLatexCommands = (text: string) => {
     .trim();
 };
 
+// Adiciona nova função para remover tags HTML
+export const cleanHtmlTags = (text: string) => {
+  if (!text) return '';
+  
+  // Remove todas as tags HTML
+  return text
+    .replace(/<[^>]*>/g, '')
+    .trim();
+};
+
 export const generateLatexContent = (content: any) => {
   const processedAuthors = cleanLatexCommands(content.authors);
   const processedAdvisors = cleanLatexCommands(content.advisors);

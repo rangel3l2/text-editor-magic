@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { uploadAdapterPlugin } from '@/utils/uploadAdapter';
 import EditorCore from './editor/EditorCore';
@@ -7,6 +6,7 @@ import ImageUploadHandler from './editor/ImageUploadHandler';
 import ValidationFeedback from './editor/ValidationFeedback';
 import { useEditorValidation } from './editor/useEditorValidation';
 import { useEditorProgress } from './editor/useEditorProgress';
+import { cleanHtmlTags } from '@/utils/latexProcessor';
 
 interface RichTextEditorProps {
   value: string;
