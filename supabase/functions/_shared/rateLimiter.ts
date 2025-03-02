@@ -1,136 +1,57 @@
 
 export class RateLimiter {
-  private static instance: RateLimiter;
-  private requests: Map<string, number[]>;
-  private backoffTimes: Map<string, number>;
-  private readonly windowMs: number = 60000; // 1 minute
-  private readonly maxRequests: number = 5; // 5 requests per minute
-  private readonly maxResultsRequests: number = 2; // 2 requests per minute for Results
-  private readonly maxBackoffMs: number = 300000; // 5 minutes
-  private readonly baseBackoffMs: number = 30000; // 30 seconds
-  private readonly cache: Map<string, { result: any; timestamp: number }>;
-  private readonly cacheTTL: number = 300000; // 5 minutes cache TTL
-  private readonly resultsCacheTTL: number = 600000; // 10 minutes cache TTL for Results
+  private requestMap: Map<string, number[]>;
+  private maxRequests: number;
+  private timeWindowMs: number;
 
-  private constructor() {
-    this.requests = new Map();
-    this.backoffTimes = new Map();
-    this.cache = new Map();
+  constructor(maxRequests: number = 5, timeWindowMs: number = 60000) {
+    this.requestMap = new Map();
+    this.maxRequests = maxRequests;
+    this.timeWindowMs = timeWindowMs;
   }
 
-  public static getInstance(): RateLimiter {
-    if (!RateLimiter.instance) {
-      RateLimiter.instance = new RateLimiter();
-    }
-    return RateLimiter.instance;
-  }
-
-  public getCachedResult(key: string, isResultsSection: boolean = false): any | null {
-    const cached = this.cache.get(key);
-    if (!cached) return null;
-
-    const ttl = isResultsSection ? this.resultsCacheTTL : this.cacheTTL;
-    if (Date.now() - cached.timestamp > ttl) {
-      this.cache.delete(key);
-      return null;
-    }
-
-    console.log(`Cache hit for key: ${key}`);
-    return cached.result;
-  }
-
-  public setCacheResult(key: string, result: any): void {
-    this.cache.set(key, {
-      result,
-      timestamp: Date.now()
-    });
-    console.log(`Cached result for key: ${key}`);
-  }
-
-  public isLimited(clientId: string, isResultsSection: boolean = false): boolean {
+  public isRateLimited(clientId: string): boolean {
     const now = Date.now();
+    const timestamps = this.requestMap.get(clientId) || [];
+
+    // Filter out timestamps that are outside the time window
+    const recentTimestamps = timestamps.filter(timestamp => now - timestamp < this.timeWindowMs);
     
-    // Check if in backoff period
-    const backoffUntil = this.backoffTimes.get(clientId);
-    if (backoffUntil && now < backoffUntil) {
-      console.log(`Client ${clientId} is in backoff period until ${new Date(backoffUntil)}`);
+    // Update the timestamps for this client
+    this.requestMap.set(clientId, recentTimestamps);
+
+    // Check if the client has made too many requests
+    if (recentTimestamps.length >= this.maxRequests) {
       return true;
     }
 
-    // Clean up old requests
-    this.cleanupOldRequests(clientId, now);
+    // Add the current timestamp
+    recentTimestamps.push(now);
+    this.requestMap.set(clientId, recentTimestamps);
+    return false;
+  }
+
+  public getRemainingRequests(clientId: string): number {
+    const now = Date.now();
+    const timestamps = this.requestMap.get(clientId) || [];
+    const recentTimestamps = timestamps.filter(timestamp => now - timestamp < this.timeWindowMs);
     
-    const clientRequests = this.requests.get(clientId) || [];
-    const maxRequests = isResultsSection ? this.maxResultsRequests : this.maxRequests;
-    const isLimited = clientRequests.length >= maxRequests;
+    return Math.max(0, this.maxRequests - recentTimestamps.length);
+  }
+
+  public getNextAvailableTime(clientId: string): number {
+    const now = Date.now();
+    const timestamps = this.requestMap.get(clientId) || [];
     
-    if (isLimited) {
-      console.log(`Rate limit exceeded for client ${clientId}. ${clientRequests.length} requests in the last minute.`);
-      this.setBackoff(clientId);
+    if (timestamps.length === 0) {
+      return now;
     }
     
-    return isLimited;
-  }
-
-  private cleanupOldRequests(clientId: string, now: number): void {
-    const clientRequests = this.requests.get(clientId) || [];
-    const validRequests = clientRequests.filter(
-      timestamp => now - timestamp < this.windowMs
-    );
-    this.requests.set(clientId, validRequests);
-  }
-
-  public getRemainingTime(clientId: string): number {
-    const now = Date.now();
+    const sortedTimestamps = [...timestamps].sort((a, b) => a - b);
+    const oldestTimestamp = sortedTimestamps[0];
     
-    // Check backoff period first
-    const backoffUntil = this.backoffTimes.get(clientId);
-    if (backoffUntil && now < backoffUntil) {
-      return backoffUntil - now;
-    }
-
-    const clientRequests = this.requests.get(clientId) || [];
-    if (clientRequests.length === 0) return 0;
-    
-    // Clean up old requests before calculating
-    this.cleanupOldRequests(clientId, now);
-    
-    const updatedRequests = this.requests.get(clientId) || [];
-    if (updatedRequests.length < this.maxRequests) return 0;
-    
-    const oldestRequest = Math.min(...updatedRequests);
-    return Math.max(0, this.windowMs - (now - oldestRequest));
-  }
-
-  public recordRequest(clientId: string): void {
-    const now = Date.now();
-    const clientRequests = this.requests.get(clientId) || [];
-    
-    // Clean up old requests before recording
-    this.cleanupOldRequests(clientId, now);
-    
-    const updatedRequests = this.requests.get(clientId) || [];
-    updatedRequests.push(now);
-    this.requests.set(clientId, updatedRequests);
-    
-    console.log(`Recorded request for client ${clientId}. Total requests in window: ${updatedRequests.length}`);
-  }
-
-  public setBackoff(clientId: string): void {
-    const now = Date.now();
-    const currentBackoff = this.backoffTimes.get(clientId);
-    
-    // Implement exponential backoff
-    let nextBackoff = currentBackoff ? 
-      Math.min(currentBackoff * 2, this.maxBackoffMs) : 
-      this.baseBackoffMs;
-    
-    this.backoffTimes.set(clientId, now + nextBackoff);
-    console.log(`Set backoff for client ${clientId} until ${new Date(now + nextBackoff)}`);
-  }
-
-  public clearBackoff(clientId: string): void {
-    this.backoffTimes.delete(clientId);
-    console.log(`Cleared backoff for client ${clientId}`);
+    return oldestTimestamp + this.timeWindowMs;
   }
 }
+
+export default RateLimiter;

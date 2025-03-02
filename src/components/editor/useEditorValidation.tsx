@@ -74,6 +74,19 @@ export const useEditorValidation = (sectionName: string) => {
           
           setErrorMessage(`Erro de conexão: O orientador virtual está temporariamente indisponível.`);
           
+          // Verificando se é um erro durante a implantação da função
+          if (errorStr.includes('Edge Function') && errorStr.includes('in progress')) {
+            console.log('A função edge ainda está sendo implantada, aguardando...');
+            
+            if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
+              retryAttemptsRef.current++;
+              setTimeout(() => {
+                validateContent(content);
+              }, 10000 * retryAttemptsRef.current); // Espera crescente
+              return;
+            }
+          }
+          
           // Não tenta retry para erros de CORS - isso só geraria mais erros
           if (errorStr.includes('CORS')) {
             console.log('Erro de CORS detectado, não tentando novamente');

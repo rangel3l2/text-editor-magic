@@ -6,7 +6,13 @@ declare module '@google/generative-ai' {
   }
 
   export interface GenerativeModel {
-    generateContent(prompt: string): Promise<GenerateContentResult>;
+    generateContent(prompt: string | Array<any>): Promise<GenerateContentResult>;
+    startChat(params?: any): ChatSession;
+  }
+
+  export interface ChatSession {
+    sendMessage(message: string | Array<any>): Promise<GenerateContentResult>;
+    getHistory(): Array<any>;
   }
 
   export interface GenerateContentResult {
