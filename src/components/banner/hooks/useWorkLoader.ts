@@ -49,7 +49,27 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         }
 
         if (data?.content) {
-          setBannerContent(data.content);
+          // Make sure we're setting all properties from the content object
+          const savedContent = data.content;
+          
+          // Ensure we have default values for all fields if they're missing
+          const completeContent = {
+            title: savedContent.title || '',
+            authors: savedContent.authors || '',
+            institution: savedContent.institution || '',
+            institutionLogo: savedContent.institutionLogo || '',
+            introduction: savedContent.introduction || '',
+            objectives: savedContent.objectives || '',
+            methodology: savedContent.methodology || '',
+            results: savedContent.results || '',
+            conclusion: savedContent.conclusion || '',
+            references: savedContent.references || '',
+            acknowledgments: savedContent.acknowledgments || '',
+            previewHtml: savedContent.previewHtml || '',
+            advisors: savedContent.advisors || '',
+          };
+          
+          setBannerContent(completeContent);
           setCurrentWorkId(id);
           hasLoaded.current = true;
         }
