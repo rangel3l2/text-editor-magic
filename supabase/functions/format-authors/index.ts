@@ -3,17 +3,22 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { rateLimit } from "../_shared/rateLimiter.ts";
 
+interface FormatAuthorsRequest {
+  authors: string;
+  sectionName: string;
+}
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response(null, { 
       headers: corsHeaders,
-      status: 200
+      status: 200 // Ensure OPTIONS returns 200 OK
     });
   }
 
   try {
-    // Rate limiting implementation
+    // Implement rate limiting
     const clientIP = req.headers.get("x-forwarded-for") || "unknown";
     const rateLimitResult = await rateLimit(clientIP, "format-authors");
     
@@ -30,11 +35,12 @@ serve(async (req) => {
     }
 
     // Extract authors from request body
-    const { authorsText, type } = await req.json();
+    const { authors, sectionName } = await req.json() as FormatAuthorsRequest;
 
-    if (!authorsText) {
+    // Validate parameters
+    if (!authors) {
       return new Response(
-        JSON.stringify({ error: "authorsText parameter is required" }),
+        JSON.stringify({ error: "Parameter authors is required" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
@@ -42,27 +48,49 @@ serve(async (req) => {
       );
     }
 
-    // Format authors based on type
-    let formattedAuthors = authorsText;
+    // Clean HTML tags
+    const cleanAuthors = authors.replace(/<[^>]*>/g, "").trim();
     
-    // Put your author formatting logic here
-    // ...
+    // Format authors according to ABNT rules
+    // This is a simplified formatter, you might want to implement a more sophisticated one
+    const names = cleanAuthors.split(/[,;]|\s+e\s+|\s+and\s+/).map(name => name.trim()).filter(Boolean);
+    
+    let formattedAuthors = "";
+    
+    if (sectionName.toLowerCase().includes("docente")) {
+      // Format for advisors - include their titles
+      formattedAuthors = names.map(name => {
+        // Check if name already has a title
+        if (/(Prof|Dr|Ma|Me|Esp|PhD)\.?\s/.test(name)) {
+          return name;
+        }
+        // Add Prof. title if not present
+        return `Prof. ${name}`;
+      }).join("; ");
+    } else {
+      // Format for students - LASTNAME, Firstname
+      formattedAuthors = names.map(name => {
+        const parts = name.trim().split(/\s+/);
+        if (parts.length <= 1) return name;
+        
+        const lastname = parts.pop()?.toUpperCase();
+        const firstname = parts.join(" ");
+        return `${lastname}, ${firstname}`;
+      }).join("; ");
+    }
 
     return new Response(
-      JSON.stringify({ 
-        formatted: formattedAuthors,
-        originalText: authorsText
-      }),
+      JSON.stringify({ formattedAuthors }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
   } catch (error) {
-    console.error("Error formatting authors:", error);
+    console.error("Error during author formatting:", error);
     
     return new Response(
-      JSON.stringify({ error: `Error formatting authors: ${error.message}` }),
+      JSON.stringify({ error: `Error during author formatting: ${error.message}` }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

@@ -4,17 +4,22 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { contentValidator } from "../_shared/contentValidator.ts";
 import { rateLimit } from "../_shared/rateLimiter.ts";
 
+interface ValidateTitleRequest {
+  title: string;
+  sectionName: string;
+}
+
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response(null, { 
       headers: corsHeaders,
-      status: 200
+      status: 200 // Ensure OPTIONS returns 200 OK
     });
   }
 
   try {
-    // Rate limiting implementation
+    // Implement rate limiting
     const clientIP = req.headers.get("x-forwarded-for") || "unknown";
     const rateLimitResult = await rateLimit(clientIP, "validate-title");
     
@@ -30,12 +35,13 @@ serve(async (req) => {
       );
     }
 
-    // Extract title and section from request body
-    const { title, section } = await req.json();
+    // Extract title from request body
+    const { title, sectionName } = await req.json() as ValidateTitleRequest;
 
+    // Validate parameters
     if (!title) {
       return new Response(
-        JSON.stringify({ error: "Title parameter is required" }),
+        JSON.stringify({ error: "Parameter title is required" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
@@ -43,20 +49,21 @@ serve(async (req) => {
       );
     }
 
-    const result = await contentValidator.validateTitle(title, section || "Title");
+    // Validate the title
+    const validationResult = await contentValidator.validateTitle(title, sectionName);
 
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify(validationResult),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
   } catch (error) {
-    console.error("Error validating title:", error);
+    console.error("Error during title validation:", error);
     
     return new Response(
-      JSON.stringify({ error: `Error validating title: ${error.message}` }),
+      JSON.stringify({ error: `Error during title validation: ${error.message}` }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

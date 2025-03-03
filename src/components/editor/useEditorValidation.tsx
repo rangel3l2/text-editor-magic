@@ -73,12 +73,24 @@ export const useEditorValidation = (sectionName: string) => {
       if (error) {
         console.error('Validation error:', error);
         
+        // Extract additional information from error response if available
+        let errorDetails = '';
+        if (error.message) {
+          errorDetails = error.message;
+        } else if (typeof error === 'string') {
+          errorDetails = error;
+        } else if (error.toString) {
+          errorDetails = error.toString();
+        }
+        
         // Check if it's a CORS or connection error
-        const errorStr = error.toString();
+        const errorStr = errorDetails;
         if (errorStr.includes('CORS') || 
             errorStr.includes('Failed to fetch') || 
             errorStr.includes('Failed to send a request') ||
-            errorStr.includes('Edge Function')) {
+            errorStr.includes('Edge Function') ||
+            errorStr.includes('status code 500') ||
+            errorStr.includes('Response to preflight request')) {
           
           setErrorMessage(`Connection error: The virtual advisor is temporarily unavailable.`);
           
@@ -96,7 +108,8 @@ export const useEditorValidation = (sectionName: string) => {
           }
           
           // Don't retry for persistent CORS errors after 3 attempts
-          if (errorStr.includes('CORS') && retryAttemptsRef.current >= MAX_RETRY_ATTEMPTS) {
+          if ((errorStr.includes('CORS') || errorStr.includes('preflight')) && 
+              retryAttemptsRef.current >= MAX_RETRY_ATTEMPTS) {
             console.log('Persistent CORS error, not retrying');
             throw new Error(`Persistent CORS error: ${errorStr}`);
           }
