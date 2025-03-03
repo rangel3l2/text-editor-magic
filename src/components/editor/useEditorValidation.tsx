@@ -16,9 +16,9 @@ export const useEditorValidation = (sectionName: string) => {
   const retryAttemptsRef = useRef<number>(0);
   const isValidatingRef = useRef(false);
   const MAX_RETRY_ATTEMPTS = 3;
-  const MIN_VALIDATION_INTERVAL = 30000; // 30 segundos entre validações
-  const RESULTS_SECTION_INTERVAL = 60000; // 1 minuto para seção de Resultados
-  const RATE_LIMIT_BACKOFF = 45000; // 45 segundos de espera após limite de taxa
+  const MIN_VALIDATION_INTERVAL = 30000; // 30 seconds between validations
+  const RESULTS_SECTION_INTERVAL = 60000; // 1 minute for Results section
+  const RATE_LIMIT_BACKOFF = 45000; // 45 seconds wait after rate limit
 
   const getValidationInterval = useCallback(() => {
     const isResultsSection = sectionName.toLowerCase().includes('resultados') || 
@@ -28,7 +28,7 @@ export const useEditorValidation = (sectionName: string) => {
 
   const validateContent = useCallback(async (content: string) => {
     if (!content?.trim() || isValidatingRef.current) {
-      console.log('Pulando validação - conteúdo vazio ou já validando');
+      console.log('Skipping validation - empty content or already validating');
       return;
     }
 
@@ -37,7 +37,7 @@ export const useEditorValidation = (sectionName: string) => {
     const timeSinceLastValidation = now - lastValidationRef.current;
     
     if (timeSinceLastValidation < validationInterval) {
-      console.log('Validação limitada, aguardando resfriamento');
+      console.log('Validation rate limited, waiting for cooldown');
       return;
     }
 
@@ -58,9 +58,9 @@ export const useEditorValidation = (sectionName: string) => {
         prompts.push({ type: 'content', section: sectionName });
       }
 
-      // Limpa as tags HTML do conteúdo antes de enviar para validação
+      // Clean HTML tags from content before sending for validation
       const cleanedContent = cleanHtmlTags(content.trim());
-      console.log(`Validando conteúdo de ${sectionName} com tamanho ${cleanedContent.length}`);
+      console.log(`Validating content for ${sectionName} with length ${cleanedContent.length}`);
       
       const { data, error } = await supabase.functions.invoke('validate-content', {
         body: { 
@@ -71,34 +71,34 @@ export const useEditorValidation = (sectionName: string) => {
       });
 
       if (error) {
-        console.error('Erro de validação:', error);
+        console.error('Validation error:', error);
         
-        // Verificar se é erro de CORS ou conexão
+        // Check if it's a CORS or connection error
         const errorStr = error.toString();
         if (errorStr.includes('CORS') || 
             errorStr.includes('Failed to fetch') || 
             errorStr.includes('Failed to send a request') ||
             errorStr.includes('Edge Function')) {
           
-          setErrorMessage(`Erro de conexão: O orientador virtual está temporariamente indisponível.`);
+          setErrorMessage(`Connection error: The virtual advisor is temporarily unavailable.`);
           
-          // Verificando se é um erro durante a implantação da função
+          // Check if it's an error during function deployment
           if (errorStr.includes('Edge Function') && errorStr.includes('in progress')) {
-            console.log('A função edge ainda está sendo implantada, aguardando...');
+            console.log('Edge function is still being deployed, waiting...');
             
             if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
               retryAttemptsRef.current++;
               setTimeout(() => {
                 validateContent(content);
-              }, 15000 * retryAttemptsRef.current); // Diminuído o tempo de espera para retry - 15 segundos x número da tentativa
+              }, 15000 * retryAttemptsRef.current); // 15 seconds x attempt number
               return;
             }
           }
           
-          // Não tenta retry para erros de CORS após 3 tentativas
+          // Don't retry for persistent CORS errors after 3 attempts
           if (errorStr.includes('CORS') && retryAttemptsRef.current >= MAX_RETRY_ATTEMPTS) {
-            console.log('Erro de CORS persistente, não tentando novamente');
-            throw new Error(`Erro de CORS persistente: ${errorStr}`);
+            console.log('Persistent CORS error, not retrying');
+            throw new Error(`Persistent CORS error: ${errorStr}`);
           }
         } else {
           setErrorMessage(errorStr);
@@ -107,7 +107,7 @@ export const useEditorValidation = (sectionName: string) => {
         if (retryAttemptsRef.current < MAX_RETRY_ATTEMPTS) {
           retryAttemptsRef.current++;
           const backoffTime = RATE_LIMIT_BACKOFF * retryAttemptsRef.current;
-          console.log(`Tentando validação novamente em ${backoffTime/1000} segundos (tentativa ${retryAttemptsRef.current})`);
+          console.log(`Retrying validation in ${backoffTime/1000} seconds (attempt ${retryAttemptsRef.current})`);
           
           setTimeout(() => {
             validateContent(content);
@@ -125,22 +125,22 @@ export const useEditorValidation = (sectionName: string) => {
 
       if (!data.isValid) {
         toast({
-          title: `Orientação para: ${sectionName}`,
+          title: `Guidance for: ${sectionName}`,
           description: <ToastDescription message={data.overallFeedback} />,
           duration: 5000,
         });
       }
     } catch (error) {
-      console.error('Erro ao validar conteúdo:', error);
+      console.error('Error validating content:', error);
       
       const errorMessage = error instanceof Error ? error.message : String(error);
       setErrorMessage(errorMessage);
       
-      // Mostra toast apenas uma vez para erros persistentes
+      // Show toast only once for persistent errors
       if (retryAttemptsRef.current <= 1) {
         toast({
-          title: "Orientador virtual indisponível",
-          description: <ToastDescription message="O orientador virtual está temporariamente indisponível. Você pode continuar trabalhando normalmente." />,
+          title: "Virtual advisor unavailable",
+          description: <ToastDescription message="The virtual advisor is temporarily unavailable. You can continue working normally." />,
           variant: "destructive",
           duration: 5000,
         });
@@ -157,10 +157,10 @@ export const useEditorValidation = (sectionName: string) => {
       clearTimeout(validationTimeoutRef.current);
     }
 
-    // Aumentar o tempo de debounce para reduzir a quantidade de chamadas API
+    // Increase debounce time to reduce API calls
     validationTimeoutRef.current = setTimeout(() => {
       validateContent(content);
-    }, 5000); // Aumentado de 3000 para 5000ms
+    }, 5000); // Increased from 3000 to 5000ms
   }, [validateContent]);
 
   useEffect(() => {

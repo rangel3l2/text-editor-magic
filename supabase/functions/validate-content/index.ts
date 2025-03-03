@@ -15,19 +15,19 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { 
       headers: corsHeaders,
-      status: 200 // Make sure OPTIONS returns 200 OK
+      status: 200 // Ensure OPTIONS returns 200 OK
     });
   }
 
   try {
-    // Implementar limitação de taxa
+    // Implement rate limiting
     const clientIP = req.headers.get("x-forwarded-for") || "unknown";
     const rateLimitResult = await rateLimit(clientIP, "validate-content");
     
     if (!rateLimitResult.allowed) {
       return new Response(
         JSON.stringify({ 
-          error: `Limite de taxa excedido. Tente novamente em ${Math.ceil(rateLimitResult.timeRemaining / 1000)} segundos.` 
+          error: `Rate limit exceeded. Try again in ${Math.ceil(rateLimitResult.timeRemaining / 1000)} seconds.` 
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -36,13 +36,13 @@ serve(async (req) => {
       );
     }
 
-    // Extrair conteúdo do corpo da requisição
+    // Extract content from request body
     const { content, prompts, sectionName } = await req.json() as ValidateContentRequest;
 
-    // Validar parâmetros
+    // Validate parameters
     if (!content || !prompts) {
       return new Response(
-        JSON.stringify({ error: "Parâmetros content e prompts são obrigatórios" }),
+        JSON.stringify({ error: "Parameters content and prompts are required" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
@@ -50,16 +50,16 @@ serve(async (req) => {
       );
     }
 
-    // Processar cada prompt e validar o conteúdo
+    // Process each prompt and validate the content
     const validationResults = [];
     
     for (const prompt of prompts) {
-      // Se o tipo for 'title', usar validação de título
+      // If type is 'title', use title validation
       if (prompt.type === 'title') {
         const titleResult = await contentValidator.validateTitle(content, prompt.sectionName || sectionName);
         validationResults.push(titleResult);
       } 
-      // Se o tipo for 'content', usar validação de conteúdo
+      // If type is 'content', use content validation
       else if (prompt.type === 'content') {
         const contentResult = await contentValidator.validateContent(
           content, 
@@ -69,7 +69,7 @@ serve(async (req) => {
       }
     }
 
-    // Se houver apenas um resultado, retorná-lo diretamente
+    // If there's only one result, return it directly
     if (validationResults.length === 1) {
       return new Response(
         JSON.stringify(validationResults[0]),
@@ -80,7 +80,7 @@ serve(async (req) => {
       );
     }
 
-    // Se houver múltiplos resultados, retornar um objeto com todos eles
+    // If there are multiple results, return an object with all of them
     return new Response(
       JSON.stringify({ results: validationResults }),
       {
@@ -89,10 +89,10 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Erro durante a validação:", error);
+    console.error("Error during validation:", error);
     
     return new Response(
-      JSON.stringify({ error: `Erro durante a validação: ${error.message}` }),
+      JSON.stringify({ error: `Error during validation: ${error.message}` }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

@@ -1,32 +1,26 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
-import { contentValidator } from "../_shared/contentValidator.ts";
 import { rateLimit } from "../_shared/rateLimiter.ts";
-
-interface FormatAuthorsRequest {
-  authors: string;
-  sectionName?: string;
-}
 
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response(null, { 
       headers: corsHeaders,
-      status: 200 // Make sure OPTIONS returns 200 OK
+      status: 200
     });
   }
 
   try {
-    // Implementar limitação de taxa
+    // Rate limiting implementation
     const clientIP = req.headers.get("x-forwarded-for") || "unknown";
     const rateLimitResult = await rateLimit(clientIP, "format-authors");
     
     if (!rateLimitResult.allowed) {
       return new Response(
         JSON.stringify({ 
-          error: `Limite de taxa excedido. Tente novamente em ${Math.ceil(rateLimitResult.timeRemaining / 1000)} segundos.` 
+          error: `Rate limit exceeded. Try again in ${Math.ceil(rateLimitResult.timeRemaining / 1000)} seconds.` 
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -35,13 +29,12 @@ serve(async (req) => {
       );
     }
 
-    // Extrair autores do corpo da requisição
-    const { authors, sectionName = "Autores" } = await req.json() as FormatAuthorsRequest;
+    // Extract authors from request body
+    const { authorsText, type } = await req.json();
 
-    // Validar parâmetros
-    if (!authors) {
+    if (!authorsText) {
       return new Response(
-        JSON.stringify({ error: "Parâmetro authors é obrigatório" }),
+        JSON.stringify({ error: "authorsText parameter is required" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
@@ -49,27 +42,27 @@ serve(async (req) => {
       );
     }
 
-    // Formatar os autores usando o contentValidator
-    let formattedAuthors = "";
+    // Format authors based on type
+    let formattedAuthors = authorsText;
     
-    if (sectionName.toLowerCase().includes("docentes") || sectionName.toLowerCase() === "docentes") {
-      formattedAuthors = await contentValidator.formatAdvisors(authors);
-    } else {
-      formattedAuthors = await contentValidator.formatAuthors(authors);
-    }
+    // Put your author formatting logic here
+    // ...
 
     return new Response(
-      JSON.stringify({ formattedAuthors }),
+      JSON.stringify({ 
+        formatted: formattedAuthors,
+        originalText: authorsText
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
   } catch (error) {
-    console.error("Erro durante a formatação de autores:", error);
+    console.error("Error formatting authors:", error);
     
     return new Response(
-      JSON.stringify({ error: `Erro durante a formatação: ${error.message}` }),
+      JSON.stringify({ error: `Error formatting authors: ${error.message}` }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
