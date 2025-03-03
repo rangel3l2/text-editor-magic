@@ -1,28 +1,44 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
-
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || "";
+import { contentValidator } from "../_shared/contentValidator.ts";
+import { rateLimit } from "../_shared/rateLimiter.ts";
 
 interface FormatAuthorsRequest {
   authors: string;
   sectionName?: string;
 }
 
-interface FormatAuthorsResponse {
-  formattedAuthors: string;
-  originalAuthors: string;
-}
-
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight request
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200 // Make sure OPTIONS returns 200 OK
+    });
   }
 
   try {
+    // Implementar limitação de taxa
+    const clientIP = req.headers.get("x-forwarded-for") || "unknown";
+    const rateLimitResult = await rateLimit(clientIP, "format-authors");
+    
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ 
+          error: `Limite de taxa excedido. Tente novamente em ${Math.ceil(rateLimitResult.timeRemaining / 1000)} segundos.` 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429,
+        }
+      );
+    }
+
+    // Extrair autores do corpo da requisição
     const { authors, sectionName = "Autores" } = await req.json() as FormatAuthorsRequest;
 
+    // Validar parâmetros
     if (!authors) {
       return new Response(
         JSON.stringify({ error: "Parâmetro authors é obrigatório" }),
@@ -33,77 +49,27 @@ serve(async (req) => {
       );
     }
 
-    // Remover tags HTML
-    const cleanAuthors = authors.replace(/<[^>]*>/g, "").trim();
-
-    console.log(`Formatando ${sectionName}:`, cleanAuthors);
-
-    // Instrução específica com base no tipo de autor (docente ou discente)
-    let instruction = "";
-    if (sectionName === "Docentes") {
-      instruction = `Formate corretamente os nomes dos docentes/orientadores a seguir de acordo com as normas ABNT, mantendo as titulações (Prof., Dr., etc.) quando presentes: "${cleanAuthors}". Retorne apenas os nomes formatados, sem explicações adicionais.`;
+    // Formatar os autores usando o contentValidator
+    let formattedAuthors = "";
+    
+    if (sectionName.toLowerCase().includes("docentes") || sectionName.toLowerCase() === "docentes") {
+      formattedAuthors = await contentValidator.formatAdvisors(authors);
     } else {
-      instruction = `Formate corretamente os nomes dos autores/alunos a seguir de acordo com as normas ABNT: "${cleanAuthors}". Retorne apenas os nomes formatados, sem explicações adicionais.`;
+      formattedAuthors = await contentValidator.formatAuthors(authors);
     }
 
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    return new Response(
+      JSON.stringify({ formattedAuthors }),
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": GEMINI_API_KEY,
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: instruction,
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.2,
-            topK: 40,
-            topP: 0.8,
-            maxOutputTokens: 200,
-          },
-        }),
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
       }
     );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Erro na API do Gemini:", errorText);
-      throw new Error(`Falha na API do Gemini: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-      throw new Error("Formato de resposta inválido da API do Gemini");
-    }
-
-    const formattedAuthors = data.candidates[0].content.parts[0].text.trim();
-    
-    console.log(`${sectionName} formatados:`, formattedAuthors);
-
-    const result: FormatAuthorsResponse = {
-      formattedAuthors,
-      originalAuthors: cleanAuthors,
-    };
-
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
   } catch (error) {
-    console.error("Erro ao formatar autores:", error);
+    console.error("Erro durante a formatação de autores:", error);
     
     return new Response(
-      JSON.stringify({ error: `Erro ao formatar autores: ${error.message}` }),
+      JSON.stringify({ error: `Erro durante a formatação: ${error.message}` }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
