@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -30,29 +29,12 @@ export const useWorkAutoSave = ({
     const saveWork = async () => {
       const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
       
-      // Ensure we're saving the complete content object
-      const completeContent = {
-        ...bannerContent,
-        title: content.title || '',
-        authors: content.authors || '',
-        institution: content.institution || '',
-        institutionLogo: content.institutionLogo || '',
-        introduction: content.introduction || '',
-        objectives: content.objectives || '',
-        methodology: content.methodology || '',
-        results: content.results || '',
-        conclusion: content.conclusion || '',
-        references: content.references || '',
-        acknowledgments: content.acknowledgments || '',
-        advisors: content.advisors || '',
-      };
-      
       try {
         const { error } = await supabase
           .from('work_in_progress')
           .update({
             title: workTitle,
-            content: completeContent,
+            content: bannerContent,
             last_modified: new Date().toISOString(),
           })
           .eq('id', currentWorkId)

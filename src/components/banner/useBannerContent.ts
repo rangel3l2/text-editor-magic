@@ -16,8 +16,7 @@ export interface BannerContent {
   conclusion: string;
   references: string;
   acknowledgments: string;
-  previewHtml?: string;
-  advisors?: string; // Added to ensure advisors field is included
+  previewHtml?: string; // Added back to fix type error
 }
 
 export const useBannerContent = () => {
@@ -39,8 +38,7 @@ export const useBannerContent = () => {
     conclusion: '',
     references: '',
     acknowledgments: '',
-    previewHtml: '',
-    advisors: ''  // Added to ensure advisors field is included
+    previewHtml: '' // Added to match interface
   };
 
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
