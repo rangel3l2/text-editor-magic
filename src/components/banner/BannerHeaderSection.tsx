@@ -154,20 +154,23 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     setFormatTimeout(newTimeout);
   };
 
-  const formatAuthors = useCallback(async (authorsText: string) => {
+  const formatAuthors = useCallback(async (authorsText: string, sectionName: string = "Autores") => {
     if (isFormatting) return;
     
     try {
       setIsFormatting(true);
-      console.log('Formatando autores:', authorsText);
+      console.log(`Formatando ${sectionName}:`, authorsText);
       
       const { data, error } = await supabase.functions.invoke('format-authors', {
-        body: { authors: authorsText }
+        body: { 
+          authors: authorsText, 
+          sectionName: sectionName 
+        }
       });
 
       if (error) {
         console.error('Erro na função do Supabase:', error);
-        throw new Error(`Falha ao formatar autores: ${error.message}`);
+        throw new Error(`Falha ao formatar ${sectionName}: ${error.message}`);
       }
 
       if (!data?.formattedAuthors) {
@@ -175,19 +178,19 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
         throw new Error('Resposta inválida do serviço de formatação');
       }
 
-      console.log('Autores formatados:', data.formattedAuthors);
-      handleChange('authors', data.formattedAuthors);
+      console.log(`${sectionName} formatados:`, data.formattedAuthors);
+      handleChange(sectionName === "Docentes" ? 'advisors' : 'authors', data.formattedAuthors);
 
       toast({
         title: "Nomes formatados",
-        description: "Os nomes foram formatados de acordo com as normas ABNT",
+        description: `Os nomes foram formatados de acordo com as normas ABNT`,
         duration: 3000,
       });
     } catch (error: any) {
-      console.error('Erro ao formatar autores:', error);
+      console.error(`Erro ao formatar ${sectionName}:`, error);
       toast({
-        title: "Erro ao formatar nomes",
-        description: error.message || "Não foi possível formatar os nomes automaticamente",
+        title: `Erro ao formatar nomes`,
+        description: error.message || `Não foi possível formatar os nomes automaticamente`,
         variant: "destructive",
         duration: 5000,
       });
@@ -205,7 +208,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     
     const newTimeout = setTimeout(() => {
       if (value && value.replace(/<[^>]*>/g, '').trim()) {
-        formatAuthors(value);
+        formatAuthors(value, "Discentes");
       }
     }, 2000);
     
@@ -221,7 +224,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     
     const newTimeout = setTimeout(() => {
       if (value && value.replace(/<[^>]*>/g, '').trim()) {
-        formatAuthors(value);
+        formatAuthors(value, "Docentes");
       }
     }, 2000);
     

@@ -23,7 +23,7 @@ const ValidationFeedback = ({
     return (
       <Alert className="bg-blue-50 text-blue-800 border-blue-200">
         <RefreshCcw className="h-4 w-4 animate-spin text-blue-500" />
-        <AlertTitle>Validando seção: {currentSection}</AlertTitle>
+        <AlertTitle>Validando seção: {currentSection || "Conteúdo"}</AlertTitle>
         <AlertDescription>
           Estamos analisando seu texto quanto à clareza, coerência e normas acadêmicas.
         </AlertDescription>
@@ -82,7 +82,7 @@ const ValidationFeedback = ({
     return (
       <Alert className="bg-green-50 text-green-800 border-green-200">
         <CheckCircle2 className="h-4 w-4 text-green-600" />
-        <AlertTitle>Seção validada com sucesso</AlertTitle>
+        <AlertTitle>Seção {currentSection || "Conteúdo"} validada com sucesso</AlertTitle>
         <AlertDescription>{overallFeedback}</AlertDescription>
       </Alert>
     );
@@ -93,7 +93,7 @@ const ValidationFeedback = ({
     <div className="space-y-4">
       <Alert variant="destructive" className="bg-red-50">
         <AlertCircle className="h-4 w-4 text-red-600" />
-        <AlertTitle>Sugestões de melhoria</AlertTitle>
+        <AlertTitle>Sugestões de melhoria para: {currentSection || "Conteúdo"}</AlertTitle>
         <AlertDescription className="space-y-2">
           <p>{overallFeedback}</p>
           

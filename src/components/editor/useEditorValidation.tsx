@@ -50,6 +50,10 @@ export const useEditorValidation = (sectionName: string) => {
       const prompts = [];
       if (sectionName.toLowerCase().includes('título')) {
         prompts.push({ type: 'title', sectionName });
+      } else if (sectionName.toLowerCase().includes('docentes')) {
+        prompts.push({ type: 'content', section: 'Docentes' });
+      } else if (sectionName.toLowerCase().includes('discentes')) {
+        prompts.push({ type: 'content', section: 'Discentes' });
       } else {
         prompts.push({ type: 'content', section: sectionName });
       }
