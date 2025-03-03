@@ -50,6 +50,8 @@ serve(async (req) => {
       );
     }
 
+    console.log(`Validando seção: ${sectionName}`);
+
     // Process each prompt and validate the content
     const validationResults = [];
     

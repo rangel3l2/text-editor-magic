@@ -19,7 +19,7 @@ export const useEditorValidation = (sectionName: string) => {
   const MIN_VALIDATION_INTERVAL = 30000; // 30 seconds between validations
   const RESULTS_SECTION_INTERVAL = 60000; // 1 minute for Results section
   const RATE_LIMIT_BACKOFF = 45000; // 45 seconds wait after rate limit
-
+  
   const getValidationInterval = useCallback(() => {
     const isResultsSection = sectionName.toLowerCase().includes('resultados') || 
                            sectionName.toLowerCase().includes('discussão');
@@ -90,9 +90,22 @@ export const useEditorValidation = (sectionName: string) => {
             errorStr.includes('Failed to send a request') ||
             errorStr.includes('Edge Function') ||
             errorStr.includes('status code 500') ||
-            errorStr.includes('Response to preflight request')) {
+            errorStr.includes('preflight request') ||
+            errorStr.includes('blocked by CORS policy') ||
+            errorStr.includes('net::ERR_FAILED')) {
           
           setErrorMessage(`Connection error: The virtual advisor is temporarily unavailable.`);
+          
+          // More detailed error logging
+          console.error('CORS or connection error details:', {
+            errorMessage: errorStr,
+            errorObject: error,
+            requestDetails: {
+              content: cleanedContent.substring(0, 100) + '...',
+              prompts,
+              sectionName
+            }
+          });
           
           // Check if it's an error during function deployment
           if (errorStr.includes('Edge Function') && errorStr.includes('in progress')) {

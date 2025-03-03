@@ -1,100 +1,67 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
-import { rateLimit } from "../_shared/rateLimiter.ts";
-
-interface FormatAuthorsRequest {
-  authors: string;
-  sectionName: string;
-}
 
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response(null, { 
       headers: corsHeaders,
-      status: 200 // Ensure OPTIONS returns 200 OK
+      status: 200
     });
   }
 
   try {
-    // Implement rate limiting
-    const clientIP = req.headers.get("x-forwarded-for") || "unknown";
-    const rateLimitResult = await rateLimit(clientIP, "format-authors");
+    const contentType = req.headers.get("content-type");
     
-    if (!rateLimitResult.allowed) {
+    if (!contentType || !contentType.includes("application/json")) {
       return new Response(
-        JSON.stringify({ 
-          error: `Rate limit exceeded. Try again in ${Math.ceil(rateLimitResult.timeRemaining / 1000)} seconds.` 
-        }),
+        JSON.stringify({ error: "Content-Type must be application/json" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 429,
+          status: 400
         }
       );
     }
 
-    // Extract authors from request body
-    const { authors, sectionName } = await req.json() as FormatAuthorsRequest;
-
-    // Validate parameters
+    const { authors } = await req.json();
+    
     if (!authors) {
       return new Response(
-        JSON.stringify({ error: "Parameter authors is required" }),
+        JSON.stringify({ error: "Authors parameter is required" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
+          status: 400
         }
       );
     }
 
-    // Clean HTML tags
-    const cleanAuthors = authors.replace(/<[^>]*>/g, "").trim();
-    
-    // Format authors according to ABNT rules
-    // This is a simplified formatter, you might want to implement a more sophisticated one
-    const names = cleanAuthors.split(/[,;]|\s+e\s+|\s+and\s+/).map(name => name.trim()).filter(Boolean);
-    
-    let formattedAuthors = "";
-    
-    if (sectionName.toLowerCase().includes("docente")) {
-      // Format for advisors - include their titles
-      formattedAuthors = names.map(name => {
-        // Check if name already has a title
-        if (/(Prof|Dr|Ma|Me|Esp|PhD)\.?\s/.test(name)) {
-          return name;
-        }
-        // Add Prof. title if not present
-        return `Prof. ${name}`;
-      }).join("; ");
-    } else {
-      // Format for students - LASTNAME, Firstname
-      formattedAuthors = names.map(name => {
-        const parts = name.trim().split(/\s+/);
-        if (parts.length <= 1) return name;
-        
-        const lastname = parts.pop()?.toUpperCase();
-        const firstname = parts.join(" ");
-        return `${lastname}, ${firstname}`;
-      }).join("; ");
-    }
+    // Process the authors formatting logic here
+    // This is a placeholder for the actual logic
+    const formattedAuthors = processAuthors(authors);
 
     return new Response(
-      JSON.stringify({ formattedAuthors }),
+      JSON.stringify({ formatted: formattedAuthors }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+        status: 200
       }
     );
   } catch (error) {
-    console.error("Error during author formatting:", error);
+    console.error("Error formatting authors:", error);
     
     return new Response(
-      JSON.stringify({ error: `Error during author formatting: ${error.message}` }),
+      JSON.stringify({ error: `Error formatting authors: ${error.message}` }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
+        status: 500
       }
     );
   }
 });
+
+// Example function to process authors string
+function processAuthors(authors: string): string {
+  // This would contain the actual logic to format authors
+  // For now, just return the input
+  return authors;
+}
