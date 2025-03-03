@@ -78,8 +78,6 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
           errorMessage = "Erro de autenticação com o serviço de validação.";
         } else if (error.message?.includes('timeout') || error.message?.includes('504')) {
           errorMessage = "Tempo de resposta excedido. Tente novamente mais tarde.";
-        } else if (error.message?.includes('CORS') || error.message?.includes('Failed to fetch')) {
-          errorMessage = "Erro de conexão com o serviço de validação. Verifique sua conexão com a internet.";
         }
         
         setLastValidationError(errorMessage);

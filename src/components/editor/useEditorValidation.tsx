@@ -90,15 +90,15 @@ export const useEditorValidation = (sectionName: string) => {
               retryAttemptsRef.current++;
               setTimeout(() => {
                 validateContent(content);
-              }, 15000 * retryAttemptsRef.current); // Diminuído o tempo de espera para retry - 15 segundos x número da tentativa
+              }, 10000 * retryAttemptsRef.current); // Espera crescente
               return;
             }
           }
           
-          // Não tenta retry para erros de CORS após 3 tentativas
-          if (errorStr.includes('CORS') && retryAttemptsRef.current >= MAX_RETRY_ATTEMPTS) {
-            console.log('Erro de CORS persistente, não tentando novamente');
-            throw new Error(`Erro de CORS persistente: ${errorStr}`);
+          // Não tenta retry para erros de CORS - isso só geraria mais erros
+          if (errorStr.includes('CORS')) {
+            console.log('Erro de CORS detectado, não tentando novamente');
+            throw new Error(`Erro de CORS detectado: ${errorStr}`);
           }
         } else {
           setErrorMessage(errorStr);
@@ -136,8 +136,8 @@ export const useEditorValidation = (sectionName: string) => {
       const errorMessage = error instanceof Error ? error.message : String(error);
       setErrorMessage(errorMessage);
       
-      // Mostra toast apenas uma vez para erros persistentes
-      if (retryAttemptsRef.current <= 1) {
+      // Só mostra toast para erros não relacionados à CORS/conexão
+      if (!errorMessage.includes('CORS') && !errorMessage.includes('Failed to fetch')) {
         toast({
           title: "Orientador virtual indisponível",
           description: <ToastDescription message="O orientador virtual está temporariamente indisponível. Você pode continuar trabalhando normalmente." />,
@@ -157,10 +157,9 @@ export const useEditorValidation = (sectionName: string) => {
       clearTimeout(validationTimeoutRef.current);
     }
 
-    // Aumentar o tempo de debounce para reduzir a quantidade de chamadas API
     validationTimeoutRef.current = setTimeout(() => {
       validateContent(content);
-    }, 5000); // Aumentado de 3000 para 5000ms
+    }, 3000);
   }, [validateContent]);
 
   useEffect(() => {

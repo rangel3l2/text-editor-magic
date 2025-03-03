@@ -13,10 +13,7 @@ interface ValidateContentRequest {
 serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 200 // Make sure OPTIONS returns 200 OK
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
