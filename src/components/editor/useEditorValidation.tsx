@@ -62,15 +62,14 @@ export const useEditorValidation = (sectionName: string) => {
       const cleanedContent = cleanHtmlTags(content.trim());
       console.log(`Validating content for ${sectionName} with length ${cleanedContent.length}`);
       
-      // Use a direct fetch with appropriate CORS headers instead of the Supabase client
-      // This is a temporary workaround while we debug the Supabase Edge Function CORS issues
+      // Choose the right endpoint based on section type
       const functionEndpoint = sectionName.toLowerCase().includes('título') 
         ? 'validate-title' 
         : 'validate-content';
       
       console.log(`Using endpoint: ${functionEndpoint}`);
       
-      const { data, error } = await supabase.functions.invoke(functionEndpoint, {
+      const response = await supabase.functions.invoke(functionEndpoint, {
         body: sectionName.toLowerCase().includes('título') 
           ? { 
               title: cleanedContent,
@@ -83,17 +82,17 @@ export const useEditorValidation = (sectionName: string) => {
             }
       });
 
-      if (error) {
-        console.error('Validation error:', error);
+      if (response.error) {
+        console.error('Validation error:', response.error);
         
         // Extract additional information from error response if available
         let errorDetails = '';
-        if (error.message) {
-          errorDetails = error.message;
-        } else if (typeof error === 'string') {
-          errorDetails = error;
-        } else if (error.toString) {
-          errorDetails = error.toString();
+        if (response.error.message) {
+          errorDetails = response.error.message;
+        } else if (typeof response.error === 'string') {
+          errorDetails = response.error;
+        } else if (response.error.toString) {
+          errorDetails = response.error.toString();
         }
         
         // Check if it's a CORS or connection error
@@ -112,7 +111,7 @@ export const useEditorValidation = (sectionName: string) => {
           // More detailed error logging
           console.error('CORS or connection error details:', {
             errorMessage: errorStr,
-            errorObject: error,
+            errorObject: response.error,
             requestDetails: {
               content: cleanedContent.substring(0, 100) + '...',
               prompts,
@@ -164,18 +163,18 @@ export const useEditorValidation = (sectionName: string) => {
           return;
         }
         
-        throw error;
+        throw response.error;
       }
 
-      setValidationResult(data);
+      setValidationResult(response.data);
       setErrorMessage(null);
       lastValidationRef.current = now;
       retryAttemptsRef.current = 0;
 
-      if (!data.isValid) {
+      if (!response.data.isValid) {
         toast({
           title: `Guidance for: ${sectionName}`,
-          description: <ToastDescription message={data.overallFeedback} />,
+          description: <ToastDescription message={response.data.overallFeedback} />,
           duration: 5000,
         });
       }
