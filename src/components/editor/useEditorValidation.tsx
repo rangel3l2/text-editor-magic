@@ -69,7 +69,8 @@ export const useEditorValidation = (sectionName: string) => {
       
       console.log(`Using endpoint: ${functionEndpoint}`);
       
-      const response = await supabase.functions.invoke(functionEndpoint, {
+      // Call the Edge Function
+      const { data, error } = await supabase.functions.invoke(functionEndpoint, {
         body: sectionName.toLowerCase().includes('título') 
           ? { 
               title: cleanedContent,
@@ -82,17 +83,17 @@ export const useEditorValidation = (sectionName: string) => {
             }
       });
 
-      if (response.error) {
-        console.error('Validation error:', response.error);
+      if (error) {
+        console.error('Validation error:', error);
         
         // Extract additional information from error response if available
         let errorDetails = '';
-        if (response.error.message) {
-          errorDetails = response.error.message;
-        } else if (typeof response.error === 'string') {
-          errorDetails = response.error;
-        } else if (response.error.toString) {
-          errorDetails = response.error.toString();
+        if (error.message) {
+          errorDetails = error.message;
+        } else if (typeof error === 'string') {
+          errorDetails = error;
+        } else if (error.toString) {
+          errorDetails = error.toString();
         }
         
         // Check if it's a CORS or connection error
@@ -111,7 +112,7 @@ export const useEditorValidation = (sectionName: string) => {
           // More detailed error logging
           console.error('CORS or connection error details:', {
             errorMessage: errorStr,
-            errorObject: response.error,
+            errorObject: error,
             requestDetails: {
               content: cleanedContent.substring(0, 100) + '...',
               prompts,
@@ -163,18 +164,18 @@ export const useEditorValidation = (sectionName: string) => {
           return;
         }
         
-        throw response.error;
+        throw error;
       }
 
-      setValidationResult(response.data);
+      setValidationResult(data);
       setErrorMessage(null);
       lastValidationRef.current = now;
       retryAttemptsRef.current = 0;
 
-      if (!response.data.isValid) {
+      if (!data.isValid) {
         toast({
           title: `Guidance for: ${sectionName}`,
-          description: <ToastDescription message={response.data.overallFeedback} />,
+          description: <ToastDescription message={data.overallFeedback} />,
           duration: 5000,
         });
       }
