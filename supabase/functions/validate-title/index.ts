@@ -17,6 +17,17 @@ serve(async (req) => {
   }
 
   try {
+    // Check content type
+    if (req.headers.get("content-type") !== "application/json") {
+      return new Response(
+        JSON.stringify({ error: "Expected content-type: application/json" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Implement rate limiting
     const clientIP = req.headers.get("x-forwarded-for") || "unknown";
     const rateLimitResult = await rateLimit(clientIP, "validate-title");
@@ -34,7 +45,19 @@ serve(async (req) => {
     }
 
     // Extract title from request body
-    const { title, sectionName } = await req.json() as ValidateTitleRequest;
+    const requestData = await req.json().catch(() => null);
+    
+    if (!requestData) {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+    
+    const { title, sectionName } = requestData as ValidateTitleRequest;
 
     // Validate parameters
     if (!title) {

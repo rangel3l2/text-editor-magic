@@ -10,9 +10,34 @@ serve(async (req) => {
   }
 
   try {
-    const { authors } = await req.json();
+    // Check content type
+    if (req.headers.get("content-type") !== "application/json") {
+      return new Response(
+        JSON.stringify({ error: "Expected content-type: application/json" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
-    if (!authors || !Array.isArray(authors)) {
+    // Parse request body
+    const requestData = await req.json().catch(() => null);
+    
+    // Validate input
+    if (!requestData || !requestData.authors) {
+      return new Response(
+        JSON.stringify({ error: "Missing required field: authors" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { authors } = requestData;
+
+    if (!Array.isArray(authors)) {
       return new Response(
         JSON.stringify({ error: "Invalid authors data. Expected an array." }),
         {
@@ -22,13 +47,13 @@ serve(async (req) => {
       );
     }
 
-    // Process authors (this is a placeholder for your actual processing logic)
-    const formattedAuthors = authors.map((author: any) => {
-      // Your author formatting logic here
+    // Process authors (simplified formatting logic)
+    const formattedAuthors = authors.map((author) => {
       // For now, just return the author as is
       return author;
     });
 
+    // Return formatted authors
     return new Response(
       JSON.stringify({ formattedAuthors }),
       {
