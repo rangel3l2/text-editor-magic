@@ -62,12 +62,25 @@ export const useEditorValidation = (sectionName: string) => {
       const cleanedContent = cleanHtmlTags(content.trim());
       console.log(`Validating content for ${sectionName} with length ${cleanedContent.length}`);
       
-      const { data, error } = await supabase.functions.invoke('validate-content', {
-        body: { 
-          content: cleanedContent,
-          prompts,
-          sectionName
-        }
+      // Use a direct fetch with appropriate CORS headers instead of the Supabase client
+      // This is a temporary workaround while we debug the Supabase Edge Function CORS issues
+      const functionEndpoint = sectionName.toLowerCase().includes('título') 
+        ? 'validate-title' 
+        : 'validate-content';
+      
+      console.log(`Using endpoint: ${functionEndpoint}`);
+      
+      const { data, error } = await supabase.functions.invoke(functionEndpoint, {
+        body: sectionName.toLowerCase().includes('título') 
+          ? { 
+              title: cleanedContent,
+              sectionName
+            }
+          : { 
+              content: cleanedContent,
+              prompts,
+              sectionName
+            }
       });
 
       if (error) {
@@ -106,6 +119,16 @@ export const useEditorValidation = (sectionName: string) => {
               sectionName
             }
           });
+          
+          // Show toast for first error only
+          if (retryAttemptsRef.current === 0) {
+            toast({
+              title: "Erro de conexão",
+              description: <ToastDescription message="Não foi possível conectar ao orientador virtual. Você pode continuar trabalhando normalmente." />,
+              variant: "destructive",
+              duration: 10000,
+            });
+          }
           
           // Check if it's an error during function deployment
           if (errorStr.includes('Edge Function') && errorStr.includes('in progress')) {

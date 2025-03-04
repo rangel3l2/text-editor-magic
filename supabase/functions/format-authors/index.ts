@@ -1,67 +1,49 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { corsHeaders, handleCors } from "../_shared/cors.ts";
 
 serve(async (req) => {
   // Handle CORS preflight request
-  if (req.method === "OPTIONS") {
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 200
-    });
+  const corsResponse = handleCors(req);
+  if (corsResponse) {
+    return corsResponse;
   }
 
   try {
-    const contentType = req.headers.get("content-type");
-    
-    if (!contentType || !contentType.includes("application/json")) {
-      return new Response(
-        JSON.stringify({ error: "Content-Type must be application/json" }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400
-        }
-      );
-    }
-
     const { authors } = await req.json();
-    
-    if (!authors) {
+
+    if (!authors || !Array.isArray(authors)) {
       return new Response(
-        JSON.stringify({ error: "Authors parameter is required" }),
+        JSON.stringify({ error: "Invalid authors data. Expected an array." }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400
+          status: 400,
         }
       );
     }
 
-    // Process the authors formatting logic here
-    // This is a placeholder for the actual logic
-    const formattedAuthors = processAuthors(authors);
+    // Process authors (this is a placeholder for your actual processing logic)
+    const formattedAuthors = authors.map((author: any) => {
+      // Your author formatting logic here
+      // For now, just return the author as is
+      return author;
+    });
 
     return new Response(
-      JSON.stringify({ formatted: formattedAuthors }),
+      JSON.stringify({ formattedAuthors }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200
+        status: 200,
       }
     );
   } catch (error) {
     console.error("Error formatting authors:", error);
     
     return new Response(
-      JSON.stringify({ error: `Error formatting authors: ${error.message}` }),
+      JSON.stringify({ error: `Failed to format authors: ${error.message}` }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500
+        status: 500,
       }
     );
   }
 });
-
-// Example function to process authors string
-function processAuthors(authors: string): string {
-  // This would contain the actual logic to format authors
-  // For now, just return the input
-  return authors;
-}

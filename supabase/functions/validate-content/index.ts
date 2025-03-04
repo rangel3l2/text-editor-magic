@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { corsHeaders, handleCors } from "../_shared/cors.ts";
 import { contentValidator } from "../_shared/contentValidator.ts";
 import { rateLimit } from "../_shared/rateLimiter.ts";
 
@@ -12,11 +12,9 @@ interface ValidateContentRequest {
 
 serve(async (req) => {
   // Handle CORS preflight request
-  if (req.method === "OPTIONS") {
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 200 // Ensure OPTIONS returns 200 OK
-    });
+  const corsResponse = handleCors(req);
+  if (corsResponse) {
+    return corsResponse;
   }
 
   try {
