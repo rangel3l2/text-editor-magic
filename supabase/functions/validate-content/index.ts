@@ -84,6 +84,7 @@ serve(async (req) => {
       } 
       // If type is 'content', use content validation
       else if (prompt.type === 'content') {
+        console.log(`Tipo de prompt: ${prompt.type}`);
         const contentResult = await contentValidator.validateContent(
           content, 
           prompt.section || sectionName

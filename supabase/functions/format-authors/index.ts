@@ -25,9 +25,9 @@ serve(async (req) => {
     const requestData = await req.json().catch(() => null);
     
     // Validate input
-    if (!requestData || !requestData.authors) {
+    if (!requestData) {
       return new Response(
-        JSON.stringify({ error: "Missing required field: authors" }),
+        JSON.stringify({ error: "Invalid JSON in request body" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -35,11 +35,17 @@ serve(async (req) => {
       );
     }
 
-    const { authors } = requestData;
-
-    if (!Array.isArray(authors)) {
+    // Handle authors as string or array
+    let authors;
+    if (typeof requestData.authors === 'string') {
+      // If authors is a string (from RichTextEditor), treat it as a single entry
+      authors = [requestData.authors];
+    } else if (Array.isArray(requestData.authors)) {
+      // If authors is already an array, use it as is
+      authors = requestData.authors;
+    } else {
       return new Response(
-        JSON.stringify({ error: "Invalid authors data. Expected an array." }),
+        JSON.stringify({ error: "Invalid authors format. Expected a string or an array." }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
@@ -47,13 +53,13 @@ serve(async (req) => {
       );
     }
 
-    // Process authors (simplified formatting logic)
-    const formattedAuthors = authors.map((author) => {
-      // For now, just return the author as is
-      return author;
-    });
+    console.log("Processing authors:", authors);
 
-    // Return formatted authors
+    // Return formatted authors (just the same content for now)
+    const formattedAuthors = typeof requestData.authors === 'string' 
+      ? requestData.authors  // Return original string if input was a string
+      : authors;             // Return array if input was an array
+
     return new Response(
       JSON.stringify({ formattedAuthors }),
       {
