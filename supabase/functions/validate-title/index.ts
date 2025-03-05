@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders, handleCors } from "../_shared/cors.ts";
 import { contentValidator } from "../_shared/contentValidator.ts";
-import { rateLimit } from "../_shared/rateLimiter.ts";
+import { rateLimit } from "../_shared/rateLimit.ts";
 
 interface ValidateTitleRequest {
   title: string;
