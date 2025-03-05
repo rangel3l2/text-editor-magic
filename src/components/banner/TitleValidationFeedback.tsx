@@ -130,11 +130,11 @@ const TitleValidationFeedback = ({
                 <div className="mt-2">
                   <p className="font-semibold text-sm">Versões melhoradas:</p>
                   <ul className="list-disc list-inside text-sm pl-2">
-                    {details.improvedVersions.map((version: string | {original: string, improved: string}, i: number) => (
+                    {details.improvedVersions.map((version: any, i: number) => (
                       <li key={`ver-${i}`}>
-                        {typeof version === 'object' ? 
+                        {version && typeof version === 'object' ? 
                          (version.improved || version.original || JSON.stringify(version)) : 
-                         version}
+                         version || ''}
                       </li>
                     ))}
                   </ul>
