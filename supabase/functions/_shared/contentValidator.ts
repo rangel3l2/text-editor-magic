@@ -1,253 +1,312 @@
 
 import { createGeminiClient } from "./geminiClient.ts";
 
-// Create an instance of the Gemini client
-const geminiClient = createGeminiClient();
+class ContentValidator {
+  private geminiClient;
 
-type ValidationResult = {
-  isValid: boolean;
-  overallFeedback: string;
-  details?: {
-    spellingErrors?: string[];
-    coherenceIssues?: string[];
-    suggestions?: string[];
-    improvedVersions?: string[];
-  };
-  error?: string;
-};
+  constructor() {
+    this.geminiClient = createGeminiClient();
+  }
 
-export const contentValidator = {
-  async validateTitle(title: string, sectionName: string = "Título"): Promise<ValidationResult> {
+  async validateTitle(title: string, sectionName: string = "Título"): Promise<any> {
     try {
-      if (!title || title.trim().length === 0) {
-        return {
-          isValid: false,
-          overallFeedback: `O ${sectionName.toLowerCase()} não pode estar vazio.`,
-        };
-      }
-
-      // Limites de tamanho para o título
+      console.log(`Validando título: ${title}`);
+      
+      // Se o título for muito curto, retornar erro
       if (title.length < 5) {
         return {
           isValid: false,
-          overallFeedback: `O ${sectionName.toLowerCase()} é muito curto. Deve ter pelo menos 5 caracteres.`,
-        };
-      }
-
-      if (title.length > 150) {
-        return {
-          isValid: false,
-          overallFeedback: `O ${sectionName.toLowerCase()} é muito longo. Deve ter no máximo 150 caracteres.`,
+          overallFeedback: `O ${sectionName.toLowerCase()} é muito curto. Adicione mais detalhes para uma validação adequada.`,
           details: {
-            suggestions: ["Tente reduzir o título para ser mais conciso e direto."]
+            suggestions: [`Elabore o ${sectionName.toLowerCase()} para ter pelo menos 10 caracteres.`]
           }
         };
       }
 
-      // Preparar o prompt para a validação do título
+      // Prompt para validação do título
       const prompt = `
-      Você é um especialista em avaliação de títulos para trabalhos acadêmicos e científicos. 
-      Avalie o título a seguir para um banner científico:
-      
-      "${title}"
-      
-      Instruções:
-      
-      1. Verifique se o título é claro, objetivo e adequado para um banner científico.
-      2. Identifique quaisquer erros ortográficos ou gramaticais.
-      3. Avalie a especificidade do título: ele deve ser específico o suficiente para indicar o tema, mas não tão detalhado a ponto de ser um parágrafo.
-      4. Verifique se o título segue as normas acadêmicas básicas.
-      
-      Forneça sua avaliação no seguinte formato JSON:
+      Você é um professor universitário especializado em metodologia científica. Analise o título acadêmico a seguir e avalie:
+
+      Título: "${title}"
+
+      Avalie o título quanto a:
+      1. Clareza e objetividade
+      2. Adequação à linguagem acadêmica
+      3. Precisão técnica e terminológica
+      4. Informatividade (se comunica bem o tema do trabalho)
+      5. Concisão (se não é desnecessariamente longo)
+      6. Gramática e ortografia
+
+      Retorne sua análise no seguinte formato JSON:
       {
         "isValid": boolean,
-        "overallFeedback": "Uma breve avaliação geral do título",
+        "overallFeedback": "Feedback geral sobre o título",
         "details": {
-          "spellingErrors": ["lista de erros ortográficos, se houver"],
-          "coherenceIssues": ["problemas de coerência ou clareza, se houver"],
-          "suggestions": ["sugestões de melhoria, se necessário"],
-          "improvedVersions": ["versões melhoradas do título, se necessário"]
+          "spellingErrors": ["erro1", "erro2"],
+          "coherenceIssues": ["problema1", "problema2"],
+          "suggestions": ["sugestão1", "sugestão2"],
+          "improvedVersions": ["versão melhorada 1", "versão melhorada 2"]
         }
       }
-      
-      Se o título for adequado, "isValid" deve ser true, e você pode fornecer um feedback positivo.
-      Se o título precisar de melhorias, "isValid" deve ser false, e você deve fornecer feedback detalhado sobre os problemas e sugestões de melhoria.
-      Responda APENAS com o JSON, sem texto adicional.
+
+      Se o título for adequado, defina "isValid" como true e forneça feedback positivo.
+      Se o título precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
       `;
 
-      const result = await geminiClient.generateContent(prompt);
+      const response = await this.geminiClient.generateContent(prompt);
+      const responseText = response.response.text();
       
-      // Get text from the response
-      const responseText = result.response.text();
+      console.log("Resposta bruta:", responseText);
       
-      // Tentar extrair o JSON da resposta
-      try {
-        // Procurar por uma estrutura JSON na resposta
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsedResult = JSON.parse(jsonMatch[0]) as ValidationResult;
-          return parsedResult;
-        }
-        
-        // Se não encontrou JSON, retornar erro
+      // Encontrar e extrair o JSON da resposta
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      
+      if (!jsonMatch) {
         throw new Error("Formato de resposta inválido");
-      } catch (parseError) {
-        console.error("Erro ao analisar resposta JSON:", parseError);
-        console.log("Resposta original:", responseText);
-        
-        // Tentar criar uma resposta baseada no texto
-        if (responseText.toLowerCase().includes("adequado") || 
-            responseText.toLowerCase().includes("apropriado") ||
-            responseText.toLowerCase().includes("bom título")) {
-          return {
-            isValid: true,
-            overallFeedback: `O ${sectionName.toLowerCase()} está adequado para um banner científico.`,
-          };
-        } else {
-          return {
-            isValid: false,
-            overallFeedback: `O ${sectionName.toLowerCase()} pode precisar de melhorias. Verifique a clareza e objetividade.`,
-            details: {
-              suggestions: ["Tente ser mais específico sobre o tema principal do trabalho."]
-            }
-          };
-        }
       }
+      
+      const jsonStr = jsonMatch[0];
+      const result = JSON.parse(jsonStr);
+      
+      // Garantir que o formato da resposta esteja correto
+      return {
+        isValid: result.isValid === true,
+        overallFeedback: result.overallFeedback || "Análise concluída",
+        details: {
+          spellingErrors: Array.isArray(result.details?.spellingErrors) ? result.details.spellingErrors : [],
+          coherenceIssues: Array.isArray(result.details?.coherenceIssues) ? result.details.coherenceIssues : [],
+          suggestions: Array.isArray(result.details?.suggestions) ? result.details.suggestions : [],
+          improvedVersions: Array.isArray(result.details?.improvedVersions) ? 
+            result.details.improvedVersions.map((version: any) => {
+              // Garantir que não há objetos complexos que causem erros no React
+              if (typeof version === 'object') {
+                return version.improved || version.original || JSON.stringify(version);
+              }
+              return version;
+            }) : []
+        }
+      };
     } catch (error) {
-      console.error("Erro durante validação de título:", error);
+      console.error("Erro na validação do título:", error);
       return {
         isValid: false,
-        overallFeedback: "Não foi possível validar o título devido a um erro técnico.",
-        error: `Erro técnico: ${error.message}`,
-      };
-    }
-  },
-
-  async validateContent(content: string, sectionName: string): Promise<ValidationResult> {
-    try {
-      if (!content || content.trim().length === 0) {
-        return {
-          isValid: false,
-          overallFeedback: `O conteúdo da seção "${sectionName}" não pode estar vazio.`,
-        };
-      }
-
-      // Limites de tamanho para cada tipo de seção
-      const sectionLimits: {[key: string]: {min: number, max: number}} = {
-        "Introdução": { min: 100, max: 2000 },
-        "Objetivos": { min: 50, max: 1000 },
-        "Metodologia": { min: 100, max: 2000 },
-        "Resultados": { min: 100, max: 2000 },
-        "Discussão": { min: 100, max: 2000 },
-        "Conclusão": { min: 100, max: 1500 },
-        "Referências": { min: 50, max: 2000 },
-        "Docentes": { min: 5, max: 500 },
-        "Discentes": { min: 5, max: 500 }
-      };
-
-      const normalizedSectionName = Object.keys(sectionLimits).find(
-        key => sectionName.toLowerCase().includes(key.toLowerCase())
-      ) || sectionName;
-
-      const limits = sectionLimits[normalizedSectionName] || { min: 50, max: 2000 };
-
-      if (content.length < limits.min) {
-        return {
-          isValid: false,
-          overallFeedback: `O conteúdo da seção "${sectionName}" é muito curto. Recomenda-se pelo menos ${limits.min} caracteres.`,
-          details: {
-            suggestions: ["Desenvolva mais o conteúdo desta seção para atender aos requisitos mínimos."]
-          }
-        };
-      }
-
-      if (content.length > limits.max) {
-        return {
-          isValid: false,
-          overallFeedback: `O conteúdo da seção "${sectionName}" é muito longo. Recomenda-se no máximo ${limits.max} caracteres.`,
-          details: {
-            suggestions: ["Tente ser mais conciso e direto para atender aos limites de tamanho."]
-          }
-        };
-      }
-
-      // Preparar o prompt para validação do conteúdo
-      const prompt = `
-      Você é um especialista em avaliação de conteúdo acadêmico para banners científicos.
-      Avalie o conteúdo a seguir para a seção "${sectionName}" de um banner científico:
-      
-      "${content}"
-      
-      Instruções:
-      
-      1. Verifique se o conteúdo é adequado para a seção "${sectionName}" de um banner científico.
-      2. Identifique quaisquer erros ortográficos ou gramaticais relevantes.
-      3. Avalie a clareza, coerência e organização do texto.
-      4. Verifique se o conteúdo segue as normas acadêmicas básicas.
-      
-      Forneça sua avaliação no seguinte formato JSON:
-      {
-        "isValid": boolean,
-        "overallFeedback": "Uma breve avaliação geral do conteúdo",
-        "details": {
-          "spellingErrors": ["lista de erros ortográficos principais, se houver"],
-          "coherenceIssues": ["problemas de coerência ou clareza, se houver"],
-          "suggestions": ["sugestões de melhoria, se necessário"],
-          "improvedVersions": ["versões melhoradas de trechos específicos, se necessário"]
-        }
-      }
-      
-      Se o conteúdo for adequado, "isValid" deve ser true, e você pode fornecer um feedback positivo.
-      Se o conteúdo precisar de melhorias, "isValid" deve ser false, e você deve fornecer feedback detalhado sobre os problemas e sugestões de melhoria.
-      Para qualquer lista vazia no objeto "details", use um array vazio [].
-      Responda APENAS com o JSON, sem texto adicional.
-      `;
-
-      const result = await geminiClient.generateContent(prompt);
-      
-      // Get text from the response
-      const responseText = result.response.text();
-      
-      // Tentar extrair o JSON da resposta
-      try {
-        // Procurar por uma estrutura JSON na resposta
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsedResult = JSON.parse(jsonMatch[0]) as ValidationResult;
-          return parsedResult;
-        }
-        
-        // Se não encontrou JSON, retornar erro
-        throw new Error("Formato de resposta inválido");
-      } catch (parseError) {
-        console.error("Erro ao analisar resposta JSON:", parseError);
-        console.log("Resposta original:", responseText);
-        
-        // Tentar criar uma resposta baseada no texto
-        if (responseText.toLowerCase().includes("adequado") || 
-            responseText.toLowerCase().includes("apropriado") ||
-            responseText.toLowerCase().includes("bom conteúdo")) {
-          return {
-            isValid: true,
-            overallFeedback: `O conteúdo da seção "${sectionName}" está adequado para um banner científico.`,
-          };
-        } else {
-          return {
-            isValid: false,
-            overallFeedback: `O conteúdo da seção "${sectionName}" pode precisar de melhorias. Verifique a clareza e organização.`,
-            details: {
-              suggestions: ["Revise o texto para melhorar a clareza e coesão."]
-            }
-          };
-        }
-      }
-    } catch (error) {
-      console.error("Erro durante validação de conteúdo:", error);
-      return {
-        isValid: false,
-        overallFeedback: `Não foi possível validar o conteúdo da seção "${sectionName}" devido a um erro técnico.`,
-        error: `Erro técnico: ${error.message}`,
+        error: `Não foi possível validar o título: ${error.message}`,
+        overallFeedback: "Ocorreu um erro durante a validação do título."
       };
     }
   }
-};
+
+  async validateContent(content: string, sectionName: string): Promise<any> {
+    try {
+      console.log(`Validando conteúdo da seção: ${sectionName}`);
+      
+      // Se o conteúdo for muito curto, retornar erro
+      if (content.length < 10) {
+        return {
+          isValid: false,
+          overallFeedback: `O conteúdo da seção ${sectionName} é muito curto. Adicione mais detalhes para uma validação adequada.`,
+          details: {
+            suggestions: [`Elabore o conteúdo da seção ${sectionName} para ter pelo menos 50 caracteres.`]
+          }
+        };
+      }
+
+      // Prompt para validação do conteúdo, adaptado conforme a seção
+      let prompt = `
+      Você é um professor universitário especializado em metodologia científica. 
+      Analise o conteúdo da seção "${sectionName}" a seguir e avalie:
+
+      Conteúdo: "${content.substring(0, 5000)}"
+
+      Avalie o conteúdo quanto a:
+      1. Clareza e objetividade
+      2. Adequação à linguagem acadêmica
+      3. Coerência e coesão
+      4. Precisão técnica e terminológica
+      5. Gramática e ortografia
+
+      Retorne sua análise no seguinte formato JSON:
+      {
+        "isValid": boolean,
+        "overallFeedback": "Feedback geral sobre o conteúdo",
+        "details": {
+          "spellingErrors": ["erro1", "erro2"],
+          "coherenceIssues": ["problema1", "problema2"],
+          "suggestions": ["sugestão1", "sugestão2"],
+          "improvedVersions": ["versão melhorada 1"]
+        }
+      }
+
+      Se o conteúdo for adequado para uma seção de ${sectionName}, defina "isValid" como true e forneça feedback positivo.
+      Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+      Seja breve e objetivo em seu feedback, pois ele será exibido em uma interface de usuário compacta.
+      `;
+
+      if (sectionName.toLowerCase().includes("introdução")) {
+        prompt = `
+        Você é um professor universitário especializado em metodologia científica. 
+        Analise o conteúdo da Introdução a seguir e avalie:
+
+        Introdução: "${content.substring(0, 5000)}"
+
+        Avalie se a introdução:
+        1. Contextualiza adequadamente o tema
+        2. Apresenta a problemática de pesquisa
+        3. Indica a relevância do estudo
+        4. Menciona os objetivos do trabalho
+        5. Utiliza linguagem acadêmica apropriada
+        6. Está gramaticalmente correta
+
+        Retorne sua análise no seguinte formato JSON:
+        {
+          "isValid": boolean,
+          "overallFeedback": "Feedback geral sobre a introdução",
+          "details": {
+            "spellingErrors": ["erro1", "erro2"],
+            "coherenceIssues": ["problema1", "problema2"],
+            "suggestions": ["sugestão1", "sugestão2"],
+            "improvedVersions": ["sugestão para uma versão melhorada concisa"]
+          }
+        }
+
+        Se a introdução for adequada, defina "isValid" como true e forneça feedback positivo.
+        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        Lembre-se: uma boa introdução contextualiza o tema, apresenta o problema e estabelece os objetivos.
+        `;
+      } else if (sectionName.toLowerCase().includes("metodologia")) {
+        prompt = `
+        Você é um professor universitário especializado em metodologia científica. 
+        Analise o conteúdo da Metodologia a seguir e avalie:
+
+        Metodologia: "${content.substring(0, 5000)}"
+
+        Avalie se a metodologia:
+        1. Descreve claramente os procedimentos metodológicos
+        2. Especifica o tipo de pesquisa/estudo
+        3. Detalha os materiais e métodos utilizados
+        4. Explica como os dados foram coletados/analisados
+        5. Utiliza terminologia adequada
+        6. Está gramaticalmente correta
+
+        Retorne sua análise no seguinte formato JSON:
+        {
+          "isValid": boolean,
+          "overallFeedback": "Feedback geral sobre a metodologia",
+          "details": {
+            "spellingErrors": ["erro1", "erro2"],
+            "coherenceIssues": ["problema1", "problema2"],
+            "suggestions": ["sugestão1", "sugestão2"],
+            "improvedVersions": ["versão melhorada concisa"]
+          }
+        }
+
+        Se a metodologia for adequada, defina "isValid" como true e forneça feedback positivo.
+        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        `;
+      } else if (sectionName.toLowerCase().includes("resultado") || sectionName.toLowerCase().includes("discussão")) {
+        prompt = `
+        Você é um professor universitário especializado em metodologia científica. 
+        Analise o conteúdo da seção de Resultados/Discussão a seguir e avalie:
+
+        Resultados/Discussão: "${content.substring(0, 5000)}"
+
+        Avalie se a seção:
+        1. Apresenta claramente os resultados encontrados
+        2. Discute os achados em relação à literatura
+        3. Interpreta os dados de forma coerente
+        4. Aborda limitações (se aplicável)
+        5. Utiliza linguagem acadêmica precisa
+        6. Está gramaticalmente correta
+
+        Retorne sua análise no seguinte formato JSON:
+        {
+          "isValid": boolean,
+          "overallFeedback": "Feedback geral sobre os resultados/discussão",
+          "details": {
+            "spellingErrors": ["erro1", "erro2"],
+            "coherenceIssues": ["problema1", "problema2"],
+            "suggestions": ["sugestão1", "sugestão2"],
+            "improvedVersions": ["versão melhorada concisa"]
+          }
+        }
+
+        Se a seção for adequada, defina "isValid" como true e forneça feedback positivo.
+        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        `;
+      } else if (sectionName.toLowerCase().includes("conclusão")) {
+        prompt = `
+        Você é um professor universitário especializado em metodologia científica. 
+        Analise o conteúdo da Conclusão a seguir e avalie:
+
+        Conclusão: "${content.substring(0, 5000)}"
+
+        Avalie se a conclusão:
+        1. Sintetiza os principais resultados
+        2. Retoma o objetivo inicial do trabalho
+        3. Apresenta as conclusões/considerações finais
+        4. Indica contribuições ou implicações do estudo
+        5. Sugere direções para pesquisas futuras (se aplicável)
+        6. Está gramaticalmente correta
+
+        Retorne sua análise no seguinte formato JSON:
+        {
+          "isValid": boolean,
+          "overallFeedback": "Feedback geral sobre a conclusão",
+          "details": {
+            "spellingErrors": ["erro1", "erro2"],
+            "coherenceIssues": ["problema1", "problema2"],
+            "suggestions": ["sugestão1", "sugestão2"],
+            "improvedVersions": ["versão melhorada concisa"]
+          }
+        }
+
+        Se a conclusão for adequada, defina "isValid" como true e forneça feedback positivo.
+        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        `;
+      }
+
+      const response = await this.geminiClient.generateContent(prompt);
+      const responseText = response.response.text();
+      
+      console.log("Resposta da validação de conteúdo:", responseText.substring(0, 200) + "...");
+      
+      // Encontrar e extrair o JSON da resposta
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      
+      if (!jsonMatch) {
+        throw new Error("Formato de resposta inválido");
+      }
+      
+      const jsonStr = jsonMatch[0];
+      const result = JSON.parse(jsonStr);
+      
+      // Garantir que o formato da resposta esteja correto
+      return {
+        isValid: result.isValid === true,
+        overallFeedback: result.overallFeedback || `Análise da seção ${sectionName} concluída`,
+        details: {
+          spellingErrors: Array.isArray(result.details?.spellingErrors) ? result.details.spellingErrors : [],
+          coherenceIssues: Array.isArray(result.details?.coherenceIssues) ? result.details.coherenceIssues : [],
+          suggestions: Array.isArray(result.details?.suggestions) ? result.details.suggestions : [],
+          improvedVersions: Array.isArray(result.details?.improvedVersions) ? 
+            result.details.improvedVersions.map((version: any) => {
+              // Garantir que não há objetos complexos que causem erros no React
+              if (typeof version === 'object') {
+                return version.improved || version.original || JSON.stringify(version);
+              }
+              return version;
+            }) : []
+        }
+      };
+    } catch (error) {
+      console.error("Erro na validação do conteúdo:", error);
+      return {
+        isValid: false,
+        error: `Não foi possível validar o conteúdo: ${error.message}`,
+        overallFeedback: `Ocorreu um erro durante a validação da seção ${sectionName}.`
+      };
+    }
+  }
+}
+
+export const contentValidator = new ContentValidator();
