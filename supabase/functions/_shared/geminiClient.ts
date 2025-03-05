@@ -1,7 +1,7 @@
 
 // Cliente para API do Gemini usando chamadas REST diretas
 export function createGeminiClient() {
-  const apiKey = Deno.env.get('GEMINI_API_KEY') ?? 'AIzaSyAljMkA_bGrCOrMZOcnI8wsHIS6B1-RX3M';
+  const apiKey = Deno.env.get('GEMINI_API_KEY') ?? 'AIzaSyAey0v2CO6552yqSfqpQ1AJmhwo7RDWqDA';
   
   if (!apiKey) {
     console.error("GEMINI_API_KEY não está definido nas variáveis de ambiente");
@@ -63,7 +63,7 @@ export function createGeminiClient() {
 
 // Função auxiliar para listar modelos disponíveis (via fetch)
 export async function listAvailableModels() {
-  const apiKey = Deno.env.get('GEMINI_API_KEY') ?? 'AIzaSyAljMkA_bGrCOrMZOcnI8wsHIS6B1-RX3M';
+  const apiKey = Deno.env.get('GEMINI_API_KEY') ?? 'AIzaSyAey0v2CO6552yqSfqpQ1AJmhwo7RDWqDA';
   
   try {
     console.log("Listando modelos disponíveis na API Gemini...");
