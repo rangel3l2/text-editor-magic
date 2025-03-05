@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { OnboardingTutorial } from "./OnboardingTutorial";
@@ -14,10 +15,12 @@ import LoginRequiredModal from "./banner/LoginRequiredModal";
 import { useWorkLoader } from "./banner/hooks/useWorkLoader";
 import { useWorkCreator } from "./banner/hooks/useWorkCreator";
 import { useWorkAutoSave } from "./banner/hooks/useWorkAutoSave";
+import { useToast } from "@/components/ui/use-toast";
 
 const BannerEditor = () => {
   const { user } = useAuth();
   const { id } = useParams();
+  const { toast } = useToast();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [hasEditedFirstField, setHasEditedFirstField] = useState(false);
 
@@ -46,7 +49,7 @@ const BannerEditor = () => {
     currentWorkId,
   });
 
-  useWorkAutoSave({
+  const { lastSaved } = useWorkAutoSave({
     currentWorkId,
     user,
     content,
@@ -91,6 +94,7 @@ const BannerEditor = () => {
     }
   };
 
+  // Show loading state while data is being loaded
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -133,8 +137,19 @@ const BannerEditor = () => {
             onLoadSavedContent={() => {}}
             onClearFields={handleClearFields}
             onOpenPreview={() => setPreviewOpen(true)}
-            onSave={() => {}}
+            onSave={() => {
+              toast({
+                title: "Salvando trabalho...",
+                description: "Seu trabalho está sendo salvo automaticamente.",
+                duration: 2000,
+              });
+            }}
           />
+          {lastSaved && (
+            <div className="text-xs text-gray-500 text-right">
+              Último salvamento: {lastSaved.toLocaleTimeString('pt-BR')}
+            </div>
+          )}
         </div>
       </BannerLayout>
     </>
