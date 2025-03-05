@@ -1,5 +1,8 @@
 
-import { geminiClient } from "./geminiClient.ts";
+import { createGeminiClient } from "./geminiClient.ts";
+
+// Create an instance of the Gemini client
+const geminiClient = createGeminiClient();
 
 type ValidationResult = {
   isValid: boolean;
@@ -72,12 +75,15 @@ export const contentValidator = {
       Responda APENAS com o JSON, sem texto adicional.
       `;
 
-      const result = await geminiClient.sendPrompt(prompt);
+      const result = await geminiClient.generateContent(prompt);
+      
+      // Get text from the response
+      const responseText = result.response.text();
       
       // Tentar extrair o JSON da resposta
       try {
         // Procurar por uma estrutura JSON na resposta
-        const jsonMatch = result.match(/\{[\s\S]*\}/);
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsedResult = JSON.parse(jsonMatch[0]) as ValidationResult;
           return parsedResult;
@@ -87,12 +93,12 @@ export const contentValidator = {
         throw new Error("Formato de resposta inválido");
       } catch (parseError) {
         console.error("Erro ao analisar resposta JSON:", parseError);
-        console.log("Resposta original:", result);
+        console.log("Resposta original:", responseText);
         
         // Tentar criar uma resposta baseada no texto
-        if (result.toLowerCase().includes("adequado") || 
-            result.toLowerCase().includes("apropriado") ||
-            result.toLowerCase().includes("bom título")) {
+        if (responseText.toLowerCase().includes("adequado") || 
+            responseText.toLowerCase().includes("apropriado") ||
+            responseText.toLowerCase().includes("bom título")) {
           return {
             isValid: true,
             overallFeedback: `O ${sectionName.toLowerCase()} está adequado para um banner científico.`,
@@ -197,12 +203,15 @@ export const contentValidator = {
       Responda APENAS com o JSON, sem texto adicional.
       `;
 
-      const result = await geminiClient.sendPrompt(prompt);
+      const result = await geminiClient.generateContent(prompt);
+      
+      // Get text from the response
+      const responseText = result.response.text();
       
       // Tentar extrair o JSON da resposta
       try {
         // Procurar por uma estrutura JSON na resposta
-        const jsonMatch = result.match(/\{[\s\S]*\}/);
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsedResult = JSON.parse(jsonMatch[0]) as ValidationResult;
           return parsedResult;
@@ -212,12 +221,12 @@ export const contentValidator = {
         throw new Error("Formato de resposta inválido");
       } catch (parseError) {
         console.error("Erro ao analisar resposta JSON:", parseError);
-        console.log("Resposta original:", result);
+        console.log("Resposta original:", responseText);
         
         // Tentar criar uma resposta baseada no texto
-        if (result.toLowerCase().includes("adequado") || 
-            result.toLowerCase().includes("apropriado") ||
-            result.toLowerCase().includes("bom conteúdo")) {
+        if (responseText.toLowerCase().includes("adequado") || 
+            responseText.toLowerCase().includes("apropriado") ||
+            responseText.toLowerCase().includes("bom conteúdo")) {
           return {
             isValid: true,
             overallFeedback: `O conteúdo da seção "${sectionName}" está adequado para um banner científico.`,
