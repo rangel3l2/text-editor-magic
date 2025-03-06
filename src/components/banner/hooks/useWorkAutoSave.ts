@@ -53,7 +53,7 @@ export const useWorkAutoSave = ({
       try {
         const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
         
-        // Ensure we're saving the complete content object
+        // Ensure each field has its own value, not copying from title
         const completeContent = {
           ...bannerContent,
           title: content.title || '',
@@ -125,6 +125,7 @@ export const useWorkAutoSave = ({
         // Save synchronously before unload
         const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
         
+        // Ensure each field maintains its own unique content
         const completeContent = {
           ...bannerContent,
           title: content.title || '',

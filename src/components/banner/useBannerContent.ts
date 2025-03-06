@@ -17,7 +17,7 @@ export interface BannerContent {
   references: string;
   acknowledgments: string;
   previewHtml?: string;
-  advisors?: string; // Added to ensure advisors field is included
+  advisors?: string;
 }
 
 export const useBannerContent = () => {
@@ -27,6 +27,7 @@ export const useBannerContent = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  // Certifique-se de que cada campo tenha seu próprio valor padrão vazio
   const initialBannerContent: BannerContent = {
     title: '',
     authors: '',
@@ -40,16 +41,20 @@ export const useBannerContent = () => {
     references: '',
     acknowledgments: '',
     previewHtml: '',
-    advisors: ''  // Added to ensure advisors field is included
+    advisors: ''
   };
 
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
 
+  // Função para atualizar apenas o campo específico
   const handleChange = (field: string, value: string) => {
-    setBannerContent(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setBannerContent(prev => {
+      // Crie uma cópia para evitar referências
+      const updated = { ...prev };
+      // Atualize apenas o campo específico
+      updated[field as keyof BannerContent] = value;
+      return updated;
+    });
   };
 
   const onImageConfigChange = (imageId: string, config: any) => {
