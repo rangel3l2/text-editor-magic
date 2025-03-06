@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { OnboardingTutorial } from "./OnboardingTutorial";
@@ -6,16 +7,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "react-router-dom";
 import BannerLayout from "./banner/BannerLayout";
 import BannerHeader from "./banner/BannerHeader";
-import BannerContent from "./banner/BannerContent";
+import BannerContentComponent from "./banner/BannerContent";
 import BannerActions from "./banner/BannerActions";
-import { useBannerContent } from "./banner/useBannerContent";
+import { useBannerContent, BannerContent as BannerContentType } from "./banner/useBannerContent";
 import { useBannerActions } from "./banner/useBannerActions";
 import LoginRequiredModal from "./banner/LoginRequiredModal";
 import { useWorkLoader } from "./banner/hooks/useWorkLoader";
 import { useWorkCreator } from "./banner/hooks/useWorkCreator";
 import { useWorkAutoSave } from "./banner/hooks/useWorkAutoSave";
 import { useToast } from "@/components/ui/use-toast";
-import { BannerContent } from "./banner/useBannerContent";
 
 const BannerEditor = () => {
   const { user } = useAuth();
@@ -72,7 +72,7 @@ const BannerEditor = () => {
     return cleanValue.length >= 10;
   };
 
-  const handleFieldChange = async (field: keyof BannerContent, value: string) => {
+  const handleFieldChange = async (field: keyof BannerContentType, value: string) => {
     if (!user && !hasEditedFirstField) {
       setHasEditedFirstField(true);
     } else if (!user && hasEditedFirstField) {
@@ -125,7 +125,7 @@ const BannerEditor = () => {
             onOpenPreview={() => setPreviewOpen(true)}
             onClearFields={handleClearFields}
           />
-          <BannerContent
+          <BannerContentComponent
             content={content}
             handleChange={handleFieldChange}
             selectedImage={selectedImage}
