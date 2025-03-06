@@ -17,7 +17,7 @@ export interface BannerContent {
   references: string;
   acknowledgments: string;
   previewHtml?: string;
-  advisors?: string;
+  advisors?: string; // Added to ensure advisors field is included
 }
 
 export const useBannerContent = () => {
@@ -40,12 +40,12 @@ export const useBannerContent = () => {
     references: '',
     acknowledgments: '',
     previewHtml: '',
-    advisors: ''
+    advisors: ''  // Added to ensure advisors field is included
   };
 
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
 
-  const handleChange = (field: keyof BannerContent, value: string) => {
+  const handleChange = (field: string, value: string) => {
     setBannerContent(prev => ({
       ...prev,
       [field]: value

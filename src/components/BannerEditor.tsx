@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { OnboardingTutorial } from "./OnboardingTutorial";
@@ -7,20 +6,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "react-router-dom";
 import BannerLayout from "./banner/BannerLayout";
 import BannerHeader from "./banner/BannerHeader";
-import BannerContentComponent from "./banner/BannerContent";
+import BannerContent from "./banner/BannerContent";
 import BannerActions from "./banner/BannerActions";
-import { useBannerContent, BannerContent as BannerContentType } from "./banner/useBannerContent";
+import { useBannerContent } from "./banner/useBannerContent";
 import { useBannerActions } from "./banner/useBannerActions";
 import LoginRequiredModal from "./banner/LoginRequiredModal";
 import { useWorkLoader } from "./banner/hooks/useWorkLoader";
 import { useWorkCreator } from "./banner/hooks/useWorkCreator";
 import { useWorkAutoSave } from "./banner/hooks/useWorkAutoSave";
-import { useToast } from "@/components/ui/use-toast";
 
 const BannerEditor = () => {
   const { user } = useAuth();
   const { id } = useParams();
-  const { toast } = useToast();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [hasEditedFirstField, setHasEditedFirstField] = useState(false);
 
@@ -49,7 +46,7 @@ const BannerEditor = () => {
     currentWorkId,
   });
 
-  const { lastSaved } = useWorkAutoSave({
+  useWorkAutoSave({
     currentWorkId,
     user,
     content,
@@ -72,7 +69,7 @@ const BannerEditor = () => {
     return cleanValue.length >= 10;
   };
 
-  const handleFieldChange = async (field: keyof BannerContentType, value: string) => {
+  const handleFieldChange = async (field: string, value: string) => {
     if (!user && !hasEditedFirstField) {
       setHasEditedFirstField(true);
     } else if (!user && hasEditedFirstField) {
@@ -94,7 +91,6 @@ const BannerEditor = () => {
     }
   };
 
-  // Show loading state while data is being loaded
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -125,7 +121,7 @@ const BannerEditor = () => {
             onOpenPreview={() => setPreviewOpen(true)}
             onClearFields={handleClearFields}
           />
-          <BannerContentComponent
+          <BannerContent
             content={content}
             handleChange={handleFieldChange}
             selectedImage={selectedImage}
@@ -137,19 +133,8 @@ const BannerEditor = () => {
             onLoadSavedContent={() => {}}
             onClearFields={handleClearFields}
             onOpenPreview={() => setPreviewOpen(true)}
-            onSave={() => {
-              toast({
-                title: "Salvando trabalho...",
-                description: "Seu trabalho está sendo salvo automaticamente.",
-                duration: 2000,
-              });
-            }}
+            onSave={() => {}}
           />
-          {lastSaved && (
-            <div className="text-xs text-gray-500 text-right">
-              Último salvamento: {lastSaved.toLocaleTimeString('pt-BR')}
-            </div>
-          )}
         </div>
       </BannerLayout>
     </>

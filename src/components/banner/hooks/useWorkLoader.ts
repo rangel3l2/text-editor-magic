@@ -17,19 +17,16 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
   const hasLoaded = useRef(false);
-  const isLoadingRef = useRef(true);
 
   useEffect(() => {
     const loadWork = async () => {
       if (!id || !user || hasLoaded.current || currentWorkId === id) {
         setIsLoading(false);
-        isLoadingRef.current = false;
         return;
       }
 
       try {
         setIsLoading(true);
-        isLoadingRef.current = true;
         console.log(`Loading work ${id}`);
 
         const { data, error } = await supabase
@@ -52,44 +49,26 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         }
 
         if (data?.content) {
-          console.log("Loaded content:", data.content);
-          
-          // Create a new clean object with default empty values
-          const completeContent = {
-            title: '',
-            authors: '',
-            institution: '',
-            institutionLogo: '',
-            introduction: '',
-            objectives: '',
-            methodology: '',
-            results: '',
-            conclusion: '',
-            references: '',
-            acknowledgments: '',
-            previewHtml: '',
-            advisors: '',
-          };
-          
-          // Only copy values that exist in the saved content, field by field
+          // Make sure we're setting all properties from the content object
           const savedContent = data.content;
           
-          // Only set fields that exist in the saved content
-          if (typeof savedContent.title === 'string') completeContent.title = savedContent.title;
-          if (typeof savedContent.authors === 'string') completeContent.authors = savedContent.authors;
-          if (typeof savedContent.institution === 'string') completeContent.institution = savedContent.institution;
-          if (typeof savedContent.institutionLogo === 'string') completeContent.institutionLogo = savedContent.institutionLogo;
-          if (typeof savedContent.introduction === 'string') completeContent.introduction = savedContent.introduction;
-          if (typeof savedContent.objectives === 'string') completeContent.objectives = savedContent.objectives;
-          if (typeof savedContent.methodology === 'string') completeContent.methodology = savedContent.methodology;
-          if (typeof savedContent.results === 'string') completeContent.results = savedContent.results;
-          if (typeof savedContent.conclusion === 'string') completeContent.conclusion = savedContent.conclusion;
-          if (typeof savedContent.references === 'string') completeContent.references = savedContent.references;
-          if (typeof savedContent.acknowledgments === 'string') completeContent.acknowledgments = savedContent.acknowledgments;
-          if (typeof savedContent.previewHtml === 'string') completeContent.previewHtml = savedContent.previewHtml;
-          if (typeof savedContent.advisors === 'string') completeContent.advisors = savedContent.advisors;
+          // Ensure we have default values for all fields if they're missing
+          const completeContent = {
+            title: savedContent.title || '',
+            authors: savedContent.authors || '',
+            institution: savedContent.institution || '',
+            institutionLogo: savedContent.institutionLogo || '',
+            introduction: savedContent.introduction || '',
+            objectives: savedContent.objectives || '',
+            methodology: savedContent.methodology || '',
+            results: savedContent.results || '',
+            conclusion: savedContent.conclusion || '',
+            references: savedContent.references || '',
+            acknowledgments: savedContent.acknowledgments || '',
+            previewHtml: savedContent.previewHtml || '',
+            advisors: savedContent.advisors || '',
+          };
           
-          // Set banner content with the properly structured content
           setBannerContent(completeContent);
           setCurrentWorkId(id);
           hasLoaded.current = true;
@@ -104,7 +83,6 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         navigate('/');
       } finally {
         setIsLoading(false);
-        isLoadingRef.current = false;
       }
     };
 
