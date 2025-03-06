@@ -30,7 +30,7 @@ const IntroductionEditor = ({
   const [isAllPartsCompleted, setIsAllPartsCompleted] = useState(false);
   const { toast } = useToast();
   
-  // Validação do editor usando Gemini
+  // Validação da introdução completa usando Gemini
   const {
     validationResult,
     isValidating,
@@ -39,6 +39,34 @@ const IntroductionEditor = ({
     scheduleValidation,
     currentSection
   } = useEditorValidation("introdução completa");
+  
+  // Validação para cada subtópico
+  const {
+    validationResult: themeValidationResult,
+    isValidating: isThemeValidating,
+    errorMessage: themeErrorMessage,
+    validateContent: validateTheme,
+    scheduleValidation: scheduleThemeValidation,
+    currentSection: themeCurrentSection
+  } = useEditorValidation("tema");
+  
+  const {
+    validationResult: problemValidationResult,
+    isValidating: isProblemValidating,
+    errorMessage: problemErrorMessage,
+    validateContent: validateProblem,
+    scheduleValidation: scheduleProblemValidation,
+    currentSection: problemCurrentSection
+  } = useEditorValidation("problema");
+  
+  const {
+    validationResult: objectivesValidationResult,
+    isValidating: isObjectivesValidating,
+    errorMessage: objectivesErrorMessage,
+    validateContent: validateObjectives,
+    scheduleValidation: scheduleObjectivesValidation,
+    currentSection: objectivesCurrentSection
+  } = useEditorValidation("objetivos");
 
   // Verifica se todas as partes da introdução estão preenchidas
   useEffect(() => {
@@ -74,6 +102,25 @@ const IntroductionEditor = ({
       scheduleValidation(combinedText);
     }
   }, [isAllPartsCompleted, activeTab, themePart, problemPart, objectivesPart]);
+  
+  // Validação individual dos subtópicos quando eles são alterados
+  useEffect(() => {
+    if (themePart.trim().length > 50) {
+      scheduleThemeValidation(themePart);
+    }
+  }, [themePart]);
+  
+  useEffect(() => {
+    if (problemPart.trim().length > 50) {
+      scheduleProblemValidation(problemPart);
+    }
+  }, [problemPart]);
+  
+  useEffect(() => {
+    if (objectivesPart.trim().length > 50) {
+      scheduleObjectivesValidation(objectivesPart);
+    }
+  }, [objectivesPart]);
 
   // Função para obter o texto combinado
   const getCombinedText = (): string => {
@@ -240,6 +287,17 @@ const IntroductionEditor = ({
                     sectionName="tema"
                     placeholder="Apresente o tema em linhas gerais, contextualizando o campo de estudo..."
                   />
+                  
+                  {themePart.trim().length > 50 && (
+                    <div className="mt-4">
+                      <ValidationFeedback 
+                        validationResult={themeValidationResult} 
+                        isValidating={isThemeValidating} 
+                        errorMessage={themeErrorMessage} 
+                        currentSection={themeCurrentSection || "Tema"}
+                      />
+                    </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
               
@@ -259,6 +317,17 @@ const IntroductionEditor = ({
                     sectionName="problema"
                     placeholder="Identifique a lacuna no conhecimento e a questão específica a ser estudada..."
                   />
+                  
+                  {problemPart.trim().length > 50 && (
+                    <div className="mt-4">
+                      <ValidationFeedback 
+                        validationResult={problemValidationResult} 
+                        isValidating={isProblemValidating} 
+                        errorMessage={problemErrorMessage} 
+                        currentSection={problemCurrentSection || "Problema"}
+                      />
+                    </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
               
@@ -278,6 +347,17 @@ const IntroductionEditor = ({
                     sectionName="objetivos"
                     placeholder="Defina os objetivos gerais e específicos e justifique a importância do estudo..."
                   />
+                  
+                  {objectivesPart.trim().length > 50 && (
+                    <div className="mt-4">
+                      <ValidationFeedback 
+                        validationResult={objectivesValidationResult} 
+                        isValidating={isObjectivesValidating} 
+                        errorMessage={objectivesErrorMessage} 
+                        currentSection={objectivesCurrentSection || "Objetivos"}
+                      />
+                    </div>
+                  )}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

@@ -178,7 +178,105 @@ class ContentValidator {
         Se precisar de melhorias, defina "isValid" como false, liste detalhadamente os problemas categorizados e forneça sugestões específicas para cada problema identificado.
         Seja minucioso na análise, especialmente quanto à coerência entre os parágrafos, uso adequado de conectivos, ausência de pleonasmos, e conformidade com normas ABNT.
         `;
-      } else if (sectionName.toLowerCase().includes("introdução") || sectionName.toLowerCase().includes("tema") || sectionName.toLowerCase().includes("problema") || sectionName.toLowerCase().includes("objetivos")) {
+      } else if (sectionName.toLowerCase() === "tema") {
+        prompt = `
+        Você é um professor universitário especializado em metodologia científica. 
+        Analise este parágrafo de apresentação do tema de um trabalho acadêmico:
+
+        Tema: "${content.substring(0, 5000)}"
+
+        Avalie se este componente da introdução:
+        1. Contextualiza adequadamente o tema da pesquisa
+        2. Apresenta informações atualizadas da literatura
+        3. Situa o leitor no contexto geral do assunto
+        4. Utiliza linguagem acadêmica apropriada
+        5. Está livre de erros gramaticais e pleonasmos
+        6. Segue as normas da ABNT
+
+        Retorne sua análise no seguinte formato JSON:
+        {
+          "isValid": boolean,
+          "overallFeedback": "Feedback específico sobre a apresentação do tema",
+          "details": {
+            "spellingErrors": ["erro1", "erro2"],
+            "coherenceIssues": ["problema1", "problema2"],
+            "abntIssues": ["problema relacionado às normas ABNT1", "problema2"],
+            "pleonasms": ["pleonasmo ou redundância encontrada1", "pleonasmo2"],
+            "suggestions": ["sugestão1", "sugestão2"],
+            "improvedVersions": ["versão melhorada para este componente"]
+          }
+        }
+
+        Se o conteúdo for adequado para esta parte da introdução, defina "isValid" como true e forneça feedback positivo.
+        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        `;
+      } else if (sectionName.toLowerCase() === "problema") {
+        prompt = `
+        Você é um professor universitário especializado em metodologia científica. 
+        Analise este parágrafo de delimitação do problema (problematização) de um trabalho acadêmico:
+
+        Problema: "${content.substring(0, 5000)}"
+
+        Avalie se este componente da introdução:
+        1. Identifica claramente a lacuna no conhecimento atual
+        2. Apresenta a questão específica que o estudo busca responder
+        3. Afunila o tema para o problema específico que será estudado
+        4. Utiliza linguagem acadêmica apropriada
+        5. Está livre de erros gramaticais e pleonasmos
+        6. Segue as normas da ABNT
+
+        Retorne sua análise no seguinte formato JSON:
+        {
+          "isValid": boolean,
+          "overallFeedback": "Feedback específico sobre a delimitação do problema",
+          "details": {
+            "spellingErrors": ["erro1", "erro2"],
+            "coherenceIssues": ["problema1", "problema2"],
+            "abntIssues": ["problema relacionado às normas ABNT1", "problema2"],
+            "pleonasms": ["pleonasmo ou redundância encontrada1", "pleonasmo2"],
+            "suggestions": ["sugestão1", "sugestão2"],
+            "improvedVersions": ["versão melhorada para este componente"]
+          }
+        }
+
+        Se o conteúdo for adequado para esta parte da introdução, defina "isValid" como true e forneça feedback positivo.
+        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        `;
+      } else if (sectionName.toLowerCase() === "objetivos") {
+        prompt = `
+        Você é um professor universitário especializado em metodologia científica. 
+        Analise este parágrafo de objetivos e justificativas de um trabalho acadêmico:
+
+        Objetivos: "${content.substring(0, 5000)}"
+
+        Avalie se este componente da introdução:
+        1. Apresenta claramente os objetivos do trabalho (geral e específicos)
+        2. Indica como a pesquisa pretende preencher a lacuna identificada
+        3. Explica a relevância e importância do estudo
+        4. Destaca as contribuições esperadas para a área de conhecimento
+        5. Utiliza linguagem acadêmica apropriada
+        6. Está livre de erros gramaticais e pleonasmos
+        7. Segue as normas da ABNT
+
+        Retorne sua análise no seguinte formato JSON:
+        {
+          "isValid": boolean,
+          "overallFeedback": "Feedback específico sobre os objetivos e justificativas",
+          "details": {
+            "spellingErrors": ["erro1", "erro2"],
+            "coherenceIssues": ["problema1", "problema2"],
+            "abntIssues": ["problema relacionado às normas ABNT1", "problema2"],
+            "pleonasms": ["pleonasmo ou redundância encontrada1", "pleonasmo2"],
+            "suggestions": ["sugestão1", "sugestão2"],
+            "improvedVersions": ["versão melhorada para este componente"]
+          }
+        }
+
+        Se o conteúdo for adequado para esta parte da introdução, defina "isValid" como true e forneça feedback positivo.
+        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        `;
+      } 
+      else if (sectionName.toLowerCase().includes("introdução") || sectionName.toLowerCase().includes("tema") || sectionName.toLowerCase().includes("problema") || sectionName.toLowerCase().includes("objetivos")) {
         prompt = `
         Você é um professor universitário especializado em metodologia científica. 
         Analise o conteúdo da parte da Introdução (${sectionName}) a seguir e avalie:
