@@ -27,7 +27,6 @@ export const useBannerContent = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Define default empty values for each field
   const initialBannerContent: BannerContent = {
     title: '',
     authors: '',
@@ -44,10 +43,8 @@ export const useBannerContent = () => {
     advisors: ''
   };
 
-  // Initialize state with the empty values
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
 
-  // Updated function to properly type the field parameter
   const handleChange = (field: keyof BannerContent, value: string) => {
     setBannerContent(prev => ({
       ...prev,
