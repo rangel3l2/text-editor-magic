@@ -107,7 +107,7 @@ export const useWorkAutoSave = ({
       }
     };
 
-    // Set a shorter timeout for autosave (every 30 seconds)
+    // Set a shorter timeout for autosave (every 500ms)
     saveTimeoutRef.current = setTimeout(saveWork, 500);
     
     // Cleanup function
@@ -141,13 +141,17 @@ export const useWorkAutoSave = ({
           advisors: content.advisors || '',
         };
         
+        // Instead of using protected members, use the REST API directly with accessible URL and key
+        const supabaseUrl = "https://xevbmqbwdaqdfexhmbmu.supabase.co";
+        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhldmJtcWJ3ZGFxZGZleGhtYm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIzODk0MTMsImV4cCI6MjA0Nzk2NTQxM30.rB31otfyrrahIGI7lmBcEH4QPENqbX59q0Flpm6E_mY";
+        
         // Using fetch API directly for synchronous saving before page unload
-        const savePromise = fetch(`${supabase.supabaseUrl}/rest/v1/work_in_progress?id=eq.${currentWorkId}&user_id=eq.${user.id}`, {
+        const savePromise = fetch(`${supabaseUrl}/rest/v1/work_in_progress?id=eq.${currentWorkId}&user_id=eq.${user.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': supabase.supabaseKey,
-            'Authorization': `Bearer ${supabase.supabaseKey}`,
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`,
             'Prefer': 'return=minimal'
           },
           body: JSON.stringify({
