@@ -169,10 +169,11 @@ const ValidationFeedback = ({
                 <div className="mt-2">
                   <p className="font-semibold text-sm">Versões melhoradas:</p>
                   <ul className="list-disc list-inside text-sm pl-2">
-                    {details.improvedVersions.map((version: string, i: number) => (
-                      <li key={`ver-${i}`}>{typeof version === 'object' ? 
+                    {details.improvedVersions.map((version: string | {improved: string, original: string} | null, i: number) => (
+                      <li key={`ver-${i}`}>
+                        {version && typeof version === 'object' ? 
                           (version.improved || version.original || JSON.stringify(version)) : 
-                          version}
+                          version || 'Versão melhorada indisponível'}
                       </li>
                     ))}
                   </ul>
