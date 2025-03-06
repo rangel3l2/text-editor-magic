@@ -25,7 +25,7 @@ const ValidationFeedback = ({
         <RefreshCcw className="h-4 w-4 animate-spin text-blue-500" />
         <AlertTitle>Validando seção: {currentSection || "Conteúdo"}</AlertTitle>
         <AlertDescription>
-          Estamos analisando seu texto quanto à clareza, coerência e normas acadêmicas.
+          Estamos analisando seu texto quanto à clareza, coerência, normas ABNT e padrões acadêmicos.
         </AlertDescription>
       </Alert>
     );
@@ -112,10 +112,43 @@ const ValidationFeedback = ({
               
               {details.coherenceIssues && details.coherenceIssues.length > 0 && (
                 <div className="mt-1">
-                  <p className="font-semibold text-sm">Problemas de coerência:</p>
+                  <p className="font-semibold text-sm">Problemas de coerência e coesão:</p>
                   <ul className="list-disc list-inside text-sm pl-2">
                     {details.coherenceIssues.map((issue: string, i: number) => (
                       <li key={`coh-${i}`}>{issue}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {details.abntIssues && details.abntIssues.length > 0 && (
+                <div className="mt-1">
+                  <p className="font-semibold text-sm">Questões sobre normas ABNT:</p>
+                  <ul className="list-disc list-inside text-sm pl-2">
+                    {details.abntIssues.map((issue: string, i: number) => (
+                      <li key={`abnt-${i}`}>{issue}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {details.pleonasms && details.pleonasms.length > 0 && (
+                <div className="mt-1">
+                  <p className="font-semibold text-sm">Pleonasmos e redundâncias:</p>
+                  <ul className="list-disc list-inside text-sm pl-2">
+                    {details.pleonasms.map((pleonasm: string, i: number) => (
+                      <li key={`pleo-${i}`}>{pleonasm}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {details.structureIssues && details.structureIssues.length > 0 && (
+                <div className="mt-1">
+                  <p className="font-semibold text-sm">Problemas estruturais:</p>
+                  <ul className="list-disc list-inside text-sm pl-2">
+                    {details.structureIssues.map((issue: string, i: number) => (
+                      <li key={`str-${i}`}>{issue}</li>
                     ))}
                   </ul>
                 </div>

@@ -1,4 +1,3 @@
-
 import { createGeminiClient } from "./geminiClient.ts";
 
 class ContentValidator {
@@ -142,38 +141,75 @@ class ContentValidator {
       Seja breve e objetivo em seu feedback, pois ele será exibido em uma interface de usuário compacta.
       `;
 
-      if (sectionName.toLowerCase().includes("introdução")) {
+      if (sectionName.toLowerCase().includes("introdução completa")) {
         prompt = `
         Você é um professor universitário especializado em metodologia científica. 
-        Analise o conteúdo da Introdução a seguir e avalie:
+        Analise o conteúdo da Introdução a seguir e avalie com rigor seguindo as normas ABNT:
 
         Introdução: "${content.substring(0, 5000)}"
 
-        Avalie se a introdução:
-        1. Contextualiza adequadamente o tema
-        2. Apresenta a problemática de pesquisa
-        3. Indica a relevância do estudo
-        4. Menciona os objetivos do trabalho
-        5. Utiliza linguagem acadêmica apropriada
-        6. Está gramaticalmente correta
+        Avalie rigorosamente se a introdução:
+        1. Contextualiza adequadamente o tema com base em literatura recente
+        2. Apresenta claramente a problemática de pesquisa
+        3. Indica a relevância e justificativa do estudo
+        4. Menciona explicitamente os objetivos do trabalho
+        5. Possui coesão e coerência entre os parágrafos
+        6. Está livre de pleonasmos e redundâncias
+        7. Utiliza linguagem acadêmica formal de acordo com a ABNT
+        8. Está gramaticalmente correta
+        9. Mantém uma estrutura lógica: do geral para o específico
 
         Retorne sua análise no seguinte formato JSON:
         {
           "isValid": boolean,
-          "overallFeedback": "Feedback geral sobre a introdução",
+          "overallFeedback": "Feedback detalhado sobre a introdução",
+          "details": {
+            "spellingErrors": ["erro1", "erro2"],
+            "coherenceIssues": ["problema de coesão ou coerência1", "problema2"],
+            "abntIssues": ["problema relacionado às normas ABNT1", "problema2"],
+            "pleonasms": ["pleonasmo ou redundância encontrada1", "pleonasmo2"],
+            "structureIssues": ["problema na estrutura lógica1", "problema2"],
+            "suggestions": ["sugestão de melhoria1", "sugestão2"],
+            "improvedVersions": ["sugestão para uma versão melhorada"]
+          }
+        }
+
+        Se a introdução estiver excelente, defina "isValid" como true e forneça feedback positivo.
+        Se precisar de melhorias, defina "isValid" como false, liste detalhadamente os problemas categorizados e forneça sugestões específicas para cada problema identificado.
+        Seja minucioso na análise, especialmente quanto à coerência entre os parágrafos, uso adequado de conectivos, ausência de pleonasmos, e conformidade com normas ABNT.
+        `;
+      } else if (sectionName.toLowerCase().includes("introdução") || sectionName.toLowerCase().includes("tema") || sectionName.toLowerCase().includes("problema") || sectionName.toLowerCase().includes("objetivos")) {
+        prompt = `
+        Você é um professor universitário especializado em metodologia científica. 
+        Analise o conteúdo da parte da Introdução (${sectionName}) a seguir e avalie:
+
+        Conteúdo: "${content.substring(0, 5000)}"
+
+        Avalie se este componente da introdução:
+        1. Atende ao propósito específico desta seção (tema, problema ou objetivos)
+        2. Está redigido com clareza e precisão
+        3. Utiliza linguagem acadêmica apropriada
+        4. Está livre de erros gramaticais
+        5. Está coerente e bem estruturado
+
+        Retorne sua análise no seguinte formato JSON:
+        {
+          "isValid": boolean,
+          "overallFeedback": "Feedback específico sobre esta parte da introdução",
           "details": {
             "spellingErrors": ["erro1", "erro2"],
             "coherenceIssues": ["problema1", "problema2"],
             "suggestions": ["sugestão1", "sugestão2"],
-            "improvedVersions": ["sugestão para uma versão melhorada concisa"]
+            "improvedVersions": ["sugestão para uma versão melhorada deste componente"]
           }
         }
 
-        Se a introdução for adequada, defina "isValid" como true e forneça feedback positivo.
+        Se o conteúdo for adequado para esta parte da introdução, defina "isValid" como true e forneça feedback positivo.
         Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
-        Lembre-se: uma boa introdução contextualiza o tema, apresenta o problema e estabelece os objetivos.
         `;
-      } else if (sectionName.toLowerCase().includes("metodologia")) {
+      }
+      // Mantenha as outras condições existentes
+      else if (sectionName.toLowerCase().includes("metodologia")) {
         prompt = `
         Você é um professor universitário especializado em metodologia científica. 
         Analise o conteúdo da Metodologia a seguir e avalie:
@@ -280,13 +316,16 @@ class ContentValidator {
       const jsonStr = jsonMatch[0];
       const result = JSON.parse(jsonStr);
       
-      // Garantir que o formato da resposta esteja correto
+      // Garantir que o formato da resposta esteja correto e incluir campos específicos da ABNT se existirem
       return {
         isValid: result.isValid === true,
         overallFeedback: result.overallFeedback || `Análise da seção ${sectionName} concluída`,
         details: {
           spellingErrors: Array.isArray(result.details?.spellingErrors) ? result.details.spellingErrors : [],
           coherenceIssues: Array.isArray(result.details?.coherenceIssues) ? result.details.coherenceIssues : [],
+          abntIssues: Array.isArray(result.details?.abntIssues) ? result.details.abntIssues : [],
+          pleonasms: Array.isArray(result.details?.pleonasms) ? result.details.pleonasms : [],
+          structureIssues: Array.isArray(result.details?.structureIssues) ? result.details.structureIssues : [],
           suggestions: Array.isArray(result.details?.suggestions) ? result.details.suggestions : [],
           improvedVersions: Array.isArray(result.details?.improvedVersions) ? 
             result.details.improvedVersions.map((version: any) => {

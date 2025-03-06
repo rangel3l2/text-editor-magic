@@ -5,7 +5,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
+import ValidationFeedback from "@/components/editor/ValidationFeedback";
+import { useEditorValidation } from "@/components/editor/useEditorValidation";
 
 interface IntroductionEditorProps {
   value: string;
@@ -25,6 +27,31 @@ const IntroductionEditor = ({
   const [problemPart, setProblemPart] = useState<string>("");
   const [objectivesPart, setObjectivesPart] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAllPartsCompleted, setIsAllPartsCompleted] = useState(false);
+  const { toast } = useToast();
+  
+  // Validação do editor usando Gemini
+  const {
+    validationResult,
+    isValidating,
+    errorMessage,
+    validateContent,
+    scheduleValidation,
+    currentSection
+  } = useEditorValidation("introdução completa");
+
+  // Verifica se todas as partes da introdução estão preenchidas
+  useEffect(() => {
+    const checkPartsCompletion = () => {
+      const themeCompleted = themePart.trim().length > 50;
+      const problemCompleted = problemPart.trim().length > 50;
+      const objectivesCompleted = objectivesPart.trim().length > 50;
+      
+      setIsAllPartsCompleted(themeCompleted && problemCompleted && objectivesCompleted);
+    };
+    
+    checkPartsCompletion();
+  }, [themePart, problemPart, objectivesPart]);
 
   // Atualiza as partes quando o valor completo muda externamente
   useEffect(() => {
@@ -40,30 +67,48 @@ const IntroductionEditor = ({
     }
   }, []);
 
+  // Valida a introdução completa quando todas as partes estiverem preenchidas
+  useEffect(() => {
+    if (isAllPartsCompleted && activeTab === "guided") {
+      const combinedText = getCombinedText();
+      scheduleValidation(combinedText);
+    }
+  }, [isAllPartsCompleted, activeTab, themePart, problemPart, objectivesPart]);
+
+  // Função para obter o texto combinado
+  const getCombinedText = (): string => {
+    let combinedText = "";
+    
+    if (themePart) {
+      combinedText += themePart + "\n\n";
+    }
+    
+    if (problemPart) {
+      combinedText += problemPart + "\n\n";
+    }
+    
+    if (objectivesPart) {
+      combinedText += objectivesPart;
+    }
+    
+    return combinedText.trim();
+  };
+
   // Função para combinar as partes em um texto único
   const combinePartsIntoIntroduction = () => {
     try {
       setIsProcessing(true);
-      let combinedText = "";
+      const combinedText = getCombinedText();
       
-      if (themePart) {
-        combinedText += themePart + "\n\n";
-      }
-      
-      if (problemPart) {
-        combinedText += problemPart + "\n\n";
-      }
-      
-      if (objectivesPart) {
-        combinedText += objectivesPart;
-      }
-      
-      onChange(combinedText.trim());
+      onChange(combinedText);
       toast({
         title: "Introdução combinada",
-        description: "As partes foram unidas em um texto único",
+        description: "As partes foram unidas em um texto único estruturado com parágrafos",
       });
       setActiveTab("editor");
+      
+      // Validação da introdução completa
+      validateContent(combinedText);
     } catch (error) {
       console.error("Erro ao combinar partes:", error);
       toast({
@@ -117,6 +162,14 @@ const IntroductionEditor = ({
     }
   };
 
+  // Atualiza o editor completo sempre que uma parte é alterada
+  useEffect(() => {
+    if (activeTab === "guided" && !isProcessing) {
+      const combinedText = getCombinedText();
+      onChange(combinedText);
+    }
+  }, [themePart, problemPart, objectivesPart, activeTab]);
+
   return (
     <Card className="border-muted">
       <CardHeader className="pb-3">
@@ -157,6 +210,17 @@ const IntroductionEditor = ({
               )}
             </div>
           </div>
+          
+          {isAllPartsCompleted && activeTab === "guided" && (
+            <div className="mb-4">
+              <ValidationFeedback 
+                validationResult={validationResult} 
+                isValidating={isValidating} 
+                errorMessage={errorMessage} 
+                currentSection={currentSection}
+              />
+            </div>
+          )}
           
           <TabsContent value="guided" className="mt-0">
             <Accordion type="multiple" defaultValue={["theme", "problem", "objectives"]} className="w-full space-y-4">
