@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { OnboardingTutorial } from "./OnboardingTutorial";
@@ -16,6 +15,7 @@ import { useWorkLoader } from "./banner/hooks/useWorkLoader";
 import { useWorkCreator } from "./banner/hooks/useWorkCreator";
 import { useWorkAutoSave } from "./banner/hooks/useWorkAutoSave";
 import { useToast } from "@/components/ui/use-toast";
+import { BannerContent } from "./banner/useBannerContent";
 
 const BannerEditor = () => {
   const { user } = useAuth();
@@ -72,7 +72,7 @@ const BannerEditor = () => {
     return cleanValue.length >= 10;
   };
 
-  const handleFieldChange = async (field: string, value: string) => {
+  const handleFieldChange = async (field: keyof BannerContent, value: string) => {
     if (!user && !hasEditedFirstField) {
       setHasEditedFirstField(true);
     } else if (!user && hasEditedFirstField) {

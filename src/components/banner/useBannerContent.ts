@@ -47,7 +47,7 @@ export const useBannerContent = () => {
   // Initialize state with the empty values
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
 
-  // Updated function to handle field changes without affecting other fields
+  // Updated function to properly type the field parameter
   const handleChange = (field: keyof BannerContent, value: string) => {
     setBannerContent(prev => ({
       ...prev,
@@ -60,7 +60,7 @@ export const useBannerContent = () => {
   };
 
   return {
-    content: bannerContent, // This ensures we're using the isolated state
+    content: bannerContent,
     handleChange,
     selectedImage,
     setSelectedImage,
