@@ -27,7 +27,7 @@ export const useBannerContent = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Certifique-se de que cada campo tenha seu próprio valor padrão vazio
+  // Define default empty values for each field
   const initialBannerContent: BannerContent = {
     title: '',
     authors: '',
@@ -44,17 +44,15 @@ export const useBannerContent = () => {
     advisors: ''
   };
 
+  // Initialize state with the empty values
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
 
-  // Função para atualizar apenas o campo específico
-  const handleChange = (field: string, value: string) => {
-    setBannerContent(prev => {
-      // Crie uma cópia para evitar referências
-      const updated = { ...prev };
-      // Atualize apenas o campo específico
-      updated[field as keyof BannerContent] = value;
-      return updated;
-    });
+  // Updated function to handle field changes without affecting other fields
+  const handleChange = (field: keyof BannerContent, value: string) => {
+    setBannerContent(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const onImageConfigChange = (imageId: string, config: any) => {
@@ -62,7 +60,7 @@ export const useBannerContent = () => {
   };
 
   return {
-    content: bannerContent,
+    content: bannerContent, // This ensures we're using the isolated state
     handleChange,
     selectedImage,
     setSelectedImage,

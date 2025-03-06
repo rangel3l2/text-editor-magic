@@ -36,7 +36,7 @@ export const useWorkAutoSave = ({
     if (!currentWorkId || !user || isLoading) return;
     
     // Convert content to JSON string for comparison
-    const currentContentString = JSON.stringify({...content, ...bannerContent});
+    const currentContentString = JSON.stringify(content);
     
     // Don't save if content hasn't changed
     if (currentContentString === lastContentRef.current) return;
@@ -53,9 +53,9 @@ export const useWorkAutoSave = ({
       try {
         const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
         
-        // Ensure each field has its own value, not copying from title
+        // Ensure each field maintains its own unique content
+        // by directly using the content object which has the individual field values
         const completeContent = {
-          ...bannerContent,
           title: content.title || '',
           authors: content.authors || '',
           institution: content.institution || '',
@@ -68,7 +68,10 @@ export const useWorkAutoSave = ({
           references: content.references || '',
           acknowledgments: content.acknowledgments || '',
           advisors: content.advisors || '',
+          previewHtml: content.previewHtml || '',
         };
+        
+        console.log("Saving content with fields:", Object.keys(completeContent));
         
         const { error } = await supabase
           .from('work_in_progress')
@@ -116,7 +119,7 @@ export const useWorkAutoSave = ({
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [content, bannerContent, user, currentWorkId, isLoading, lastSaved, toast]);
+  }, [content, user, currentWorkId, isLoading, lastSaved, toast]);
 
   // Also save when the user is about to leave the page
   useEffect(() => {
@@ -127,7 +130,6 @@ export const useWorkAutoSave = ({
         
         // Ensure each field maintains its own unique content
         const completeContent = {
-          ...bannerContent,
           title: content.title || '',
           authors: content.authors || '',
           institution: content.institution || '',
@@ -140,9 +142,10 @@ export const useWorkAutoSave = ({
           references: content.references || '',
           acknowledgments: content.acknowledgments || '',
           advisors: content.advisors || '',
+          previewHtml: content.previewHtml || '',
         };
         
-        // Instead of using protected members, use the REST API directly with accessible URL and key
+        // Instead of using protected members, use fixed URL and key
         const supabaseUrl = "https://xevbmqbwdaqdfexhmbmu.supabase.co";
         const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhldmJtcWJ3ZGFxZGZleGhtYm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIzODk0MTMsImV4cCI6MjA0Nzk2NTQxM30.rB31otfyrrahIGI7lmBcEH4QPENqbX59q0Flpm6E_mY";
         
@@ -172,7 +175,7 @@ export const useWorkAutoSave = ({
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [content, bannerContent, currentWorkId, user, isLoading]);
+  }, [content, currentWorkId, user, isLoading]);
 
   return { lastSaved };
 };

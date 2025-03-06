@@ -54,26 +54,42 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         if (data?.content) {
           console.log("Loaded content:", data.content);
           
-          // Validate and ensure each field has its own content
-          const savedContent = data.content;
-          
-          // Create a clean object with default values that won't be affected by any copying issues
+          // Create a new clean object with default empty values
           const completeContent = {
-            title: typeof savedContent.title === 'string' ? savedContent.title : '',
-            authors: typeof savedContent.authors === 'string' ? savedContent.authors : '',
-            institution: typeof savedContent.institution === 'string' ? savedContent.institution : '',
-            institutionLogo: typeof savedContent.institutionLogo === 'string' ? savedContent.institutionLogo : '',
-            introduction: typeof savedContent.introduction === 'string' ? savedContent.introduction : '',
-            objectives: typeof savedContent.objectives === 'string' ? savedContent.objectives : '',
-            methodology: typeof savedContent.methodology === 'string' ? savedContent.methodology : '',
-            results: typeof savedContent.results === 'string' ? savedContent.results : '',
-            conclusion: typeof savedContent.conclusion === 'string' ? savedContent.conclusion : '',
-            references: typeof savedContent.references === 'string' ? savedContent.references : '',
-            acknowledgments: typeof savedContent.acknowledgments === 'string' ? savedContent.acknowledgments : '',
-            previewHtml: typeof savedContent.previewHtml === 'string' ? savedContent.previewHtml : '',
-            advisors: typeof savedContent.advisors === 'string' ? savedContent.advisors : '',
+            title: '',
+            authors: '',
+            institution: '',
+            institutionLogo: '',
+            introduction: '',
+            objectives: '',
+            methodology: '',
+            results: '',
+            conclusion: '',
+            references: '',
+            acknowledgments: '',
+            previewHtml: '',
+            advisors: '',
           };
           
+          // Only copy values that exist in the saved content, field by field
+          const savedContent = data.content;
+          
+          // Only set fields that exist in the saved content
+          if (typeof savedContent.title === 'string') completeContent.title = savedContent.title;
+          if (typeof savedContent.authors === 'string') completeContent.authors = savedContent.authors;
+          if (typeof savedContent.institution === 'string') completeContent.institution = savedContent.institution;
+          if (typeof savedContent.institutionLogo === 'string') completeContent.institutionLogo = savedContent.institutionLogo;
+          if (typeof savedContent.introduction === 'string') completeContent.introduction = savedContent.introduction;
+          if (typeof savedContent.objectives === 'string') completeContent.objectives = savedContent.objectives;
+          if (typeof savedContent.methodology === 'string') completeContent.methodology = savedContent.methodology;
+          if (typeof savedContent.results === 'string') completeContent.results = savedContent.results;
+          if (typeof savedContent.conclusion === 'string') completeContent.conclusion = savedContent.conclusion;
+          if (typeof savedContent.references === 'string') completeContent.references = savedContent.references;
+          if (typeof savedContent.acknowledgments === 'string') completeContent.acknowledgments = savedContent.acknowledgments;
+          if (typeof savedContent.previewHtml === 'string') completeContent.previewHtml = savedContent.previewHtml;
+          if (typeof savedContent.advisors === 'string') completeContent.advisors = savedContent.advisors;
+          
+          // Set banner content with the properly structured content
           setBannerContent(completeContent);
           setCurrentWorkId(id);
           hasLoaded.current = true;
