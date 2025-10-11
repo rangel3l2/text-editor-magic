@@ -14,7 +14,224 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      academic_work_types: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      banner_images: {
+        Row: {
+          aspect_ratio: string | null
+          banner_id: string | null
+          created_at: string | null
+          crop_data: Json | null
+          id: string
+          image_url: string
+          position_data: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          aspect_ratio?: string | null
+          banner_id?: string | null
+          created_at?: string | null
+          crop_data?: Json | null
+          id?: string
+          image_url: string
+          position_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          aspect_ratio?: string | null
+          banner_id?: string | null
+          created_at?: string | null
+          crop_data?: Json | null
+          id?: string
+          image_url?: string
+          position_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banner_images_banner_id_fkey"
+            columns: ["banner_id"]
+            isOneToOne: false
+            referencedRelation: "banner_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      banner_templates: {
+        Row: {
+          content: Json
+          created_at: string | null
+          id: string
+          latex_template: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: Json
+          created_at?: string | null
+          id?: string
+          latex_template: string
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          id?: string
+          latex_template?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          is_admin: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          is_admin?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_admin?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      system_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          performed_by: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          performed_by: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          performed_by?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          cookie_consent: boolean | null
+          cookie_consent_date: string | null
+          created_at: string | null
+          has_seen_tutorial: boolean | null
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cookie_consent?: boolean | null
+          cookie_consent_date?: string | null
+          created_at?: string | null
+          has_seen_tutorial?: boolean | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cookie_consent?: boolean | null
+          cookie_consent_date?: string | null
+          created_at?: string | null
+          has_seen_tutorial?: boolean | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      work_in_progress: {
+        Row: {
+          content: Json | null
+          created_at: string | null
+          id: string
+          last_modified: string | null
+          title: string
+          user_id: string
+          work_type: string
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string | null
+          id?: string
+          last_modified?: string | null
+          title?: string
+          user_id: string
+          work_type: string
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string | null
+          id?: string
+          last_modified?: string | null
+          title?: string
+          user_id?: string
+          work_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
