@@ -1,3 +1,5 @@
+import { sanitizeHtml } from "@/utils/sanitize";
+
 interface PreviewHeaderProps {
   institutionName: string;
   institutionLogo?: string;
@@ -33,7 +35,7 @@ const PreviewHeader = ({
         {institutionName && (
           <div 
             className="institution flex-1 text-right text-xl font-semibold"
-            dangerouslySetInnerHTML={{ __html: institutionName }} 
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(institutionName) }} 
           />
         )}
       </div>
@@ -47,7 +49,7 @@ const PreviewHeader = ({
           {authors && (
             <div 
               className="authors text-sm mt-2"
-              dangerouslySetInnerHTML={{ __html: authors }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(authors) }}
             />
           )}
         </div>

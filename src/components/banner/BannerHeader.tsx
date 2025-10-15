@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { FileDown, Share2, Eye, RotateCcw } from "lucide-react";
+import { sanitizeHtml } from "@/utils/sanitize";
 
 interface BannerHeaderProps {
   title: string;
@@ -75,7 +76,7 @@ const BannerHeader = ({
         <div className="col-span-2 w-full mb-4">
           <div 
             className="text-center"
-            dangerouslySetInnerHTML={{ __html: headerContent }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(headerContent) }}
           />
         </div>
       )}

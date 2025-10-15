@@ -1,1 +1,7 @@
 project_id = "mpewdrpkkkwlpdtgddmn"
+
+[functions.validate-content]
+verify_jwt = true
+
+[functions.validate-title]
+verify_jwt = true

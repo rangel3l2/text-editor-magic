@@ -1,6 +1,7 @@
 
 import { MonographyContent } from "@/hooks/useMonographyContent";
 import { cleanLatexCommands } from "@/utils/latexProcessor";
+import { sanitizeHtml } from "@/utils/sanitize";
 
 interface MonographyPreviewProps {
   content: MonographyContent;
@@ -59,7 +60,7 @@ const MonographyPreview = ({ content }: MonographyPreviewProps) => {
       {/* Resumo */}
       <div className="mt-16">
         <h2 className="text-lg font-bold mb-4">RESUMO</h2>
-        <div className="text-justify mb-4" dangerouslySetInnerHTML={{ __html: content.abstract }} />
+        <div className="text-justify mb-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.abstract) }} />
         <p className="italic">
           <strong>Palavras-chave:</strong> {content.keywords}
         </p>
@@ -70,33 +71,33 @@ const MonographyPreview = ({ content }: MonographyPreviewProps) => {
         {/* Introdução como texto corrido */}
         <section>
           <h2 className="text-lg font-bold mb-4">1 INTRODUÇÃO</h2>
-          <div className="text-justify" dangerouslySetInnerHTML={{ __html: content.introduction }} />
+          <div className="text-justify" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.introduction) }} />
         </section>
 
         {/* Tópicos do Referencial Teórico */}
         {content.theoreticalTopics.map((topic) => (
           <section key={topic.id}>
             <h2 className="text-lg font-bold mb-4">{topic.order} {topic.title.toUpperCase()}</h2>
-            <div className="text-justify" dangerouslySetInnerHTML={{ __html: topic.content }} />
+            <div className="text-justify" dangerouslySetInnerHTML={{ __html: sanitizeHtml(topic.content) }} />
           </section>
         ))}
 
         {/* Desenvolvimento */}
         <section>
           <h2 className="text-lg font-bold mb-4">{2 + content.theoreticalTopics.length} DESENVOLVIMENTO</h2>
-          <div className="text-justify" dangerouslySetInnerHTML={{ __html: content.development }} />
+          <div className="text-justify" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.development) }} />
         </section>
 
         {/* Conclusão */}
         <section>
           <h2 className="text-lg font-bold mb-4">{3 + content.theoreticalTopics.length} CONCLUSÃO</h2>
-          <div className="text-justify" dangerouslySetInnerHTML={{ __html: content.conclusion }} />
+          <div className="text-justify" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.conclusion) }} />
         </section>
 
         {/* Referências */}
         <section>
           <h2 className="text-lg font-bold mb-4">REFERÊNCIAS</h2>
-          <div dangerouslySetInnerHTML={{ __html: content.references }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.references) }} />
         </section>
       </div>
     </div>

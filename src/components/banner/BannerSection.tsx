@@ -1,4 +1,5 @@
 import React from 'react';
+import { sanitizeHtml } from '@/utils/sanitize';
 
 interface BannerSectionProps {
   section: HTMLElement;
@@ -65,7 +66,7 @@ const BannerSection = ({
     >
       <div className="p-2 rounded">
         <div
-          dangerouslySetInnerHTML={{ __html: processedHtml }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(processedHtml) }}
           onClick={handleClick}
         />
       </div>

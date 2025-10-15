@@ -2,6 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { ArticleContent } from "@/hooks/useArticleContent";
 import { cleanLatexCommands } from "@/utils/latexProcessor";
+import { sanitizeHtml } from "@/utils/sanitize";
 
 interface ArticlePreviewProps {
   content: ArticleContent;
@@ -20,14 +21,14 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
 
       {/* Autores e Orientadores */}
       <div className="mb-8 text-center">
-        <div className="mb-4" dangerouslySetInnerHTML={{ __html: content.authors }} />
-        <div dangerouslySetInnerHTML={{ __html: content.advisors }} />
+        <div className="mb-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.authors) }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.advisors) }} />
       </div>
 
       {/* Resumo */}
       <div className="mb-8">
         <h2 className="text-lg font-bold mb-2">RESUMO</h2>
-        <div className="mb-4" dangerouslySetInnerHTML={{ __html: content.abstract }} />
+        <div className="mb-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.abstract) }} />
         <p className="italic">
           <span className="font-bold">Palavras-chave:</span> {content.keywords}
         </p>
@@ -36,7 +37,7 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
       {/* Abstract */}
       <div className="mb-8">
         <h2 className="text-lg font-bold mb-2">ABSTRACT</h2>
-        <div className="mb-4" dangerouslySetInnerHTML={{ __html: content.englishAbstract }} />
+        <div className="mb-4" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.englishAbstract) }} />
         <p className="italic">
           <span className="font-bold">Keywords:</span> {content.englishKeywords}
         </p>
@@ -52,14 +53,14 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
       {/* Introdução */}
       <div className="mb-8">
         <h2 className="text-lg font-bold mb-2">1 INTRODUÇÃO</h2>
-        <div dangerouslySetInnerHTML={{ __html: content.introduction }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.introduction) }} />
       </div>
 
       {/* Tópicos do Referencial Teórico */}
       {content.theoreticalTopics.map((topic, index) => (
         <div key={topic.id} className="mb-8">
           <h2 className="text-lg font-bold mb-2">{topic.order} {topic.title.toUpperCase()}</h2>
-          <div dangerouslySetInnerHTML={{ __html: topic.content }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(topic.content) }} />
         </div>
       ))}
 
@@ -68,7 +69,7 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         <h2 className="text-lg font-bold mb-2">
           {2 + content.theoreticalTopics.length} METODOLOGIA
         </h2>
-        <div dangerouslySetInnerHTML={{ __html: content.methodology }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.methodology) }} />
       </div>
 
       {/* Resultados */}
@@ -76,7 +77,7 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         <h2 className="text-lg font-bold mb-2">
           {3 + content.theoreticalTopics.length} RESULTADOS
         </h2>
-        <div dangerouslySetInnerHTML={{ __html: content.results }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.results) }} />
       </div>
 
       {/* Discussão */}
@@ -84,7 +85,7 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         <h2 className="text-lg font-bold mb-2">
           {4 + content.theoreticalTopics.length} DISCUSSÃO
         </h2>
-        <div dangerouslySetInnerHTML={{ __html: content.discussion }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.discussion) }} />
       </div>
 
       {/* Conclusão */}
@@ -92,13 +93,13 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         <h2 className="text-lg font-bold mb-2">
           {5 + content.theoreticalTopics.length} CONCLUSÃO
         </h2>
-        <div dangerouslySetInnerHTML={{ __html: content.conclusion }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.conclusion) }} />
       </div>
 
       {/* Referências */}
       <div>
         <h2 className="text-lg font-bold mb-2">REFERÊNCIAS</h2>
-        <div dangerouslySetInnerHTML={{ __html: content.references }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.references) }} />
       </div>
     </div>
   );
