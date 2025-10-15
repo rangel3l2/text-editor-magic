@@ -41,32 +41,32 @@ export const generateLatexContent = (content: any) => {
 
   let html = '<div style="height: 100%;">';
   
-  // Header section with specific classes for extraction
-  html += '<div class="banner-header flex items-center justify-between p-4 border-b">';
+  // Header section with specific classes for extraction - Banner style
+  html += '<div class="banner-header flex items-center justify-between p-8 border-b-4 border-primary" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">';
   
   // Institution logo and name in a flex container
-  html += '<div class="flex items-center gap-4">';
+  html += '<div class="flex items-center gap-6">';
   if (content.institutionLogo) {
-    html += `<img src="${content.institutionLogo}" alt="Logo da Instituição" class="w-24 h-24 object-contain" />`;
+    html += `<img src="${content.institutionLogo}" alt="Logo da Instituição" class="w-48 h-48 object-contain" />`;
   }
   html += '</div>';
   
   if (processedInstitution) {
-    html += `<div class="institution flex-1 text-right text-xl font-semibold">${processedInstitution}</div>`;
+    html += `<div class="institution flex-1 text-right text-4xl font-bold">${processedInstitution}</div>`;
   }
   html += '</div>';
 
-  // Title and authors section with reduced spacing
+  // Title and authors section with banner styling
   if (processedTitle || processedAuthors || processedAdvisors) {
-    html += '<div class="text-center mt-4 space-y-2">';
+    html += '<div class="text-center mt-8 mb-8 space-y-4 px-8">';
     if (processedTitle) {
-      html += `<h1 class="text-2xl font-bold">${processedTitle}</h1>`;
+      html += `<h1 class="text-6xl font-bold leading-tight" style="color: #1e40af;">${processedTitle}</h1>`;
     }
     if (processedAuthors) {
-      html += `<div class="authors text-sm mt-2">${processedAuthors}</div>`;
+      html += `<div class="authors text-3xl mt-4">${processedAuthors}</div>`;
     }
     if (processedAdvisors) {
-      html += `<div class="advisors text-sm mt-2"><strong>${processedAdvisors}</strong></div>`;
+      html += `<div class="advisors text-3xl mt-4"><strong>Orientador(a): ${processedAdvisors}</strong></div>`;
     }
     html += '</div>';
   }
@@ -81,13 +81,16 @@ export const generateLatexContent = (content: any) => {
     { title: 'REFERÊNCIAS', content: content.references }
   ];
 
+  // Content in columns
+  html += '<div style="column-count: 3; column-gap: 3rem; padding: 2rem;">';
+  
   sections.forEach(({ title, content: sectionContent }) => {
     if (sectionContent) {
       const cleanContent = cleanLatexCommands(sectionContent);
       html += `
-        <div class="banner-section" style="break-inside: avoid; margin-bottom: 1rem;">
-          <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5rem;">${title}</h2>
-          <div style="font-size: 12pt;">${cleanContent}</div>
+        <div class="banner-section" style="break-inside: avoid; margin-bottom: 2.5rem;">
+          <h2 style="font-size: 32pt; font-weight: bold; margin-bottom: 1rem; color: #1e40af; border-bottom: 4px solid #3b82f6; padding-bottom: 0.5rem;">${title}</h2>
+          <div style="font-size: 24pt; line-height: 1.6; text-align: justify;">${cleanContent}</div>
         </div>
       `;
     }
@@ -97,14 +100,15 @@ export const generateLatexContent = (content: any) => {
   if (content.acknowledgments) {
     const cleanAcknowledgments = cleanLatexCommands(content.acknowledgments);
     html += `
-      <div class="banner-section" style="break-inside: avoid; margin-bottom: 1rem;">
-        <h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.5rem;">AGRADECIMENTOS</h2>
-        <div style="font-size: 12pt;">${cleanAcknowledgments}</div>
+      <div class="banner-section" style="break-inside: avoid; margin-bottom: 2.5rem;">
+        <h2 style="font-size: 32pt; font-weight: bold; margin-bottom: 1rem; color: #1e40af; border-bottom: 4px solid #3b82f6; padding-bottom: 0.5rem;">AGRADECIMENTOS</h2>
+        <div style="font-size: 24pt; line-height: 1.6; text-align: justify;">${cleanAcknowledgments}</div>
       </div>
     `;
   }
 
-  html += '</div>';
+  html += '</div>'; // Close columns div
+  html += '</div>'; // Close main div
 
   return html;
 };

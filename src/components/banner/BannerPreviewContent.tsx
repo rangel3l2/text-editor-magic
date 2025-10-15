@@ -118,12 +118,12 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
       <div 
         className="bg-white shadow-lg"
         style={{
-          width: '210mm',
-          height: '297mm',
-          padding: '15mm',
+          width: '900mm',
+          height: '1200mm',
+          padding: '20mm',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           margin: '0 auto',
-          transform: 'scale(0.9)',
+          transform: 'scale(0.35)',
           transformOrigin: 'top center',
           display: 'flex',
           flexDirection: 'column',
