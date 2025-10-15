@@ -46,7 +46,7 @@ const WorkInProgress = () => {
       
       const { data: dbWorks, error } = await supabase
         .from('work_in_progress')
-        .select('id, title, work_type, created_at, last_modified, content->isComplete')
+        .select('id, title, work_type, created_at, last_modified')
         .eq('user_id', user.id)
         .order('last_modified', { ascending: false });
         
@@ -60,7 +60,8 @@ const WorkInProgress = () => {
         return [];
       }
 
-      return dbWorks || [];
+      // Map works and add isComplete as false (since we removed it from the query)
+      return (dbWorks || []).map((work: any) => ({ ...work, isComplete: false }));
     },
     enabled: !!user,
     staleTime: 1000 * 60,
@@ -186,7 +187,7 @@ const WorkInProgress = () => {
               <p className="text-muted-foreground">Carregando...</p>
             ) : displayedInProgressWorks.length > 0 ? (
               <div className="space-y-4">
-                {displayedInProgressWorks.map((work) => (
+                {displayedInProgressWorks.map((work: any) => (
                   <div
                     key={work.id}
                     className="flex flex-col p-4 rounded-lg border hover:bg-accent transition-colors relative"
@@ -242,7 +243,7 @@ const WorkInProgress = () => {
               <p className="text-muted-foreground">Carregando...</p>
             ) : displayedCompletedWorks.length > 0 ? (
               <div className="space-y-4">
-                {displayedCompletedWorks.map((work) => (
+                {displayedCompletedWorks.map((work: any) => (
                   <div
                     key={work.id}
                     className="flex flex-col p-4 rounded-lg border hover:bg-accent transition-colors relative"

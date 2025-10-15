@@ -49,8 +49,8 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         }
 
         if (data?.content) {
-          // Make sure we're setting all properties from the content object
-          const savedContent = data.content;
+          // Type cast the JSONB content to any
+          const savedContent = data.content as any;
           
           // Ensure we have default values for all fields if they're missing
           const completeContent = {

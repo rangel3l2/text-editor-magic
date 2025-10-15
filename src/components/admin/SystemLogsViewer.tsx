@@ -17,18 +17,32 @@ const SystemLogsViewer = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("system_logs")
-        .select(`
-          *,
-          performed_by_user:profiles(email)
-        `)
-        .order("created_at", { ascending: false });
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
 
       if (error) {
         console.error("Error fetching logs:", error);
         throw error;
       }
 
-      return data;
+      // Fetch profile emails separately
+      const logsWithEmails = await Promise.all(
+        (data || []).map(async (log) => {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("email")
+            .eq("id", log.performed_by)
+            .maybeSingle();
+          
+          return {
+            ...log,
+            performed_by_user: profile ? { email: profile.email } : { email: "Unknown" }
+          };
+        })
+      );
+      
+      return logsWithEmails;
     },
   });
 

@@ -74,7 +74,7 @@ export const useArticleContent = () => {
           const { error } = await supabase
             .from('work_in_progress')
             .update({ 
-              content: { ...content, [field]: value },
+              content: { ...content, [field]: value } as any,
               last_modified: new Date().toISOString()
             })
             .eq('id', id)
@@ -159,7 +159,7 @@ export const useArticleContent = () => {
 
           if (error) throw error;
           if (data?.content) {
-            setContent(data.content as ArticleContent);
+            setContent(data.content as any as ArticleContent);
           }
         } catch (error) {
           console.error('Error loading article content:', error);

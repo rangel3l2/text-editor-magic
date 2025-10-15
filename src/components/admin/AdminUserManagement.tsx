@@ -11,52 +11,83 @@ import {
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
+import { Database } from "@/integrations/supabase/types";
 
 const AdminUserManagement = () => {
   const { toast } = useToast();
-  const [updating, setUpdating] = useState(false);
+  const [updating, setUpdating] = useState<string | null>(null);
 
-  const { data: profiles, refetch } = useQuery({
-    queryKey: ["profiles"],
+  const { data: profilesWithRoles, refetch } = useQuery({
+    queryKey: ["profilesWithRoles"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
         .order("email");
 
-      if (error) {
-        console.error("Error fetching profiles:", error);
-        throw error;
+      if (profilesError) {
+        console.error("Error loading profiles:", profilesError);
+        throw profilesError;
       }
 
-      return data;
+      // Fetch roles for each profile
+      const profilesWithRoles = await Promise.all(
+        (profiles || []).map(async (profile) => {
+          const { data: roleData } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", profile.id)
+            .eq("role", "admin")
+            .maybeSingle();
+
+          return {
+            ...profile,
+            is_admin: !!roleData,
+          };
+        })
+      );
+
+      return profilesWithRoles;
     },
   });
 
   const handleAdminToggle = async (userId: string, currentValue: boolean) => {
-    setUpdating(true);
+    setUpdating(userId);
+    
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ is_admin: !currentValue })
-        .eq("id", userId);
+      if (!currentValue) {
+        // Adding admin role
+        const { error } = await supabase
+          .from("user_roles")
+          .insert({ user_id: userId, role: "admin" as Database['public']['Enums']['app_role'] });
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Removing admin role
+        const { error } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId)
+          .eq("role", "admin");
+
+        if (error) throw error;
+      }
 
       toast({
         title: "Sucesso",
-        description: "Permissões de administrador atualizadas com sucesso.",
+        description: "Status de administrador atualizado com sucesso",
       });
+
       refetch();
     } catch (error) {
       console.error("Error updating admin status:", error);
       toast({
         title: "Erro",
-        description: "Erro ao atualizar permissões de administrador.",
+        description: "Não foi possível atualizar o status de administrador",
         variant: "destructive",
       });
     } finally {
-      setUpdating(false);
+      setUpdating(null);
     }
   };
 
@@ -70,17 +101,17 @@ const AdminUserManagement = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {profiles?.map((profile) => (
+          {profilesWithRoles?.map((profile) => (
             <TableRow key={profile.id}>
               <TableCell>{profile.email}</TableCell>
               <TableCell>
-                <Switch
-                  checked={profile.is_admin}
-                  disabled={updating}
-                  onCheckedChange={() =>
-                    handleAdminToggle(profile.id, profile.is_admin)
-                  }
-                />
+              <Switch
+                checked={profile.is_admin}
+                disabled={!!updating}
+                onCheckedChange={() =>
+                  handleAdminToggle(profile.id, profile.is_admin)
+                }
+              />
               </TableCell>
             </TableRow>
           ))}

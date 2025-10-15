@@ -1,38 +1,20 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AdminUserManagement from "@/components/admin/AdminUserManagement";
 import AcademicWorkTypeManagement from "@/components/admin/AcademicWorkTypeManagement";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsAdmin } from "@/hooks/useUserRole";
 
 const AdminSettings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: isAdmin, isLoading } = useQuery({
-    queryKey: ["isAdmin", user?.id],
-    queryFn: async () => {
-      if (!user) return false;
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", user.id)
-        .single();
-
-      if (error) {
-        console.error("Error checking admin status:", error);
-        return false;
-      }
-
-      return data?.is_admin || false;
-    },
-    enabled: !!user,
-  });
+  // Check if user is admin using new role system
+  const { data: isAdmin, isLoading } = useIsAdmin(user);
 
   useEffect(() => {
     if (!user) {

@@ -5,7 +5,7 @@ import { useTheme } from "@/components/theme-provider";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAdminStatus } from "@/hooks/useAdminStatus";
+import { useIsAdmin } from "@/hooks/useUserRole";
 import MobileMenu from "./header/MobileMenu";
 import AdminSettingsDialog from "./header/AdminSettingsDialog";
 
@@ -14,7 +14,7 @@ const Header = () => {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { data: isAdmin, isLoading } = useAdminStatus(user);
+  const { data: isAdmin, isLoading } = useIsAdmin(user);
   const [inputValue, setInputValue] = useState("");
 
   return (
