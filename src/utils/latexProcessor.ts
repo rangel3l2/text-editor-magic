@@ -81,8 +81,8 @@ export const generateLatexContent = (content: any) => {
     { title: 'REFERÊNCIAS', content: content.references }
   ];
 
-  // Content in columns
-  html += '<div style="column-count: 3; column-gap: 3rem; padding: 2rem;">';
+  // Content in columns (2 columns like science fair banners)
+  html += '<div style="column-count: 2; column-gap: 3rem; padding: 2rem;">';
   
   sections.forEach(({ title, content: sectionContent }) => {
     if (sectionContent) {

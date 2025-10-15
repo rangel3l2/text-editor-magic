@@ -23,7 +23,7 @@ const PreviewColumns = ({
   onImageClick
 }: PreviewColumnsProps) => {
   return (
-    <div className="columns-2 gap-4 h-full">
+    <div className="columns-2 gap-8 h-full" style={{ columnGap: '3rem' }}>
       {sections.map((section, index) => (
         <BannerSection
           key={index}
