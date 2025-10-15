@@ -31,6 +31,12 @@ const ProgressEditor = ({ value, onChange, maxLines, config, placeholder }: Prog
         <CKEditor
           editor={ClassicEditor}
           data={value}
+          config={{
+            language: 'pt-br',
+            removePlugins: ['MediaEmbed'],
+            placeholder: placeholder || `Digite aqui (máximo ${maxLines} linhas)...`,
+            ...config
+          }}
           onChange={(_event, editor) => {
             const data = editor.getData();
             onChange(data);
@@ -38,10 +44,6 @@ const ProgressEditor = ({ value, onChange, maxLines, config, placeholder }: Prog
           }}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          config={{
-            ...config,
-            placeholder: placeholder || `Digite aqui (máximo ${maxLines} linhas)...`
-          }}
         />
       </div>
       {isFocused && (

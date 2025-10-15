@@ -27,18 +27,9 @@ const TextEditor = () => {
           <CKEditor
             editor={ClassicEditor}
             data={content}
-            onChange={handleChange}
-            onReady={(editor) => {
-              // Load saved content if exists
-              const savedContent = localStorage.getItem('editorContent');
-              if (savedContent) {
-                editor.setData(savedContent);
-              }
-              
-              // You can store the "editor" and use it when needed
-              console.log('Editor is ready to use!', editor);
-            }}
             config={{
+              language: 'pt-br',
+              removePlugins: ['MediaEmbed'],
               toolbar: [
                 'heading',
                 '|',
@@ -56,6 +47,17 @@ const TextEditor = () => {
                 'undo',
                 'redo'
               ]
+            }}
+            onChange={handleChange}
+            onReady={(editor) => {
+              // Load saved content if exists
+              const savedContent = localStorage.getItem('editorContent');
+              if (savedContent) {
+                editor.setData(savedContent);
+              }
+              
+              // You can store the "editor" and use it when needed
+              console.log('Editor is ready to use!', editor);
             }}
           />
         </div>
