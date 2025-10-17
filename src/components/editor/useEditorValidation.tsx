@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { ToastDescription } from './ToastDescription';
 import { cleanHtmlTags } from '@/utils/latexProcessor';
+import { getValidationCache, setValidationCache } from '@/utils/validationCache';
 
 export const useEditorValidation = (sectionName: string) => {
   const [validationResult, setValidationResult] = useState<any>(null);
@@ -29,6 +30,17 @@ export const useEditorValidation = (sectionName: string) => {
   const validateContent = useCallback(async (content: string) => {
     if (!content?.trim() || isValidatingRef.current) {
       console.log('Skipping validation - empty content or already validating');
+      return;
+    }
+
+    // Clean HTML tags from content
+    const cleanedContent = cleanHtmlTags(content.trim());
+
+    // Check cache first
+    const cachedResult = getValidationCache(sectionName, cleanedContent);
+    if (cachedResult) {
+      setValidationResult(cachedResult);
+      setErrorMessage(null);
       return;
     }
 
@@ -58,8 +70,6 @@ export const useEditorValidation = (sectionName: string) => {
         prompts.push({ type: 'content', section: sectionName });
       }
 
-      // Clean HTML tags from content before sending for validation
-      const cleanedContent = cleanHtmlTags(content.trim());
       console.log(`Validating content for ${sectionName} with length ${cleanedContent.length}`);
       
       // Choose the right endpoint based on section type
@@ -167,6 +177,9 @@ export const useEditorValidation = (sectionName: string) => {
         throw error;
       }
 
+      // Cache the successful validation result
+      setValidationCache(sectionName, cleanedContent, data);
+      
       setValidationResult(data);
       setErrorMessage(null);
       lastValidationRef.current = now;
