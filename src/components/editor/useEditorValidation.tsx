@@ -178,10 +178,19 @@ export const useEditorValidation = (sectionName: string) => {
         throw error;
       }
 
+      console.log(`🔍 Resposta da API para "${sectionName}":`, JSON.stringify(data, null, 2));
+      
       // Cache the successful validation result
       setValidationCache(sectionName, cleanedContent, data);
       
       console.log(`💾 Salvando resultado de validação para "${sectionName}":`, data);
+      console.log(`📦 Estrutura do data:`, {
+        hasFeedbacks: !!data?.feedbacks,
+        feedbacksIsArray: Array.isArray(data?.feedbacks),
+        feedbacksLength: data?.feedbacks?.length,
+        dataKeys: Object.keys(data || {})
+      });
+      
       setValidationResult(data);
       setErrorMessage(null);
       lastValidationRef.current = now;
