@@ -24,6 +24,11 @@ const ValidationFeedback = ({
   useEffect(() => {
     console.log('📊 ValidationFeedback - validationResult:', validationResult);
     
+    // Evita avisos enquanto ainda não houve validação
+    if (validationResult == null) {
+      return;
+    }
+    
     if (validationResult?.feedbacks && Array.isArray(validationResult.feedbacks)) {
       console.log('✅ Processando feedbacks:', validationResult.feedbacks.length);
       setFeedbacks(validationResult.feedbacks);
