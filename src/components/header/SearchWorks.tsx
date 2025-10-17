@@ -98,23 +98,30 @@ export const SearchWorks = () => {
       "Monografia": "/monography-editor",
       "TCC": "/thesis-editor",
       "Projeto de Intervenção": "/intervention-project-editor",
+      "banner": "/", // Banner não tem editor específico, volta para home
     };
 
     const route = editorRoutes[work.work_type];
     console.log("Tipo de trabalho:", work.work_type);
     console.log("Rota encontrada:", route);
     
-    if (route) {
+    if (route && route !== "/") {
       const fullRoute = `${route}?id=${work.id}`;
       console.log("Navegando para:", fullRoute);
       navigate(fullRoute);
       setShowResults(false);
       setSearchQuery("");
+    } else if (work.work_type === "banner") {
+      console.log("Tipo banner - não tem editor de busca");
+      toast({
+        title: "Aviso",
+        description: "Este é um trabalho de banner e não pode ser editado pela busca",
+      });
     } else {
       console.error("Rota não encontrada para o tipo:", work.work_type);
       toast({
         title: "Erro",
-        description: "Tipo de trabalho não reconhecido",
+        description: "Tipo de trabalho não reconhecido: " + work.work_type,
         variant: "destructive",
       });
     }
