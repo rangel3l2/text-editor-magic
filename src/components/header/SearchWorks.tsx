@@ -27,6 +27,8 @@ export const SearchWorks = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  console.log("SearchWorks renderizado - user:", user?.id, "query:", searchQuery);
+
   // Auto-search with debounce
   useEffect(() => {
     if (!user) {
@@ -144,7 +146,10 @@ export const SearchWorks = () => {
             type="text"
             placeholder="Buscar trabalhos..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              console.log("Input onChange:", e.target.value);
+              setSearchQuery(e.target.value);
+            }}
             onFocus={() => searchQuery && setShowResults(true)}
             disabled={!user}
             className="w-32 sm:w-56 pl-8 pr-8"
