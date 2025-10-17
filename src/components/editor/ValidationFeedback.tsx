@@ -1,6 +1,8 @@
-
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, RefreshCcw, WifiOff } from "lucide-react";
+import { AlertCircle, RefreshCcw, WifiOff } from "lucide-react";
+import FeedbackPanel from "@/components/feedback/FeedbackPanel";
+import { useFeedbackSound } from "@/hooks/useFeedbackSound";
+import { useEffect, useState } from "react";
 
 interface ValidationFeedbackProps {
   validationResult: any;
@@ -15,6 +17,28 @@ const ValidationFeedback = ({
   errorMessage,
   currentSection 
 }: ValidationFeedbackProps) => {
+  const { playFeedbackSound } = useFeedbackSound();
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+
+  // Processar resultado de validação e tocar sons
+  useEffect(() => {
+    if (validationResult?.feedbacks && Array.isArray(validationResult.feedbacks)) {
+      setFeedbacks(validationResult.feedbacks);
+      
+      // Tocar som baseado no tipo predominante
+      const types = validationResult.feedbacks.map((f: any) => f.type);
+      if (types.includes('excellent')) {
+        playFeedbackSound('excellent');
+      } else if (types.includes('success')) {
+        playFeedbackSound('success');
+      } else if (types.includes('warning')) {
+        playFeedbackSound('warning');
+      } else {
+        playFeedbackSound('tip');
+      }
+    }
+  }, [validationResult, playFeedbackSound]);
+
   // Se não está validando a seção atual ou não há resultado, não mostra nada
   if (!isValidating && !validationResult && !errorMessage) return null;
 
@@ -61,135 +85,16 @@ const ValidationFeedback = ({
     );
   }
 
-  // Se não temos resultado, não mostra nada
-  if (!validationResult) return null;
+  // Se não temos resultado ou feedbacks, não mostra nada
+  if (!validationResult || !feedbacks.length) return null;
 
-  const { isValid, overallFeedback, details, error } = validationResult;
-
-  // Se temos um erro genérico do serviço
-  if (error) {
-    return (
-      <Alert variant="destructive" className="bg-red-50">
-        <AlertCircle className="h-4 w-4 text-red-600" />
-        <AlertTitle>Erro na validação</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Conteúdo válido
-  if (isValid) {
-    return (
-      <Alert className="bg-green-50 text-green-800 border-green-200">
-        <CheckCircle2 className="h-4 w-4 text-green-600" />
-        <AlertTitle>Seção {currentSection || "Conteúdo"} validada com sucesso</AlertTitle>
-        <AlertDescription>{overallFeedback}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Conteúdo inválido com feedback
+  // Mostrar FeedbackPanel com os feedbacks estruturados
   return (
-    <div className="space-y-4">
-      <Alert variant="destructive" className="bg-red-50">
-        <AlertCircle className="h-4 w-4 text-red-600" />
-        <AlertTitle>Sugestões de melhoria para: {currentSection || "Conteúdo"}</AlertTitle>
-        <AlertDescription className="space-y-2">
-          <p>{overallFeedback}</p>
-          
-          {details && (
-            <div className="mt-2">
-              {details.spellingErrors && details.spellingErrors.length > 0 && (
-                <div className="mt-1">
-                  <p className="font-semibold text-sm">Possíveis erros ortográficos:</p>
-                  <ul className="list-disc list-inside text-sm pl-2">
-                    {details.spellingErrors.map((error: string, i: number) => (
-                      <li key={`spell-${i}`}>{error}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {details.coherenceIssues && details.coherenceIssues.length > 0 && (
-                <div className="mt-1">
-                  <p className="font-semibold text-sm">Problemas de coerência e coesão:</p>
-                  <ul className="list-disc list-inside text-sm pl-2">
-                    {details.coherenceIssues.map((issue: string, i: number) => (
-                      <li key={`coh-${i}`}>{issue}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {details.abntIssues && details.abntIssues.length > 0 && (
-                <div className="mt-1">
-                  <p className="font-semibold text-sm">Questões sobre normas ABNT:</p>
-                  <ul className="list-disc list-inside text-sm pl-2">
-                    {details.abntIssues.map((issue: string, i: number) => (
-                      <li key={`abnt-${i}`}>{issue}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {details.pleonasms && details.pleonasms.length > 0 && (
-                <div className="mt-1">
-                  <p className="font-semibold text-sm">Pleonasmos e redundâncias:</p>
-                  <ul className="list-disc list-inside text-sm pl-2">
-                    {details.pleonasms.map((pleonasm: string, i: number) => (
-                      <li key={`pleo-${i}`}>{pleonasm}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {details.structureIssues && details.structureIssues.length > 0 && (
-                <div className="mt-1">
-                  <p className="font-semibold text-sm">Problemas estruturais:</p>
-                  <ul className="list-disc list-inside text-sm pl-2">
-                    {details.structureIssues.map((issue: string, i: number) => (
-                      <li key={`str-${i}`}>{issue}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {details.suggestions && details.suggestions.length > 0 && (
-                <div className="mt-1">
-                  <p className="font-semibold text-sm">Sugestões:</p>
-                  <ul className="list-disc list-inside text-sm pl-2">
-                    {details.suggestions.map((suggestion: string, i: number) => (
-                      <li key={`sug-${i}`}>{suggestion}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {details.improvedVersions && details.improvedVersions.length > 0 && (
-                <div className="mt-2">
-                  <p className="font-semibold text-sm">Versões melhoradas:</p>
-                  <ul className="list-disc list-inside text-sm pl-2">
-                    {details.improvedVersions.map((version: string | {improved: string, original: string} | null, i: number) => {
-                      let displayText = 'Versão melhorada indisponível';
-                      
-                      if (version) {
-                        if (typeof version === 'string') {
-                          displayText = version;
-                        } else if (typeof version === 'object') {
-                          displayText = version.improved || version.original || JSON.stringify(version);
-                        }
-                      }
-                      
-                      return <li key={`ver-${i}`}>{displayText}</li>;
-                    })}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-        </AlertDescription>
-      </Alert>
-    </div>
+    <FeedbackPanel
+      feedbacks={feedbacks}
+      progressLabel={`Orientação para: ${currentSection || "Conteúdo"}`}
+      className="animate-fade-in"
+    />
   );
 };
 

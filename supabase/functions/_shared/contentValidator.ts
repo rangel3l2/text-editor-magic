@@ -15,10 +15,13 @@ class ContentValidator {
       if (title.length < 5) {
         return {
           isValid: false,
-          overallFeedback: `O ${sectionName.toLowerCase()} é muito curto. Adicione mais detalhes para uma validação adequada.`,
-          details: {
-            suggestions: [`Elabore o ${sectionName.toLowerCase()} para ter pelo menos 10 caracteres.`]
-          }
+          feedbacks: [{
+            id: `short-${Date.now()}`,
+            type: 'warning',
+            title: '⚠️ Título muito curto',
+            explanation: `O ${sectionName.toLowerCase()} precisa ser mais descritivo.`,
+            suggestion: `Elabore o ${sectionName.toLowerCase()} para ter pelo menos 10 caracteres.`
+          }]
         };
       }
 
@@ -36,20 +39,30 @@ class ContentValidator {
       5. Concisão (se não é desnecessariamente longo)
       6. Gramática e ortografia
 
-      Retorne sua análise no seguinte formato JSON:
+      Retorne sua análise no seguinte formato JSON com um array de feedbacks estruturados:
       {
         "isValid": boolean,
-        "overallFeedback": "Feedback geral sobre o título",
-        "details": {
-          "spellingErrors": ["erro1", "erro2"],
-          "coherenceIssues": ["problema1", "problema2"],
-          "suggestions": ["sugestão1", "sugestão2"],
-          "improvedVersions": ["versão melhorada 1", "versão melhorada 2"]
-        }
+        "feedbacks": [
+          {
+            "type": "success" | "tip" | "warning" | "excellent",
+            "title": "Título curto (1 linha)",
+            "explanation": "Explicação breve (1-2 linhas)",
+            "suggestion": "Sugestão prática (1 linha)"
+          }
+        ]
       }
 
-      Se o título for adequado, defina "isValid" como true e forneça feedback positivo.
-      Se o título precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+      Tipos de feedback:
+      - "excellent": Quando o título está impecável
+      - "success": Quando está bom mas tem pequenos detalhes a melhorar
+      - "tip": Orientações para melhorar
+      - "warning": Problemas que precisam atenção
+
+      Gere 1-3 feedbacks específicos. Cada um deve seguir:
+      - Emoji no título (💡 Dica / ⚠️ Atenção / ✅ Muito bem / ✨ Excelente)
+      - Título direto e motivador
+      - Explicação clara do ponto
+      - Sugestão prática e aplicável
       `;
 
       const response = await this.geminiClient.generateContent(prompt);
@@ -70,27 +83,25 @@ class ContentValidator {
       // Garantir que o formato da resposta esteja correto
       return {
         isValid: result.isValid === true,
-        overallFeedback: result.overallFeedback || "Análise concluída",
-        details: {
-          spellingErrors: Array.isArray(result.details?.spellingErrors) ? result.details.spellingErrors : [],
-          coherenceIssues: Array.isArray(result.details?.coherenceIssues) ? result.details.coherenceIssues : [],
-          suggestions: Array.isArray(result.details?.suggestions) ? result.details.suggestions : [],
-          improvedVersions: Array.isArray(result.details?.improvedVersions) ? 
-            result.details.improvedVersions.map((version: any) => {
-              // Garantir que não há objetos complexos que causem erros no React
-              if (typeof version === 'object') {
-                return version.improved || version.original || JSON.stringify(version);
-              }
-              return version;
-            }) : []
-        }
+        feedbacks: Array.isArray(result.feedbacks) ? result.feedbacks.map((fb: any) => ({
+          id: `${Date.now()}-${Math.random()}`,
+          type: fb.type || 'tip',
+          title: fb.title || 'Feedback',
+          explanation: fb.explanation || '',
+          suggestion: fb.suggestion || ''
+        })) : []
       };
     } catch (error) {
       console.error("Erro na validação do título:", error);
       return {
         isValid: false,
-        error: `Não foi possível validar o título: ${error.message}`,
-        overallFeedback: "Ocorreu um erro durante a validação do título."
+        feedbacks: [{
+          id: `error-${Date.now()}`,
+          type: 'warning',
+          title: '⚠️ Erro na validação',
+          explanation: `Não foi possível validar o título.`,
+          suggestion: 'Tente novamente mais tarde ou continue editando normalmente.'
+        }]
       };
     }
   }
@@ -103,10 +114,13 @@ class ContentValidator {
       if (content.length < 10) {
         return {
           isValid: false,
-          overallFeedback: `O conteúdo da seção ${sectionName} é muito curto. Adicione mais detalhes para uma validação adequada.`,
-          details: {
-            suggestions: [`Elabore o conteúdo da seção ${sectionName} para ter pelo menos 50 caracteres.`]
-          }
+          feedbacks: [{
+            id: `short-${Date.now()}`,
+            type: 'warning',
+            title: '⚠️ Conteúdo muito curto',
+            explanation: `O conteúdo da seção ${sectionName} precisa ser mais desenvolvido.`,
+            suggestion: `Elabore o conteúdo da seção ${sectionName} para ter pelo menos 50 caracteres.`
+          }]
         };
       }
 
@@ -124,21 +138,30 @@ class ContentValidator {
       4. Precisão técnica e terminológica
       5. Gramática e ortografia
 
-      Retorne sua análise no seguinte formato JSON:
+      Retorne sua análise no seguinte formato JSON com um array de feedbacks estruturados:
       {
         "isValid": boolean,
-        "overallFeedback": "Feedback geral sobre o conteúdo",
-        "details": {
-          "spellingErrors": ["erro1", "erro2"],
-          "coherenceIssues": ["problema1", "problema2"],
-          "suggestions": ["sugestão1", "sugestão2"],
-          "improvedVersions": ["versão melhorada 1"]
-        }
+        "feedbacks": [
+          {
+            "type": "success" | "tip" | "warning" | "excellent",
+            "title": "Título curto (1 linha)",
+            "explanation": "Explicação breve (1-2 linhas)",
+            "suggestion": "Sugestão prática (1 linha)"
+          }
+        ]
       }
 
-      Se o conteúdo for adequado para uma seção de ${sectionName}, defina "isValid" como true e forneça feedback positivo.
-      Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
-      Seja breve e objetivo em seu feedback, pois ele será exibido em uma interface de usuário compacta.
+      Tipos de feedback:
+      - "excellent": Quando está impecável
+      - "success": Quando está bom mas tem pequenos detalhes a melhorar
+      - "tip": Orientações para melhorar
+      - "warning": Problemas que precisam atenção
+
+      Gere 1-4 feedbacks específicos. Cada um deve seguir:
+      - Emoji no título (💡 / ⚠️ / ✅ / ✨)
+      - Título direto e motivador
+      - Explicação clara do ponto
+      - Sugestão prática e aplicável
       `;
 
       if (sectionName.toLowerCase().includes("introdução completa")) {
@@ -159,24 +182,21 @@ class ContentValidator {
         8. Está gramaticalmente correta
         9. Mantém uma estrutura lógica: do geral para o específico
 
-        Retorne sua análise no seguinte formato JSON:
+        Retorne sua análise no seguinte formato JSON com feedbacks estruturados:
         {
           "isValid": boolean,
-          "overallFeedback": "Feedback detalhado sobre a introdução",
-          "details": {
-            "spellingErrors": ["erro1", "erro2"],
-            "coherenceIssues": ["problema de coesão ou coerência1", "problema2"],
-            "abntIssues": ["problema relacionado às normas ABNT1", "problema2"],
-            "pleonasms": ["pleonasmo ou redundância encontrada1", "pleonasmo2"],
-            "structureIssues": ["problema na estrutura lógica1", "problema2"],
-            "suggestions": ["sugestão de melhoria1", "sugestão2"],
-            "improvedVersions": ["sugestão para uma versão melhorada"]
-          }
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título curto com emoji",
+              "explanation": "Explicação breve (1-2 linhas)",
+              "suggestion": "Sugestão prática (1 linha)"
+            }
+          ]
         }
 
-        Se a introdução estiver excelente, defina "isValid" como true e forneça feedback positivo.
-        Se precisar de melhorias, defina "isValid" como false, liste detalhadamente os problemas categorizados e forneça sugestões específicas para cada problema identificado.
-        Seja minucioso na análise, especialmente quanto à coerência entre os parágrafos, uso adequado de conectivos, ausência de pleonasmos, e conformidade com normas ABNT.
+        Gere 2-5 feedbacks categorizados (estrutura, coerência, ABNT, linguagem, etc).
+        Use: "excellent" para pontos impecáveis, "success" para bons com melhorias menores, "tip" para orientações, "warning" para problemas críticos.
         `;
       } else if (sectionName.toLowerCase() === "tema") {
         prompt = `
@@ -193,22 +213,20 @@ class ContentValidator {
         5. Está livre de erros gramaticais e pleonasmos
         6. Segue as normas da ABNT
 
-        Retorne sua análise no seguinte formato JSON:
+        Retorne sua análise no seguinte formato JSON com feedbacks estruturados:
         {
           "isValid": boolean,
-          "overallFeedback": "Feedback específico sobre a apresentação do tema",
-          "details": {
-            "spellingErrors": ["erro1", "erro2"],
-            "coherenceIssues": ["problema1", "problema2"],
-            "abntIssues": ["problema relacionado às normas ABNT1", "problema2"],
-            "pleonasms": ["pleonasmo ou redundância encontrada1", "pleonasmo2"],
-            "suggestions": ["sugestão1", "sugestão2"],
-            "improvedVersions": ["versão melhorada para este componente"]
-          }
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título curto com emoji",
+              "explanation": "Explicação breve (1-2 linhas)",
+              "suggestion": "Sugestão prática (1 linha)"
+            }
+          ]
         }
 
-        Se o conteúdo for adequado para esta parte da introdução, defina "isValid" como true e forneça feedback positivo.
-        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        Gere 1-3 feedbacks específicos sobre a apresentação do tema.
         `;
       } else if (sectionName.toLowerCase() === "problema") {
         prompt = `
@@ -225,22 +243,20 @@ class ContentValidator {
         5. Está livre de erros gramaticais e pleonasmos
         6. Segue as normas da ABNT
 
-        Retorne sua análise no seguinte formato JSON:
+        Retorne sua análise no seguinte formato JSON com feedbacks estruturados:
         {
           "isValid": boolean,
-          "overallFeedback": "Feedback específico sobre a delimitação do problema",
-          "details": {
-            "spellingErrors": ["erro1", "erro2"],
-            "coherenceIssues": ["problema1", "problema2"],
-            "abntIssues": ["problema relacionado às normas ABNT1", "problema2"],
-            "pleonasms": ["pleonasmo ou redundância encontrada1", "pleonasmo2"],
-            "suggestions": ["sugestão1", "sugestão2"],
-            "improvedVersions": ["versão melhorada para este componente"]
-          }
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título curto com emoji",
+              "explanation": "Explicação breve (1-2 linhas)",
+              "suggestion": "Sugestão prática (1 linha)"
+            }
+          ]
         }
 
-        Se o conteúdo for adequado para esta parte da introdução, defina "isValid" como true e forneça feedback positivo.
-        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        Gere 1-3 feedbacks específicos sobre a delimitação do problema.
         `;
       } else if (sectionName.toLowerCase() === "objetivos") {
         prompt = `
@@ -258,22 +274,20 @@ class ContentValidator {
         6. Está livre de erros gramaticais e pleonasmos
         7. Segue as normas da ABNT
 
-        Retorne sua análise no seguinte formato JSON:
+        Retorne sua análise no seguinte formato JSON com feedbacks estruturados:
         {
           "isValid": boolean,
-          "overallFeedback": "Feedback específico sobre os objetivos e justificativas",
-          "details": {
-            "spellingErrors": ["erro1", "erro2"],
-            "coherenceIssues": ["problema1", "problema2"],
-            "abntIssues": ["problema relacionado às normas ABNT1", "problema2"],
-            "pleonasms": ["pleonasmo ou redundância encontrada1", "pleonasmo2"],
-            "suggestions": ["sugestão1", "sugestão2"],
-            "improvedVersions": ["versão melhorada para este componente"]
-          }
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título curto com emoji",
+              "explanation": "Explicação breve (1-2 linhas)",
+              "suggestion": "Sugestão prática (1 linha)"
+            }
+          ]
         }
 
-        Se o conteúdo for adequado para esta parte da introdução, defina "isValid" como true e forneça feedback positivo.
-        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        Gere 1-3 feedbacks específicos sobre objetivos e justificativas.
         `;
       } 
       else if (sectionName.toLowerCase().includes("introdução") || sectionName.toLowerCase().includes("tema") || sectionName.toLowerCase().includes("problema") || sectionName.toLowerCase().includes("objetivos")) {
@@ -290,20 +304,20 @@ class ContentValidator {
         4. Está livre de erros gramaticais
         5. Está coerente e bem estruturado
 
-        Retorne sua análise no seguinte formato JSON:
+        Retorne sua análise no seguinte formato JSON com feedbacks estruturados:
         {
           "isValid": boolean,
-          "overallFeedback": "Feedback específico sobre esta parte da introdução",
-          "details": {
-            "spellingErrors": ["erro1", "erro2"],
-            "coherenceIssues": ["problema1", "problema2"],
-            "suggestions": ["sugestão1", "sugestão2"],
-            "improvedVersions": ["sugestão para uma versão melhorada deste componente"]
-          }
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título curto com emoji",
+              "explanation": "Explicação breve (1-2 linhas)",
+              "suggestion": "Sugestão prática (1 linha)"
+            }
+          ]
         }
 
-        Se o conteúdo for adequado para esta parte da introdução, defina "isValid" como true e forneça feedback positivo.
-        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        Gere 1-3 feedbacks específicos para esta parte da introdução.
         `;
       }
       // Mantenha as outras condições existentes
@@ -322,20 +336,20 @@ class ContentValidator {
         5. Utiliza terminologia adequada
         6. Está gramaticalmente correta
 
-        Retorne sua análise no seguinte formato JSON:
+        Retorne sua análise no seguinte formato JSON com feedbacks estruturados:
         {
           "isValid": boolean,
-          "overallFeedback": "Feedback geral sobre a metodologia",
-          "details": {
-            "spellingErrors": ["erro1", "erro2"],
-            "coherenceIssues": ["problema1", "problema2"],
-            "suggestions": ["sugestão1", "sugestão2"],
-            "improvedVersions": ["versão melhorada concisa"]
-          }
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título curto com emoji",
+              "explanation": "Explicação breve (1-2 linhas)",
+              "suggestion": "Sugestão prática (1 linha)"
+            }
+          ]
         }
 
-        Se a metodologia for adequada, defina "isValid" como true e forneça feedback positivo.
-        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        Gere 1-3 feedbacks específicos sobre a metodologia.
         `;
       } else if (sectionName.toLowerCase().includes("resultado") || sectionName.toLowerCase().includes("discussão")) {
         prompt = `
@@ -352,20 +366,20 @@ class ContentValidator {
         5. Utiliza linguagem acadêmica precisa
         6. Está gramaticalmente correta
 
-        Retorne sua análise no seguinte formato JSON:
+        Retorne sua análise no seguinte formato JSON com feedbacks estruturados:
         {
           "isValid": boolean,
-          "overallFeedback": "Feedback geral sobre os resultados/discussão",
-          "details": {
-            "spellingErrors": ["erro1", "erro2"],
-            "coherenceIssues": ["problema1", "problema2"],
-            "suggestions": ["sugestão1", "sugestão2"],
-            "improvedVersions": ["versão melhorada concisa"]
-          }
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título curto com emoji",
+              "explanation": "Explicação breve (1-2 linhas)",
+              "suggestion": "Sugestão prática (1 linha)"
+            }
+          ]
         }
 
-        Se a seção for adequada, defina "isValid" como true e forneça feedback positivo.
-        Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
+        Gere 1-3 feedbacks específicos sobre resultados/discussão.
         `;
       } else if (sectionName.toLowerCase().includes("conclusão")) {
         prompt = `
@@ -382,19 +396,20 @@ class ContentValidator {
         5. Sugere direções para pesquisas futuras (se aplicável)
         6. Está gramaticalmente correta
 
-        Retorne sua análise no seguinte formato JSON:
+        Retorne sua análise no seguinte formato JSON com feedbacks estruturados:
         {
           "isValid": boolean,
-          "overallFeedback": "Feedback geral sobre a conclusão",
-          "details": {
-            "spellingErrors": ["erro1", "erro2"],
-            "coherenceIssues": ["problema1", "problema2"],
-            "suggestions": ["sugestão1", "sugestão2"],
-            "improvedVersions": ["versão melhorada concisa"]
-          }
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título curto com emoji",
+              "explanation": "Explicação breve (1-2 linhas)",
+              "suggestion": "Sugestão prática (1 linha)"
+            }
+          ]
         }
 
-        Se a conclusão for adequada, defina "isValid" como true e forneça feedback positivo.
+        Gere 1-3 feedbacks específicos sobre a conclusão.
         Se precisar de melhorias, defina "isValid" como false, liste os problemas e forneça sugestões específicas.
         `;
       }
@@ -414,33 +429,28 @@ class ContentValidator {
       const jsonStr = jsonMatch[0];
       const result = JSON.parse(jsonStr);
       
-      // Garantir que o formato da resposta esteja correto e incluir campos específicos da ABNT se existirem
+      // Garantir que o formato da resposta esteja correto com feedbacks estruturados
       return {
         isValid: result.isValid === true,
-        overallFeedback: result.overallFeedback || `Análise da seção ${sectionName} concluída`,
-        details: {
-          spellingErrors: Array.isArray(result.details?.spellingErrors) ? result.details.spellingErrors : [],
-          coherenceIssues: Array.isArray(result.details?.coherenceIssues) ? result.details.coherenceIssues : [],
-          abntIssues: Array.isArray(result.details?.abntIssues) ? result.details.abntIssues : [],
-          pleonasms: Array.isArray(result.details?.pleonasms) ? result.details.pleonasms : [],
-          structureIssues: Array.isArray(result.details?.structureIssues) ? result.details.structureIssues : [],
-          suggestions: Array.isArray(result.details?.suggestions) ? result.details.suggestions : [],
-          improvedVersions: Array.isArray(result.details?.improvedVersions) ? 
-            result.details.improvedVersions.map((version: any) => {
-              // Garantir que não há objetos complexos que causem erros no React
-              if (typeof version === 'object') {
-                return version.improved || version.original || JSON.stringify(version);
-              }
-              return version;
-            }) : []
-        }
+        feedbacks: Array.isArray(result.feedbacks) ? result.feedbacks.map((fb: any) => ({
+          id: `${Date.now()}-${Math.random()}`,
+          type: fb.type || 'tip',
+          title: fb.title || 'Feedback',
+          explanation: fb.explanation || '',
+          suggestion: fb.suggestion || ''
+        })) : []
       };
     } catch (error) {
       console.error("Erro na validação do conteúdo:", error);
       return {
         isValid: false,
-        error: `Não foi possível validar o conteúdo: ${error.message}`,
-        overallFeedback: `Ocorreu um erro durante a validação da seção ${sectionName}.`
+        feedbacks: [{
+          id: `error-${Date.now()}`,
+          type: 'warning',
+          title: '⚠️ Erro na validação',
+          explanation: `Não foi possível validar o conteúdo da seção ${sectionName}.`,
+          suggestion: 'Tente novamente mais tarde ou continue editando normalmente.'
+        }]
       };
     }
   }

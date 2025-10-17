@@ -172,13 +172,7 @@ export const useEditorValidation = (sectionName: string) => {
       lastValidationRef.current = now;
       retryAttemptsRef.current = 0;
 
-      if (!data.isValid) {
-        toast({
-          title: `Guidance for: ${sectionName}`,
-          description: <ToastDescription message={data.overallFeedback} />,
-          duration: 5000,
-        });
-      }
+      // Não exibe toast pois o feedback visual será mostrado no FeedbackPanel
     } catch (error) {
       console.error('Error validating content:', error);
       
