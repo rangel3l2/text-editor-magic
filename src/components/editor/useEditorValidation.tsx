@@ -40,6 +40,12 @@ export const useEditorValidation = (sectionName: string) => {
     const cachedResult = getValidationCache(sectionName, cleanedContent);
     if (cachedResult) {
       console.log(`✅ Usando cache para "${sectionName}":`, cachedResult);
+      console.log(`📦 Estrutura do cache:`, {
+        hasFeedbacks: !!cachedResult?.feedbacks,
+        feedbacksIsArray: Array.isArray(cachedResult?.feedbacks),
+        feedbacksLength: cachedResult?.feedbacks?.length,
+        cacheKeys: Object.keys(cachedResult || {})
+      });
       setValidationResult(cachedResult);
       setErrorMessage(null);
       return;

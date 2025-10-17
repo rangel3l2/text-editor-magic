@@ -47,13 +47,20 @@ const RichTextEditor = ({
     handleContentChange
   } = useEditorProgress(maxLines, minLines);
 
-  // Load cached validation immediately on mount/value change (no extra requests)
+  // Load cached validation only on mount if there's content
   useEffect(() => {
     const cleaned = cleanHtmlTags(value || '').trim();
+    console.log(`🔵 RichTextEditor mount for "${sectionName}":`, {
+      hasValue: !!value,
+      cleanedLength: cleaned.length,
+      willValidate: cleaned.length > 20
+    });
+    
     if (cleaned.length > 20) {
       validateContent(value);
     }
-  }, [value, validateContent]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   // Validar conteúdo com debounce
   useEffect(() => {
