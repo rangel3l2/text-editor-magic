@@ -78,6 +78,8 @@ export const SearchWorks = () => {
   }, []);
 
   const handleWorkClick = (work: Work) => {
+    console.log("Clicou no trabalho:", work);
+    
     const editorRoutes: Record<string, string> = {
       "Artigo Científico": "/article-editor",
       "Monografia": "/monography-editor",
@@ -86,10 +88,22 @@ export const SearchWorks = () => {
     };
 
     const route = editorRoutes[work.work_type];
+    console.log("Tipo de trabalho:", work.work_type);
+    console.log("Rota encontrada:", route);
+    
     if (route) {
-      navigate(`${route}?id=${work.id}`);
+      const fullRoute = `${route}?id=${work.id}`;
+      console.log("Navegando para:", fullRoute);
+      navigate(fullRoute);
       setShowResults(false);
       setSearchQuery("");
+    } else {
+      console.error("Rota não encontrada para o tipo:", work.work_type);
+      toast({
+        title: "Erro",
+        description: "Tipo de trabalho não reconhecido",
+        variant: "destructive",
+      });
     }
   };
 
