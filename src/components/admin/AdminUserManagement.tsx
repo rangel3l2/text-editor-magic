@@ -186,54 +186,75 @@ const AdminUserManagement = () => {
     setIsAddingModerator(true);
 
     try {
-      // First, find the user by email
-      const { data: profile, error: profileError } = await supabase
+      // Check if user already exists
+      const { data: profile } = await supabase
         .from("profiles")
         .select("id")
         .eq("email", newModeratorEmail.trim())
         .maybeSingle();
 
-      if (profileError) throw profileError;
+      if (profile) {
+        // User already exists, check if already a moderator
+        const { data: existingRole } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", profile.id)
+          .eq("role", "moderator")
+          .maybeSingle();
 
-      if (!profile) {
-        toast({
-          title: "Erro",
-          description: "Usuário não encontrado. O usuário deve estar cadastrado no sistema.",
-          variant: "destructive",
-        });
-        return;
+        if (existingRole) {
+          toast({
+            title: "Aviso",
+            description: "Este usuário já é um moderador",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Add moderator role directly
+        const { error: insertError } = await supabase
+          .from("user_roles")
+          .insert({ 
+            user_id: profile.id, 
+            role: "moderator" as Database['public']['Enums']['app_role'] 
+          });
+
+        if (insertError) throw insertError;
+      } else {
+        // User doesn't exist yet, check if already in pending roles
+        const { data: existingPending } = await supabase
+          .from("pending_user_roles")
+          .select("*")
+          .eq("email", newModeratorEmail.trim())
+          .eq("role", "moderator")
+          .maybeSingle();
+
+        if (existingPending) {
+          toast({
+            title: "Aviso",
+            description: "Este email já está cadastrado como moderador pendente",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Add to pending roles
+        const { error: pendingError } = await supabase
+          .from("pending_user_roles")
+          .insert({ 
+            email: newModeratorEmail.trim(),
+            role: "moderator" as Database['public']['Enums']['app_role'],
+            created_by: user?.id
+          });
+
+        if (pendingError) throw pendingError;
       }
-
-      // Check if user is already a moderator
-      const { data: existingRole } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", profile.id)
-        .eq("role", "moderator")
-        .maybeSingle();
-
-      if (existingRole) {
-        toast({
-          title: "Aviso",
-          description: "Este usuário já é um moderador",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Add moderator role
-      const { error: insertError } = await supabase
-        .from("user_roles")
-        .insert({ 
-          user_id: profile.id, 
-          role: "moderator" as Database['public']['Enums']['app_role'] 
-        });
-
-      if (insertError) throw insertError;
 
       toast({
         title: "Sucesso",
-        description: "Moderador adicionado com sucesso",
+        description: profile 
+          ? "Moderador adicionado com sucesso"
+          : "Moderador cadastrado. Ele receberá os privilégios quando fizer login pela primeira vez.",
       });
 
       setNewModeratorEmail("");
@@ -266,7 +287,7 @@ const AdminUserManagement = () => {
               <DialogHeader>
                 <DialogTitle>Adicionar Moderador</DialogTitle>
                 <DialogDescription>
-                  Insira o email de um usuário cadastrado para torná-lo moderador do sistema.
+                  Insira o email para torná-lo moderador. Se o usuário ainda não fez login, ele receberá os privilégios automaticamente no primeiro acesso.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
