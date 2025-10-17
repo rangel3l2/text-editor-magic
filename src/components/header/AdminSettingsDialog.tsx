@@ -23,7 +23,7 @@ const AdminSettingsDialog = ({ isOpen, onOpenChange }: AdminSettingsDialogProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-6xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Configurações do Sistema</DialogTitle>
         </DialogHeader>

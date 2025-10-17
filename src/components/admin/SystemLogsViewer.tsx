@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -52,36 +53,38 @@ const SystemLogsViewer = () => {
 
   return (
     <div className="space-y-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Data</TableHead>
-            <TableHead>Ação</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Detalhes</TableHead>
-            <TableHead>Realizado por</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {logs?.map((log) => (
-            <TableRow key={log.id}>
-              <TableCell>
-                {format(new Date(log.created_at), "dd/MM/yyyy HH:mm", {
-                  locale: ptBR,
-                })}
-              </TableCell>
-              <TableCell>{log.action}</TableCell>
-              <TableCell>{log.entity_type}</TableCell>
-              <TableCell>
-                {log.details ? JSON.stringify(log.details, null, 2) : "N/A"}
-              </TableCell>
-              <TableCell>
-                {log.performed_by_user?.email || "Usuário não encontrado"}
-              </TableCell>
+      <ScrollArea className="h-[60vh] w-full rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Data</TableHead>
+              <TableHead>Ação</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Detalhes</TableHead>
+              <TableHead>Realizado por</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {logs?.map((log) => (
+              <TableRow key={log.id}>
+                <TableCell>
+                  {format(new Date(log.created_at), "dd/MM/yyyy HH:mm", {
+                    locale: ptBR,
+                  })}
+                </TableCell>
+                <TableCell>{log.action}</TableCell>
+                <TableCell>{log.entity_type}</TableCell>
+                <TableCell>
+                  {log.details ? JSON.stringify(log.details, null, 2) : "N/A"}
+                </TableCell>
+                <TableCell>
+                  {log.performed_by_user?.email || "Usuário não encontrado"}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollArea>
     </div>
   );
 };
