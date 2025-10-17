@@ -1,20 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search, FileText, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface Work {
   id: string;
@@ -28,60 +21,61 @@ export const SearchWorks = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Work[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleSearch = async () => {
-    if (!user) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para buscar trabalhos",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  // Auto-search with debounce
+  useEffect(() => {
+    if (!user) return;
+    
     if (!searchQuery.trim()) {
-      toast({
-        title: "Aviso",
-        description: "Digite algo para buscar",
-        variant: "destructive",
-      });
+      setSearchResults([]);
+      setShowResults(false);
       return;
     }
 
     setIsSearching(true);
-    setIsSearchOpen(true);
+    const timeoutId = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase
+          .rpc("search_works_by_title", {
+            p_user_id: user.id,
+            p_search_term: searchQuery.trim(),
+          });
 
-    try {
-      const { data, error } = await supabase
-        .rpc("search_works_by_title", {
-          p_user_id: user.id,
-          p_search_term: searchQuery.trim(),
-        });
+        if (error) throw error;
 
-      if (error) throw error;
-
-      setSearchResults(data || []);
-
-      if (!data || data.length === 0) {
+        setSearchResults(data || []);
+        setShowResults(true);
+      } catch (error) {
+        console.error("Error searching works:", error);
         toast({
-          title: "Nenhum resultado",
-          description: "Não foram encontrados trabalhos com este título",
+          title: "Erro",
+          description: "Não foi possível buscar os trabalhos",
+          variant: "destructive",
         });
+      } finally {
+        setIsSearching(false);
       }
-    } catch (error) {
-      console.error("Error searching works:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível buscar os trabalhos",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  };
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, user, toast]);
+
+  // Close results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleWorkClick = (work: Work) => {
     const editorRoutes: Record<string, string> = {
@@ -94,78 +88,84 @@ export const SearchWorks = () => {
     const route = editorRoutes[work.work_type];
     if (route) {
       navigate(`${route}?id=${work.id}`);
-      setIsSearchOpen(false);
+      setShowResults(false);
       setSearchQuery("");
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowResults(false);
+    inputRef.current?.focus();
   };
 
   return (
-    <>
+    <div ref={searchRef} className="relative">
       <div className="flex items-center gap-2">
-        <Input
-          type="text"
-          placeholder="Buscar trabalhos..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={handleKeyPress}
-          className="w-32 sm:w-48"
-        />
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleSearch}
-          disabled={isSearching || !user}
-          title="Localizar trabalhos"
-        >
-          <Search className="h-5 w-5" />
-        </Button>
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            ref={inputRef}
+            type="text"
+            placeholder="Buscar trabalhos..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => searchQuery && setShowResults(true)}
+            disabled={!user}
+            className="w-32 sm:w-56 pl-8 pr-8"
+          />
+          {searchQuery && (
+            <button
+              onClick={handleClearSearch}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
-      <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Resultados da Busca</DialogTitle>
-            <DialogDescription>
-              {searchResults.length > 0
-                ? `Encontrados ${searchResults.length} trabalho(s)`
-                : "Nenhum trabalho encontrado"}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            {searchResults.map((work) => (
-              <div
-                key={work.id}
-                className="p-4 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                onClick={() => handleWorkClick(work)}
-              >
-                <div className="flex items-start gap-3">
-                  <FileText className="h-5 w-5 text-muted-foreground mt-1" />
-                  <div className="flex-1">
-                    <h3 className="font-medium">{work.title}</h3>
-                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                      <span>{work.work_type}</span>
-                      <span>•</span>
-                      <span>
-                        Modificado em{" "}
-                        {format(new Date(work.last_modified), "dd 'de' MMMM 'de' yyyy", {
-                          locale: ptBR,
-                        })}
-                      </span>
+      {/* Dropdown Results */}
+      {showResults && searchQuery && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-background border rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 min-w-[300px] sm:min-w-[400px]">
+          {isSearching ? (
+            <div className="p-4 text-center text-muted-foreground">
+              Buscando...
+            </div>
+          ) : searchResults.length > 0 ? (
+            <div className="py-2">
+              {searchResults.map((work) => (
+                <div
+                  key={work.id}
+                  className="px-4 py-3 hover:bg-accent cursor-pointer transition-colors border-b last:border-b-0"
+                  onClick={() => handleWorkClick(work)}
+                >
+                  <div className="flex items-start gap-3">
+                    <FileText className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm truncate">{work.title}</h3>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                        <span className="truncate">{work.work_type}</span>
+                        <span>•</span>
+                        <span className="truncate">
+                          {format(new Date(work.last_modified), "dd/MM/yyyy", {
+                            locale: ptBR,
+                          })}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 text-center text-muted-foreground text-sm">
+              Nenhum trabalho encontrado
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
