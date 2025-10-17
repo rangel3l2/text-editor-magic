@@ -297,6 +297,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      search_works_by_title: {
+        Args: { p_search_term: string; p_user_id: string }
+        Returns: {
+          id: string
+          last_modified: string
+          title: string
+          work_type: string
+        }[]
+      }
+      unaccent: {
+        Args: { "": string }
+        Returns: string
+      }
+      unaccent_init: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "moderator"

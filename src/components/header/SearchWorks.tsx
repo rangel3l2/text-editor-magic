@@ -56,11 +56,10 @@ export const SearchWorks = () => {
 
     try {
       const { data, error } = await supabase
-        .from("work_in_progress")
-        .select("id, title, work_type, last_modified")
-        .eq("user_id", user.id)
-        .ilike("title", `%${searchQuery.trim()}%`)
-        .order("last_modified", { ascending: false });
+        .rpc("search_works_by_title", {
+          p_user_id: user.id,
+          p_search_term: searchQuery.trim(),
+        });
 
       if (error) throw error;
 
