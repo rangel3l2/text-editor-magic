@@ -29,7 +29,10 @@ export const SearchWorks = () => {
 
   // Auto-search with debounce
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      console.log("Usuário não logado");
+      return;
+    }
     
     if (!searchQuery.trim()) {
       setSearchResults([]);
@@ -37,17 +40,26 @@ export const SearchWorks = () => {
       return;
     }
 
+    console.log("Iniciando busca para:", searchQuery);
     setIsSearching(true);
     const timeoutId = setTimeout(async () => {
       try {
+        console.log("Executando RPC com user_id:", user.id, "termo:", searchQuery.trim());
+        
         const { data, error } = await supabase
           .rpc("search_works_by_title", {
             p_user_id: user.id,
             p_search_term: searchQuery.trim(),
           });
 
-        if (error) throw error;
+        console.log("Resposta da busca:", { data, error });
 
+        if (error) {
+          console.error("Erro na busca:", error);
+          throw error;
+        }
+
+        console.log("Resultados encontrados:", data?.length || 0);
         setSearchResults(data || []);
         setShowResults(true);
       } catch (error) {
@@ -57,6 +69,7 @@ export const SearchWorks = () => {
           description: "Não foi possível buscar os trabalhos",
           variant: "destructive",
         });
+        setSearchResults([]);
       } finally {
         setIsSearching(false);
       }
