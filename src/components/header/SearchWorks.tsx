@@ -96,10 +96,10 @@ export const SearchWorks = () => {
     console.log("Clicou no trabalho:", work);
     
     const editorRoutes: Record<string, string> = {
-      "Artigo Científico": "/article-editor",
-      "Monografia": "/monography-editor",
-      "TCC": "/thesis-editor",
-      "Projeto de Intervenção": "/intervention-project-editor",
+      "Artigo Científico": "/article",
+      "Monografia": "/monography",
+      "TCC": "/thesis",
+      "Projeto de Intervenção": "/intervention-project",
       "banner": "/", // Banner não tem editor específico, volta para home
     };
 
