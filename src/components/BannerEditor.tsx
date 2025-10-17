@@ -70,13 +70,9 @@ const BannerEditor = () => {
   };
 
   const handleFieldChange = async (field: string, value: string) => {
-    // Permite digitar sempre. Exibe o login uma vez para incentivar autenticação,
-    // mas não bloqueia a edição local.
+    // Permite digitar sempre, sem abrir modal automaticamente
     if (!user && !hasEditedFirstField) {
       setHasEditedFirstField(true);
-    } else if (!user && hasEditedFirstField && !showLoginModal) {
-      setShowLoginModal(true);
-      // prossegue sem retornar, para não travar a digitação
     }
 
     handleChange(field, value);
