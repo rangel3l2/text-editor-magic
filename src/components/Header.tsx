@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useIsAdminOrModerator } from "@/hooks/useUserRole";
 import MobileMenu from "./header/MobileMenu";
 import AdminSettingsDialog from "./header/AdminSettingsDialog";
+import { SearchWorks } from "./header/SearchWorks";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -15,7 +16,6 @@ const Header = () => {
   const { user } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { data: isAdminOrModerator, isLoading } = useIsAdminOrModerator(user);
-  const [inputValue, setInputValue] = useState("");
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b z-50">
@@ -40,12 +40,7 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <input 
-            type="text" 
-            value={inputValue} 
-            onChange={(e) => setInputValue(e.target.value)} 
-            className="border rounded px-2 py-1"
-          />
+          <SearchWorks />
           <Button
             variant="ghost"
             size="icon"
