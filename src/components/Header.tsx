@@ -5,7 +5,7 @@ import { useTheme } from "@/components/theme-provider";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useIsAdmin } from "@/hooks/useUserRole";
+import { useIsAdminOrModerator } from "@/hooks/useUserRole";
 import MobileMenu from "./header/MobileMenu";
 import AdminSettingsDialog from "./header/AdminSettingsDialog";
 
@@ -14,7 +14,7 @@ const Header = () => {
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { data: isAdmin, isLoading } = useIsAdmin(user);
+  const { data: isAdminOrModerator, isLoading } = useIsAdminOrModerator(user);
   const [inputValue, setInputValue] = useState("");
 
   return (
@@ -22,7 +22,7 @@ const Header = () => {
       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MobileMenu 
-            isAdmin={isAdmin || false} 
+            isAdmin={isAdminOrModerator || false} 
             onSettingsClick={() => setIsSettingsOpen(true)} 
           />
           
@@ -59,7 +59,7 @@ const Header = () => {
             )}
           </Button>
           <LoginButton />
-          {!isLoading && isAdmin && (
+          {!isLoading && isAdminOrModerator && (
             <Button
               variant="ghost"
               size="icon"

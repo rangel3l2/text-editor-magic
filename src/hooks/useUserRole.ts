@@ -34,3 +34,21 @@ export const useIsAdmin = (user: User | null) => {
     data: role === 'admin',
   };
 };
+
+export const useIsModerator = (user: User | null) => {
+  const { data: role, ...queryResult } = useUserRole(user);
+  
+  return {
+    ...queryResult,
+    data: role === 'moderator',
+  };
+};
+
+export const useIsAdminOrModerator = (user: User | null) => {
+  const { data: role, ...queryResult } = useUserRole(user);
+  
+  return {
+    ...queryResult,
+    data: role === 'admin' || role === 'moderator',
+  };
+};

@@ -6,15 +6,15 @@ import AdminUserManagement from "@/components/admin/AdminUserManagement";
 import AcademicWorkTypeManagement from "@/components/admin/AcademicWorkTypeManagement";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useIsAdmin } from "@/hooks/useUserRole";
+import { useIsAdminOrModerator } from "@/hooks/useUserRole";
 
 const AdminSettings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if user is admin using new role system
-  const { data: isAdmin, isLoading } = useIsAdmin(user);
+  // Check if user is admin or moderator using new role system
+  const { data: isAdminOrModerator, isLoading } = useIsAdminOrModerator(user);
 
   useEffect(() => {
     if (!user) {
@@ -22,7 +22,7 @@ const AdminSettings = () => {
       return;
     }
 
-    if (!isLoading && !isAdmin) {
+    if (!isLoading && !isAdminOrModerator) {
       toast({
         title: "Acesso negado",
         description: "Você não tem permissão para acessar esta página.",
@@ -30,13 +30,13 @@ const AdminSettings = () => {
       });
       navigate("/");
     }
-  }, [user, isAdmin, isLoading, navigate, toast]);
+  }, [user, isAdminOrModerator, isLoading, navigate, toast]);
 
   if (isLoading) {
     return <div>Carregando...</div>;
   }
 
-  if (!isAdmin) {
+  if (!isAdminOrModerator) {
     return null;
   }
 
@@ -53,7 +53,7 @@ const AdminSettings = () => {
         <TabsContent value="users">
           <Card>
             <CardHeader>
-              <CardTitle>Gerenciamento de Administradores</CardTitle>
+              <CardTitle>Gerenciamento de Usuários</CardTitle>
             </CardHeader>
             <CardContent>
               <AdminUserManagement />
