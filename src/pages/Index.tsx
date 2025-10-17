@@ -11,7 +11,7 @@ const Index = () => {
 
   return (
     <MainLayout>
-      <div className="container mx-auto p-6 pt-16">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 pt-16 sm:pt-20">
         <HomeHeader />
         <WorkInProgress />
         <AvailableWorkTypes onStart={navigate} />

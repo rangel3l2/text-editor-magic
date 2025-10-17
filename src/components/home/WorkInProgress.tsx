@@ -140,12 +140,12 @@ const WorkInProgress = () => {
 
   if (!user) {
     return (
-      <div className="mb-16">
-        <h2 className="text-2xl font-bold text-center mb-8">Meus Trabalhos</h2>
-        <Card className="shadow-lg text-center p-8">
+      <div className="mb-12 sm:mb-16 px-3 sm:px-4">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">Meus Trabalhos</h2>
+        <Card className="shadow-lg text-center p-6 sm:p-8">
           <div className="flex flex-col items-center gap-4">
-            <LogIn className="h-12 w-12 text-muted-foreground" />
-            <p className="text-muted-foreground text-lg">
+            <LogIn className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
+            <p className="text-muted-foreground text-base sm:text-lg">
               Você precisa fazer login para seus trabalhos aparecerem
             </p>
             <Button
@@ -172,118 +172,118 @@ const WorkInProgress = () => {
   const hasMoreWorks = inProgressWorks.length > 5 || completedWorks.length > 5;
 
   return (
-    <div className="mb-16">
-      <h2 className="text-2xl font-bold text-center mb-8">Meus Trabalhos</h2>
-      <div className="grid md:grid-cols-2 gap-8">
+    <div className="mb-12 sm:mb-16 px-3 sm:px-4">
+      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">Meus Trabalhos</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
         <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <BookText className="h-5 w-5" />
               Em Andamento
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <p className="text-muted-foreground">Carregando...</p>
+              <p className="text-muted-foreground text-sm sm:text-base">Carregando...</p>
             ) : displayedInProgressWorks.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {displayedInProgressWorks.map((work: any) => (
                   <div
                     key={work.id}
-                    className="flex flex-col p-4 rounded-lg border hover:bg-accent transition-colors relative"
+                    className="flex flex-col p-3 sm:p-4 rounded-lg border hover:bg-accent transition-colors relative"
                   >
                     <div 
                       className="flex-1 cursor-pointer"
                       onClick={() => handleWorkClick(work)}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <p className="font-medium">{work.title}</p>
-                          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                            <Badge variant="outline">
+                      <div className="flex items-start justify-between pr-8">
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <p className="font-medium text-sm sm:text-base line-clamp-2">{work.title}</p>
+                          <div className="flex flex-wrap gap-2 text-xs sm:text-sm text-muted-foreground">
+                            <Badge variant="outline" className="text-xs">
                               {getWorkTypeName(work.work_type)}
                             </Badge>
-                            <p>ID: {work.id.slice(0, 8)}</p>
+                            <p className="hidden sm:inline">ID: {work.id.slice(0, 8)}</p>
                           </div>
                         </div>
                       </div>
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        <p>Criado em: {formatDate(work.created_at)}</p>
-                        <p>Última modificação: {formatDate(work.last_modified)}</p>
+                      <div className="mt-2 text-xs sm:text-sm text-muted-foreground space-y-0.5">
+                        <p>Criado: {formatDate(work.created_at)}</p>
+                        <p>Modificado: {formatDate(work.last_modified)}</p>
                       </div>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-destructive"
+                      className="absolute top-2 right-2 h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteWorkId(work.id);
                       }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground">Nenhum trabalho em andamento</p>
+              <p className="text-muted-foreground text-sm sm:text-base">Nenhum trabalho em andamento</p>
             )}
           </CardContent>
         </Card>
         <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
               <FileText className="h-5 w-5" />
               Concluídos
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <p className="text-muted-foreground">Carregando...</p>
+              <p className="text-muted-foreground text-sm sm:text-base">Carregando...</p>
             ) : displayedCompletedWorks.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {displayedCompletedWorks.map((work: any) => (
                   <div
                     key={work.id}
-                    className="flex flex-col p-4 rounded-lg border hover:bg-accent transition-colors relative"
+                    className="flex flex-col p-3 sm:p-4 rounded-lg border hover:bg-accent transition-colors relative"
                   >
                     <div 
                       className="flex-1 cursor-pointer"
                       onClick={() => handleWorkClick(work)}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <p className="font-medium">{work.title}</p>
-                          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                            <Badge variant="outline">
+                      <div className="flex items-start justify-between pr-8">
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <p className="font-medium text-sm sm:text-base line-clamp-2">{work.title}</p>
+                          <div className="flex flex-wrap gap-2 text-xs sm:text-sm text-muted-foreground">
+                            <Badge variant="outline" className="text-xs">
                               {getWorkTypeName(work.work_type)}
                             </Badge>
-                            <p>ID: {work.id.slice(0, 8)}</p>
+                            <p className="hidden sm:inline">ID: {work.id.slice(0, 8)}</p>
                           </div>
                         </div>
                       </div>
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        <p>Criado em: {formatDate(work.created_at)}</p>
-                        <p>Última modificação: {formatDate(work.last_modified)}</p>
+                      <div className="mt-2 text-xs sm:text-sm text-muted-foreground space-y-0.5">
+                        <p>Criado: {formatDate(work.created_at)}</p>
+                        <p>Modificado: {formatDate(work.last_modified)}</p>
                       </div>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-destructive"
+                      className="absolute top-2 right-2 h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteWorkId(work.id);
                       }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground">Nenhum trabalho concluído</p>
+              <p className="text-muted-foreground text-sm sm:text-base">Nenhum trabalho concluído</p>
             )}
           </CardContent>
         </Card>
@@ -295,6 +295,7 @@ const WorkInProgress = () => {
           <Button
             variant="outline"
             onClick={() => setShowAllWorks(!showAllWorks)}
+            className="w-full sm:w-auto"
           >
             {showAllWorks ? "Ver menos" : "Ver mais"}
           </Button>
@@ -303,17 +304,20 @@ const WorkInProgress = () => {
 
       {/* Diálogo de confirmação de exclusão */}
       <AlertDialog open={!!deleteWorkId} onOpenChange={(open) => !open && setDeleteWorkId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-lg sm:text-xl">Tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm sm:text-base">
               Esta ação não pode ser desfeita. Isso excluirá permanentemente o trabalho
               selecionado e removerá todos os dados do nosso servidor.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteWork} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteWork} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full sm:w-auto"
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

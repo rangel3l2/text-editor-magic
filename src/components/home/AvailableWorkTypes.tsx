@@ -68,12 +68,12 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-16">
-      <h2 className="text-2xl font-bold text-center mb-8 text-purple-800">
+    <div className="container mx-auto px-3 sm:px-4 lg:px-6 mb-12 sm:mb-16">
+      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-purple-800 animate-fade-in">
         Trabalhos Acadêmicos Disponíveis
       </h2>
       {workTypes && workTypes.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-7xl mx-auto">
           {workTypes.map((type) => (
             <WorkTypeCard
               key={type.id}
@@ -84,11 +84,11 @@ const AvailableWorkTypes = ({ onStart }: AvailableWorkTypesProps) => {
           ))}
         </div>
       ) : (
-        <div className="text-center p-8 bg-muted rounded-lg max-w-2xl mx-auto">
-          <h3 className="text-xl font-semibold text-gray-700">
+        <div className="text-center p-6 sm:p-8 bg-muted rounded-lg max-w-2xl mx-auto">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-700">
             Nenhum tipo de trabalho acadêmico disponível no momento
           </h3>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 text-sm sm:text-base text-muted-foreground">
             Por favor, volte mais tarde.
           </p>
         </div>

@@ -41,29 +41,29 @@ export function LoginButton() {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1 sm:gap-2">
       {user ? (
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
             <AvatarImage 
               src={user.user_metadata?.avatar_url} 
               alt={user.user_metadata?.full_name || user.email} 
             />
-            <AvatarFallback>
+            <AvatarFallback className="text-xs sm:text-sm">
               {(user.user_metadata?.full_name?.[0] || user.email?.[0])?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm text-foreground hidden sm:inline">
+          <span className="text-xs sm:text-sm text-foreground hidden md:inline truncate max-w-[100px] lg:max-w-[150px]">
             {user.user_metadata?.full_name || user.email}
           </span>
           <Button
             variant="outline"
             size="sm"
             onClick={handleLogout}
-            className="flex items-center gap-2 hover:bg-destructive/10"
+            className="flex items-center gap-1 sm:gap-2 hover:bg-destructive/10 h-8 sm:h-9 px-2 sm:px-3"
           >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Sair</span>
+            <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline text-xs sm:text-sm">Sair</span>
           </Button>
         </div>
       ) : (
@@ -71,10 +71,10 @@ export function LoginButton() {
           onClick={handleLogin}
           variant="outline"
           size="sm"
-          className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-600 border border-gray-300"
+          className="flex items-center gap-1.5 sm:gap-2 bg-white hover:bg-gray-50 text-gray-600 border border-gray-300 h-8 sm:h-9 px-2 sm:px-3"
         >
           <svg 
-            className="h-4 w-4" 
+            className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" 
             viewBox="0 0 24 24"
           >
             <path
@@ -94,7 +94,7 @@ export function LoginButton() {
               fill="#EA4335"
             />
           </svg>
-          <span className="hidden sm:inline">Entrar com Google</span>
+          <span className="hidden xs:inline text-xs sm:text-sm">Entrar</span>
         </Button>
       )}
     </div>

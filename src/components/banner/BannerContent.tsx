@@ -19,14 +19,18 @@ const BannerContent = ({
   return (
     <div className="w-full">
       <Tabs defaultValue="header" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="header">Cabeçalho do Banner</TabsTrigger>
-          <TabsTrigger value="content">Conteúdo do Banner</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="header" className="text-xs sm:text-sm py-2">
+            Cabeçalho do Banner
+          </TabsTrigger>
+          <TabsTrigger value="content" className="text-xs sm:text-sm py-2">
+            Conteúdo do Banner
+          </TabsTrigger>
         </TabsList>
-        <TabsContent value="header">
+        <TabsContent value="header" className="mt-4">
           <BannerHeaderSection content={content} handleChange={handleChange} />
         </TabsContent>
-        <TabsContent value="content">
+        <TabsContent value="content" className="mt-4">
           <BannerContentSection content={content} handleChange={handleChange} />
         </TabsContent>
       </Tabs>

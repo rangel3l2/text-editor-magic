@@ -22,38 +22,55 @@ const BannerLayout = ({
   return (
     <>
       <Header />
-      <main className="pt-16 pb-20 sm:pb-8 px-4">
+      <main className="pt-16 pb-20 sm:pb-8 px-3 sm:px-4">
         <div className="container mx-auto max-w-5xl">
           {children}
         </div>
       </main>
 
       {/* Navegação inferior móvel */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t p-2 flex justify-around items-center sm:hidden">
-        <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+      <nav className="fixed bottom-0 left-0 right-0 bg-background/95 dark:bg-background/98 backdrop-blur-md border-t shadow-lg p-2 flex justify-around items-center sm:hidden z-40">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex flex-col items-center gap-0.5 h-auto py-2 px-3 hover:bg-accent transition-colors"
+        >
           <Eye className="h-5 w-5" />
-          <span className="text-xs">Visualizar</span>
+          <span className="text-[10px] font-medium">Visualizar</span>
         </Button>
-        <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex flex-col items-center gap-0.5 h-auto py-2 px-3 hover:bg-accent transition-colors"
+        >
           <FileDown className="h-5 w-5" />
-          <span className="text-xs">Baixar</span>
+          <span className="text-[10px] font-medium">Baixar</span>
         </Button>
-        <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex flex-col items-center gap-0.5 h-auto py-2 px-3 hover:bg-accent transition-colors"
+        >
           <Share2 className="h-5 w-5" />
-          <span className="text-xs">Compartilhar</span>
+          <span className="text-[10px] font-medium">Compartilhar</span>
         </Button>
-        <Button variant="ghost" size="sm" className="flex flex-col items-center gap-1">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex flex-col items-center gap-0.5 h-auto py-2 px-3 hover:bg-accent transition-colors"
+        >
           <RotateCcw className="h-5 w-5" />
-          <span className="text-xs">Recuperar</span>
+          <span className="text-[10px] font-medium">Recuperar</span>
         </Button>
       </nav>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent 
-          className="max-w-[95vw] h-[95vh] p-4"
+          className="max-w-[95vw] sm:max-w-[90vw] h-[90vh] sm:h-[95vh] p-3 sm:p-4"
           style={{
-            width: 'calc(210mm * 0.9)',
-            maxHeight: '95vh',
+            width: '95vw',
+            maxWidth: 'min(calc(210mm * 0.9), 95vw)',
+            maxHeight: '90vh',
             margin: '0 auto',
           }}
         >
