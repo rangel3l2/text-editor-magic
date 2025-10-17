@@ -22,7 +22,10 @@ const ValidationFeedback = ({
 
   // Processar resultado de validação e tocar sons
   useEffect(() => {
+    console.log('📊 ValidationFeedback - validationResult:', validationResult);
+    
     if (validationResult?.feedbacks && Array.isArray(validationResult.feedbacks)) {
+      console.log('✅ Processando feedbacks:', validationResult.feedbacks.length);
       setFeedbacks(validationResult.feedbacks);
       
       // Tocar som baseado no tipo predominante
@@ -36,6 +39,8 @@ const ValidationFeedback = ({
       } else {
         playFeedbackSound('tip');
       }
+    } else {
+      console.warn('⚠️ validationResult não tem feedbacks ou formato incorreto:', validationResult);
     }
   }, [validationResult, playFeedbackSound]);
 
@@ -86,8 +91,16 @@ const ValidationFeedback = ({
   }
 
   // Se não temos resultado ou feedbacks, não mostra nada
-  if (!validationResult || !feedbacks.length) return null;
+  if (!validationResult || !feedbacks.length) {
+    console.log('🚫 Não renderizando FeedbackPanel:', { 
+      hasValidationResult: !!validationResult, 
+      feedbacksLength: feedbacks.length 
+    });
+    return null;
+  }
 
+  console.log('✨ Renderizando FeedbackPanel com', feedbacks.length, 'feedbacks');
+  
   // Mostrar FeedbackPanel com os feedbacks estruturados
   return (
     <FeedbackPanel

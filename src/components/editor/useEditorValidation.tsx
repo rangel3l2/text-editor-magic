@@ -39,6 +39,7 @@ export const useEditorValidation = (sectionName: string) => {
     // Check cache first
     const cachedResult = getValidationCache(sectionName, cleanedContent);
     if (cachedResult) {
+      console.log(`✅ Usando cache para "${sectionName}":`, cachedResult);
       setValidationResult(cachedResult);
       setErrorMessage(null);
       return;
@@ -180,6 +181,7 @@ export const useEditorValidation = (sectionName: string) => {
       // Cache the successful validation result
       setValidationCache(sectionName, cleanedContent, data);
       
+      console.log(`💾 Salvando resultado de validação para "${sectionName}":`, data);
       setValidationResult(data);
       setErrorMessage(null);
       lastValidationRef.current = now;
