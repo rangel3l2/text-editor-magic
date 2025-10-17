@@ -26,32 +26,40 @@ export const SearchWorks = () => {
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastQueryRef = useRef<string>("");
 
   console.log("SearchWorks renderizado - user:", user?.id, "query:", searchQuery);
 
-  // Auto-search with debounce
   useEffect(() => {
     if (!user) {
       console.log("Usuário não logado");
       return;
     }
     
-    if (!searchQuery.trim()) {
+    const term = searchQuery.trim();
+    if (!term) {
       setSearchResults([]);
       setShowResults(false);
+      lastQueryRef.current = "";
       return;
     }
 
-    console.log("Iniciando busca para:", searchQuery);
+    // Evita buscas repetidas para o mesmo termo
+    if (term === lastQueryRef.current) {
+      setShowResults(true);
+      return;
+    }
+
+    console.log("Iniciando busca para:", term);
     setIsSearching(true);
     const timeoutId = setTimeout(async () => {
       try {
-        console.log("Executando RPC com user_id:", user.id, "termo:", searchQuery.trim());
+        console.log("Executando RPC com user_id:", user.id, "termo:", term);
         
         const { data, error } = await supabase
           .rpc("search_works_by_title", {
             p_user_id: user.id,
-            p_search_term: searchQuery.trim(),
+            p_search_term: term,
           });
 
         console.log("Resposta da busca:", { data, error });
@@ -64,21 +72,18 @@ export const SearchWorks = () => {
         console.log("Resultados encontrados:", data?.length || 0);
         setSearchResults(data || []);
         setShowResults(true);
+        lastQueryRef.current = term;
       } catch (error) {
         console.error("Error searching works:", error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível buscar os trabalhos",
-          variant: "destructive",
-        });
-        setSearchResults([]);
+        // Evita recriar o efeito por mudanças no toast
+        // Mostra erro de forma discreta
       } finally {
         setIsSearching(false);
       }
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, user, toast]);
+  }, [searchQuery, user]);
 
   // Close results when clicking outside
   useEffect(() => {
