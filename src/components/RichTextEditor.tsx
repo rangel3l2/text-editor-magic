@@ -47,6 +47,14 @@ const RichTextEditor = ({
     handleContentChange
   } = useEditorProgress(maxLines, minLines);
 
+  // Load cached validation immediately on mount/value change (no extra requests)
+  useEffect(() => {
+    const cleaned = cleanHtmlTags(value || '').trim();
+    if (cleaned.length > 20) {
+      validateContent(value);
+    }
+  }, [value, validateContent]);
+
   // Validar conteúdo com debounce
   useEffect(() => {
     if (shouldValidate && contentToValidate) {
