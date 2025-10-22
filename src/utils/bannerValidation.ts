@@ -11,14 +11,14 @@ interface ValidationSection {
 
 export const validateBannerContent = (bannerContent: BannerContent): boolean => {
   const sections: ValidationSection[] = [
-    { name: 'Instituição', content: bannerContent.institution, min: 2, max: 3 },
-    { name: 'Autores', content: bannerContent.authors, min: 2, max: 3 },
-    { name: 'Introdução', content: bannerContent.introduction, min: 7, max: 10 },
-    { name: 'Objetivos', content: bannerContent.objectives, min: 3, max: 4 },
-    { name: 'Metodologia', content: bannerContent.methodology, min: 6, max: 8 },
-    { name: 'Resultados', content: bannerContent.results, min: 5, max: 7 },
-    { name: 'Conclusão', content: bannerContent.conclusion, min: 4, max: 6 },
-    { name: 'Referências', content: bannerContent.references, min: 2, max: 3 },
+    { name: 'Instituição', content: bannerContent.institution, min: 1, max: 5 },
+    { name: 'Autores', content: bannerContent.authors, min: 1, max: 5 },
+    { name: 'Introdução', content: bannerContent.introduction, min: 5, max: 25 },
+    { name: 'Objetivos', content: bannerContent.objectives, min: 2, max: 10 },
+    { name: 'Metodologia', content: bannerContent.methodology, min: 5, max: 25 },
+    { name: 'Resultados', content: bannerContent.results, min: 5, max: 25 },
+    { name: 'Conclusão', content: bannerContent.conclusion, min: 3, max: 15 },
+    { name: 'Referências', content: bannerContent.references, min: 2, max: 10 },
   ];
 
   for (const section of sections) {

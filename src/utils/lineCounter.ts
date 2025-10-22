@@ -17,8 +17,8 @@ export const countTextLines = (content: string, options: LineCountOptions = {}) 
     .filter(line => line.trim().length > 0);
 
   // Calculate characters per line based on columns and font size
-  // Para fonte 12pt em duas colunas, aproximadamente 45 caracteres por linha
-  const baseCharsPerLine = 90; // Base para uma coluna
+  // Para fonte 12pt em duas colunas, aproximadamente 60-70 caracteres por linha
+  const baseCharsPerLine = 120; // Base para uma coluna (ajustado para banners reais)
   const charsPerLine = Math.floor(baseCharsPerLine / columns);
   
   let totalLines = 0;
