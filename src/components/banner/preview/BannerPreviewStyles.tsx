@@ -6,7 +6,7 @@ const BannerPreviewStyles = () => {
           background-color: transparent;
         }
         .banner-section:hover > div {
-          background-color: rgb(243 244 246);
+          background-color: rgb(243 244 246 / 0.8);
         }
         .banner-section.drop-top::before {
           content: '';

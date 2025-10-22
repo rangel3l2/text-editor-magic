@@ -8,8 +8,13 @@ export const countTextLines = (content: string, options: LineCountOptions = {}) 
   
   const { columns = 2, fontSize = 12 } = options;
   
+  // Normalize block elements to line breaks before stripping tags
+  const withBreaks = content
+    .replace(/<(br|BR)\s*\/>/g, '\n')
+    .replace(/<\/(p|li|div|section|article|h[1-6])>/gi, '\n');
+
   // Remove HTML tags
-  const textWithoutTags = content.replace(/<[^>]*>/g, '');
+  const textWithoutTags = withBreaks.replace(/<[^>]*>/g, '');
   
   // Split by line breaks and filter out empty lines
   const lines = textWithoutTags
