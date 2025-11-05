@@ -7,6 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -39,8 +41,8 @@ serve(async (req) => {
 
     console.log('Texto extraído (primeiros 500 chars):', fullText.substring(0, 500));
 
-    // Extrair seções do artigo
-    const parsedContent = extractArticleSections(fullText);
+    // Extrair seções do artigo usando IA
+    const parsedContent = await extractArticleSectionsWithAI(fullText);
 
     console.log('Seções extraídas:', Object.keys(parsedContent));
 
@@ -82,6 +84,101 @@ async function parseDOCX(buffer: ArrayBuffer): Promise<string> {
   const uint8Array = new Uint8Array(buffer);
   const result = await mammoth.extractRawText({ buffer: uint8Array });
   return result.value;
+}
+
+async function extractArticleSectionsWithAI(text: string) {
+  if (!LOVABLE_API_KEY) {
+    console.error('LOVABLE_API_KEY não configurada, usando extração regex');
+    return extractArticleSections(text);
+  }
+
+  try {
+    const prompt = `Analise o texto de um artigo científico abaixo e extraia as seguintes seções. IGNORE completamente cabeçalhos e rodapés de página. Foque apenas no conteúdo principal do artigo.
+
+Extraia exatamente estas seções (retorne vazio se não encontrar):
+- title: Título principal do artigo (geralmente em MAIÚSCULAS no início)
+- authors: Nome dos autores (após o título, antes do RESUMO)
+- advisors: Nome dos orientadores (geralmente em notas de rodapé ou após autores)
+- abstract: Texto do RESUMO em português (após "RESUMO" e antes de "Palavras-chave")
+- keywords: Palavras-chave em português (após "Palavras-chave:" e antes de "ABSTRACT")
+- englishAbstract: Texto do ABSTRACT em inglês (após "ABSTRACT" e antes de "Keywords")
+- englishKeywords: Keywords em inglês (após "Keywords:")
+- introduction: Seção de INTRODUÇÃO (geralmente seção 1)
+- methodology: Seção de METODOLOGIA (procure por títulos como "Metodologia", "Materiais e Métodos", etc.)
+- results: Seção de RESULTADOS e/ou DISCUSSÃO (procure por "Resultados", "Resultados e Discussão", etc.)
+- conclusion: Seção de CONCLUSÃO (procure por "Conclusão", "Considerações Finais", etc.)
+- references: Seção de REFERÊNCIAS (após "REFERÊNCIAS" ou "REFERÊNCIAS BIBLIOGRÁFICAS")
+
+Retorne APENAS um JSON válido no formato:
+{
+  "title": "...",
+  "authors": "...",
+  "advisors": "...",
+  "abstract": "...",
+  "keywords": "...",
+  "englishAbstract": "...",
+  "englishKeywords": "...",
+  "introduction": "...",
+  "methodology": "...",
+  "results": "...",
+  "conclusion": "...",
+  "references": "..."
+}
+
+TEXTO DO ARTIGO:
+${text.substring(0, 15000)}`;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: 'Você é um assistente especializado em análise de artigos científicos. Retorne apenas JSON válido, sem markdown ou explicações adicionais.' },
+          { role: 'user', content: prompt }
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Erro na API de IA:', response.status);
+      return extractArticleSections(text);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    
+    // Remover markdown code blocks se presentes
+    const jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const aiResult = JSON.parse(jsonStr);
+
+    // Converter para HTML e adicionar instituição padrão
+    const result = {
+      title: cleanHtml(aiResult.title || ''),
+      authors: cleanHtml(aiResult.authors || ''),
+      advisors: cleanHtml(aiResult.advisors || ''),
+      abstract: cleanHtml(aiResult.abstract || ''),
+      keywords: cleanHtml(aiResult.keywords || ''),
+      englishAbstract: cleanHtml(aiResult.englishAbstract || ''),
+      englishKeywords: cleanHtml(aiResult.englishKeywords || ''),
+      introduction: cleanHtml(aiResult.introduction || ''),
+      methodology: cleanHtml(aiResult.methodology || ''),
+      results: cleanHtml(aiResult.results || ''),
+      conclusion: cleanHtml(aiResult.conclusion || ''),
+      references: cleanHtml(aiResult.references || ''),
+      institution: 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul',
+    };
+
+    console.log('Extração por IA concluída com sucesso');
+    return result;
+
+  } catch (error) {
+    console.error('Erro ao usar IA para extração:', error);
+    return extractArticleSections(text);
+  }
 }
 
 function extractArticleSections(text: string) {
