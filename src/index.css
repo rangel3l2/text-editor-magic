@@ -190,12 +190,22 @@
   padding-top: 2cm;
 }
 
-.academic-preview h1,
-.academic-preview h2 {
+.academic-preview h1 {
   font-family: 'Times New Roman', Times, serif;
   font-weight: bold;
   text-align: center;
   word-spacing: normal;
+  font-size: 14pt;
+  line-height: 1.15;
+}
+
+.academic-preview h2 {
+  font-family: 'Times New Roman', Times, serif;
+  font-weight: normal;
+  text-align: center;
+  word-spacing: normal;
+  font-size: 12pt;
+  line-height: 1.15;
 }
 
 .academic-preview h2.section-title {
@@ -204,6 +214,7 @@
   text-align: left;
   margin-top: 1.5em;
   margin-bottom: 1em;
+  line-height: 1.15;
 }
 
 .academic-preview p,

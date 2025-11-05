@@ -46,9 +46,11 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
       <div className="academic-page first-page">
         {/* Título e Subtítulo */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold mb-2 uppercase">{cleanLatexCommands(content.title)}</h1>
+          <h1 className="text-[14pt] font-bold mb-2 uppercase leading-tight" 
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(cleanLatexCommands(content.title))) }} />
           {content.subtitle && (
-            <h2 className="text-xl mb-4">{cleanLatexCommands(content.subtitle)}</h2>
+            <h2 className="text-[12pt] mb-4 leading-tight" 
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(cleanLatexCommands(content.subtitle))) }} />
           )}
         </div>
 
