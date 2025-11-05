@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,6 +62,8 @@ export const useArticleContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const loadingRef = useRef(false);
+  const toastShownRef = useRef(false);
+  const navigate = useNavigate();
 
   const handleChange = (field: keyof ArticleContent, value: string | TheoreticalTopic[]) => {
     setContent(prev => ({
@@ -176,11 +178,21 @@ export const useArticleContent = () => {
         if (!workMeta) {
           console.error('[ArticleContent] Work not found:', id);
           setLoadError('Trabalho não encontrado');
-          toast({
-            title: "Trabalho não encontrado",
-            description: "O trabalho que você tentou abrir não foi encontrado ou você não tem permissão para acessá-lo.",
-            variant: "destructive",
-          });
+          
+          // Mostrar toast apenas uma vez
+          if (!toastShownRef.current) {
+            toastShownRef.current = true;
+            toast({
+              title: "Trabalho não encontrado",
+              description: "O trabalho que você tentou abrir não foi encontrado ou foi excluído.",
+              variant: "destructive",
+            });
+            
+            // Redirecionar para a página inicial após 2 segundos
+            setTimeout(() => {
+              navigate('/');
+            }, 2000);
+          }
           return;
         }
 
@@ -221,13 +233,18 @@ export const useArticleContent = () => {
         console.error('[ArticleContent] Error loading article content:', error);
         const errorMessage = error.message || 'Erro desconhecido';
         setLoadError(errorMessage);
-        toast({
-          title: "Erro ao carregar trabalho",
-          description: errorMessage.includes('Failed to fetch') 
-            ? "Erro de conexão. Verifique sua internet e tente novamente."
-            : errorMessage,
-          variant: "destructive",
-        });
+        
+        // Mostrar toast apenas uma vez
+        if (!toastShownRef.current) {
+          toastShownRef.current = true;
+          toast({
+            title: "Erro ao carregar trabalho",
+            description: errorMessage.includes('Failed to fetch') 
+              ? "Erro de conexão. Verifique sua internet e tente novamente."
+              : errorMessage,
+            variant: "destructive",
+          });
+        }
       } finally {
         setIsLoading(false);
         loadingRef.current = false;
