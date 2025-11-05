@@ -186,7 +186,7 @@ const ArticleEditor = () => {
                   <IntroductionEditor
                     value={content.introduction}
                     onChange={(value) => handleChange('introduction', value)}
-                    maxLines={30}
+                    maxLines={100}
                     minLines={10}
                   />
                 </div>

@@ -19,7 +19,7 @@ interface IntroductionEditorProps {
 const IntroductionEditor = ({
   value,
   onChange,
-  maxLines = 50,
+  maxLines = 100,
   minLines = 10,
 }: IntroductionEditorProps) => {
   const [activeTab, setActiveTab] = useState<string>("guided");
