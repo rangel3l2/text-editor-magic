@@ -59,6 +59,7 @@ export const useArticleContent = () => {
   };
 
   const [content, setContent] = useState<ArticleContent>(initialArticleContent);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (field: keyof ArticleContent, value: string | TheoreticalTopic[]) => {
     setContent(prev => ({
@@ -147,34 +148,66 @@ export const useArticleContent = () => {
   useEffect(() => {
     if (user && id) {
       const loadContent = async () => {
+        setIsLoading(true);
+        console.log(`[ArticleContent] Loading work ${id} for user ${user.id}`);
+        
         try {
           const { data, error } = await supabase
             .from('work_in_progress')
-            .select('content')
+            .select('content, title, work_type')
             .eq('id', id)
             .eq('user_id', user.id)
             .maybeSingle();
 
-          if (error) throw error;
-          if (data?.content) {
-            setContent(data.content as any as ArticleContent);
+          if (error) {
+            console.error('[ArticleContent] Supabase error:', error);
+            throw error;
           }
-        } catch (error) {
-          console.error('Error loading article content:', error);
+          
+          if (!data) {
+            console.error('[ArticleContent] Work not found:', id);
+            toast({
+              title: "Trabalho não encontrado",
+              description: "O trabalho que você tentou abrir não foi encontrado ou você não tem permissão para acessá-lo.",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          console.log('[ArticleContent] Work loaded successfully:', data.title);
+          
+          if (data?.content) {
+            const loadedContent = data.content as any as ArticleContent;
+            console.log('[ArticleContent] Content sections:', {
+              hasTitle: !!loadedContent.title,
+              hasAbstract: !!loadedContent.abstract,
+              hasIntroduction: !!loadedContent.introduction,
+              hasMethodology: !!loadedContent.methodology,
+              hasResults: !!loadedContent.results,
+              hasConclusion: !!loadedContent.conclusion,
+              hasReferences: !!loadedContent.references,
+            });
+            setContent(loadedContent);
+          }
+        } catch (error: any) {
+          console.error('[ArticleContent] Error loading article content:', error);
           toast({
-            title: "Erro ao carregar",
-            description: "Não foi possível carregar o conteúdo do artigo. Tente novamente.",
+            title: "Erro ao carregar trabalho",
+            description: error.message || "Não foi possível carregar o conteúdo do artigo. Tente novamente.",
             variant: "destructive",
           });
+        } finally {
+          setIsLoading(false);
         }
       };
 
       loadContent();
     }
-  }, [id, user]);
+  }, [id, user, toast]);
 
   return {
     content,
+    isLoading,
     handleChange,
     addTheoreticalTopic,
     updateTheoreticalTopic,

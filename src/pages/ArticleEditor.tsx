@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
-  const { content, handleChange, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
+  const { content, isLoading, handleChange, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
   const [previewOpen, setPreviewOpen] = useState(false);
   const { data: isAdmin } = useIsAdmin(user);
 
@@ -103,11 +103,24 @@ const ArticleEditor = () => {
     });
   };
 
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto p-6 flex items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground">Carregando trabalho...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-6">
         <EditorHeader
-          title="Novo Artigo Científico"
+          title={content.title || "Novo Artigo Científico"}
           onDownload={handleDownload}
           onShare={handleShare}
           onPreview={() => setPreviewOpen(true)}
