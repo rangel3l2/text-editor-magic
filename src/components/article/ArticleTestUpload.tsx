@@ -59,10 +59,13 @@ export const ArticleTestUpload = ({ onArticleParsed }: ArticleTestUploadProps) =
       );
 
       if (!response.ok) {
-        throw new Error('Erro ao processar artigo');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao processar artigo');
       }
 
       const parsedContent = await response.json();
+      
+      console.log('Conteúdo extraído:', parsedContent);
       
       // Preencher os campos do editor
       onArticleParsed(parsedContent);
@@ -78,7 +81,7 @@ export const ArticleTestUpload = ({ onArticleParsed }: ArticleTestUploadProps) =
       console.error('Erro ao processar artigo:', error);
       toast({
         title: "Erro ao processar artigo",
-        description: "Não foi possível extrair o conteúdo. Verifique o formato do arquivo.",
+        description: error instanceof Error ? error.message : "Não foi possível extrair o conteúdo.",
         variant: "destructive"
       });
     } finally {

@@ -61,18 +61,14 @@ const ArticleEditor = () => {
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <EditorHeader
-            title="Novo Artigo Científico"
-            onDownload={handleDownload}
-            onShare={handleShare}
-            onPreview={() => setPreviewOpen(true)}
-            onClear={handleClear}
-          />
-          {isAdmin && (
-            <ArticleTestUpload onArticleParsed={handleArticleParsed} />
-          )}
-        </div>
+        <EditorHeader
+          title="Novo Artigo Científico"
+          onDownload={handleDownload}
+          onShare={handleShare}
+          onPreview={() => setPreviewOpen(true)}
+          onClear={handleClear}
+          adminButton={isAdmin ? <ArticleTestUpload onArticleParsed={handleArticleParsed} /> : undefined}
+        />
 
         {/* Orientação Acadêmica */}
         <div className="mb-6">

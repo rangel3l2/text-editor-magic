@@ -9,6 +9,7 @@ interface EditorHeaderProps {
   onShare?: () => void;
   onPreview?: () => void;
   onClear?: () => void;
+  adminButton?: React.ReactNode;
 }
 
 const EditorHeader = ({ 
@@ -16,12 +17,14 @@ const EditorHeader = ({
   onDownload,
   onShare,
   onPreview,
-  onClear 
+  onClear,
+  adminButton
 }: EditorHeaderProps) => {
   return (
     <div className="flex items-center justify-between mb-6">
       <h1 className="text-2xl font-bold">{title}</h1>
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2">
+        {adminButton}
         <Button
           variant="outline"
           size="sm"
