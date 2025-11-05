@@ -157,6 +157,9 @@
   background: #f5f5f5;
   padding: 2rem;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .academic-preview {
@@ -170,18 +173,17 @@
 .academic-page {
   width: 21cm;
   min-height: 29.7cm;
-  margin: 0 auto 2rem auto;
+  margin: 0 auto;
   padding: 3cm 2cm 2cm 3cm;
   background: white;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
   position: relative;
   page-break-after: always;
-  overflow: visible;
+  box-sizing: border-box;
 }
 
 .academic-page.first-page {
   padding-top: 3cm;
-  min-height: auto;
 }
 
 .academic-page.content-page {
