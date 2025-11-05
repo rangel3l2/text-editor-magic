@@ -41,31 +41,37 @@ const buildBlocks = (content: ArticleContent) => {
   const blocks: { html: string; mark?: 'INTRO_END' }[] = [];
   const sanitize = (s: string) => sanitizeHtml(cleanFeedbackComments(cleanLatexCommands(s || '')));
 
-  // Capa (sem numeração)
-  blocks.push({ html: `
-    <div class="text-center mb-8">
-      <h1 class="text-[14pt] font-bold mb-2 uppercase leading-tight" >${sanitize(content.title)}</h1>
-      ${content.subtitle ? `<h2 class="text-[12pt] mb-4 leading-tight">${sanitize(content.subtitle)}</h2>` : ''}
-    </div>
-    <div class="mb-8 text-center text-[12pt]">
-      <div class="mb-4">${sanitize(content.authors)}</div>
-      <div>${sanitize(content.advisors)}</div>
-    </div>
-    <div class="mb-8">
-      <h2 class="section-title">RESUMO</h2>
-      <div class="mb-4 text-justify hyphens-auto">${sanitize(content.abstract)}</div>
-      <p class="text-justify hyphens-auto"><span class="font-bold">Palavras-chave:</span> ${sanitize(content.keywords)}</p>
-    </div>
-  `});
+  // Título
+  blocks.push({ html: `<div class="text-center mb-8"><h1 class="text-2xl font-bold mb-2 uppercase leading-tight">${sanitize(content.title)}</h1></div>` });
+  
+  // Subtítulo (se existir)
+  if (content.subtitle) {
+    blocks.push({ html: `<div class="text-center mb-4"><h2 class="text-xl leading-tight">${sanitize(content.subtitle)}</h2></div>` });
+  }
 
-  // Abstract (sem numeração)
-  blocks.push({ html: `
-    <div class="mb-8">
-      <h2 class="section-title">ABSTRACT</h2>
-      <div class="mb-4 text-justify hyphens-auto">${sanitize(content.englishAbstract)}</div>
-      <p class="text-justify hyphens-auto"><span class="font-bold">Keywords:</span> ${sanitize(content.englishKeywords)}</p>
-    </div>
-  `});
+  // Autores
+  blocks.push({ html: `<div class="mb-4 text-center">${sanitize(content.authors)}</div>` });
+  
+  // Orientadores
+  blocks.push({ html: `<div class="mb-8 text-center">${sanitize(content.advisors)}</div>` });
+
+  // Resumo - título
+  blocks.push({ html: `<div class="mb-4"><h2 class="section-title">RESUMO</h2></div>` });
+  
+  // Resumo - conteúdo
+  blocks.push({ html: `<div class="mb-4 text-justify hyphens-auto">${sanitize(content.abstract)}</div>` });
+  
+  // Palavras-chave
+  blocks.push({ html: `<p class="mb-8 text-justify hyphens-auto"><span class="font-bold">Palavras-chave:</span> ${sanitize(content.keywords)}</p>` });
+
+  // Abstract - título
+  blocks.push({ html: `<div class="mb-4"><h2 class="section-title">ABSTRACT</h2></div>` });
+  
+  // Abstract - conteúdo
+  blocks.push({ html: `<div class="mb-4 text-justify hyphens-auto">${sanitize(content.englishAbstract)}</div>` });
+  
+  // Keywords
+  blocks.push({ html: `<p class="mb-8 text-justify hyphens-auto"><span class="font-bold">Keywords:</span> ${sanitize(content.englishKeywords)}</p>` });
 
   // Introdução
   blocks.push({ html: `<h2 class="section-title">1 INTRODUÇÃO</h2>` });
