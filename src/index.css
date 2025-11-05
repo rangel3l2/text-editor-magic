@@ -73,6 +73,7 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Times New Roman', Times, serif;
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -132,4 +133,70 @@
 
 .dark .ck.ck-editor__editable_inline > [data-placeholder]::before {
   color: hsl(var(--muted-foreground));
+}
+
+/* Formatação ABNT/IFMS para editores e visualizações */
+.ck-editor__editable {
+  font-family: 'Times New Roman', Times, serif !important;
+  font-size: 12pt !important;
+  line-height: 1.5 !important;
+  text-align: justify !important;
+}
+
+.ck-editor__editable p {
+  text-align: justify !important;
+  margin-bottom: 0 !important;
+}
+
+/* Estilo A4 para preview acadêmico */
+.academic-preview {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  text-align: justify;
+  max-width: 21cm;
+  min-height: 29.7cm;
+  margin: 0 auto;
+  padding: 3cm 3cm 2cm 3cm; /* Margens ABNT: superior 3cm, direita 2cm, inferior 2cm, esquerda 3cm */
+  background: white;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.academic-preview h1,
+.academic-preview h2 {
+  font-family: 'Times New Roman', Times, serif;
+  font-weight: bold;
+  text-align: center;
+}
+
+.academic-preview h2.section-title {
+  font-size: 12pt;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.5em;
+  margin-bottom: 1em;
+}
+
+.academic-preview .references {
+  text-align: left !important;
+  line-height: 1 !important;
+}
+
+.academic-preview .references p {
+  text-align: left !important;
+  margin-bottom: 1em !important;
+}
+
+.academic-preview .citation-block {
+  font-size: 10pt;
+  line-height: 1;
+  margin-left: 4cm;
+  text-align: justify;
+}
+
+.academic-preview .page-number {
+  position: absolute;
+  top: 2cm;
+  right: 2cm;
+  font-size: 10pt;
 }
