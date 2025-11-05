@@ -58,6 +58,20 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
           <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(content.advisors)) }} />
         </div>
 
+        {/* Resumo e Abstract movidos para páginas de conteúdo para evitar corte na capa */}
+
+        {/* Data de aprovação */}
+        {content.approvalDate && (
+          <div className="mb-8 text-justify">
+            <p>Data de aprovação: {content.approvalDate}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Páginas de conteúdo - com numeração */}
+      <div className="academic-page content-page">
+        <div className="page-number">1</div>
+        
         {/* Resumo */}
         <div className="mb-8">
           <h2 className="section-title">RESUMO</h2>
@@ -75,18 +89,6 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
             <span className="font-bold">Keywords:</span> {content.englishKeywords}
           </p>
         </div>
-
-        {/* Data de aprovação */}
-        {content.approvalDate && (
-          <div className="mb-8 text-justify">
-            <p>Data de aprovação: {content.approvalDate}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Páginas de conteúdo - com numeração */}
-      <div className="academic-page content-page">
-        <div className="page-number">1</div>
         
         {/* Introdução */}
         <div className="mb-8">
