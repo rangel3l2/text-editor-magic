@@ -23,14 +23,47 @@ export const cleanLatexCommands = (text: string) => {
     .trim();
 };
 
-// Adiciona nova função para remover tags HTML
+// Remove tags HTML e decodifica entidades HTML
 export const cleanHtmlTags = (text: string) => {
   if (!text) return '';
   
-  // Remove todas as tags HTML
-  return text
-    .replace(/<[^>]*>/g, '')
-    .trim();
+  // Primeiro, remove todas as tags HTML
+  let cleaned = text.replace(/<[^>]*>/g, '');
+  
+  // Depois, decodifica entidades HTML comuns
+  const entityMap: Record<string, string> = {
+    '&nbsp;': ' ',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&apos;': "'",
+    '&ndash;': '\u2013',
+    '&mdash;': '\u2014',
+    '&rsquo;': '\u2019',
+    '&lsquo;': '\u2018',
+    '&rdquo;': '\u201D',
+    '&ldquo;': '\u201C',
+  };
+  
+  // Substitui entidades HTML conhecidas
+  Object.entries(entityMap).forEach(([entity, char]) => {
+    cleaned = cleaned.replace(new RegExp(entity, 'g'), char);
+  });
+  
+  // Decodifica entidades numéricas (ex: &#160; para espaço)
+  cleaned = cleaned.replace(/&#(\d+);/g, (match, dec) => {
+    return String.fromCharCode(dec);
+  });
+  
+  // Decodifica entidades hexadecimais (ex: &#x00A0; para espaço)
+  cleaned = cleaned.replace(/&#x([0-9A-Fa-f]+);/g, (match, hex) => {
+    return String.fromCharCode(parseInt(hex, 16));
+  });
+  
+  // Remove múltiplos espaços consecutivos e faz trim
+  return cleaned.replace(/\s+/g, ' ').trim();
 };
 
 export const generateLatexContent = (content: any) => {
