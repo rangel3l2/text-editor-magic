@@ -93,26 +93,45 @@ async function extractArticleSectionsWithAI(text: string) {
   }
 
   try {
-    const prompt = `Analise o texto de um artigo científico abaixo e extraia as seguintes seções. IGNORE completamente cabeçalhos e rodapés de página. Foque apenas no conteúdo principal do artigo.
+    const prompt = `Analise cuidadosamente o texto de um artigo científico e extraia TODAS as seções principais. IGNORE cabeçalhos, rodapés e numeração de página.
 
-Extraia exatamente estas seções (retorne vazio se não encontrar):
-- title: Título principal do artigo (geralmente em MAIÚSCULAS no início)
-- authors: Nome dos autores (após o título, antes do RESUMO)
-- advisors: Nome dos orientadores (geralmente em notas de rodapé ou após autores)
-- abstract: Texto do RESUMO em português (após "RESUMO" e antes de "Palavras-chave")
-- keywords: Palavras-chave em português (após "Palavras-chave:" e antes de "ABSTRACT")
-- englishAbstract: Texto do ABSTRACT em inglês (após "ABSTRACT" e antes de "Keywords")
-- englishKeywords: Keywords em inglês (após "Keywords:")
-- introduction: TODA a seção de INTRODUÇÃO completa (geralmente seção 1) - NÃO dividir em partes
-- theoreticalTopics: Array de tópicos do referencial teórico (seção 2), cada um com {title: string, content: string}
-- methodology: Seção de METODOLOGIA (procure por títulos como "Metodologia", "Materiais e Métodos", etc.)
-- results: Seção de RESULTADOS e/ou DISCUSSÃO (procure por "Resultados", "Resultados e Discussão", etc.)
-- conclusion: Seção de CONCLUSÃO (procure por "Conclusão", "Considerações Finais", etc.)
-- references: Seção de REFERÊNCIAS (após "REFERÊNCIAS" ou "REFERÊNCIAS BIBLIOGRÁFICAS")
+INSTRUÇÕES CRÍTICAS:
+1. Extraia o conteúdo COMPLETO de cada seção, não apenas um resumo
+2. Mantenha toda a formatação e parágrafos originais
+3. Se uma seção não existir, retorne string vazia ""
+4. Para referências, extraia TODAS as referências bibliográficas completas
 
-Para theoreticalTopics, identifique TODOS os subtópicos numerados (ex: 2.1, 2.2, 2.3) e extraia o título e conteúdo de cada um.
+SEÇÕES A EXTRAIR:
 
-Retorne APENAS um JSON válido no formato:
+**title**: Título principal do artigo (geralmente em MAIÚSCULAS ou negrito no início)
+
+**authors**: Nomes completos dos autores com numeração sobrescrita se houver (ex: João Silva¹, Maria Santos²)
+
+**advisors**: Orientadores (procure por "Orientador:", "Professor orientador:", ou notas de rodapé com ¹, ²)
+
+**abstract**: Conteúdo COMPLETO após "RESUMO" até "Palavras-chave"
+
+**keywords**: Lista após "Palavras-chave:" ou "Palavras chave:" até próxima seção
+
+**englishAbstract**: Conteúdo COMPLETO após "ABSTRACT" até "Keywords"
+
+**englishKeywords**: Lista após "Keywords:" até próxima seção
+
+**introduction**: TODA a seção 1 INTRODUÇÃO completa, do início até o final da seção (antes da seção 2)
+
+**theoreticalTopics**: Identifique TODOS os subtópicos da seção 2 (Referencial Teórico/Fundamentação). Cada subtópico numerado (2.1, 2.2, etc.) deve ser extraído como:
+  - title: título do subtópico SEM o número
+  - content: conteúdo completo do subtópico até o próximo subtópico
+
+**methodology**: Conteúdo COMPLETO da seção de metodologia (pode ser "METODOLOGIA", "MATERIAIS E MÉTODOS", "PROCEDIMENTOS METODOLÓGICOS", ou similar, geralmente seção 3 ou 4)
+
+**results**: Conteúdo COMPLETO da seção de resultados (procure por "RESULTADOS", "RESULTADOS E DISCUSSÃO", "ANÁLISE DOS RESULTADOS", "DISCUSSÃO", geralmente próximo ao final, antes da conclusão)
+
+**conclusion**: Conteúdo COMPLETO da conclusão (procure por "CONCLUSÃO", "CONSIDERAÇÕES FINAIS", "CONCLUSÕES", geralmente a última seção antes das referências)
+
+**references**: TODAS as referências bibliográficas completas após "REFERÊNCIAS" ou "REFERÊNCIAS BIBLIOGRÁFICAS" até o final do documento
+
+Retorne APENAS JSON válido (sem markdown):
 {
   "title": "...",
   "authors": "...",
@@ -130,7 +149,7 @@ Retorne APENAS um JSON válido no formato:
 }
 
 TEXTO DO ARTIGO:
-${text.substring(0, 15000)}`;
+${text.substring(0, 20000)}`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -149,11 +168,15 @@ ${text.substring(0, 15000)}`;
 
     if (!response.ok) {
       console.error('Erro na API de IA:', response.status);
+      const errorText = await response.text();
+      console.error('Resposta de erro:', errorText);
       return extractArticleSections(text);
     }
 
     const data = await response.json();
     const content = data.choices[0].message.content;
+    
+    console.log('Resposta da IA (primeiros 1000 chars):', content.substring(0, 1000));
     
     // Remover markdown code blocks se presentes
     const jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -186,7 +209,15 @@ ${text.substring(0, 15000)}`;
       }));
     }
 
-    console.log('Extração por IA concluída com sucesso');
+    console.log('Seções extraídas com sucesso:');
+    console.log('- Title:', result.title ? 'OK' : 'VAZIO');
+    console.log('- Introduction:', result.introduction ? 'OK' : 'VAZIO');
+    console.log('- Methodology:', result.methodology ? 'OK' : 'VAZIO');
+    console.log('- Results:', result.results ? 'OK' : 'VAZIO');
+    console.log('- Conclusion:', result.conclusion ? 'OK' : 'VAZIO');
+    console.log('- References:', result.references ? 'OK' : 'VAZIO');
+    console.log('- Theoretical Topics:', result.theoreticalTopics?.length || 0);
+    
     return result;
 
   } catch (error) {
