@@ -78,7 +78,9 @@ async function parsePDF(buffer: ArrayBuffer): Promise<string> {
 }
 
 async function parseDOCX(buffer: ArrayBuffer): Promise<string> {
-  const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+  // Converter ArrayBuffer para Buffer
+  const uint8Array = new Uint8Array(buffer);
+  const result = await mammoth.extractRawText({ buffer: uint8Array });
   return result.value;
 }
 
