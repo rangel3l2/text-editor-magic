@@ -11,16 +11,16 @@ class ContentValidator {
     try {
       console.log(`Validando título: ${title}`);
       
-      // Se o título for muito curto, retornar erro
+      // Se o título for muito curto, retornar erro com metodologia Scaffolding
       if (title.length < 5) {
         return {
           isValid: false,
           feedbacks: [{
             id: `short-${Date.now()}`,
             type: 'warning',
-            title: '⚠️ Título muito curto',
-            explanation: `O ${sectionName.toLowerCase()} precisa ser mais descritivo.`,
-            suggestion: `Elabore o ${sectionName.toLowerCase()} para ter pelo menos 10 caracteres.`
+            title: '💭 Vamos começar juntos!',
+            explanation: `Usando a Teoria do Andaime, vejo que você está começando a escrever o ${sectionName.toLowerCase()}. Ótimo! Estou aqui para orientar você através de perguntas.`,
+            suggestion: `Me conte: sobre qual tema você quer pesquisar? O que mais te interessa nesse assunto?`
           }]
         };
       }
@@ -28,14 +28,17 @@ class ContentValidator {
       // Prompt para validação do título usando Teoria do Andaime
       const prompt = `
       Você é a Orienta.IA, uma Orientadora Virtual do IFMS especializada em metodologia científica.
-      Sua metodologia é baseada na Teoria do Andaime (Scaffolding).
+      Sua metodologia é baseada na TEORIA DO ANDAIME (SCAFFOLDING) de Vygotsky e Bruner.
 
-      REGRAS IMPORTANTES:
+      IMPORTANTE: Em TODA resposta, INICIE o campo "explanation" mencionando explicitamente que você está usando a Teoria do Andaime.
+
+      REGRAS DA METODOLOGIA SCAFFOLDING:
       1. NUNCA dê respostas prontas ou reescreva o título
       2. SEMPRE faça perguntas orientadoras primeiro
       3. Forneça estrutura, não conteúdo
       4. Use linguagem encorajadora e positiva
       5. Guie o aluno a pensar, não dê a resposta
+      6. SEMPRE mencione que está usando a Teoria do Andaime
 
       Título atual: "${title}"
 
@@ -51,7 +54,7 @@ class ContentValidator {
           {
             "type": "success" | "tip" | "warning" | "excellent",
             "title": "Título curto com emoji (💭 / 🤔 / ✅ / ✨)",
-            "explanation": "Reconheça o que o aluno fez até agora",
+            "explanation": "INICIE com 'Usando a Teoria do Andaime...' e depois reconheça o que o aluno fez",
             "suggestion": "Faça uma PERGUNTA orientadora, não dê a resposta pronta"
           }
         ]
@@ -59,12 +62,12 @@ class ContentValidator {
 
       EXEMPLOS de feedback com andaime:
       - ❌ ERRADO: "Melhore o título para: 'A Influência da Tecnologia...'"
-      - ✅ CORRETO: "Você mencionou 'tecnologia'. Me conte: qual aspecto específico da tecnologia você quer pesquisar? Em que contexto?"
+      - ✅ CORRETO: "Usando a Teoria do Andaime, vejo que você mencionou 'tecnologia'. Me conte: qual aspecto específico da tecnologia você quer pesquisar? Em que contexto?"
       
       - ❌ ERRADO: "O título está muito genérico"
-      - ✅ CORRETO: "Vejo que você escolheu um tema amplo. Vamos delimitar juntos: o que exatamente dentro desse tema você quer investigar?"
+      - ✅ CORRETO: "Usando a Teoria do Andaime para orientar você: vejo que escolheu um tema amplo. Vamos delimitar juntos: o que exatamente dentro desse tema você quer investigar?"
 
-      Gere 1-2 feedbacks usando perguntas orientadoras.
+      Gere 1-2 feedbacks usando perguntas orientadoras e SEMPRE mencionando a metodologia no início do explanation.
       `;
 
       const response = await this.geminiClient.generateContent(prompt);
@@ -112,32 +115,35 @@ class ContentValidator {
     try {
       console.log(`Validando conteúdo da seção: ${sectionName}`);
       
-      // Se o conteúdo for muito curto, retornar erro
+      // Se o conteúdo for muito curto, retornar erro com metodologia Scaffolding
       if (content.length < 10) {
         return {
           isValid: false,
           feedbacks: [{
             id: `short-${Date.now()}`,
             type: 'warning',
-            title: '⚠️ Conteúdo muito curto',
-            explanation: `O conteúdo da seção ${sectionName} precisa ser mais desenvolvido.`,
-            suggestion: `Elabore o conteúdo da seção ${sectionName} para ter pelo menos 50 caracteres.`
+            title: '💭 Vamos construir juntos!',
+            explanation: `Usando a Teoria do Andaime, vejo que você está começando a seção ${sectionName}. Ótimo início!`,
+            suggestion: `Me conte: o que você já sabe sobre essa parte do artigo? Vamos desenvolver juntos através de perguntas orientadoras.`
           }]
         };
       }
 
-      // Prompt para validação do conteúdo usando Teoria do Andaime
+      // Prompt base usando Teoria do Andaime
       let prompt = `
       Você é a Orienta.IA, uma Orientadora Virtual do IFMS especializada em metodologia científica.
-      Sua metodologia é baseada na Teoria do Andaime (Scaffolding).
+      Sua metodologia é baseada na TEORIA DO ANDAIME (SCAFFOLDING) de Vygotsky e Bruner.
 
-      REGRAS DA METODOLOGIA DO ANDAIME:
+      IMPORTANTE: Em TODA resposta, INICIE o campo "explanation" mencionando explicitamente que você está usando a Teoria do Andaime.
+
+      REGRAS DA METODOLOGIA SCAFFOLDING:
       1. NUNCA escreva conteúdo pelo aluno
       2. SEMPRE faça perguntas orientadoras primeiro
       3. Forneça estrutura e orientação, não conteúdo pronto
       4. Reconheça o que está bom antes de apontar melhorias
       5. Use perguntas para guiar o raciocínio do aluno
       6. Mantenha tom encorajador e pedagógico
+      7. SEMPRE mencione que está usando a Teoria do Andaime
 
       Seção: "${sectionName}"
       Conteúdo: "${content.substring(0, 5000)}"
@@ -154,7 +160,7 @@ class ContentValidator {
           {
             "type": "success" | "tip" | "warning" | "excellent",
             "title": "Título com emoji (💭 / 🤔 / ✅ / ✨)",
-            "explanation": "Reconheça especificamente o que o aluno escreveu",
+            "explanation": "INICIE com 'Usando a Teoria do Andaime...' e depois reconheça especificamente o que o aluno escreveu",
             "suggestion": "Faça uma PERGUNTA orientadora (não dê a resposta)"
           }
         ]
@@ -162,67 +168,57 @@ class ContentValidator {
 
       EXEMPLOS de feedback com andaime:
       - ❌ ERRADO: "Adicione mais contextualização no primeiro parágrafo"
-      - ✅ CORRETO: "Você apresentou o tema. Agora me diga: por que esse tema é relevante hoje? O que motivou você a pesquisá-lo?"
+      - ✅ CORRETO: "Usando a Teoria do Andaime, vejo que você apresentou o tema. Agora me diga: por que esse tema é relevante hoje? O que motivou você a pesquisá-lo?"
       
       - ❌ ERRADO: "O problema de pesquisa precisa ser mais específico"
-      - ✅ CORRETO: "Você identificou um problema interessante. Vamos delimitar: exatamente qual aspecto desse problema você quer investigar?"
+      - ✅ CORRETO: "Usando a Teoria do Andaime para orientar: você identificou um problema interessante. Vamos delimitar: exatamente qual aspecto desse problema você quer investigar?"
 
-      Gere 1-3 feedbacks usando perguntas orientadoras.
+      Gere 1-3 feedbacks usando perguntas orientadoras e SEMPRE mencionando a metodologia no início do explanation.
       `;
 
+      // Prompts específicos para cada seção
       if (sectionName.toLowerCase().includes("introdução completa")) {
         prompt = `
-        Você é a Orienta.IA, Orientadora Virtual do IFMS usando a Teoria do Andaime.
+        Você é a Orienta.IA, Orientadora Virtual do IFMS usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
-        REGRAS DO ANDAIME:
-        - NUNCA reescreva a introdução pelo aluno
-        - Faça perguntas orientadoras
-        - Reconheça o que está bom
-        - Guie com perguntas, não com respostas
+        IMPORTANTE: SEMPRE inicie o campo "explanation" mencionando que está usando a Teoria do Andaime.
 
         Introdução: "${content.substring(0, 5000)}"
 
         Analise a introdução completa e:
-        1. Reconheça os elementos presentes (contextualização, problema, objetivos, justificativa)
-        2. Para cada elemento que precisa melhorar, faça uma PERGUNTA orientadora
-        3. Use perguntas como: "Me explique melhor...", "Por que você acha que...", "Como você poderia..."
+        1. INICIE o explanation com "Usando a Teoria do Andaime..."
+        2. Reconheça os elementos presentes
+        3. Faça PERGUNTAS orientadoras para melhorar
 
-        Retorne no formato JSON:
+        Retorne no formato JSON com feedbacks usando perguntas orientadoras e sempre mencionando a metodologia.
         {
           "isValid": boolean,
           "feedbacks": [
             {
               "type": "success" | "tip" | "warning" | "excellent",
               "title": "Título com emoji",
-              "explanation": "Reconheça o que o aluno escreveu",
-              "suggestion": "Faça uma PERGUNTA orientadora"
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
+              "suggestion": "Pergunta orientadora"
             }
           ]
         }
-
-        Gere 2-4 feedbacks usando perguntas que façam o aluno pensar e melhorar.
         `;
       } else if (sectionName.toLowerCase() === "tema") {
         prompt = `
-        Você é a Orienta.IA usando a Teoria do Andaime.
+        Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
-        REGRAS: Faça perguntas orientadoras, não dê respostas prontas.
+        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
         Tema: "${content.substring(0, 5000)}"
 
-        Analise e:
-        1. Reconheça o tema apresentado
-        2. Faça perguntas para o aluno contextualizar melhor
-        3. Use perguntas como: "Por que esse tema é importante?", "Que contexto atual justifica estudá-lo?"
-
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras.
+        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
         {
           "isValid": boolean,
           "feedbacks": [
             {
               "type": "success" | "tip" | "warning" | "excellent",
               "title": "Título com emoji",
-              "explanation": "Reconheça o tema",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
               "suggestion": "Pergunta orientadora"
             }
           ]
@@ -230,25 +226,20 @@ class ContentValidator {
         `;
       } else if (sectionName.toLowerCase() === "problema") {
         prompt = `
-        Você é a Orienta.IA usando a Teoria do Andaime.
+        Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
-        REGRAS: Faça perguntas orientadoras, não dê respostas prontas.
+        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
         Problema: "${content.substring(0, 5000)}"
 
-        Analise e:
-        1. Reconheça o problema apresentado
-        2. Faça perguntas para delimitar melhor
-        3. Use perguntas como: "Qual aspecto específico você quer investigar?", "Que lacuna você identificou?"
-
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras.
+        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
         {
           "isValid": boolean,
           "feedbacks": [
             {
               "type": "success" | "tip" | "warning" | "excellent",
               "title": "Título com emoji",
-              "explanation": "Reconheça o problema",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
               "suggestion": "Pergunta orientadora"
             }
           ]
@@ -256,78 +247,41 @@ class ContentValidator {
         `;
       } else if (sectionName.toLowerCase() === "objetivos") {
         prompt = `
-        Você é a Orienta.IA usando a Teoria do Andaime.
+        Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
-        REGRAS: Faça perguntas orientadoras, não dê respostas prontas.
+        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
         Objetivos: "${content.substring(0, 5000)}"
 
-        Analise e:
-        1. Reconheça os objetivos apresentados
-        2. Faça perguntas para refinar
-        3. Use perguntas como: "O que exatamente você pretende alcançar?", "Como isso responde ao seu problema?"
-
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras.
+        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
         {
           "isValid": boolean,
           "feedbacks": [
             {
               "type": "success" | "tip" | "warning" | "excellent",
               "title": "Título com emoji",
-              "explanation": "Reconheça os objetivos",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
               "suggestion": "Pergunta orientadora"
             }
           ]
         }
         `;
-      } 
-      else if (sectionName.toLowerCase().includes("introdução") || sectionName.toLowerCase().includes("tema") || sectionName.toLowerCase().includes("problema") || sectionName.toLowerCase().includes("objetivos")) {
+      } else if (sectionName.toLowerCase().includes("metodologia")) {
         prompt = `
-        Você é a Orienta.IA usando a Teoria do Andaime.
+        Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
-        REGRAS: Faça perguntas orientadoras, não dê respostas prontas.
-
-        Seção: ${sectionName}
-        Conteúdo: "${content.substring(0, 5000)}"
-
-        Analise e faça perguntas que ajudem o aluno a desenvolver melhor esta parte da introdução.
-
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras.
-        {
-          "isValid": boolean,
-          "feedbacks": [
-            {
-              "type": "success" | "tip" | "warning" | "excellent",
-              "title": "Título com emoji",
-              "explanation": "Reconheça o que foi escrito",
-              "suggestion": "Pergunta orientadora"
-            }
-          ]
-        }
-        `;
-      }
-      // Mantenha as outras condições existentes
-      else if (sectionName.toLowerCase().includes("metodologia")) {
-        prompt = `
-        Você é a Orienta.IA usando a Teoria do Andaime.
-
-        REGRAS: Faça perguntas orientadoras sobre a metodologia.
+        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
         Metodologia: "${content.substring(0, 5000)}"
 
-        Analise e faça perguntas como:
-        - "Que tipo de pesquisa você está realizando?"
-        - "Como você pretende coletar os dados?"
-        - "Por que escolheu essa abordagem?"
-
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras.
+        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
         {
           "isValid": boolean,
           "feedbacks": [
             {
               "type": "success" | "tip" | "warning" | "excellent",
               "title": "Título com emoji",
-              "explanation": "Reconheça a metodologia",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
               "suggestion": "Pergunta orientadora"
             }
           ]
@@ -335,25 +289,20 @@ class ContentValidator {
         `;
       } else if (sectionName.toLowerCase().includes("resultado") || sectionName.toLowerCase().includes("discussão")) {
         prompt = `
-        Você é a Orienta.IA usando a Teoria do Andaime.
+        Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
-        REGRAS: Faça perguntas orientadoras sobre resultados/discussão.
+        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
         Resultados/Discussão: "${content.substring(0, 5000)}"
 
-        Analise e faça perguntas como:
-        - "O que seus dados revelaram?"
-        - "Isso confirma ou contradiz a literatura?"
-        - "Quais são as implicações desses achados?"
-
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras.
+        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
         {
           "isValid": boolean,
           "feedbacks": [
             {
               "type": "success" | "tip" | "warning" | "excellent",
               "title": "Título com emoji",
-              "explanation": "Reconheça os resultados",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
               "suggestion": "Pergunta orientadora"
             }
           ]
@@ -361,25 +310,20 @@ class ContentValidator {
         `;
       } else if (sectionName.toLowerCase().includes("conclusão")) {
         prompt = `
-        Você é a Orienta.IA usando a Teoria do Andaime.
+        Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
-        REGRAS: Faça perguntas orientadoras sobre a conclusão.
+        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
         Conclusão: "${content.substring(0, 5000)}"
 
-        Analise e faça perguntas como:
-        - "Seu objetivo foi alcançado?"
-        - "Que contribuições seu trabalho traz?"
-        - "Que pesquisas futuras você sugere?"
-
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras.
+        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
         {
           "isValid": boolean,
           "feedbacks": [
             {
               "type": "success" | "tip" | "warning" | "excellent",
               "title": "Título com emoji",
-              "explanation": "Reconheça a conclusão",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
               "suggestion": "Pergunta orientadora"
             }
           ]

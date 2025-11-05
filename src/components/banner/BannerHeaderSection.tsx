@@ -151,7 +151,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       if (cleanValue && cleanValue.length > 10) {
         validateTitle(value);
       }
-    }, 2000);
+    }, 4000); // Aumentado para 4 segundos para garantir que o usuário terminou de digitar
     
     setFormatTimeout(newTimeout);
   };
