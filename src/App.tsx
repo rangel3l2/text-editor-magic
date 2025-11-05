@@ -11,6 +11,7 @@ import InterventionProjectEditor from "@/pages/InterventionProjectEditor";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ValidationProvider } from "@/contexts/ValidationContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import CookieConsent from "@/components/CookieConsent";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -30,8 +31,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <AuthProvider>
-          <Router>
-            <Routes>
+          <ValidationProvider>
+            <Router>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/admin" element={<AdminSettings />} />
@@ -43,10 +45,11 @@ function App() {
               <Route path="/intervention-project" element={<InterventionProjectEditor />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
-            </Routes>
-            <Toaster />
-            <CookieConsent />
-          </Router>
+              </Routes>
+              <Toaster />
+              <CookieConsent />
+            </Router>
+          </ValidationProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
