@@ -16,6 +16,7 @@ import IntroductionEditor from "@/components/academic/IntroductionEditor";
 import AcademicAdvisor from "@/components/article/AcademicAdvisor";
 import { ArticleTestUpload } from "@/components/article/ArticleTestUpload";
 import { useIsAdmin } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
@@ -37,11 +38,55 @@ const ArticleEditor = () => {
     });
   };
 
-  const handleDownload = () => {
-    toast({
-      title: "Download",
-      description: "Função de download em desenvolvimento...",
-    });
+  const handleDownload = async () => {
+    // Validar se há conteúdo mínimo
+    if (!content.title || !content.abstract) {
+      toast({
+        title: "Conteúdo incompleto",
+        description: "Preencha pelo menos o título e o resumo antes de gerar o PDF.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Gerando LaTeX...",
+        description: "Aguarde enquanto preparamos seu artigo científico.",
+      });
+
+      const { data, error } = await supabase.functions.invoke('generate-article-latex', {
+        body: { content }
+      });
+
+      if (error) throw error;
+
+      if (data?.latex) {
+        // Criar arquivo .tex para download
+        const blob = new Blob([data.latex], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${content.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'artigo'}.tex`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast({
+          title: "LaTeX gerado com sucesso!",
+          description: "Código LaTeX baixado. Cole em Overleaf.com ou TeXstudio para gerar o PDF com formatação ABNT completa.",
+          duration: 8000,
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao gerar LaTeX:', error);
+      toast({
+        title: "Erro ao gerar LaTeX",
+        description: "Não foi possível gerar o arquivo. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleShare = () => {

@@ -1,221 +1,187 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
-// Generate LaTeX document for academic article (ABNT/IFMS format)
+// Gerar documento LaTeX para artigo científico ABNT
 const generateArticleLatex = (content: any): string => {
   const cleanLatex = (text: string) => {
     if (!text) return '';
+    
     return text
-      .replace(/&/g, '\\&')
-      .replace(/%/g, '\\%')
-      .replace(/\$/g, '\\$')
-      .replace(/#/g, '\\#')
-      .replace(/_/g, '\\_')
-      .replace(/{/g, '\\{')
-      .replace(/}/g, '\\}')
+      .replace(/<p>/gi, '')
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<strong>(.*?)<\/strong>/gi, '\\textbf{$1}')
+      .replace(/<em>(.*?)<\/em>/gi, '\\textit{$1}')
+      .replace(/<ul>/gi, '\\begin{itemize}\n')
+      .replace(/<\/ul>/gi, '\\end{itemize}\n')
+      .replace(/<ol>/gi, '\\begin{enumerate}\n')
+      .replace(/<\/ol>/gi, '\\end{enumerate}\n')
+      .replace(/<li>(.*?)<\/li>/gi, '\\item $1\n')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '\\&')
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/<[^>]+>/g, '')
+      .replace(/[%$#_{}]/g, (match) => `\\${match}`)
       .replace(/~/g, '\\textasciitilde{}')
       .replace(/\^/g, '\\textasciicircum{}')
-      .replace(/<[^>]*>/g, ''); // Remove HTML tags
+      .trim();
   };
 
-  const title = cleanLatex(content.title || '');
-  const subtitle = cleanLatex(content.subtitle || '');
-  const authors = cleanLatex(content.authors || '');
-  const advisors = cleanLatex(content.advisors || '');
-  const abstract = cleanLatex(content.abstract || '');
-  const keywords = cleanLatex(content.keywords || '');
-  const englishAbstract = cleanLatex(content.englishAbstract || '');
-  const englishKeywords = cleanLatex(content.englishKeywords || '');
-  const introduction = cleanLatex(content.introduction || '');
-  const methodology = cleanLatex(content.methodology || '');
-  const results = cleanLatex(content.results || '');
-  const conclusion = cleanLatex(content.conclusion || '');
-  const references = cleanLatex(content.references || '');
-
-  // Process theoretical topics
-  const theoreticalSections = (content.theoreticalTopics || [])
-    .map((topic: any, index: number) => {
-      const topicTitle = cleanLatex(topic.title || '');
-      const topicContent = cleanLatex(topic.content || '');
-      return `\\section{${topicTitle.toUpperCase()}}\n${topicContent}\n`;
-    })
-    .join('\n');
-
-  return `\\documentclass[12pt,a4paper]{article}
+  let latex = `\\documentclass[12pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
+\\usepackage[portuguese]{babel}
 \\usepackage[T1]{fontenc}
-\\usepackage[brazilian]{babel}
-\\usepackage{geometry}
-\\usepackage{indentfirst}
-\\usepackage{setspace}
 \\usepackage{times}
-\\usepackage{ragged2e}
+\\usepackage{indentfirst}
+\\usepackage{geometry}
+\\usepackage{setspace}
+\\usepackage{titlesec}
+\\usepackage{enumitem}
 
-% Margens ABNT/IFMS: superior 3cm, direita 2cm, inferior 2cm, esquerda 3cm
+% Configurações ABNT
 \\geometry{
   a4paper,
-  top=3cm,
+  left=3cm,
   right=2cm,
-  bottom=2cm,
-  left=3cm
+  top=3cm,
+  bottom=2cm
 }
 
-% Espaçamento entre linhas 1,5
-\\setstretch{1.5}
+% Espaçamento 1.5
+\\onehalfspacing
 
-% Recuo de parágrafo
+% Recuo de parágrafo 1.25cm
 \\setlength{\\parindent}{1.25cm}
 
-% Configuração de cabeçalho e rodapé
-\\usepackage{fancyhdr}
-\\pagestyle{fancy}
-\\fancyhf{}
-\\fancyhead[R]{\\thepage}
-\\renewcommand{\\headrulewidth}{0pt}
-
-% Configuração de seções
-\\usepackage{titlesec}
-\\titleformat{\\section}
-  {\\normalfont\\fontsize{12}{15}\\bfseries}
-  {\\thesection}{1em}{}
-\\titleformat{\\subsection}
-  {\\normalfont\\fontsize{12}{15}\\bfseries}
-  {\\thesubsection}{1em}{}
+% Formatação de seções (ABNT)
+\\titleformat{\\section}{\\normalfont\\fontsize{12}{15}\\bfseries\\MakeUppercase}{\\thesection}{1em}{}
+\\titleformat{\\subsection}{\\normalfont\\fontsize{12}{15}\\bfseries}{\\thesubsection}{1em}{}
 
 \\begin{document}
 
-% Remove numeração da primeira página
-\\thispagestyle{empty}
-
-% Título
+% Capa
 \\begin{center}
-\\textbf{\\MakeUppercase{${title}}}${subtitle ? `\\\\\n${subtitle}` : ''}
+\\MakeUppercase{\\textbf{${cleanLatex(content.institution || 'INSTITUTO FEDERAL')}}}
+
+\\vspace{3cm}
+
+\\MakeUppercase{\\textbf{${cleanLatex(content.title)}}}
+
+${content.subtitle ? `\\vspace{0.5cm}\n\n${cleanLatex(content.subtitle)}` : ''}
+
+\\vfill
+
+${cleanLatex(content.authors || '')}
+
+\\vfill
+
+${new Date().getFullYear()}
 \\end{center}
 
-\\vspace{1cm}
-
-% Autores e Orientadores
-\\begin{center}
-${authors}${advisors ? `\\\\\n\\vspace{0.5cm}\n${advisors}` : ''}
-\\end{center}
-
-\\vspace{1cm}
+\\newpage
 
 % Resumo
-\\begin{flushleft}
+\\begin{center}
 \\textbf{RESUMO}
-\\end{flushleft}
+\\end{center}
 
-\\begin{justify}
-${abstract}
+\\noindent ${cleanLatex(content.abstract)}
 
-\\textbf{Palavras-chave:} ${keywords}
-\\end{justify}
+\\noindent \\textbf{Palavras-chave:} ${cleanLatex(content.keywords)}
 
 \\vspace{1cm}
 
 % Abstract
-\\begin{flushleft}
+\\begin{center}
 \\textbf{ABSTRACT}
-\\end{flushleft}
+\\end{center}
 
-\\begin{justify}
-${englishAbstract}
+\\noindent ${cleanLatex(content.englishAbstract)}
 
-\\textbf{Keywords:} ${englishKeywords}
-\\end{justify}
+\\noindent \\textbf{Keywords:} ${cleanLatex(content.englishKeywords)}
 
 \\newpage
-\\setcounter{page}{1}
 
 % Introdução
 \\section{INTRODUÇÃO}
-\\begin{justify}
-${introduction}
-\\end{justify}
+${cleanLatex(content.introduction)}
 
-% Referencial Teórico
-${theoreticalSections}
+`;
 
-% Metodologia
-\\section{METODOLOGIA}
-\\begin{justify}
-${methodology}
-\\end{justify}
+  // Referencial teórico
+  if (content.theoreticalTopics && content.theoreticalTopics.length > 0) {
+    content.theoreticalTopics.forEach((topic: any) => {
+      latex += `\\section{${cleanLatex(topic.title).toUpperCase()}}\n${cleanLatex(topic.content)}\n\n`;
+    });
+  }
 
-% Resultados e Discussão
-\\section{RESULTADOS E DISCUSSÃO}
-\\begin{justify}
-${results}
-\\end{justify}
+  // Metodologia
+  const methSection = 2 + (content.theoreticalTopics?.length || 0);
+  latex += `\\section{METODOLOGIA}\n${cleanLatex(content.methodology)}\n\n`;
 
-% Conclusão
-\\section{CONCLUSÃO}
-\\begin{justify}
-${conclusion}
-\\end{justify}
+  // Resultados
+  latex += `\\section{RESULTADOS E DISCUSSÃO}\n${cleanLatex(content.results)}\n\n`;
 
-% Referências (alinhadas à esquerda, espaçamento simples)
-\\newpage
-\\begin{flushleft}
+  // Conclusão
+  latex += `\\section{CONCLUSÃO}\n${cleanLatex(content.conclusion)}\n\n`;
+
+  // Referências
+  latex += `\\begin{center}
 \\textbf{REFERÊNCIAS}
-\\end{flushleft}
+\\end{center}
 
-\\begin{spacing}{1}
-\\begin{flushleft}
-${references}
-\\end{flushleft}
-\\end{spacing}
+\\noindent ${cleanLatex(content.references)}
 
 \\end{document}`;
+
+  return latex;
 };
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { content } = await req.json()
-    
-    if (!content) {
+    const { content } = await req.json();
+
+    if (!content || !content.title) {
       return new Response(
-        JSON.stringify({ error: 'Content is required' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
+        JSON.stringify({ error: "Título é obrigatório" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    console.log('Generating LaTeX for article:', content);
+    console.log('Gerando artigo LaTeX para:', content.title);
 
     const latexSource = generateArticleLatex(content);
     
-    console.log('LaTeX source generated, length:', latexSource.length);
+    console.log('LaTeX gerado, tamanho:', latexSource.length);
 
+    // Retornar LaTeX gerado (em produção, compilaria para PDF)
     return new Response(
       JSON.stringify({ 
         latex: latexSource,
-        message: 'LaTeX source generated for article with ABNT/IFMS formatting'
+        message: 'Código LaTeX gerado com sucesso. Para visualizar o PDF, copie o código e cole em um editor LaTeX online como Overleaf.'
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+
+  } catch (error) {
+    console.error('Erro ao gerar artigo:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : "Erro desconhecido"
       }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
       }
-    )
-  } catch (error) {
-    console.error('Error:', error)
-    return new Response(
-      JSON.stringify({ error: 'Failed to generate LaTeX' }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
-      }
-    )
+    );
   }
-})
+});
