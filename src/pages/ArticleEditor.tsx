@@ -17,6 +17,8 @@ import AcademicAdvisor from "@/components/article/AcademicAdvisor";
 import { ArticleTestUpload } from "@/components/article/ArticleTestUpload";
 import { useIsAdmin } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
+import { ValidationProvider } from "@/contexts/ValidationContext";
+import ValidationToggleButton from "@/components/editor/ValidationToggleButton";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
@@ -131,16 +133,20 @@ const ArticleEditor = () => {
   }
 
   return (
-    <MainLayout>
-      <div className="container mx-auto p-6 space-y-6">
-        <EditorHeader
-          title={content.title || "Novo Artigo Científico"}
-          onDownload={handleDownload}
-          onShare={handleShare}
-          onPreview={() => setPreviewOpen(true)}
-          onClear={handleClear}
-          adminButton={isAdmin ? <ArticleTestUpload onArticleParsed={handleArticleParsed} /> : undefined}
-        />
+    <ValidationProvider>
+      <MainLayout>
+        <div className="container mx-auto p-6 space-y-6">
+          <div className="flex items-center justify-between gap-4">
+            <EditorHeader
+              title={content.title || "Novo Artigo Científico"}
+              onDownload={handleDownload}
+              onShare={handleShare}
+              onPreview={() => setPreviewOpen(true)}
+              onClear={handleClear}
+              adminButton={isAdmin ? <ArticleTestUpload onArticleParsed={handleArticleParsed} /> : undefined}
+            />
+            <ValidationToggleButton />
+          </div>
 
         {/* Orientação Acadêmica */}
         <div className="mb-6">
@@ -405,6 +411,7 @@ const ArticleEditor = () => {
         </Tabs>
       </div>
     </MainLayout>
+    </ValidationProvider>
   );
 };
 

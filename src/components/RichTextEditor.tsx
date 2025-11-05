@@ -7,6 +7,7 @@ import ValidationFeedback from './editor/ValidationFeedback';
 import { useEditorValidation } from './editor/useEditorValidation';
 import { useEditorProgress } from './editor/useEditorProgress';
 import { cleanHtmlTags } from '@/utils/latexProcessor';
+import { useValidationContext } from '@/contexts/ValidationContext';
 
 interface RichTextEditorProps {
   value: string;
@@ -31,6 +32,7 @@ const RichTextEditor = ({
   const [editorInstance, setEditorInstance] = useState<any>(null);
   const [shouldValidate, setShouldValidate] = useState(false);
   const [contentToValidate, setContentToValidate] = useState('');
+  const { isValidationVisible } = useValidationContext();
 
   const {
     validationResult,
@@ -39,7 +41,7 @@ const RichTextEditor = ({
     validateContent,
     scheduleValidation,
     currentSection
-  } = useEditorValidation(sectionName);
+  } = useEditorValidation(sectionName, isValidationVisible);
 
   const {
     progress,
@@ -49,6 +51,8 @@ const RichTextEditor = ({
 
   // Load cached validation only on mount if there's content
   useEffect(() => {
+    if (!isValidationVisible) return;
+    
     const cleaned = cleanHtmlTags(value || '').trim();
     const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
     const minLen = isTitle ? 5 : 20;
@@ -63,10 +67,26 @@ const RichTextEditor = ({
       validateContent(value);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run on mount
+  }, []);
+  
+  // Validar automaticamente quando as validações voltarem a ser mostradas
+  useEffect(() => {
+    if (isValidationVisible && value) {
+      const cleaned = cleanHtmlTags(value || '').trim();
+      const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
+      const minLen = isTitle ? 5 : 20;
+      
+      if (cleaned.length > minLen) {
+        validateContent(value);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isValidationVisible]);
 
   // Validar conteúdo com debounce (usando Teoria do Andaime - aguarda o aluno terminar)
   useEffect(() => {
+    if (!isValidationVisible) return; // Não validar se as validações estão escondidas
+    
     if (shouldValidate && contentToValidate) {
       const timeout = setTimeout(() => {
         validateContent(contentToValidate);
@@ -76,7 +96,7 @@ const RichTextEditor = ({
       
       return () => clearTimeout(timeout);
     }
-  }, [shouldValidate, contentToValidate, validateContent]);
+  }, [shouldValidate, contentToValidate, validateContent, isValidationVisible]);
 
   const { handleImageUpload } = ImageUploadHandler({
     onSuccess: (imageUrl) => {
@@ -119,6 +139,8 @@ const RichTextEditor = ({
   // Validar quando o usuário sai do campo (blur)
   const handleBlur = () => {
     setIsFocused(false);
+    if (!isValidationVisible) return; // Não validar se as validações estão escondidas
+    
     const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
     const minLen = isTitle ? 5 : 50;
     if (value && value.trim().length > minLen) {
@@ -152,12 +174,14 @@ const RichTextEditor = ({
         />
       )}
 
-      <ValidationFeedback 
-        validationResult={validationResult}
-        isValidating={isValidating}
-        errorMessage={errorMessage}
-        currentSection={currentSection}
-      />
+      {isValidationVisible && (
+        <ValidationFeedback 
+          validationResult={validationResult}
+          isValidating={isValidating}
+          errorMessage={errorMessage}
+          currentSection={currentSection}
+        />
+      )}
     </div>
   );
 };

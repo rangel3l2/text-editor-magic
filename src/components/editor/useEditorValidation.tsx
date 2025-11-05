@@ -6,7 +6,7 @@ import { ToastDescription } from './ToastDescription';
 import { cleanHtmlTags } from '@/utils/latexProcessor';
 import { getValidationCache, setValidationCache } from '@/utils/validationCache';
 
-export const useEditorValidation = (sectionName: string) => {
+export const useEditorValidation = (sectionName: string, isValidationEnabled: boolean = true) => {
   const [validationResult, setValidationResult] = useState<any>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -29,6 +29,12 @@ export const useEditorValidation = (sectionName: string) => {
   }, [sectionName]);
 
   const validateContent = useCallback(async (content: string) => {
+    // Não validar se as validações estão desabilitadas
+    if (!isValidationEnabled) {
+      console.log('Validation disabled - skipping');
+      return;
+    }
+    
     if (!content?.trim() || isValidatingRef.current) {
       console.log('Skipping validation - empty content or already validating');
       return;
@@ -224,7 +230,7 @@ export const useEditorValidation = (sectionName: string) => {
       setIsValidating(false);
       setCurrentSection('');
     }
-  }, [sectionName, toast, getValidationInterval]);
+  }, [sectionName, toast, getValidationInterval, isValidationEnabled]);
 
   const scheduleValidation = useCallback((content: string) => {
     if (validationTimeoutRef.current) {
