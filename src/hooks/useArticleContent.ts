@@ -150,6 +150,10 @@ export const useArticleContent = () => {
   };
 
   useEffect(() => {
+    // Resetar refs ao montar o componente
+    loadingRef.current = false;
+    toastShownRef.current = false;
+    
     // Prevenir múltiplas chamadas simultâneas
     if (!user || !id || loadingRef.current) {
       return;
@@ -252,7 +256,14 @@ export const useArticleContent = () => {
     };
 
     loadContent();
-  }, [id, user]); // Removido 'toast' das dependências para evitar loops
+
+    // Cleanup ao desmontar
+    return () => {
+      console.log('[ArticleContent] Component unmounting, resetting refs');
+      loadingRef.current = false;
+      toastShownRef.current = false;
+    };
+  }, [id, user, navigate]); // Adicionado navigate às dependências
 
   return {
     content,
