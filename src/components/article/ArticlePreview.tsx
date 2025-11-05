@@ -28,8 +28,8 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         {/* Resumo */}
         <div className="mb-8">
           <h2 className="section-title">RESUMO</h2>
-          <div className="mb-4 text-justify" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.abstract) }} />
-          <p className="text-justify">
+          <div className="mb-4 text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.abstract) }} />
+          <p className="text-justify hyphens-auto">
             <span className="font-bold">Palavras-chave:</span> {content.keywords}
           </p>
         </div>
@@ -37,8 +37,8 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         {/* Abstract */}
         <div className="mb-8">
           <h2 className="section-title">ABSTRACT</h2>
-          <div className="mb-4 text-justify" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.englishAbstract) }} />
-          <p className="text-justify">
+          <div className="mb-4 text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.englishAbstract) }} />
+          <p className="text-justify hyphens-auto">
             <span className="font-bold">Keywords:</span> {content.englishKeywords}
           </p>
         </div>
@@ -51,21 +51,21 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         )}
       </div>
 
-      {/* Página 2+ - Conteúdo (com numeração a partir da introdução) */}
-      <div className="academic-page numbered-page">
+      {/* Páginas de conteúdo - com numeração */}
+      <div className="academic-page content-page">
         <div className="page-number">1</div>
         
         {/* Introdução */}
         <div className="mb-8">
           <h2 className="section-title">1 INTRODUÇÃO</h2>
-          <div className="text-justify" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.introduction) }} />
+          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.introduction) }} />
         </div>
 
         {/* Tópicos do Referencial Teórico */}
         {content.theoreticalTopics.map((topic, index) => (
           <div key={topic.id} className="mb-8">
             <h2 className="section-title">{topic.order} {topic.title.toUpperCase()}</h2>
-            <div className="text-justify" dangerouslySetInnerHTML={{ __html: sanitizeHtml(topic.content) }} />
+            <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(topic.content) }} />
           </div>
         ))}
 
@@ -74,7 +74,7 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
           <h2 className="section-title">
             {2 + content.theoreticalTopics.length} METODOLOGIA
           </h2>
-          <div className="text-justify" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.methodology) }} />
+          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.methodology) }} />
         </div>
 
         {/* Resultados e Discussão */}
@@ -82,19 +82,19 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
           <h2 className="section-title">
             {2 + content.theoreticalTopics.length + 1} RESULTADOS E DISCUSSÃO
           </h2>
-          <div className="text-justify" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.results) }} />
+          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.results) }} />
         </div>
 
         {/* Conclusão */}
         <div className="mb-8">
           <h2 className="section-title">CONCLUSÃO</h2>
-          <div className="text-justify" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.conclusion) }} />
+          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.conclusion) }} />
         </div>
 
         {/* Referências */}
         <div className="references">
           <h2 className="section-title">REFERÊNCIAS</h2>
-          <div className="text-left" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.references) }} />
+          <div className="text-left leading-normal" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.references) }} />
         </div>
       </div>
     </div>

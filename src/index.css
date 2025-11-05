@@ -141,11 +141,15 @@
   font-size: 12pt !important;
   line-height: 1.5 !important;
   text-align: justify !important;
+  word-spacing: normal !important;
+  hyphens: auto !important;
 }
 
 .ck-editor__editable p {
   text-align: justify !important;
   margin-bottom: 0 !important;
+  word-spacing: normal !important;
+  hyphens: auto !important;
 }
 
 /* Estilo A4 para preview acadêmico - Container de páginas */
@@ -167,18 +171,20 @@
   width: 21cm;
   min-height: 29.7cm;
   margin: 0 auto 2rem auto;
-  padding: 3cm 2cm 2cm 3cm; /* Margens ABNT: superior 3cm, direita 2cm, inferior 2cm, esquerda 3cm */
+  padding: 3cm 2cm 2cm 3cm;
   background: white;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
   position: relative;
   page-break-after: always;
+  overflow: visible;
 }
 
 .academic-page.first-page {
   padding-top: 3cm;
+  min-height: auto;
 }
 
-.academic-page.numbered-page {
+.academic-page.content-page {
   padding-top: 2cm;
 }
 
@@ -187,6 +193,7 @@
   font-family: 'Times New Roman', Times, serif;
   font-weight: bold;
   text-align: center;
+  word-spacing: normal;
 }
 
 .academic-preview h2.section-title {
@@ -195,6 +202,13 @@
   text-align: left;
   margin-top: 1.5em;
   margin-bottom: 1em;
+}
+
+.academic-preview p,
+.academic-preview div {
+  text-align: justify !important;
+  word-spacing: normal !important;
+  hyphens: auto !important;
 }
 
 .academic-preview .references {
