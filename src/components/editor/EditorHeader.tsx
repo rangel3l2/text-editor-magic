@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { FileDown, Share2, Eye, RotateCcw } from "lucide-react";
+import { cleanHtmlTags } from '@/utils/latexProcessor';
 
 interface EditorHeaderProps {
   title: string;
@@ -20,9 +21,12 @@ const EditorHeader = ({
   onClear,
   adminButton
 }: EditorHeaderProps) => {
+  // Limpar tags HTML do título para exibição
+  const displayTitle = title ? cleanHtmlTags(title) : "Sem título";
+  
   return (
     <div className="flex items-center justify-between mb-6">
-      <h1 className="text-2xl font-bold">{title}</h1>
+      <h1 className="text-2xl font-bold">{displayTitle}</h1>
       <div className="flex items-center gap-2">
         {adminButton}
         <Button
