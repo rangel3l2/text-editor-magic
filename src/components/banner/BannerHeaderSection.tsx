@@ -151,7 +151,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       if (cleanValue && cleanValue.length > 10) {
         validateTitle(value);
       }
-    }, 4000); // Aumentado para 4 segundos para garantir que o usuário terminou de digitar
+    }, 5000); // 5 segundos para garantir que o usuário terminou de digitar (padrão Teoria do Andaime)
     
     setFormatTimeout(newTimeout);
   };
@@ -212,7 +212,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       if (value && value.replace(/<[^>]*>/g, '').trim()) {
         formatAuthors(value, "Discentes");
       }
-    }, 2000);
+    }, 5000); // 5 segundos para garantir que o usuário terminou de digitar
     
     setFormatTimeout(newTimeout);
   }, [handleChange, formatAuthors, formatTimeout]);
@@ -228,7 +228,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       if (value && value.replace(/<[^>]*>/g, '').trim()) {
         formatAuthors(value, "Docentes");
       }
-    }, 2000);
+    }, 5000); // 5 segundos para garantir que o usuário terminou de digitar
     
     setFormatTimeout(newTimeout);
   }, [handleChange, formatAuthors, formatTimeout]);

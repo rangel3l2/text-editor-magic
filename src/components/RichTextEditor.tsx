@@ -62,14 +62,14 @@ const RichTextEditor = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
 
-  // Validar conteúdo com debounce
+  // Validar conteúdo com debounce (usando Teoria do Andaime - aguarda o aluno terminar)
   useEffect(() => {
     if (shouldValidate && contentToValidate) {
       const timeout = setTimeout(() => {
         validateContent(contentToValidate);
         setShouldValidate(false);
         setContentToValidate('');
-      }, 2000);
+      }, 5000); // 5 segundos para garantir que o usuário terminou de digitar
       
       return () => clearTimeout(timeout);
     }

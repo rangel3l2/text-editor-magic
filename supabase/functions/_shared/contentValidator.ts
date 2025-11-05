@@ -176,8 +176,121 @@ class ContentValidator {
       Gere 1-3 feedbacks usando perguntas orientadoras e SEMPRE mencionando a metodologia no início do explanation.
       `;
 
-      // Prompts específicos para cada seção
-      if (sectionName.toLowerCase().includes("introdução completa")) {
+      // Prompts específicos para cada seção do TCC IFMS
+      if (sectionName.toLowerCase().includes("resumo") || sectionName.toLowerCase().includes("abstract")) {
+        prompt = `
+        Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
+
+        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
+
+        Resumo/Abstract: "${content.substring(0, 5000)}"
+
+        CONTEXTO IFMS: O resumo deve ser escrito POR ÚLTIMO, após o trabalho estar pronto.
+        Deve ter 100-250 palavras e seguir a estrutura ABNT 6028: Contextualização, Objetivo, Metodologia, Resultados, Conclusão.
+
+        Analise e faça perguntas como:
+        - "Qual o objetivo principal do seu trabalho?"
+        - "Qual foi sua metodologia?"
+        - "Quais seus principais resultados?"
+        - "Qual sua conclusão?"
+
+        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
+        {
+          "isValid": boolean,
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título com emoji",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
+              "suggestion": "Pergunta orientadora"
+            }
+          ]
+        }
+        `;
+      } else if (sectionName.toLowerCase().includes("palavras-chave") || sectionName.toLowerCase().includes("keywords")) {
+        prompt = `
+        Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
+
+        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
+
+        Palavras-chave: "${content.substring(0, 5000)}"
+
+        CONTEXTO IFMS: Devem ser 3-5 termos que representem a pesquisa (não muito genéricos).
+
+        Analise o resumo e título e faça perguntas como:
+        - "Se você fosse pesquisar seu próprio artigo em uma base de dados, quais termos você usaria?"
+        - "Esses termos são específicos suficiente para sua pesquisa?"
+
+        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
+        {
+          "isValid": boolean,
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título com emoji",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
+              "suggestion": "Pergunta orientadora"
+            }
+          ]
+        }
+        `;
+      } else if (sectionName.toLowerCase().includes("fundamentação") || sectionName.toLowerCase().includes("referencial teórico")) {
+        prompt = `
+        Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
+
+        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
+
+        Fundamentação Teórica: "${content.substring(0, 5000)}"
+
+        CONTEXTO IFMS: Deve apresentar autores relevantes, evitar plágio, e usar citações ABNT corretas (diretas, indiretas, apud).
+
+        Analise e faça perguntas como:
+        - "Quais autores fundamentam sua pesquisa?"
+        - "Como você está usando as citações deles?"
+        - "Está formatando corretamente segundo a ABNT?"
+
+        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
+        {
+          "isValid": boolean,
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título com emoji",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
+              "suggestion": "Pergunta orientadora"
+            }
+          ]
+        }
+        `;
+      } else if (sectionName.toLowerCase().includes("referências")) {
+        prompt = `
+        Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
+
+        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
+
+        Referências: "${content.substring(0, 5000)}"
+
+        CONTEXTO IFMS: As referências devem seguir ABNT NBR 6023 (alinhadas à esquerda, espaçamento simples).
+        Todas as citações no texto devem estar aqui, e vice-versa.
+
+        Analise e faça perguntas como:
+        - "Você tem certeza que todos os autores citados no texto estão listados aqui?"
+        - "A formatação está seguindo a ABNT?"
+
+        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
+        {
+          "isValid": boolean,
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título com emoji",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
+              "suggestion": "Pergunta orientadora"
+            }
+          ]
+        }
+        `;
+      } else if (sectionName.toLowerCase().includes("introdução completa")) {
         prompt = `
         Você é a Orienta.IA, Orientadora Virtual do IFMS usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
@@ -274,6 +387,15 @@ class ContentValidator {
 
         Metodologia: "${content.substring(0, 5000)}"
 
+        CONTEXTO IFMS: Deve descrever "como se fez" a pesquisa. Não confundir metodologia de pesquisa 
+        (ex: Estudo de Caso, Pesquisa-Ação) com ferramentas técnicas (ex: React, Supabase).
+        Pode ter subseções: Arquitetura do Sistema, Procedimentos de Validação.
+
+        Analise e faça perguntas como:
+        - "Que tipo de pesquisa você está realizando? (Pesquisa-Ação, Estudo de Caso, etc.)"
+        - "Como você pretende coletar os dados?"
+        - "Por que escolheu essa abordagem metodológica?"
+
         Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
         {
           "isValid": boolean,
@@ -295,6 +417,16 @@ class ContentValidator {
 
         Resultados/Discussão: "${content.substring(0, 5000)}"
 
+        CONTEXTO IFMS: Não se limite a descrever os dados. Faça a DISCUSSÃO conectando 
+        resultados com os autores da Fundamentação Teórica. 
+        Use formatos ABNT (Quadro, Tabela, Gráfico) para apresentar dados.
+
+        Analise e faça perguntas como:
+        - "O que seus dados revelaram?"
+        - "Isso confirma ou contradiz o que o Autor X (da sua Fundamentação) disse?"
+        - "Quais são as implicações práticas desses achados?"
+        - "Como você poderia apresentar esses dados visualmente (tabela, gráfico)?"
+
         Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
         {
           "isValid": boolean,
@@ -308,13 +440,22 @@ class ContentValidator {
           ]
         }
         `;
-      } else if (sectionName.toLowerCase().includes("conclusão")) {
+      } else if (sectionName.toLowerCase().includes("conclusão") || sectionName.toLowerCase().includes("considerações finais")) {
         prompt = `
         Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
         IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
-        Conclusão: "${content.substring(0, 5000)}"
+        Conclusão/Considerações Finais: "${content.substring(0, 5000)}"
+
+        CONTEXTO IFMS: Não apenas repetir o Resumo ou Introdução. 
+        Deve retomar os objetivos da Introdução e avaliar se foram alcançados.
+
+        Analise e faça perguntas como:
+        - "Seu trabalho conseguiu responder ao Objetivo 1? E ao Objetivo 2?"
+        - "Quais foram as limitações da sua pesquisa?"
+        - "O que você sugere para trabalhos futuros?"
+        - "Quais as contribuições práticas do seu trabalho?"
 
         Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
         {
