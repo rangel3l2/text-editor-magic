@@ -180,22 +180,22 @@ export const useArticleContent = () => {
       console.log(`[ArticleContent] Loading work ${id} for user ${user.id}`);
       
       try {
-        // Primeiro, verificar se o trabalho existe (query leve)
-        const { data: workMeta, error: metaError } = await supabase
+        // Carregar metadados e conteúdo em uma única consulta (reduz requisições)
+        const { data: work, error } = await supabase
           .from('work_in_progress')
-          .select('id, title, work_type')
+          .select('id, title, work_type, content')
           .eq('id', id)
           .eq('user_id', user.id)
           .maybeSingle();
 
         if (!mountedRef.current) return;
 
-        if (metaError) {
-          console.error('[ArticleContent] Supabase error:', metaError);
-          throw metaError;
+        if (error) {
+          console.error('[ArticleContent] Supabase error:', error);
+          throw error;
         }
         
-        if (!workMeta) {
+        if (!work) {
           console.error('[ArticleContent] Work not found:', id);
           setLoadError('Trabalho não encontrado');
           
@@ -217,38 +217,15 @@ export const useArticleContent = () => {
           return;
         }
 
-        console.log('[ArticleContent] Work metadata loaded:', workMeta.title);
+        console.log('[ArticleContent] Work loaded:', work.title);
         
-        // Agora carregar o conteúdo completo
-        const { data: workData, error: contentError } = await supabase
-          .from('work_in_progress')
-          .select('content')
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (!mountedRef.current) return;
-
-        if (contentError) {
-          console.error('[ArticleContent] Error loading content:', contentError);
-          throw contentError;
+        const loadedContent = (work.content as any as ArticleContent) ?? initialArticleContent;
+        
+        if (mountedRef.current) {
+          setContent(loadedContent);
+          loadedIdRef.current = id;
         }
 
-        if (workData?.content) {
-          const loadedContent = workData.content as any as ArticleContent;
-          console.log('[ArticleContent] Content loaded successfully');
-          
-          if (mountedRef.current) {
-            setContent(loadedContent);
-            loadedIdRef.current = id;
-          }
-        } else {
-          console.log('[ArticleContent] No content found, using defaults');
-          if (mountedRef.current) {
-            setContent(initialArticleContent);
-            loadedIdRef.current = id;
-          }
-        }
       } catch (error: any) {
         if (!mountedRef.current) return;
         
