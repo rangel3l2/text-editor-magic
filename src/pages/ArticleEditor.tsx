@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RichTextEditor from "@/components/RichTextEditor";
-import { useArticleContent } from "@/hooks/useArticleContent";
+import { useArticleContent, ArticleContent } from "@/hooks/useArticleContent";
 import { Separator } from "@/components/ui/separator";
 import ArticlePreviewPaginated from "@/components/article/ArticlePreviewPaginated";
 import { useState } from "react";
@@ -14,11 +14,28 @@ import { toast } from "@/components/ui/use-toast";
 import TheoreticalFramework from "@/components/article/TheoreticalFramework";
 import IntroductionEditor from "@/components/academic/IntroductionEditor";
 import AcademicAdvisor from "@/components/article/AcademicAdvisor";
+import { ArticleTestUpload } from "@/components/article/ArticleTestUpload";
+import { useIsAdmin } from "@/hooks/useUserRole";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
   const { content, handleChange, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
   const [previewOpen, setPreviewOpen] = useState(false);
+  const { data: isAdmin } = useIsAdmin(user);
+
+  const handleArticleParsed = (parsedContent: Partial<ArticleContent>) => {
+    // Preencher todos os campos com o conteúdo extraído
+    Object.entries(parsedContent).forEach(([key, value]) => {
+      if (value) {
+        handleChange(key as keyof ArticleContent, value);
+      }
+    });
+
+    toast({
+      title: "Artigo importado!",
+      description: "Todos os campos foram preenchidos automaticamente. Revise o conteúdo.",
+    });
+  };
 
   const handleDownload = () => {
     toast({
@@ -44,13 +61,18 @@ const ArticleEditor = () => {
   return (
     <MainLayout>
       <div className="container mx-auto p-6 space-y-6">
-        <EditorHeader
-          title="Novo Artigo Científico"
-          onDownload={handleDownload}
-          onShare={handleShare}
-          onPreview={() => setPreviewOpen(true)}
-          onClear={handleClear}
-        />
+        <div className="flex items-center gap-3">
+          <EditorHeader
+            title="Novo Artigo Científico"
+            onDownload={handleDownload}
+            onShare={handleShare}
+            onPreview={() => setPreviewOpen(true)}
+            onClear={handleClear}
+          />
+          {isAdmin && (
+            <ArticleTestUpload onArticleParsed={handleArticleParsed} />
+          )}
+        </div>
 
         {/* Orientação Acadêmica */}
         <div className="mb-6">
