@@ -65,16 +65,22 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
           <h2 className="section-title">RESUMO</h2>
           <div className="mb-4 text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(content.abstract)) }} />
           <p className="text-justify hyphens-auto">
-            <span className="font-bold">Palavras-chave:</span> {content.keywords}
+            <span className="font-bold">Palavras-chave:</span>{' '}
+            <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(content.keywords)) }} />
           </p>
         </div>
 
+      </div>
+
+      {/* Página 2 - Abstract (sem numeração) */}
+      <div className="academic-page first-page">
         {/* Abstract */}
         <div className="mb-8">
           <h2 className="section-title">ABSTRACT</h2>
           <div className="mb-4 text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(content.englishAbstract)) }} />
           <p className="text-justify hyphens-auto">
-            <span className="font-bold">Keywords:</span> {content.englishKeywords}
+            <span className="font-bold">Keywords:</span>{' '}
+            <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(content.englishKeywords)) }} />
           </p>
         </div>
 
@@ -86,9 +92,8 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         )}
       </div>
 
-      {/* Páginas de conteúdo - com numeração */}
+      {/* Páginas de conteúdo - numeração começa após introdução */}
       <div className="academic-page content-page">
-        <div className="page-number">1</div>
         
         {/* Introdução */}
         <div className="mb-8">
@@ -96,6 +101,12 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
           <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(content.introduction)) }} />
         </div>
 
+      </div>
+
+      {/* Páginas de conteúdo - com numeração a partir daqui */}
+      <div className="academic-page content-page">
+        <div className="page-number">1</div>
+        
         {/* Tópicos do Referencial Teórico */}
         {content.theoreticalTopics.map((topic, index) => (
           <div key={topic.id} className="mb-8">
