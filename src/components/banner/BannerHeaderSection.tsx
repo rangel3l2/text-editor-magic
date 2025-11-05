@@ -51,10 +51,13 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     
     setIsValidatingTitle(true);
     try {
-      console.log('Validando título:', title);
+      console.log('🔍 validateTitle - Título RAW recebido:', title);
       
       // Adicionar originalTitle ao estado para comparação posterior
       const cleanTitle = cleanHtmlTags(title);
+      
+      console.log('🧼 validateTitle - Título LIMPO:', cleanTitle);
+      console.log('📊 validateTitle - Comprimento limpo:', cleanTitle.length);
       
       const { data, error } = await supabase.functions.invoke('validate-title', {
         body: { 
@@ -140,6 +143,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
   };
 
   const handleTitleChange = (value: string) => {
+    console.log('📝 Título RAW do editor:', value);
     handleChange('title', value);
     
     if (formatTimeout) {
@@ -148,8 +152,14 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     
     const newTimeout = setTimeout(() => {
       const cleanValue = value.replace(/<[^>]*>/g, '').trim();
+      console.log('🧹 Título após limpeza básica:', cleanValue);
+      console.log('📏 Comprimento do título limpo:', cleanValue.length);
+      
       if (cleanValue && cleanValue.length > 10) {
+        console.log('✅ Enviando para validação:', value);
         validateTitle(value);
+      } else {
+        console.log('❌ Título muito curto, não validando');
       }
     }, 5000); // 5 segundos para garantir que o usuário terminou de digitar (padrão Teoria do Andaime)
     
