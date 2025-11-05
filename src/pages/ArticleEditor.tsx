@@ -136,7 +136,7 @@ const ArticleEditor = () => {
                   <RichTextEditor
                     value={content.abstract}
                     onChange={(value) => handleChange('abstract', value)}
-                    maxLines={15}
+                    maxLines={40}
                     minLines={5}
                     sectionName="resumo"
                     placeholder="Digite o resumo (100 a 250 palavras)..."
@@ -159,7 +159,7 @@ const ArticleEditor = () => {
                   <RichTextEditor
                     value={content.englishAbstract}
                     onChange={(value) => handleChange('englishAbstract', value)}
-                    maxLines={15}
+                    maxLines={40}
                     minLines={5}
                     sectionName="abstract"
                     placeholder="Type the abstract (100 to 250 words)..."
