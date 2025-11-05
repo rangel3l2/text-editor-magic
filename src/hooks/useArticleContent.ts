@@ -63,6 +63,8 @@ export const useArticleContent = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const loadingRef = useRef(false);
   const toastShownRef = useRef(false);
+  const loadedIdRef = useRef<string | null>(null);
+  const mountedRef = useRef(true);
   const navigate = useNavigate();
 
   const handleChange = (field: keyof ArticleContent, value: string | TheoreticalTopic[]) => {
@@ -71,7 +73,8 @@ export const useArticleContent = () => {
       [field]: value
     }));
 
-    if (user && id) {
+    // Só salvar se temos user, id e o componente está montado
+    if (user && id && mountedRef.current) {
       const saveContent = async () => {
         try {
           const { error } = await supabase
@@ -86,11 +89,14 @@ export const useArticleContent = () => {
           if (error) throw error;
         } catch (error) {
           console.error('Error saving article content:', error);
-          toast({
-            title: "Erro ao salvar",
-            description: "Não foi possível salvar as alterações. Tente novamente.",
-            variant: "destructive",
-          });
+          // Não mostrar toast em todo erro de salvamento para evitar spam
+          if (mountedRef.current) {
+            toast({
+              title: "Erro ao salvar",
+              description: "Não foi possível salvar as alterações. Tente novamente.",
+              variant: "destructive",
+            });
+          }
         }
       };
 
@@ -150,19 +156,27 @@ export const useArticleContent = () => {
   };
 
   useEffect(() => {
-    // Resetar refs ao montar o componente
-    loadingRef.current = false;
-    toastShownRef.current = false;
+    mountedRef.current = true;
+    
+    // Se já carregamos este ID, não carregar novamente
+    if (loadedIdRef.current === id) {
+      console.log('[ArticleContent] Already loaded this work, skipping');
+      return;
+    }
     
     // Prevenir múltiplas chamadas simultâneas
     if (!user || !id || loadingRef.current) {
+      console.log('[ArticleContent] Skipping load:', { hasUser: !!user, hasId: !!id, isLoading: loadingRef.current });
       return;
     }
 
     const loadContent = async () => {
+      if (!mountedRef.current) return;
+      
       loadingRef.current = true;
       setIsLoading(true);
       setLoadError(null);
+      toastShownRef.current = false;
       console.log(`[ArticleContent] Loading work ${id} for user ${user.id}`);
       
       try {
@@ -174,6 +188,8 @@ export const useArticleContent = () => {
           .eq('user_id', user.id)
           .maybeSingle();
 
+        if (!mountedRef.current) return;
+
         if (metaError) {
           console.error('[ArticleContent] Supabase error:', metaError);
           throw metaError;
@@ -183,8 +199,7 @@ export const useArticleContent = () => {
           console.error('[ArticleContent] Work not found:', id);
           setLoadError('Trabalho não encontrado');
           
-          // Mostrar toast apenas uma vez
-          if (!toastShownRef.current) {
+          if (!toastShownRef.current && mountedRef.current) {
             toastShownRef.current = true;
             toast({
               title: "Trabalho não encontrado",
@@ -192,10 +207,12 @@ export const useArticleContent = () => {
               variant: "destructive",
             });
             
-            // Redirecionar para a página inicial após 2 segundos
+            // Redirecionar para a página inicial
             setTimeout(() => {
-              navigate('/');
-            }, 2000);
+              if (mountedRef.current) {
+                navigate('/', { replace: true });
+              }
+            }, 1500);
           }
           return;
         }
@@ -210,6 +227,8 @@ export const useArticleContent = () => {
           .eq('user_id', user.id)
           .maybeSingle();
 
+        if (!mountedRef.current) return;
+
         if (contentError) {
           console.error('[ArticleContent] Error loading content:', contentError);
           throw contentError;
@@ -218,52 +237,60 @@ export const useArticleContent = () => {
         if (workData?.content) {
           const loadedContent = workData.content as any as ArticleContent;
           console.log('[ArticleContent] Content loaded successfully');
-          console.log('[ArticleContent] Content sections:', {
-            hasTitle: !!loadedContent.title,
-            hasAbstract: !!loadedContent.abstract,
-            hasIntroduction: !!loadedContent.introduction,
-            hasMethodology: !!loadedContent.methodology,
-            hasResults: !!loadedContent.results,
-            hasConclusion: !!loadedContent.conclusion,
-            hasReferences: !!loadedContent.references,
-          });
-          setContent(loadedContent);
+          
+          if (mountedRef.current) {
+            setContent(loadedContent);
+            loadedIdRef.current = id;
+          }
         } else {
-          // Se não tem conteúdo, iniciar com valores vazios
           console.log('[ArticleContent] No content found, using defaults');
-          setContent(initialArticleContent);
+          if (mountedRef.current) {
+            setContent(initialArticleContent);
+            loadedIdRef.current = id;
+          }
         }
       } catch (error: any) {
+        if (!mountedRef.current) return;
+        
         console.error('[ArticleContent] Error loading article content:', error);
         const errorMessage = error.message || 'Erro desconhecido';
         setLoadError(errorMessage);
         
-        // Mostrar toast apenas uma vez
-        if (!toastShownRef.current) {
+        if (!toastShownRef.current && mountedRef.current) {
           toastShownRef.current = true;
           toast({
             title: "Erro ao carregar trabalho",
-            description: errorMessage.includes('Failed to fetch') 
-              ? "Erro de conexão. Verifique sua internet e tente novamente."
-              : errorMessage,
+            description: "Não foi possível carregar o trabalho. Tente novamente.",
             variant: "destructive",
           });
+          
+          // Redirecionar para home em caso de erro persistente
+          setTimeout(() => {
+            if (mountedRef.current) {
+              navigate('/', { replace: true });
+            }
+          }, 2000);
         }
       } finally {
-        setIsLoading(false);
-        loadingRef.current = false;
+        if (mountedRef.current) {
+          setIsLoading(false);
+          loadingRef.current = false;
+        }
       }
     };
 
-    loadContent();
+    // Pequeno delay para evitar race conditions
+    const timeoutId = setTimeout(() => {
+      loadContent();
+    }, 100);
 
-    // Cleanup ao desmontar
     return () => {
-      console.log('[ArticleContent] Component unmounting, resetting refs');
+      clearTimeout(timeoutId);
+      console.log('[ArticleContent] Cleanup: component unmounting');
+      mountedRef.current = false;
       loadingRef.current = false;
-      toastShownRef.current = false;
     };
-  }, [id, user, navigate]); // Adicionado navigate às dependências
+  }, [id, user]); // Removido navigate e toast das dependências
 
   return {
     content,
