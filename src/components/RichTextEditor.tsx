@@ -50,13 +50,16 @@ const RichTextEditor = ({
   // Load cached validation only on mount if there's content
   useEffect(() => {
     const cleaned = cleanHtmlTags(value || '').trim();
+    const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
+    const minLen = isTitle ? 5 : 20;
     console.log(`🔵 RichTextEditor mount for "${sectionName}":`, {
       hasValue: !!value,
       cleanedLength: cleaned.length,
-      willValidate: cleaned.length > 20
+      willValidate: cleaned.length > minLen,
+      isTitle,
     });
     
-    if (cleaned.length > 20) {
+    if (cleaned.length > minLen) {
       validateContent(value);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -100,12 +103,14 @@ const RichTextEditor = ({
 
   const handleEditorChange = (data: string) => {
     const isOverLimit = handleContentChange(data);
+    const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
+    const minLen = isTitle ? 5 : 20;
     
     if (!isOverLimit) {
       onChange(data);
       
       // Agendar validação com debounce
-      if (data.trim().length > 20) {
+      if (data.trim().length > minLen) {
         setContentToValidate(data);
         setShouldValidate(true);
       }
@@ -119,7 +124,9 @@ const RichTextEditor = ({
   // Validar quando o usuário sai do campo (blur)
   const handleBlur = () => {
     setIsFocused(false);
-    if (value && value.trim().length > 50) {
+    const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
+    const minLen = isTitle ? 5 : 50;
+    if (value && value.trim().length > minLen) {
       validateContent(value);
     }
   };
