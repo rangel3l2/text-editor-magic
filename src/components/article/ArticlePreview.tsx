@@ -72,26 +72,18 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.methodology) }} />
       </div>
 
-      {/* Resultados */}
+      {/* 2.{n} Resultados e Discussão */}
       <div className="mb-8">
         <h2 className="text-lg font-bold mb-2">
-          {3 + content.theoreticalTopics.length} RESULTADOS
+          {2 + content.theoreticalTopics.length + 1} RESULTADOS E DISCUSSÃO
         </h2>
         <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.results) }} />
       </div>
 
-      {/* Discussão */}
+      {/* 3 Conclusão */}
       <div className="mb-8">
         <h2 className="text-lg font-bold mb-2">
-          {4 + content.theoreticalTopics.length} DISCUSSÃO
-        </h2>
-        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.discussion) }} />
-      </div>
-
-      {/* Conclusão */}
-      <div className="mb-8">
-        <h2 className="text-lg font-bold mb-2">
-          {5 + content.theoreticalTopics.length} CONCLUSÃO
+          3 CONCLUSÃO
         </h2>
         <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.conclusion) }} />
       </div>

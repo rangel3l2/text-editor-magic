@@ -24,8 +24,7 @@ export interface ArticleContent {
   introduction: string;
   theoreticalTopics: TheoreticalTopic[];
   methodology: string;
-  results: string;
-  discussion: string;
+  results: string; // Agora inclui Resultados e Discussão unificados (padrão IFMS)
   conclusion: string;
   references: string;
   appendices?: string;
@@ -51,8 +50,7 @@ export const useArticleContent = () => {
     introduction: '',
     theoreticalTopics: [],
     methodology: '',
-    results: '',
-    discussion: '',
+    results: '', // Resultados e Discussão unificados
     conclusion: '',
     references: '',
     appendices: '',

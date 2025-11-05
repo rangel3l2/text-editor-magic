@@ -74,8 +74,7 @@ const AcademicAdvisor = ({ currentSection, articleContent }: AcademicAdvisorProp
       'Abstract': 'O Abstract é a versão em inglês do seu Resumo, mantendo a mesma estrutura e conteúdo. Você já tem o resumo em português pronto para traduzirmos?',
       'Introdução': 'Vamos estruturar sua Introdução! Ela deve apresentar: (1) Contextualização do tema, (2) Problema de pesquisa, (3) Objetivos (geral e específicos), (4) Justificativa. Para começar, me diga: por que você escolheu esse tema? O que te motivou?',
       'Metodologia': 'Hora de planejar sua Metodologia! Precisamos definir: (1) Tipo de pesquisa (qualitativa, quantitativa ou mista), (2) Instrumentos de coleta de dados, (3) Forma de análise. Vamos começar: que tipo de dados você precisa coletar para responder sua pergunta de pesquisa?',
-      'Resultados': 'Vamos organizar seus Resultados! Nesta seção, você apresenta os dados coletados de forma objetiva, sem interpretá-los ainda. Que dados você coletou? Possui tabelas, gráficos ou figuras para ilustrar?',
-      'Discussão': 'Na Discussão, você vai interpretar seus resultados e compará-los com a literatura. O que seus dados revelaram? Isso confirma ou contradiz o que outros autores já estudaram?',
+      'Resultados e Discussão': 'Vamos trabalhar em Resultados e Discussão! Primeiro, apresente os dados coletados de forma objetiva. Depois, interprete-os: O que seus dados revelaram? Isso confirma ou contradiz o que os autores da sua Fundamentação Teórica disseram?',
       'Conclusão': 'Vamos elaborar sua Conclusão! Ela deve: (1) Retomar o objetivo, (2) Sintetizar os principais achados, (3) Indicar limitações, (4) Sugerir trabalhos futuros. Seu objetivo foi alcançado? O que você concluiu?',
       'Referências': 'As Referências seguem a ABNT NBR 6023. Você tem uma lista dos materiais que consultou? Me mostre algumas referências para orientarmos a formatação correta.'
     };

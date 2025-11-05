@@ -22,6 +22,7 @@ export const useEditorValidation = (sectionName: string) => {
   const RATE_LIMIT_BACKOFF = 45000; // 45 seconds wait after rate limit
   
   const getValidationInterval = useCallback(() => {
+    // Seção "Resultados e Discussão" precisa de intervalo maior por ser mais longa
     const isResultsSection = sectionName.toLowerCase().includes('resultados') || 
                            sectionName.toLowerCase().includes('discussão');
     return isResultsSection ? RESULTS_SECTION_INTERVAL : MIN_VALIDATION_INTERVAL;

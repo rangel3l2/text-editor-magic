@@ -220,51 +220,43 @@ const ArticleEditor = () => {
 
                 <Separator />
 
-                {/* Resultados */}
+                {/* 2.3 Resultados e Discussão */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">
-                    {3 + content.theoreticalTopics.length}. Resultados
+                    2.{content.theoreticalTopics.length + 1} Resultados e Discussão
                   </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Apresente os dados coletados de forma objetiva e depois interprete-os, 
+                    comparando com a literatura da Fundamentação Teórica. Use tabelas, 
+                    gráficos ou quadros (formato ABNT).
+                  </p>
                   <RichTextEditor
                     value={content.results}
                     onChange={(value) => handleChange('results', value)}
-                    maxLines={50}
-                    minLines={10}
-                    sectionName="resultados"
-                    placeholder="Digite os resultados..."
+                    maxLines={70}
+                    minLines={15}
+                    sectionName="Resultados e Discussão"
+                    placeholder="Apresente os resultados obtidos e discuta-os comparando com os autores da fundamentação teórica..."
                   />
                 </div>
 
                 <Separator />
 
-                {/* Discussão */}
+                {/* 3 Conclusão */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">
-                    {4 + content.theoreticalTopics.length}. Discussão
+                    3 Conclusão
                   </h3>
-                  <RichTextEditor
-                    value={content.discussion}
-                    onChange={(value) => handleChange('discussion', value)}
-                    maxLines={50}
-                    minLines={10}
-                    sectionName="discussão"
-                    placeholder="Digite a discussão dos resultados..."
-                  />
-                </div>
-
-                <Separator />
-
-                {/* Conclusão */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">
-                    {5 + content.theoreticalTopics.length}. Conclusão
-                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Retome os objetivos, sintetize os principais achados, 
+                    indique limitações e sugira trabalhos futuros.
+                  </p>
                   <RichTextEditor
                     value={content.conclusion}
                     onChange={(value) => handleChange('conclusion', value)}
-                    maxLines={20}
+                    maxLines={25}
                     minLines={5}
-                    sectionName="conclusão"
+                    sectionName="Conclusão"
                     placeholder="Digite a conclusão do artigo..."
                   />
                 </div>
