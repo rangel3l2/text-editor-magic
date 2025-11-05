@@ -32,7 +32,7 @@ const EditorHeader = ({
           className="hidden sm:flex"
         >
           <FileDown className="h-4 w-4 mr-2" />
-          Baixar PDF
+          Gerar LaTeX
         </Button>
         <Button
           variant="outline"

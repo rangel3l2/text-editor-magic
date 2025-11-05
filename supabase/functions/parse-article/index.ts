@@ -123,13 +123,29 @@ SEÇÕES A EXTRAIR:
   - title: título do subtópico SEM o número
   - content: conteúdo completo do subtópico até o próximo subtópico
 
-**methodology**: Conteúdo COMPLETO da seção de metodologia (pode ser "METODOLOGIA", "MATERIAIS E MÉTODOS", "PROCEDIMENTOS METODOLÓGICOS", ou similar, geralmente seção 3 ou 4)
+**methodology**: Conteúdo COMPLETO da seção de metodologia (pode ser "METODOLOGIA", "MATERIAIS E MÉTODOS", "PROCEDIMENTOS METODOLÓGICOS", "MÉTODO", ou similar, geralmente seção 3 ou 4). Procure pela seção numerada (3. ou 4.) e extraia TODO o conteúdo até a próxima seção.
 
-**results**: Conteúdo COMPLETO da seção de resultados (procure por "RESULTADOS", "RESULTADOS E DISCUSSÃO", "ANÁLISE DOS RESULTADOS", "DISCUSSÃO", geralmente próximo ao final, antes da conclusão)
+**results**: Conteúdo COMPLETO da seção de resultados. ATENÇÃO: Esta seção pode ter títulos variados:
+  - "RESULTADOS"
+  - "RESULTADOS E DISCUSSÃO" 
+  - "RESULTADOS E DISCUSSÕES"
+  - "ANÁLISE DOS RESULTADOS"
+  - "DISCUSSÃO"
+  - "ANÁLISE E DISCUSSÃO DOS RESULTADOS"
+  Geralmente é a penúltima ou antepenúltima seção (antes da conclusão). Extraia TODO o conteúdo desta seção até a próxima seção principal.
 
-**conclusion**: Conteúdo COMPLETO da conclusão (procure por "CONCLUSÃO", "CONSIDERAÇÕES FINAIS", "CONCLUSÕES", geralmente a última seção antes das referências)
+**conclusion**: Conteúdo COMPLETO da conclusão. ATENÇÃO: Esta seção pode ter títulos variados:
+  - "CONCLUSÃO"
+  - "CONCLUSÕES"
+  - "CONSIDERAÇÕES FINAIS"
+  - "CONCLUSÕES E CONSIDERAÇÕES FINAIS"
+  Geralmente é a última seção antes das referências. Extraia TODO o conteúdo até "REFERÊNCIAS".
 
-**references**: TODAS as referências bibliográficas completas após "REFERÊNCIAS" ou "REFERÊNCIAS BIBLIOGRÁFICAS" até o final do documento
+**references**: TODAS as referências bibliográficas completas. Procure por:
+  - "REFERÊNCIAS"
+  - "REFERÊNCIAS BIBLIOGRÁFICAS"
+  - Seção após a conclusão com lista de citações formatadas
+  Extraia TODO o conteúdo desta seção até o final do documento.
 
 Retorne APENAS JSON válido (sem markdown):
 {
@@ -148,8 +164,15 @@ Retorne APENAS JSON válido (sem markdown):
   "references": "..."
 }
 
+IMPORTANTE: 
+- Procure pelas seções em TODO o texto, não apenas no início
+- Resultados e Conclusão costumam estar no FINAL do documento
+- Referências sempre está no FINAL, após a conclusão
+- Se uma seção tiver um título diferente mas o conteúdo corresponder, inclua-a
+- NÃO deixe seções vazias se houver conteúdo relevante no documento
+
 TEXTO DO ARTIGO:
-${text.substring(0, 20000)}`;
+${text}`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -158,9 +181,9 @@ ${text.substring(0, 20000)}`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-pro',
         messages: [
-          { role: 'system', content: 'Você é um assistente especializado em análise de artigos científicos. Retorne apenas JSON válido, sem markdown ou explicações adicionais.' },
+          { role: 'system', content: 'Você é um assistente especializado em análise de artigos científicos acadêmicos brasileiros. Você deve extrair TODAS as seções do documento, incluindo resultados, discussão, conclusão e referências. Retorne apenas JSON válido, sem markdown ou explicações adicionais.' },
           { role: 'user', content: prompt }
         ],
       }),
