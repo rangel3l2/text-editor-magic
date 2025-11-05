@@ -13,6 +13,7 @@ import EditorHeader from "@/components/editor/EditorHeader";
 import { toast } from "@/components/ui/use-toast";
 import TheoreticalFramework from "@/components/article/TheoreticalFramework";
 import IntroductionEditor from "@/components/academic/IntroductionEditor";
+import AcademicAdvisor from "@/components/article/AcademicAdvisor";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
@@ -50,6 +51,14 @@ const ArticleEditor = () => {
           onPreview={() => setPreviewOpen(true)}
           onClear={handleClear}
         />
+
+        {/* Orientação Acadêmica */}
+        <div className="mb-6">
+          <AcademicAdvisor 
+            currentSection="artigo científico"
+            articleContent={content}
+          />
+        </div>
 
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
           <DialogContent className="max-w-7xl h-[90vh] overflow-y-auto">

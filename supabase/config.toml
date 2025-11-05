@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.validate-title]
 verify_jwt = true
+
+[functions.academic-advisor]
+verify_jwt = true
