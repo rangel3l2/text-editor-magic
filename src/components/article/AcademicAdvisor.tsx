@@ -66,11 +66,32 @@ const AcademicAdvisor = ({ currentSection, articleContent }: AcademicAdvisorProp
     }
   };
 
+  const getContextualGreeting = () => {
+    const sectionGuidance: Record<string, string> = {
+      'Título': 'Vamos trabalhar no título do seu artigo! Um bom título deve ser claro, objetivo e refletir exatamente o tema da sua pesquisa. Deve ter entre 10 e 15 palavras. Me conte: qual é o tema principal que você quer pesquisar?',
+      'Autores': 'Agora vamos identificar os autores do artigo. Quem são os autores deste trabalho? Liste nome completo e afiliação institucional de cada um.',
+      'Resumo': 'Vamos construir seu Resumo! Ele deve ter entre 150-250 palavras e seguir a estrutura: (1) Contextualização breve, (2) Objetivo, (3) Metodologia, (4) Principais resultados. Comece me contando: qual é o objetivo principal da sua pesquisa?',
+      'Abstract': 'O Abstract é a versão em inglês do seu Resumo, mantendo a mesma estrutura e conteúdo. Você já tem o resumo em português pronto para traduzirmos?',
+      'Introdução': 'Vamos estruturar sua Introdução! Ela deve apresentar: (1) Contextualização do tema, (2) Problema de pesquisa, (3) Objetivos (geral e específicos), (4) Justificativa. Para começar, me diga: por que você escolheu esse tema? O que te motivou?',
+      'Metodologia': 'Hora de planejar sua Metodologia! Precisamos definir: (1) Tipo de pesquisa (qualitativa, quantitativa ou mista), (2) Instrumentos de coleta de dados, (3) Forma de análise. Vamos começar: que tipo de dados você precisa coletar para responder sua pergunta de pesquisa?',
+      'Resultados': 'Vamos organizar seus Resultados! Nesta seção, você apresenta os dados coletados de forma objetiva, sem interpretá-los ainda. Que dados você coletou? Possui tabelas, gráficos ou figuras para ilustrar?',
+      'Discussão': 'Na Discussão, você vai interpretar seus resultados e compará-los com a literatura. O que seus dados revelaram? Isso confirma ou contradiz o que outros autores já estudaram?',
+      'Conclusão': 'Vamos elaborar sua Conclusão! Ela deve: (1) Retomar o objetivo, (2) Sintetizar os principais achados, (3) Indicar limitações, (4) Sugerir trabalhos futuros. Seu objetivo foi alcançado? O que você concluiu?',
+      'Referências': 'As Referências seguem a ABNT NBR 6023. Você tem uma lista dos materiais que consultou? Me mostre algumas referências para orientarmos a formatação correta.'
+    };
+
+    if (currentSection && sectionGuidance[currentSection]) {
+      return `Olá! Eu sou a Orienta.IA, sua Orientadora Virtual do IFMS. Vejo que você está trabalhando na seção "${currentSection}".\n\n${sectionGuidance[currentSection]}`;
+    }
+
+    return 'Olá! Eu sou a Orienta.IA, sua Orientadora Virtual do IFMS. Estou aqui para orientar você na escrita do seu artigo científico, seção por seção, seguindo as normas ABNT e do IFMS. Vamos começar pelo Título do seu artigo. Qual é o tema que você quer pesquisar?';
+  };
+
   const startOrientation = () => {
     setShowMethodology(false);
     const initialMessage: Message = {
       role: 'assistant',
-      content: 'Olá! Eu sou a Orienta.IA, sua Orientadora Virtual do IFMS. Estou aqui para ajudar você em todas as etapas do seu TCC, desde a ideia inicial até a formatação final. Para começarmos, em qual etapa do seu trabalho você está agora (ex: Definição do Tema, Introdução, Metodologia, etc.)?'
+      content: getContextualGreeting()
     };
     setMessages([initialMessage]);
   };
