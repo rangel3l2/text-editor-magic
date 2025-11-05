@@ -34,17 +34,21 @@ function App() {
           <ValidationProvider>
             <Router>
               <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/admin" element={<AdminSettings />} />
-              <Route path="/banner" element={<BannerEditor />} />
-              <Route path="/banner/:id" element={<BannerEditor />} />
-              <Route path="/article" element={<ArticleEditor />} />
-              <Route path="/monography" element={<MonographyEditor />} />
-              <Route path="/thesis" element={<ThesisEditor />} />
-              <Route path="/intervention-project" element={<InterventionProjectEditor />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/admin" element={<AdminSettings />} />
+                <Route path="/banner" element={<BannerEditor />} />
+                <Route path="/banner/:id" element={<BannerEditor />} />
+                <Route path="/article" element={<ArticleEditor />} />
+                <Route path="/article/:id" element={<ArticleEditor />} />
+                <Route path="/monography" element={<MonographyEditor />} />
+                <Route path="/monography/:id" element={<MonographyEditor />} />
+                <Route path="/thesis" element={<ThesisEditor />} />
+                <Route path="/thesis/:id" element={<ThesisEditor />} />
+                <Route path="/intervention-project" element={<InterventionProjectEditor />} />
+                <Route path="/intervention-project/:id" element={<InterventionProjectEditor />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
               </Routes>
               <Toaster />
               <CookieConsent />
