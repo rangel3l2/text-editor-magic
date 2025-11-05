@@ -173,6 +173,7 @@
 .academic-page {
   width: 21cm;
   min-height: 29.7cm;
+  max-height: 29.7cm;
   margin: 0 auto;
   padding: 3cm 2cm 2cm 3cm;
   background: white;
@@ -180,6 +181,9 @@
   position: relative;
   page-break-after: always;
   box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .academic-page.first-page {
@@ -222,6 +226,13 @@
   text-align: justify !important;
   word-spacing: normal !important;
   hyphens: auto !important;
+  margin-bottom: 0.5em !important;
+  text-indent: 1.25cm !important;
+  page-break-inside: avoid;
+}
+
+.academic-preview p:first-child {
+  text-indent: 0 !important;
 }
 
 .academic-preview .references {

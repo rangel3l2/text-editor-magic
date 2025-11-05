@@ -27,7 +27,8 @@ const cleanFeedbackComments = (html: string): string => {
   const paragraphs = tempDiv.querySelectorAll('p');
   paragraphs.forEach(p => {
     const text = p.textContent?.trim() || '';
-    if (feedbackPhrases.some(phrase => text.toLowerCase().startsWith(phrase.toLowerCase()))) {
+    // Remove se for apenas feedback (texto curto com palavras-chave de feedback)
+    if (text.length < 100 && feedbackPhrases.some(phrase => text.toLowerCase().includes(phrase.toLowerCase()))) {
       p.remove();
     }
   });
