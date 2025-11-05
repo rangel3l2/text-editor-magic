@@ -148,18 +148,38 @@
   margin-bottom: 0 !important;
 }
 
-/* Estilo A4 para preview acadêmico */
+/* Estilo A4 para preview acadêmico - Container de páginas */
+.academic-preview-container {
+  background: #f5f5f5;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
 .academic-preview {
   font-family: 'Times New Roman', Times, serif;
   font-size: 12pt;
   line-height: 1.5;
   text-align: justify;
-  max-width: 21cm;
+  background: white;
+}
+
+.academic-page {
+  width: 21cm;
   min-height: 29.7cm;
-  margin: 0 auto;
-  padding: 3cm 3cm 2cm 3cm; /* Margens ABNT: superior 3cm, direita 2cm, inferior 2cm, esquerda 3cm */
+  margin: 0 auto 2rem auto;
+  padding: 3cm 2cm 2cm 3cm; /* Margens ABNT: superior 3cm, direita 2cm, inferior 2cm, esquerda 3cm */
   background: white;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  position: relative;
+  page-break-after: always;
+}
+
+.academic-page.first-page {
+  padding-top: 3cm;
+}
+
+.academic-page.numbered-page {
+  padding-top: 2cm;
 }
 
 .academic-preview h1,
@@ -196,7 +216,26 @@
 
 .academic-preview .page-number {
   position: absolute;
-  top: 2cm;
+  top: 1cm;
   right: 2cm;
   font-size: 10pt;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+/* Print styles */
+@media print {
+  .academic-preview-container {
+    background: white;
+    padding: 0;
+  }
+  
+  .academic-page {
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+  }
+  
+  .academic-page:last-child {
+    page-break-after: auto;
+  }
 }
