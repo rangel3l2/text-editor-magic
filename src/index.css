@@ -172,8 +172,7 @@
 
 .academic-page {
   width: 21cm;
-  min-height: 29.7cm;
-  max-height: 29.7cm;
+  height: 29.7cm;
   margin: 0 auto;
   padding: 3cm 2cm 2cm 3cm;
   background: white;
@@ -181,7 +180,6 @@
   position: relative;
   page-break-after: always;
   box-sizing: border-box;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
