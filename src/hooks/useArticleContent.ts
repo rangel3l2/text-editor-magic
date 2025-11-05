@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -60,6 +60,8 @@ export const useArticleContent = () => {
 
   const [content, setContent] = useState<ArticleContent>(initialArticleContent);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const loadingRef = useRef(false);
 
   const handleChange = (field: keyof ArticleContent, value: string | TheoreticalTopic[]) => {
     setContent(prev => ({
@@ -146,68 +148,99 @@ export const useArticleContent = () => {
   };
 
   useEffect(() => {
-    if (user && id) {
-      const loadContent = async () => {
-        setIsLoading(true);
-        console.log(`[ArticleContent] Loading work ${id} for user ${user.id}`);
+    // Prevenir múltiplas chamadas simultâneas
+    if (!user || !id || loadingRef.current) {
+      return;
+    }
+
+    const loadContent = async () => {
+      loadingRef.current = true;
+      setIsLoading(true);
+      setLoadError(null);
+      console.log(`[ArticleContent] Loading work ${id} for user ${user.id}`);
+      
+      try {
+        // Primeiro, verificar se o trabalho existe (query leve)
+        const { data: workMeta, error: metaError } = await supabase
+          .from('work_in_progress')
+          .select('id, title, work_type')
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (metaError) {
+          console.error('[ArticleContent] Supabase error:', metaError);
+          throw metaError;
+        }
         
-        try {
-          const { data, error } = await supabase
-            .from('work_in_progress')
-            .select('content, title, work_type')
-            .eq('id', id)
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-          if (error) {
-            console.error('[ArticleContent] Supabase error:', error);
-            throw error;
-          }
-          
-          if (!data) {
-            console.error('[ArticleContent] Work not found:', id);
-            toast({
-              title: "Trabalho não encontrado",
-              description: "O trabalho que você tentou abrir não foi encontrado ou você não tem permissão para acessá-lo.",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          console.log('[ArticleContent] Work loaded successfully:', data.title);
-          
-          if (data?.content) {
-            const loadedContent = data.content as any as ArticleContent;
-            console.log('[ArticleContent] Content sections:', {
-              hasTitle: !!loadedContent.title,
-              hasAbstract: !!loadedContent.abstract,
-              hasIntroduction: !!loadedContent.introduction,
-              hasMethodology: !!loadedContent.methodology,
-              hasResults: !!loadedContent.results,
-              hasConclusion: !!loadedContent.conclusion,
-              hasReferences: !!loadedContent.references,
-            });
-            setContent(loadedContent);
-          }
-        } catch (error: any) {
-          console.error('[ArticleContent] Error loading article content:', error);
+        if (!workMeta) {
+          console.error('[ArticleContent] Work not found:', id);
+          setLoadError('Trabalho não encontrado');
           toast({
-            title: "Erro ao carregar trabalho",
-            description: error.message || "Não foi possível carregar o conteúdo do artigo. Tente novamente.",
+            title: "Trabalho não encontrado",
+            description: "O trabalho que você tentou abrir não foi encontrado ou você não tem permissão para acessá-lo.",
             variant: "destructive",
           });
-        } finally {
-          setIsLoading(false);
+          return;
         }
-      };
 
-      loadContent();
-    }
-  }, [id, user, toast]);
+        console.log('[ArticleContent] Work metadata loaded:', workMeta.title);
+        
+        // Agora carregar o conteúdo completo
+        const { data: workData, error: contentError } = await supabase
+          .from('work_in_progress')
+          .select('content')
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (contentError) {
+          console.error('[ArticleContent] Error loading content:', contentError);
+          throw contentError;
+        }
+
+        if (workData?.content) {
+          const loadedContent = workData.content as any as ArticleContent;
+          console.log('[ArticleContent] Content loaded successfully');
+          console.log('[ArticleContent] Content sections:', {
+            hasTitle: !!loadedContent.title,
+            hasAbstract: !!loadedContent.abstract,
+            hasIntroduction: !!loadedContent.introduction,
+            hasMethodology: !!loadedContent.methodology,
+            hasResults: !!loadedContent.results,
+            hasConclusion: !!loadedContent.conclusion,
+            hasReferences: !!loadedContent.references,
+          });
+          setContent(loadedContent);
+        } else {
+          // Se não tem conteúdo, iniciar com valores vazios
+          console.log('[ArticleContent] No content found, using defaults');
+          setContent(initialArticleContent);
+        }
+      } catch (error: any) {
+        console.error('[ArticleContent] Error loading article content:', error);
+        const errorMessage = error.message || 'Erro desconhecido';
+        setLoadError(errorMessage);
+        toast({
+          title: "Erro ao carregar trabalho",
+          description: errorMessage.includes('Failed to fetch') 
+            ? "Erro de conexão. Verifique sua internet e tente novamente."
+            : errorMessage,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+        loadingRef.current = false;
+      }
+    };
+
+    loadContent();
+  }, [id, user]); // Removido 'toast' das dependências para evitar loops
 
   return {
     content,
     isLoading,
+    loadError,
     handleChange,
     addTheoreticalTopic,
     updateTheoreticalTopic,

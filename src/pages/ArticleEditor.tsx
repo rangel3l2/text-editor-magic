@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
-  const { content, isLoading, handleChange, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
+  const { content, isLoading, loadError, handleChange, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
   const [previewOpen, setPreviewOpen] = useState(false);
   const { data: isAdmin } = useIsAdmin(user);
 
@@ -110,6 +110,20 @@ const ArticleEditor = () => {
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <p className="text-muted-foreground">Carregando trabalho...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto p-6 flex items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <div className="text-destructive text-4xl">⚠️</div>
+            <h2 className="text-xl font-semibold">Erro ao carregar trabalho</h2>
+            <p className="text-muted-foreground">{loadError}</p>
           </div>
         </div>
       </MainLayout>
