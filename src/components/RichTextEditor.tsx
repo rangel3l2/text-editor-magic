@@ -102,22 +102,17 @@ const RichTextEditor = ({
   };
 
   const handleEditorChange = (data: string) => {
-    const isOverLimit = handleContentChange(data);
+    handleContentChange(data); // Remove verificação de limite - apenas calcula progresso
     const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
     const minLen = isTitle ? 5 : 20;
     
-    if (!isOverLimit) {
-      onChange(data);
-      
-      // Agendar validação com debounce
-      if (data.trim().length > minLen) {
-        setContentToValidate(data);
-        setShouldValidate(true);
-      }
-    } else {
-      if (editorInstance) {
-        editorInstance.setData(value);
-      }
+    // Sempre permite a mudança, sem bloquear
+    onChange(data);
+    
+    // Agendar validação com debounce
+    if (data.trim().length > minLen) {
+      setContentToValidate(data);
+      setShouldValidate(true);
     }
   };
 

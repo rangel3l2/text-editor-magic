@@ -13,23 +13,16 @@ export const useEditorProgress = (maxLines: number, minLines: number) => {
     setProgress(percentage);
     setCurrentLines(actualLines);
 
-    if (percentage >= 90 && percentage < 100) {
+    // Apenas alerta quando ultrapassa muito o limite (150%), sem bloquear
+    if (percentage >= 150) {
       toast({
-        title: "Atenção",
-        description: "Você está próximo do limite de texto para esta seção",
-        duration: 3000,
+        title: "Texto muito longo",
+        description: "Esta seção está muito extensa. Considere revisar o conteúdo para manter a objetividade acadêmica.",
+        duration: 5000,
       });
-    } else if (isOverLimit) {
-      toast({
-        title: "Limite atingido",
-        description: "Você atingiu o limite de texto para esta seção",
-        variant: "destructive",
-        duration: 3000,
-      });
-      return true;
     }
 
-    return false;
+    return false; // Nunca bloqueia
   }, [maxLines, minLines, toast]);
 
   return {
