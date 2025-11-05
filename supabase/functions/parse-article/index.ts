@@ -103,11 +103,14 @@ Extraia exatamente estas seções (retorne vazio se não encontrar):
 - keywords: Palavras-chave em português (após "Palavras-chave:" e antes de "ABSTRACT")
 - englishAbstract: Texto do ABSTRACT em inglês (após "ABSTRACT" e antes de "Keywords")
 - englishKeywords: Keywords em inglês (após "Keywords:")
-- introduction: Seção de INTRODUÇÃO (geralmente seção 1)
+- introduction: TODA a seção de INTRODUÇÃO completa (geralmente seção 1) - NÃO dividir em partes
+- theoreticalTopics: Array de tópicos do referencial teórico (seção 2), cada um com {title: string, content: string}
 - methodology: Seção de METODOLOGIA (procure por títulos como "Metodologia", "Materiais e Métodos", etc.)
 - results: Seção de RESULTADOS e/ou DISCUSSÃO (procure por "Resultados", "Resultados e Discussão", etc.)
 - conclusion: Seção de CONCLUSÃO (procure por "Conclusão", "Considerações Finais", etc.)
 - references: Seção de REFERÊNCIAS (após "REFERÊNCIAS" ou "REFERÊNCIAS BIBLIOGRÁFICAS")
+
+Para theoreticalTopics, identifique TODOS os subtópicos numerados (ex: 2.1, 2.2, 2.3) e extraia o título e conteúdo de cada um.
 
 Retorne APENAS um JSON válido no formato:
 {
@@ -119,6 +122,7 @@ Retorne APENAS um JSON válido no formato:
   "englishAbstract": "...",
   "englishKeywords": "...",
   "introduction": "...",
+  "theoreticalTopics": [{"title": "...", "content": "..."}, ...],
   "methodology": "...",
   "results": "...",
   "conclusion": "...",
@@ -156,7 +160,7 @@ ${text.substring(0, 15000)}`;
     const aiResult = JSON.parse(jsonStr);
 
     // Converter para HTML e adicionar instituição padrão
-    const result = {
+    const result: any = {
       title: cleanHtml(aiResult.title || ''),
       authors: cleanHtml(aiResult.authors || ''),
       advisors: cleanHtml(aiResult.advisors || ''),
@@ -171,6 +175,16 @@ ${text.substring(0, 15000)}`;
       references: cleanHtml(aiResult.references || ''),
       institution: 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul',
     };
+
+    // Processar tópicos teóricos se existirem
+    if (aiResult.theoreticalTopics && Array.isArray(aiResult.theoreticalTopics)) {
+      result.theoreticalTopics = aiResult.theoreticalTopics.map((topic: any, index: number) => ({
+        id: `topic-${index + 1}`,
+        order: index + 1,
+        title: topic.title || `Tópico ${index + 1}`,
+        content: cleanHtml(topic.content || '')
+      }));
+    }
 
     console.log('Extração por IA concluída com sucesso');
     return result;

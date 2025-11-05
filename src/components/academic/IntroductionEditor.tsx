@@ -81,19 +81,13 @@ const IntroductionEditor = ({
     checkPartsCompletion();
   }, [themePart, problemPart, objectivesPart]);
 
-  // Atualiza as partes quando o valor completo muda externamente
+  // Atualiza as partes quando o valor completo muda externamente (como no upload)
   useEffect(() => {
-    if (activeTab === "guided" && value && !isProcessing) {
-      extractPartsFromIntroduction();
-    }
-  }, [value, activeTab]);
-
-  // Efeito para extrair as partes quando o componente é montado pela primeira vez
-  useEffect(() => {
+    // Só divide automaticamente se vier de um upload (valor mudou mas partes estão vazias)
     if (value && !isProcessing && themePart === "" && problemPart === "" && objectivesPart === "") {
       extractPartsFromIntroduction();
     }
-  }, []);
+  }, [value]);
 
   // Valida a introdução completa quando todas as partes estiverem preenchidas
   useEffect(() => {
@@ -193,17 +187,15 @@ const IntroductionEditor = ({
         setObjectivesPart("");
       }
       
-      toast({
-        title: "Introdução dividida",
-        description: "O texto foi dividido em partes para edição",
-      });
+      // Não mostrar toast ao dividir automaticamente
+      if (activeTab === "guided") {
+        toast({
+          title: "Introdução dividida",
+          description: "O texto foi dividido em partes para edição",
+        });
+      }
     } catch (error) {
       console.error("Erro ao extrair partes:", error);
-      toast({
-        title: "Erro ao dividir",
-        description: "Ocorreu um erro ao dividir o texto. Tente novamente.",
-        variant: "destructive",
-      });
     } finally {
       setIsProcessing(false);
     }
