@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useArticleContent } from "@/hooks/useArticleContent";
 import { Separator } from "@/components/ui/separator";
-import ArticlePreview from "@/components/article/ArticlePreview";
+import ArticlePreviewPaginated from "@/components/article/ArticlePreviewPaginated";
 import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import EditorHeader from "@/components/editor/EditorHeader";
@@ -62,7 +62,7 @@ const ArticleEditor = () => {
 
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
           <DialogContent className="max-w-7xl h-[90vh] overflow-y-auto">
-            <ArticlePreview content={content} />
+            <ArticlePreviewPaginated content={content} />
           </DialogContent>
         </Dialog>
 

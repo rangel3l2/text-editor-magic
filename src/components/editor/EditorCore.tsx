@@ -51,6 +51,9 @@ const EditorCore = ({
         config={{
           language: 'pt-br',
           removePlugins: ['MediaEmbed'],
+          enterMode: 2, // ENTER_P - cria <p> ao pressionar Enter
+          shiftEnterMode: 1, // ENTER_BR - cria <br> ao pressionar Shift+Enter
+          autoParagraph: true, // Envolve texto automaticamente em <p>
           ...config
         }}
         onReady={(editor) => {
