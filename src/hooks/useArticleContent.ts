@@ -65,6 +65,7 @@ export const useArticleContent = () => {
   const toastShownRef = useRef(false);
   const loadedIdRef = useRef<string | null>(null);
   const mountedRef = useRef(true);
+  const loadControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
 
   const handleChange = (field: keyof ArticleContent, value: string | TheoreticalTopic[]) => {
@@ -179,6 +180,13 @@ export const useArticleContent = () => {
       toastShownRef.current = false;
       console.log(`[ArticleContent] Loading work ${id} for user ${user.id}`);
       
+      // Abort previous in-flight load, then create a new controller
+      if (loadControllerRef.current) {
+        try { loadControllerRef.current.abort(); } catch {}
+      }
+      const controller = new AbortController();
+      loadControllerRef.current = controller;
+      
       try {
         // Carregar metadados e conteúdo em uma única consulta (reduz requisições)
         const { data: work, error } = await supabase
@@ -186,6 +194,7 @@ export const useArticleContent = () => {
           .select('id, title, work_type, content')
           .eq('id', id)
           .eq('user_id', user.id)
+          .abortSignal(controller.signal)
           .maybeSingle();
 
         if (!mountedRef.current) return;
@@ -241,18 +250,15 @@ export const useArticleContent = () => {
             variant: "destructive",
           });
           
-          // Redirecionar para home em caso de erro persistente
-          setTimeout(() => {
-            if (mountedRef.current) {
-              navigate('/', { replace: true });
-            }
-          }, 2000);
+          // Mantemos o usuário na página para permitir tentar novamente
         }
       } finally {
         if (mountedRef.current) {
           setIsLoading(false);
           loadingRef.current = false;
         }
+        // Limpa o controlador de carregamento
+        loadControllerRef.current = null;
       }
     };
 
@@ -266,6 +272,11 @@ export const useArticleContent = () => {
       console.log('[ArticleContent] Cleanup: component unmounting');
       mountedRef.current = false;
       loadingRef.current = false;
+      // Aborta qualquer requisição em andamento
+      if (loadControllerRef.current) {
+        try { loadControllerRef.current.abort(); } catch {}
+        loadControllerRef.current = null;
+      }
     };
   }, [id, user]); // Removido navigate e toast das dependências
 
