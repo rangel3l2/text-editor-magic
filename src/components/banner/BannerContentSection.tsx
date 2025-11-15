@@ -8,6 +8,7 @@ interface BannerContentSectionProps {
     objectives: string;
     methodology: string;
     results: string;
+    discussion: string;
     conclusion: string;
     references: string;
     acknowledgments: string;
@@ -18,19 +19,42 @@ interface BannerContentSectionProps {
 const BannerContentSection = ({ content, handleChange }: BannerContentSectionProps) => {
   return (
     <div className="space-y-6">
+      <div className="bg-muted/30 p-4 rounded-lg mb-6">
+        <h3 className="text-lg font-semibold mb-2">📐 Estrutura do Banner Científico</h3>
+        <p className="text-sm text-muted-foreground">
+          Seu banner será organizado em 3 colunas profissionais:
+        </p>
+        <div className="grid grid-cols-3 gap-4 mt-3 text-xs">
+          <div className="bg-background p-3 rounded border">
+            <p className="font-semibold">Coluna 1</p>
+            <p className="text-muted-foreground">Introdução • Objetivos • Referências</p>
+          </div>
+          <div className="bg-background p-3 rounded border">
+            <p className="font-semibold">Coluna 2</p>
+            <p className="text-muted-foreground">Metodologia • Resultados (início)</p>
+          </div>
+          <div className="bg-background p-3 rounded border">
+            <p className="font-semibold">Coluna 3</p>
+            <p className="text-muted-foreground">Resultados • Discussão • Conclusão • Agradecimentos</p>
+          </div>
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>3. Introdução</CardTitle>
-          <CardDescription>Apresente uma visão geral do tema, incluindo problematização e objetivos gerais. (5-25 linhas)</CardDescription>
+          <CardTitle>Introdução</CardTitle>
+          <CardDescription>
+            Contextualize o tema e apresente a problemática. Seja objetivo e claro. (Recomendado: 10-20 linhas)
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <RichTextEditor
             value={content.introduction}
             onChange={(data) => handleChange('introduction', data)}
-            maxLines={25}
+            maxLines={30}
             minLines={5}
             config={editorConfig}
-            placeholder="Apresente o tema, contexto e problematização do trabalho..."
+            placeholder="Ex: A problemática dos resíduos plásticos tem afetado significativamente os ecossistemas marinhos..."
             sectionName="Introdução"
           />
         </CardContent>
@@ -38,17 +62,19 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
 
       <Card>
         <CardHeader>
-          <CardTitle>4. Objetivos</CardTitle>
-          <CardDescription>Informe os objetivos gerais e específicos do trabalho. Use frases curtas e diretas. (2-10 linhas)</CardDescription>
+          <CardTitle>Objetivos</CardTitle>
+          <CardDescription>
+            Liste os objetivos gerais e específicos. Use tópicos claros e diretos. (Recomendado: 5-10 linhas)
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <RichTextEditor
             value={content.objectives}
             onChange={(data) => handleChange('objectives', data)}
-            maxLines={10}
+            maxLines={15}
             minLines={2}
             config={editorConfig}
-            placeholder="Liste os objetivos gerais e específicos do trabalho..."
+            placeholder="Ex: • Objetivo Geral: Avaliar o impacto... • Objetivos Específicos: 1) Quantificar... 2) Analisar..."
             sectionName="Objetivos"
           />
         </CardContent>
@@ -56,17 +82,19 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
 
       <Card>
         <CardHeader>
-          <CardTitle>5. Metodologia</CardTitle>
-          <CardDescription>Explique o método utilizado, destacando as etapas principais. (5-25 linhas)</CardDescription>
+          <CardTitle>Metodologia / Materiais e Métodos</CardTitle>
+          <CardDescription>
+            Descreva os procedimentos, materiais e técnicas utilizadas. Seja específico. (Recomendado: 15-25 linhas)
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <RichTextEditor
             value={content.methodology}
             onChange={(data) => handleChange('methodology', data)}
-            maxLines={25}
+            maxLines={35}
             minLines={5}
             config={editorConfig}
-            placeholder="Descreva os métodos e procedimentos utilizados..."
+            placeholder="Ex: O estudo foi conduzido em três etapas: 1) Coleta de amostras... 2) Análise laboratorial... 3) Tratamento estatístico..."
             sectionName="Metodologia"
           />
         </CardContent>
@@ -74,17 +102,19 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
 
       <Card>
         <CardHeader>
-          <CardTitle>6. Resultados e Discussão</CardTitle>
-          <CardDescription>Apresente os principais resultados e compare com a literatura. Use gráficos ou tabelas. (5-25 linhas)</CardDescription>
+          <CardTitle>Resultados</CardTitle>
+          <CardDescription>
+            Apresente os principais dados e resultados obtidos. Use gráficos e tabelas quando possível. (Recomendado: 15-25 linhas)
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <RichTextEditor
             value={content.results}
             onChange={(data) => handleChange('results', data)}
-            maxLines={25}
+            maxLines={35}
             minLines={5}
             config={editorConfig}
-            placeholder="Apresente os principais resultados obtidos e sua discussão..."
+            placeholder="Ex: Os resultados demonstraram que... A Figura 1 ilustra... A Tabela 1 apresenta..."
             sectionName="Resultados"
           />
         </CardContent>
@@ -92,17 +122,39 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
 
       <Card>
         <CardHeader>
-          <CardTitle>7. Conclusão</CardTitle>
-          <CardDescription>Resuma as principais descobertas e contribuições do trabalho. (3-15 linhas)</CardDescription>
+          <CardTitle>Discussão</CardTitle>
+          <CardDescription>
+            Compare seus resultados com a literatura e explique suas implicações. (Recomendado: 10-20 linhas)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RichTextEditor
+            value={content.discussion}
+            onChange={(data) => handleChange('discussion', data)}
+            maxLines={30}
+            minLines={5}
+            config={editorConfig}
+            placeholder="Ex: Os resultados obtidos corroboram com os estudos de Silva et al. (2022), que também observaram..."
+            sectionName="Discussão"
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Conclusões</CardTitle>
+          <CardDescription>
+            Sintetize as principais descobertas e contribuições do trabalho. (Recomendado: 5-12 linhas)
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <RichTextEditor
             value={content.conclusion}
             onChange={(data) => handleChange('conclusion', data)}
-            maxLines={15}
+            maxLines={18}
             minLines={3}
             config={editorConfig}
-            placeholder="Apresente as principais conclusões e contribuições do trabalho..."
+            placeholder="Ex: Conclui-se que a metodologia proposta foi eficaz para... Os resultados sugerem que..."
             sectionName="Conclusão"
           />
         </CardContent>
