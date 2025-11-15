@@ -23,6 +23,7 @@ export interface BannerContent {
   advisors?: string;
   qrCode?: string;
   themeColor?: string;
+  columnLayout?: '2' | '3';
 }
 
 export const useBannerContent = () => {
@@ -50,7 +51,8 @@ export const useBannerContent = () => {
     previewHtml: '',
     advisors: '',
     qrCode: '',
-    themeColor: '#1e40af'
+    themeColor: '#1e40af',
+    columnLayout: '2'
   };
 
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);

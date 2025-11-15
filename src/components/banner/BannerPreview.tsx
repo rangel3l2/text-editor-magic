@@ -35,7 +35,10 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
 
   return (
     <Card className="w-full h-full bg-white overflow-hidden">
-      <BannerPreviewContent previewHtml={previewHtml} />
+      <BannerPreviewContent 
+        previewHtml={previewHtml} 
+        columnLayout={content.columnLayout || '2'}
+      />
     </Card>
   );
 };
