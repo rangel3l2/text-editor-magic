@@ -67,21 +67,17 @@ const BannerLayout = ({
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent 
-          className="max-w-[95vw] sm:max-w-[90vw] h-[90vh] sm:h-[95vh] p-3 sm:p-4"
-          style={{
-            width: '95vw',
-            maxWidth: 'min(calc(210mm * 0.9), 95vw)',
-            maxHeight: '90vh',
-            margin: '0 auto',
-          }}
+          className="max-w-[98vw] w-[98vw] h-[95vh] p-2"
         >
           <VisuallyHidden>
             <DialogTitle>Visualização do Banner</DialogTitle>
           </VisuallyHidden>
-          <BannerPreview 
-            content={content}
-            onImageConfigChange={onImageConfigChange}
-          />
+          <div className="w-full h-full overflow-auto">
+            <BannerPreview 
+              content={content}
+              onImageConfigChange={onImageConfigChange}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </>

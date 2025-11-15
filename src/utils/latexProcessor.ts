@@ -65,26 +65,28 @@ export const generateLatexContent = (content: any) => {
   const processedInstitution = cleanLatexCommands(content.institution);
   const themeColor = content.themeColor || '#1e40af';
 
+  console.log('Generating latex with institutionLogo:', content.institutionLogo);
+
   const parts: string[] = [];
   
-  parts.push('<div style="width: 90cm; height: 120cm; position: relative; background: white; font-family: Arial, sans-serif;">');
+  parts.push('<div style="width: 100%; max-width: 120cm; margin: 0 auto; position: relative; background: white; font-family: Arial, sans-serif; aspect-ratio: 3/4;">');
   
   // Header
-  parts.push('<div class="banner-header" style="display: flex; align-items: center; justify-content: space-between; padding: 2cm; border-bottom: 0.5cm solid ' + themeColor + '; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">');
+  parts.push('<div class="banner-header" style="display: flex; align-items: center; justify-content: space-between; padding: 2rem; border-bottom: 0.5rem solid ' + themeColor + '; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">');
   
-  parts.push('<div style="display: flex; align-items: center; gap: 1cm;">');
+  parts.push('<div style="display: flex; align-items: center; gap: 1rem; flex: 1;">');
   if (content.institutionLogo) {
-    parts.push('<img src="' + content.institutionLogo + '" alt="Logo" style="max-width: 8cm; max-height: 8cm; object-fit: contain;" />');
+    parts.push('<img src="' + content.institutionLogo + '" alt="Logo da Instituição" style="max-height: 5rem; width: auto; object-fit: contain;" />');
+  }
+  if (processedInstitution) {
+    parts.push('<div style="flex: 1; text-align: right; font-size: 1.5rem; font-weight: bold; color: ' + themeColor + ';">' + processedInstitution + '</div>');
   }
   parts.push('</div>');
   
   if (content.eventLogo) {
-    parts.push('<img src="' + content.eventLogo + '" alt="Evento" style="max-width: 8cm; max-height: 8cm; object-fit: contain;" />');
+    parts.push('<img src="' + content.eventLogo + '" alt="Evento" style="max-height: 5rem; width: auto; object-fit: contain; margin-left: 1rem;" />');
   }
   
-  if (processedInstitution) {
-    parts.push('<div style="flex: 1; text-align: right; font-size: 1.8cm; font-weight: bold; color: ' + themeColor + ';">' + processedInstitution + '</div>');
-  }
   parts.push('</div>');
 
   // Title section
