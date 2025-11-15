@@ -14,9 +14,12 @@ interface BannerHeaderSectionProps {
   content: {
     title: string;
     authors: string;
+    authorEmail: string;
     institution: string;
     institutionLogo?: string;
+    eventLogo?: string;
     advisors?: string;
+    themeColor?: string;
   };
   handleChange: (field: string, data: string) => void;
 }

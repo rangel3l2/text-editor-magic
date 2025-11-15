@@ -7,17 +7,22 @@ import { useToast } from '@/components/ui/use-toast';
 export interface BannerContent {
   title: string;
   authors: string;
+  authorEmail: string;
   institution: string;
   institutionLogo?: string;
+  eventLogo?: string;
   introduction: string;
   objectives: string;
   methodology: string;
   results: string;
+  discussion: string;
   conclusion: string;
   references: string;
   acknowledgments: string;
   previewHtml?: string;
-  advisors?: string; // Added to ensure advisors field is included
+  advisors?: string;
+  qrCode?: string;
+  themeColor?: string;
 }
 
 export const useBannerContent = () => {
@@ -30,17 +35,22 @@ export const useBannerContent = () => {
   const initialBannerContent: BannerContent = {
     title: '',
     authors: '',
+    authorEmail: '',
     institution: '',
     institutionLogo: '',
+    eventLogo: '',
     introduction: '',
     objectives: '',
     methodology: '',
     results: '',
+    discussion: '',
     conclusion: '',
     references: '',
     acknowledgments: '',
     previewHtml: '',
-    advisors: ''  // Added to ensure advisors field is included
+    advisors: '',
+    qrCode: '',
+    themeColor: '#1e40af'
   };
 
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
