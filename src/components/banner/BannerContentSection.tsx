@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import RichTextEditor from '../RichTextEditor';
 import editorConfig from '@/config/editorConfig';
+import BannerImagesSection from './images/BannerImagesSection';
 
 interface BannerContentSectionProps {
   content: {
@@ -119,6 +120,9 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
           />
         </CardContent>
       </Card>
+
+      {/* Images Section */}
+      <BannerImagesSection />
 
       <Card>
         <CardHeader>
