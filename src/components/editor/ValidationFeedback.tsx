@@ -97,14 +97,10 @@ const ValidationFeedback = ({
 
   // Se não temos resultado ou feedbacks, não mostra nada
   if (!validationResult || !feedbacks.length) {
-    console.log('🚫 Não renderizando FeedbackPanel:', { 
-      hasValidationResult: !!validationResult, 
-      feedbacksLength: feedbacks.length 
-    });
     return null;
   }
 
-  console.log('✨ Renderizando FeedbackPanel com', feedbacks.length, 'feedbacks');
+  
   
   // Mostrar FeedbackPanel com os feedbacks estruturados
   return (
