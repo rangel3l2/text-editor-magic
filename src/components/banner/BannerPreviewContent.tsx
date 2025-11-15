@@ -11,9 +11,10 @@ interface ImageSettingsConfig {
 
 interface BannerPreviewContentProps {
   previewHtml: string;
+  columnLayout?: '2' | '3';
 }
 
-const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
+const BannerPreviewContent = ({ previewHtml, columnLayout = '2' }: BannerPreviewContentProps) => {
   const [sections, setSections] = useState<HTMLElement[]>([]);
   const [draggedSection, setDraggedSection] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -147,6 +148,7 @@ const BannerPreviewContent = ({ previewHtml }: BannerPreviewContentProps) => {
             onDrop={handleDrop}
             getImageStyle={getImageStyle}
             onImageClick={handleImageClick}
+            columnLayout={columnLayout}
           />
         </div>
       </div>

@@ -10,6 +10,7 @@ interface PreviewColumnsProps {
   onDrop: (e: React.DragEvent<HTMLDivElement>, index: number) => void;
   getImageStyle: (imageUrl: string) => React.CSSProperties;
   onImageClick: (imageUrl: string) => void;
+  columnLayout?: '2' | '3';
 }
 
 const PreviewColumns = ({
@@ -20,10 +21,13 @@ const PreviewColumns = ({
   onDragLeave,
   onDrop,
   getImageStyle,
-  onImageClick
+  onImageClick,
+  columnLayout = '2'
 }: PreviewColumnsProps) => {
+  const columnClass = columnLayout === '3' ? 'columns-3' : 'columns-2';
+  
   return (
-    <div className="columns-2 gap-8 h-full" style={{ columnGap: '3rem' }}>
+    <div className={`${columnClass} gap-8 h-full`} style={{ columnGap: '3rem' }}>
       {sections.map((section, index) => (
         <BannerSection
           key={index}
