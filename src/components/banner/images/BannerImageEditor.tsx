@@ -7,7 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { BannerImage } from '@/hooks/useBannerImages';
-import { RotateCw, Save } from 'lucide-react';
+import { RotateCw, Save, Crop, AlertCircle } from 'lucide-react';
+import ImageCropTool from './ImageCropTool';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 interface BannerImageEditorProps {
   image: BannerImage | null;
@@ -28,12 +32,31 @@ const BannerImageEditor = ({
   const [brightness, setBrightness] = useState(image?.adjustments.brightness || 0);
   const [contrast, setContrast] = useState(image?.adjustments.contrast || 0);
   const [saturation, setSaturation] = useState(image?.adjustments.saturation || 0);
+  const [showCropTool, setShowCropTool] = useState(false);
+  const { toast } = useToast();
 
   if (!image) return null;
 
+  // Input validation
+  const captionError = caption.length > 200 ? 'Legenda muito longa (máximo 200 caracteres)' : 
+                       caption.length < 10 ? 'Legenda muito curta (mínimo 10 caracteres)' : null;
+
   const handleSave = async () => {
+    // Validate inputs before saving
+    if (caption.length < 10 || caption.length > 200) {
+      toast({
+        title: 'Erro de validação',
+        description: 'A legenda deve ter entre 10 e 200 caracteres',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Sanitize caption - remove HTML tags
+    const sanitizedCaption = caption.replace(/<[^>]*>/g, '').trim();
+
     await onSave(image.id, {
-      caption,
+      caption: sanitizedCaption,
       column_position: columnPosition === 'auto' ? null : parseInt(columnPosition),
       rotation,
       adjustments: {
@@ -43,6 +66,36 @@ const BannerImageEditor = ({
       }
     });
     onClose();
+  };
+
+  const handleCropSave = async (croppedBlob: Blob, cropData: any) => {
+    try {
+      // Upload cropped image
+      const fileName = `${image.user_id}/${image.work_id}/cropped-${Date.now()}.png`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('banner_images')
+        .upload(fileName, croppedBlob);
+
+      if (uploadError) throw uploadError;
+
+      // Update image with new path and crop data
+      await onSave(image.id, {
+        storage_path: uploadData.path,
+        crop_data: cropData
+      });
+
+      toast({
+        title: 'Imagem cortada',
+        description: 'Corte aplicado com sucesso'
+      });
+    } catch (error) {
+      console.error('Error saving cropped image:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar a imagem cortada',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleRotate = () => {
@@ -82,6 +135,14 @@ const BannerImageEditor = ({
 
           {/* Controls */}
           <div className="space-y-6">
+            {/* Validation Alerts */}
+            {captionError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{captionError}</AlertDescription>
+              </Alert>
+            )}
+
             {/* Caption */}
             <div className="space-y-2">
               <Label htmlFor="caption">Legenda *</Label>
@@ -92,9 +153,10 @@ const BannerImageEditor = ({
                 placeholder="Figura X - Descrição clara e objetiva"
                 rows={3}
                 maxLength={200}
+                className={captionError ? 'border-destructive' : ''}
               />
-              <p className="text-xs text-muted-foreground">
-                {caption.length}/200 caracteres
+              <p className={`text-xs ${captionError ? 'text-destructive' : 'text-muted-foreground'}`}>
+                {caption.length}/200 caracteres {captionError && '• ' + captionError}
               </p>
             </div>
 
@@ -117,23 +179,34 @@ const BannerImageEditor = ({
               </p>
             </div>
 
-            {/* Rotation */}
+            {/* Rotation and Crop */}
             <div className="space-y-2">
-              <Label>Rotação</Label>
-              <div className="flex items-center gap-4">
+              <Label>Transformações</Label>
+              <div className="flex items-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={handleRotate}
+                  className="flex-1"
                 >
                   <RotateCw className="w-4 h-4 mr-2" />
                   Girar 90°
                 </Button>
-                <span className="text-sm text-muted-foreground">
-                  Atual: {rotation}°
-                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCropTool(true)}
+                  className="flex-1"
+                >
+                  <Crop className="w-4 h-4 mr-2" />
+                  Cortar
+                </Button>
               </div>
+              <span className="text-xs text-muted-foreground">
+                Rotação atual: {rotation}°
+              </span>
             </div>
 
             <div className="border-t pt-4">
@@ -208,12 +281,20 @@ const BannerImageEditor = ({
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} disabled={!!captionError}>
             <Save className="w-4 h-4 mr-2" />
             Salvar Alterações
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Crop Tool Dialog */}
+      <ImageCropTool
+        image={image.url || ''}
+        isOpen={showCropTool}
+        onClose={() => setShowCropTool(false)}
+        onSave={handleCropSave}
+      />
     </Dialog>
   );
 };

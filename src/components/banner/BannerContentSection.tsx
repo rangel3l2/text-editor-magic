@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import RichTextEditor from '../RichTextEditor';
 import editorConfig from '@/config/editorConfig';
 import BannerImagesSection from './images/BannerImagesSection';
+import BannerTableEditor from './tables/BannerTableEditor';
+import BannerChartEditor from './charts/BannerChartEditor';
 
 interface BannerContentSectionProps {
   content: {
@@ -163,6 +165,17 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
           />
         </CardContent>
       </Card>
+
+      {/* Tabelas e Gráficos */}
+      <BannerTableEditor
+        tables={[]}
+        onTablesChange={() => {}}
+      />
+
+      <BannerChartEditor
+        charts={[]}
+        onChartsChange={() => {}}
+      />
 
       <Card>
         <CardHeader>
