@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { Upload, Clipboard } from 'lucide-react';
 
 interface LogoUploadProps {
   institutionLogo?: string;
@@ -12,8 +14,10 @@ interface LogoUploadProps {
 
 const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
   const [uploading, setUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const pasteAreaRef = useRef<HTMLDivElement>(null);
 
   const uploadFile = async (file: File) => {
     try {
@@ -88,35 +92,75 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
     }
   };
 
-  const handlePaste = async (event: ClipboardEvent) => {
-    if (!user) return;
-    
-    const items = event.clipboardData?.items;
-    if (!items) return;
+  const handlePasteClick = async () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Você precisa estar logado para fazer upload de imagens",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
 
-    for (const item of Array.from(items)) {
-      if (item.type.startsWith('image/')) {
-        event.preventDefault();
-        const file = item.getAsFile();
-        if (file) {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      
+      for (const item of clipboardItems) {
+        const imageType = item.types.find(type => type.startsWith('image/'));
+        
+        if (imageType) {
+          const blob = await item.getType(imageType);
+          const file = new File([blob], `logo-${Date.now()}.png`, { type: imageType });
+          
           toast({
             title: "Imagem colada",
             description: "Fazendo upload da imagem...",
             duration: 2000,
           });
+          
           await uploadFile(file);
+          return;
         }
-        break;
       }
+      
+      toast({
+        title: "Nenhuma imagem encontrada",
+        description: "Copie uma imagem primeiro (Ctrl+C) e depois clique em colar",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao colar",
+        description: "Não foi possível acessar a área de transferência. Use o upload de arquivo.",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   };
 
-  useEffect(() => {
-    window.addEventListener('paste', handlePaste);
-    return () => {
-      window.removeEventListener('paste', handlePaste);
-    };
-  }, [user]);
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    if (!user) return;
+    
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      await uploadFile(file);
+    }
+  };
 
   return (
     <Card>
@@ -124,13 +168,13 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
         <CardTitle>1. Logo da Instituição</CardTitle>
         <CardDescription>
           {user 
-            ? "Faça upload do logo da sua instituição (formato PNG ou JPG recomendado) ou cole com Ctrl+V"
+            ? "Faça upload, arraste ou cole uma imagem do logo da sua instituição"
             : "Faça login para poder fazer upload do logo da sua instituição"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {institutionLogo && (
-          <div className="w-40 h-40 mx-auto mb-4">
+          <div className="w-40 h-40 mx-auto mb-4 border-2 border-border rounded-lg p-2">
             <img 
               src={institutionLogo} 
               alt="Logo da Instituição" 
@@ -138,14 +182,60 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
             />
           </div>
         )}
-        <div className="flex items-center gap-4">
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={handleFileUpload}
-            disabled={uploading || !user}
-          />
-          {uploading && <span className="text-sm text-muted-foreground">Enviando...</span>}
+        
+        <div 
+          ref={pasteAreaRef}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
+            isDragOver 
+              ? 'border-primary bg-primary/5' 
+              : 'border-border bg-muted/20'
+          } ${!user ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+        >
+          <div className="flex flex-col items-center gap-4">
+            <Upload className="w-12 h-12 text-muted-foreground" />
+            <div className="text-center space-y-2">
+              <p className="text-sm font-medium">Arraste uma imagem aqui</p>
+              <p className="text-xs text-muted-foreground">ou use os botões abaixo</p>
+            </div>
+            
+            <div className="flex gap-2 w-full">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => document.getElementById('logo-file-input')?.click()}
+                disabled={uploading || !user}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Escolher arquivo
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handlePasteClick}
+                disabled={uploading || !user}
+              >
+                <Clipboard className="w-4 h-4 mr-2" />
+                Colar (Ctrl+V)
+              </Button>
+            </div>
+            
+            <Input
+              id="logo-file-input"
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              disabled={uploading || !user}
+              className="hidden"
+            />
+            
+            {uploading && (
+              <p className="text-sm text-primary animate-pulse">Enviando imagem...</p>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
