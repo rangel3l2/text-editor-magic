@@ -118,6 +118,74 @@ export type Database = {
         }
         Relationships: []
       }
+      banner_work_images: {
+        Row: {
+          adjustments: Json | null
+          caption: string | null
+          column_position: number | null
+          created_at: string | null
+          crop_data: Json | null
+          display_order: number
+          dpi: number | null
+          height_cm: number | null
+          id: string
+          original_height: number | null
+          original_width: number | null
+          rotation: number | null
+          storage_path: string
+          updated_at: string | null
+          user_id: string
+          width_cm: number | null
+          work_id: string
+        }
+        Insert: {
+          adjustments?: Json | null
+          caption?: string | null
+          column_position?: number | null
+          created_at?: string | null
+          crop_data?: Json | null
+          display_order?: number
+          dpi?: number | null
+          height_cm?: number | null
+          id?: string
+          original_height?: number | null
+          original_width?: number | null
+          rotation?: number | null
+          storage_path: string
+          updated_at?: string | null
+          user_id: string
+          width_cm?: number | null
+          work_id: string
+        }
+        Update: {
+          adjustments?: Json | null
+          caption?: string | null
+          column_position?: number | null
+          created_at?: string | null
+          crop_data?: Json | null
+          display_order?: number
+          dpi?: number | null
+          height_cm?: number | null
+          id?: string
+          original_height?: number | null
+          original_width?: number | null
+          rotation?: number | null
+          storage_path?: string
+          updated_at?: string | null
+          user_id?: string
+          width_cm?: number | null
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banner_work_images_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "work_in_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pending_user_roles: {
         Row: {
           created_at: string | null
