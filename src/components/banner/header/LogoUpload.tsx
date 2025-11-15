@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -15,7 +15,7 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadFile = async (file: File) => {
     try {
       if (!user) {
         toast({
@@ -28,8 +28,6 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
       }
 
       setUploading(true);
-      const file = event.target.files?.[0];
-      if (!file) return;
 
       const fileExt = file.name.split('.').pop();
       const filePath = `${crypto.randomUUID()}.${fileExt}`;
@@ -83,13 +81,50 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await uploadFile(file);
+    }
+  };
+
+  const handlePaste = async (event: ClipboardEvent) => {
+    if (!user) return;
+    
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith('image/')) {
+        event.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          toast({
+            title: "Imagem colada",
+            description: "Fazendo upload da imagem...",
+            duration: 2000,
+          });
+          await uploadFile(file);
+        }
+        break;
+      }
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('paste', handlePaste);
+    return () => {
+      window.removeEventListener('paste', handlePaste);
+    };
+  }, [user]);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>1. Logo da Instituição</CardTitle>
         <CardDescription>
           {user 
-            ? "Faça upload do logo da sua instituição (formato PNG ou JPG recomendado)"
+            ? "Faça upload do logo da sua instituição (formato PNG ou JPG recomendado) ou cole com Ctrl+V"
             : "Faça login para poder fazer upload do logo da sua instituição"}
         </CardDescription>
       </CardHeader>
