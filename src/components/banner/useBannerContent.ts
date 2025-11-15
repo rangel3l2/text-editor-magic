@@ -24,6 +24,15 @@ export interface BannerContent {
   qrCode?: string;
   themeColor?: string;
   columnLayout?: '2' | '3';
+  templateId?: string;
+  customColors?: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    text: string;
+    background: string;
+    sectionHeader: string;
+  };
 }
 
 export const useBannerContent = () => {
