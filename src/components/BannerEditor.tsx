@@ -14,6 +14,8 @@ import LoginRequiredModal from "./banner/LoginRequiredModal";
 import { useWorkLoader } from "./banner/hooks/useWorkLoader";
 import { useWorkCreator } from "./banner/hooks/useWorkCreator";
 import { useWorkAutoSave } from "./banner/hooks/useWorkAutoSave";
+import BannerTemplateSelector from "./banner/templates/BannerTemplateSelector";
+import type { BannerTemplatePreset } from "@/hooks/useBannerTemplates";
 
 const BannerEditor = () => {
   const { user } = useAuth();
@@ -89,6 +91,19 @@ const BannerEditor = () => {
     }
   };
 
+  const handleSelectTemplate = (template: BannerTemplatePreset) => {
+    // Aplicar configurações do template ao banner
+    handleChange('templateId', template.id);
+    handleChange('columnLayout', template.layout_config.columns.toString() as '2' | '3');
+    handleChange('themeColor', template.colors.primary);
+    
+    // Armazenar cores customizadas
+    setBannerContent(prev => ({
+      ...prev,
+      customColors: template.colors
+    }));
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -119,6 +134,12 @@ const BannerEditor = () => {
             onOpenPreview={() => setPreviewOpen(true)}
             onClearFields={handleClearFields}
           />
+          
+          <BannerTemplateSelector
+            onSelectTemplate={handleSelectTemplate}
+            currentTemplateId={content.templateId}
+          />
+          
           <BannerContent
             content={content}
             handleChange={handleFieldChange}
