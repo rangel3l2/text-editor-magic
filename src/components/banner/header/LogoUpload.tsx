@@ -174,12 +174,21 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         {institutionLogo && (
-          <div className="w-40 h-40 mx-auto mb-4 border-2 border-border rounded-lg p-2">
+          <div className="relative w-full max-w-md mx-auto mb-4 border-2 border-border rounded-lg p-4 bg-background">
             <img 
               src={institutionLogo} 
               alt="Logo da Instituição" 
-              className="w-full h-full object-contain"
+              className="w-full h-auto object-contain max-h-32"
             />
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              className="absolute top-2 right-2"
+              onClick={() => handleChange('institutionLogo', '')}
+            >
+              Remover
+            </Button>
           </div>
         )}
         

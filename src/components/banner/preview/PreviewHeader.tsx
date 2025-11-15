@@ -23,21 +23,21 @@ const PreviewHeader = ({
   return (
     <div className="flex flex-col w-full mb-4">
       <div className="banner-header flex items-center justify-between p-4 border-b">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-1">
           {institutionLogo && (
             <img 
               src={institutionLogo} 
               alt="Logo da Instituição" 
-              className="w-24 h-24 object-contain"
+              className="max-h-20 w-auto object-contain"
+            />
+          )}
+          {institutionName && (
+            <div 
+              className="institution flex-1 text-right text-xl font-semibold"
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(institutionName) }} 
             />
           )}
         </div>
-        {institutionName && (
-          <div 
-            className="institution flex-1 text-right text-xl font-semibold"
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml(institutionName) }} 
-          />
-        )}
       </div>
       {(title || authors) && (
         <div className="text-center mt-4 space-y-2">
