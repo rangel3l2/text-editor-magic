@@ -1,5 +1,6 @@
 import Header from '../Header';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import BannerPreview from './BannerPreview';
 import { FileDown, Share2, Eye, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,9 @@ const BannerLayout = ({
             margin: '0 auto',
           }}
         >
+          <VisuallyHidden>
+            <DialogTitle>Visualização do Banner</DialogTitle>
+          </VisuallyHidden>
           <BannerPreview 
             content={content}
             onImageConfigChange={onImageConfigChange}
