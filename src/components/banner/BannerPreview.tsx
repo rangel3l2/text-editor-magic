@@ -34,10 +34,12 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
   }, [content, toast]);
 
   return (
-    <Card className="w-full h-full bg-white overflow-hidden">
+    <Card className="w-full h-full bg-white overflow-auto">
       <BannerPreviewContent 
         previewHtml={previewHtml} 
         columnLayout={content.columnLayout || '2'}
+        institutionLogo={content.institutionLogo}
+        institutionName={content.institution}
       />
     </Card>
   );

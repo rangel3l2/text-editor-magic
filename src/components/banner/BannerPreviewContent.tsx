@@ -12,9 +12,11 @@ interface ImageSettingsConfig {
 interface BannerPreviewContentProps {
   previewHtml: string;
   columnLayout?: '2' | '3';
+  institutionLogo?: string;
+  institutionName?: string;
 }
 
-const BannerPreviewContent = ({ previewHtml, columnLayout = '2' }: BannerPreviewContentProps) => {
+const BannerPreviewContent = ({ previewHtml, columnLayout = '2', institutionLogo, institutionName }: BannerPreviewContentProps) => {
   const [sections, setSections] = useState<HTMLElement[]>([]);
   const [draggedSection, setDraggedSection] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -109,8 +111,8 @@ const BannerPreviewContent = ({ previewHtml, columnLayout = '2' }: BannerPreview
   const doc = parser.parseFromString(previewHtml, 'text/html');
   
   const headerSection = doc.querySelector('.banner-header');
-  const institutionName = headerSection?.querySelector('.institution')?.innerHTML || '';
-  const institutionLogo = headerSection?.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src') || '';
+  const extractedInstitutionName = headerSection?.querySelector('.institution')?.innerHTML || institutionName || '';
+  const extractedInstitutionLogo = headerSection?.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src') || institutionLogo || '';
   const title = doc.querySelector('h1')?.innerHTML || '';
   const authors = doc.querySelector('.authors')?.innerHTML || '';
 
@@ -119,12 +121,12 @@ const BannerPreviewContent = ({ previewHtml, columnLayout = '2' }: BannerPreview
       <div 
         className="bg-white shadow-lg"
         style={{
-          width: '900mm',
-          height: '1200mm',
-          padding: '20mm',
+          width: '90cm',
+          height: '120cm',
+          padding: '2cm',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           margin: '0 auto',
-          transform: 'scale(0.35)',
+          transform: 'scale(0.6)',
           transformOrigin: 'top center',
           display: 'flex',
           flexDirection: 'column',
@@ -133,8 +135,8 @@ const BannerPreviewContent = ({ previewHtml, columnLayout = '2' }: BannerPreview
       >
         <div className="banner-content flex-1 overflow-hidden">
           <PreviewHeader 
-            institutionName={institutionName}
-            institutionLogo={institutionLogo}
+            institutionName={extractedInstitutionName}
+            institutionLogo={extractedInstitutionLogo}
             title={title}
             authors={authors}
           />
