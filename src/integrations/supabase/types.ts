@@ -88,6 +88,48 @@ export type Database = {
           },
         ]
       }
+      banner_template_presets: {
+        Row: {
+          colors: Json
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          layout_config: Json
+          name: string
+          structure: Json
+          thumbnail_url: string | null
+          typography: Json
+          updated_at: string | null
+        }
+        Insert: {
+          colors: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          layout_config: Json
+          name: string
+          structure: Json
+          thumbnail_url?: string | null
+          typography: Json
+          updated_at?: string | null
+        }
+        Update: {
+          colors?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          layout_config?: Json
+          name?: string
+          structure?: Json
+          thumbnail_url?: string | null
+          typography?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       banner_templates: {
         Row: {
           content: Json
