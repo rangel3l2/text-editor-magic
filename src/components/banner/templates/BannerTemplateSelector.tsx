@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Palette, Columns2, Columns3, Sparkles } from 'lucide-react';
+import { Palette, Columns2, Columns3, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { useBannerTemplates, BannerTemplatePreset } from '@/hooks/useBannerTemplates';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
 
 interface BannerTemplateSelectorProps {
   onSelectTemplate: (template: BannerTemplatePreset) => void;
@@ -12,6 +13,9 @@ interface BannerTemplateSelectorProps {
 
 const BannerTemplateSelector = ({ onSelectTemplate, currentTemplateId }: BannerTemplateSelectorProps) => {
   const { templates, isLoading } = useBannerTemplates();
+  const [isExpanded, setIsExpanded] = useState(!currentTemplateId);
+
+  const selectedTemplate = templates.find(t => t.id === currentTemplateId);
 
   if (isLoading) {
     return (
@@ -29,15 +33,43 @@ const BannerTemplateSelector = ({ onSelectTemplate, currentTemplateId }: BannerT
     );
   }
 
+  // Vista minimizada quando um template está selecionado e não expandido
+  if (currentTemplateId && !isExpanded && selectedTemplate) {
+    return (
+      <Button
+        variant="outline"
+        className="w-full flex items-center justify-between gap-2 p-3"
+        onClick={() => setIsExpanded(true)}
+      >
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4" />
+          <span className="font-medium text-sm">{selectedTemplate.name}</span>
+        </div>
+        <ChevronDown className="w-4 h-4" />
+      </Button>
+    );
+  }
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5" />
-          Templates de Banner
-        </CardTitle>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            <CardTitle>Templates de Banner</CardTitle>
+          </div>
+          {currentTemplateId && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(false)}
+            >
+              <ChevronUp className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
         <CardDescription>
-          Escolha um template profissional baseado nos padrões da FeciTEL e personalize conforme necessário
+          Escolha um template profissional e personalize conforme necessário
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -46,7 +78,10 @@ const BannerTemplateSelector = ({ onSelectTemplate, currentTemplateId }: BannerT
             key={template.id}
             variant={currentTemplateId === template.id ? 'default' : 'outline'}
             className="w-full h-auto p-4 flex flex-col items-start gap-2"
-            onClick={() => onSelectTemplate(template)}
+            onClick={() => {
+              onSelectTemplate(template);
+              setIsExpanded(false);
+            }}
           >
             <div className="flex items-start justify-between w-full">
               <div className="flex items-center gap-2">
