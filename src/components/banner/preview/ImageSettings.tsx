@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import ImageCropDialog, { ImageConfig } from '../ImageCropDialog';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +65,9 @@ const ImageSettings = ({
   return (
     <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
       <DialogContent className="max-w-[95vw] w-[800px] max-h-[95vh] p-6">
+        <VisuallyHidden>
+          <DialogTitle>Configurações da Imagem</DialogTitle>
+        </VisuallyHidden>
         <ImageCropDialog
           imageUrl={selectedImage || ''}
           initialConfig={selectedImage ? imageSettings[selectedImage] : undefined}
