@@ -4,13 +4,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { generateLatexContent } from '@/utils/latexProcessor';
 import BannerPreviewContent from './BannerPreviewContent';
+import type { LogoConfig } from "./header/LogoUpload";
 
 interface BannerPreviewProps {
   content: any;
   onImageConfigChange: (imageId: string, config: any) => void;
+  onLogoConfigChange?: (config: LogoConfig) => void;
 }
 
-const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => {
+const BannerPreview = ({ content, onImageConfigChange, onLogoConfigChange }: BannerPreviewProps) => {
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const { toast } = useToast();
 
@@ -41,6 +43,8 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
         institutionLogo={content.institutionLogo}
         institutionName={content.institution}
         logoConfig={content.logoConfig}
+        editable={true}
+        onLogoConfigChange={onLogoConfigChange}
       />
     </Card>
   );

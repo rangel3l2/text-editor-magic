@@ -69,7 +69,7 @@ export const useBannerContent = () => {
 
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: any) => {
     setBannerContent(prev => ({
       ...prev,
       [field]: value

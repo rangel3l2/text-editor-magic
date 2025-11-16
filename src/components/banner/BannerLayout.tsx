@@ -4,6 +4,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import BannerPreview from './BannerPreview';
 import { FileDown, Share2, Eye, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { LogoConfig } from "./header/LogoUpload";
 
 interface BannerLayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ interface BannerLayoutProps {
   setPreviewOpen: (open: boolean) => void;
   content: any;
   onImageConfigChange: (imageId: string, config: any) => void;
+  onLogoConfigChange?: (config: LogoConfig) => void;
 }
 
 const BannerLayout = ({ 
@@ -18,7 +20,8 @@ const BannerLayout = ({
   previewOpen, 
   setPreviewOpen, 
   content, 
-  onImageConfigChange 
+  onImageConfigChange,
+  onLogoConfigChange
 }: BannerLayoutProps) => {
   return (
     <>
@@ -76,6 +79,7 @@ const BannerLayout = ({
             <BannerPreview 
               content={content}
               onImageConfigChange={onImageConfigChange}
+              onLogoConfigChange={onLogoConfigChange}
             />
           </div>
         </DialogContent>

@@ -25,11 +25,16 @@ interface Area {
 
 export interface LogoConfig {
   maxHeight: number; // in rem
+  width?: number; // largura em % da área disponível (20-100)
   crop?: {
     x: number;
     y: number;
     width: number;
     height: number;
+  };
+  position?: {
+    x: number;
+    y: number;
   };
 }
 
@@ -45,8 +50,10 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [maxHeight, setMaxHeight] = useState(logoConfig?.maxHeight || 10);
+  const [logoWidth, setLogoWidth] = useState(logoConfig?.width || 40);
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -56,6 +63,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
   useEffect(() => {
     if (logoConfig) {
       setMaxHeight(logoConfig.maxHeight || 10);
+      setLogoWidth(logoConfig.width || 40);
       if (logoConfig.crop) {
         setCrop({ x: logoConfig.crop.x, y: logoConfig.crop.y });
       }
@@ -259,12 +267,14 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
   const handleSaveConfig = async () => {
     const newConfig: LogoConfig = {
       maxHeight,
+      width: logoWidth,
       crop: croppedAreaPixels ? {
         x: croppedAreaPixels.x,
         y: croppedAreaPixels.y,
         width: croppedAreaPixels.width,
         height: croppedAreaPixels.height
-      } : logoConfig?.crop
+      } : logoConfig?.crop,
+      position: logoConfig?.position
     };
     
     handleChange('logoConfig', newConfig);
@@ -414,6 +424,23 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
               </p>
             </div>
 
+            <div className="space-y-3">
+              <label className="text-sm font-medium">
+                Largura: {logoWidth}% da área disponível
+              </label>
+              <Slider
+                value={[logoWidth]}
+                onValueChange={([v]) => setLogoWidth(v)}
+                min={20}
+                max={100}
+                step={5}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Para faixas horizontais, use 80-100%
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Button
                 variant="outline"
@@ -423,7 +450,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
                   setShowCropDialog(true);
                 }}
               >
-                Ajustar Crop/Enquadramento
+                Ajustar Crop/Enquadramento (cortar partes)
               </Button>
             </div>
 
@@ -441,36 +468,80 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
 
       {/* Crop Dialog */}
       <Dialog open={showCropDialog} onOpenChange={setShowCropDialog}>
-        <DialogContent className="max-w-3xl max-h-[90vh]">
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Ajustar Enquadramento do Logo</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Arraste para reposicionar, use zoom para cortar partes superior/inferior (ideal para faixas)
+            </p>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
-            <div className="relative h-[400px] bg-muted rounded-lg overflow-hidden">
+            <div className="relative h-[500px] bg-muted rounded-lg overflow-hidden">
               {institutionLogo && (
                 <Cropper
                   image={institutionLogo}
                   crop={crop}
                   zoom={zoom}
+                  rotation={rotation}
                   aspect={undefined}
+                  objectFit="horizontal-cover"
                   onCropChange={setCrop}
                   onZoomChange={setZoom}
+                  onRotationChange={setRotation}
                   onCropComplete={onCropComplete}
+                  showGrid={true}
+                  cropShape="rect"
                 />
               )}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Zoom: {zoom.toFixed(1)}x</label>
+                <label className="text-sm font-medium">Zoom: {zoom.toFixed(1)}x (use para cortar topo/base)</label>
                 <Slider
                   value={[zoom]}
                   onValueChange={([v]) => setZoom(v)}
                   min={1}
                   max={3}
-                  step={0.1}
+                  step={0.05}
                   className="w-full"
                 />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Rotação: {rotation}°</label>
+                <Slider
+                  value={[rotation]}
+                  onValueChange={([v]) => setRotation(v)}
+                  min={-45}
+                  max={45}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => { setZoom(1); setRotation(0); }}
+                >
+                  Resetar
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setZoom(zoom + 0.1)}
+                >
+                  Zoom +
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setZoom(Math.max(1, zoom - 0.1))}
+                >
+                  Zoom -
+                </Button>
               </div>
             </div>
 
@@ -479,7 +550,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
                 Cancelar
               </Button>
               <Button onClick={handleSaveConfig}>
-                Aplicar
+                Aplicar Corte
               </Button>
             </div>
           </div>
