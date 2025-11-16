@@ -15,6 +15,7 @@ import { ValidationProvider } from "@/contexts/ValidationContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import CookieConsent from "@/components/CookieConsent";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SharedBannerPage } from "@/pages/SharedBannerPage";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -39,6 +40,7 @@ function App() {
                 <Route path="/admin" element={<AdminSettings />} />
                 <Route path="/banner" element={<BannerEditor />} />
                 <Route path="/banner/:id" element={<BannerEditor />} />
+                <Route path="/banner/shared/:token" element={<SharedBannerPage />} />
                 <Route path="/article" element={<ArticleEditor />} />
                 <Route path="/article/:id" element={<ArticleEditor />} />
                 <Route path="/monography" element={<MonographyEditor />} />
