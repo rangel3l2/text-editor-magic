@@ -112,14 +112,14 @@ export const LogoInteractive = ({
     }
   }, [isResizing, isDragging, width, height, position, crop, onConfigChange]);
 
-  // Apply crop using clip-path if crop data exists
+  // Apply crop using object-position and overflow if crop data exists
   const getCropStyle = (): React.CSSProperties => {
-    if (!crop) return {};
+    if (!crop || !crop.width || !crop.height) return {};
     
-    // Convert crop pixels to percentages for clip-path
-    // Assuming crop is from react-easy-crop which gives pixels relative to natural image size
+    // crop is in percentages from react-image-crop
+    // We use clip-path with percentages
     return {
-      clipPath: `inset(${crop.y}px ${100 - crop.x - crop.width}px ${100 - crop.y - crop.height}px ${crop.x}px)`
+      clipPath: `inset(${crop.y}% ${100 - crop.x - crop.width}% ${100 - crop.y - crop.height}% ${crop.x}%)`
     };
   };
 
@@ -137,7 +137,7 @@ export const LogoInteractive = ({
     height: 'auto',
     objectFit: 'contain',
     display: 'block',
-    // Temporariamente desativamos o clip-path até converter corretamente para percentuais
+    ...getCropStyle(),
   };
 
   if (!editable) {
