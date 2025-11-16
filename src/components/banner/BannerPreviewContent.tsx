@@ -4,6 +4,7 @@ import PreviewHeader from './preview/PreviewHeader';
 import PreviewColumns from './preview/PreviewColumns';
 import ImageSettings from './preview/ImageSettings';
 import BannerPreviewStyles from './preview/BannerPreviewStyles';
+import type { LogoConfig } from './header/LogoUpload';
 
 interface ImageSettingsConfig {
   [key: string]: ImageConfig;
@@ -14,9 +15,10 @@ interface BannerPreviewContentProps {
   columnLayout?: '2' | '3';
   institutionLogo?: string;
   institutionName?: string;
+  logoConfig?: LogoConfig;
 }
 
-const BannerPreviewContent = ({ previewHtml, columnLayout = '2', institutionLogo, institutionName }: BannerPreviewContentProps) => {
+const BannerPreviewContent = ({ previewHtml, columnLayout = '2', institutionLogo, institutionName, logoConfig }: BannerPreviewContentProps) => {
   const [sections, setSections] = useState<HTMLElement[]>([]);
   const [draggedSection, setDraggedSection] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -145,6 +147,7 @@ const BannerPreviewContent = ({ previewHtml, columnLayout = '2', institutionLogo
           <PreviewHeader 
             institutionName={extractedInstitutionName}
             institutionLogo={extractedInstitutionLogo}
+            logoConfig={logoConfig}
             title={title}
             authors={authors}
           />

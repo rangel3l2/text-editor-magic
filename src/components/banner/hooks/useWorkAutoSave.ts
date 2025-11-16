@@ -37,6 +37,7 @@ export const useWorkAutoSave = ({
         authors: content.authors || '',
         institution: content.institution || '',
         institutionLogo: content.institutionLogo || '',
+        logoConfig: content.logoConfig,
         introduction: content.introduction || '',
         objectives: content.objectives || '',
         methodology: content.methodology || '',

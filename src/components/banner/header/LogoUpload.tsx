@@ -2,24 +2,65 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Upload, Clipboard } from 'lucide-react';
+import { Upload, Clipboard, Settings } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import Cropper from 'react-easy-crop';
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface Area {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface LogoConfig {
+  maxHeight: number; // in rem
+  crop?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
 
 interface LogoUploadProps {
   institutionLogo?: string;
-  handleChange: (field: string, value: string) => void;
+  logoConfig?: LogoConfig;
+  handleChange: (field: string, value: any) => void;
 }
 
-const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
+const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [showCropDialog, setShowCropDialog] = useState(false);
+  const [maxHeight, setMaxHeight] = useState(logoConfig?.maxHeight || 10);
+  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const pasteAreaRef = useRef<HTMLDivElement>(null);
   const { id } = useParams();
+
+  useEffect(() => {
+    if (logoConfig) {
+      setMaxHeight(logoConfig.maxHeight || 10);
+      if (logoConfig.crop) {
+        setCrop({ x: logoConfig.crop.x, y: logoConfig.crop.y });
+      }
+    }
+  }, [logoConfig]);
 
   const uploadFile = async (file: File) => {
     try {
@@ -215,6 +256,43 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
     }
   };
 
+  const handleSaveConfig = async () => {
+    const newConfig: LogoConfig = {
+      maxHeight,
+      crop: croppedAreaPixels ? {
+        x: croppedAreaPixels.x,
+        y: croppedAreaPixels.y,
+        width: croppedAreaPixels.width,
+        height: croppedAreaPixels.height
+      } : logoConfig?.crop
+    };
+    
+    handleChange('logoConfig', newConfig);
+    
+    if (user && id) {
+      try {
+        const { error: fnError } = await supabase.functions.invoke('update-work-content', {
+          body: { id, contentPatch: { logoConfig: newConfig } }
+        });
+        if (fnError) throw fnError;
+      } catch (err) {
+        console.error('Erro ao salvar configuração do logo:', err);
+      }
+    }
+    
+    setShowConfigDialog(false);
+    setShowCropDialog(false);
+    
+    toast({
+      title: 'Configuração salva',
+      description: 'As configurações do logo foram atualizadas',
+    });
+  };
+
+  const onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -231,17 +309,28 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
             <img 
               src={institutionLogo} 
               alt="Logo da Instituição" 
-              className="w-full h-auto object-contain max-h-32"
+              className="w-full h-auto object-contain"
+              style={{ maxHeight: `${maxHeight}rem` }}
             />
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              className="absolute top-2 right-2 z-10"
-              onClick={handleRemoveLogo}
-            >
-              Remover
-            </Button>
+            <div className="absolute top-2 right-2 z-10 flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowConfigDialog(true)}
+                disabled={!user}
+              >
+                <Settings className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={handleRemoveLogo}
+              >
+                Remover
+              </Button>
+            </div>
           </div>
         )}
         
@@ -300,6 +389,102 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
           </div>
         </div>
       </CardContent>
+
+      {/* Config Dialog */}
+      <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Configurar Logo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="space-y-3">
+              <label className="text-sm font-medium">
+                Altura Máxima: {maxHeight}rem (padrão banner: 8-12rem)
+              </label>
+              <Slider
+                value={[maxHeight]}
+                onValueChange={([v]) => setMaxHeight(v)}
+                min={4}
+                max={20}
+                step={0.5}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Padrão científico recomendado: 8-12rem
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setShowConfigDialog(false);
+                  setShowCropDialog(true);
+                }}
+              >
+                Ajustar Crop/Enquadramento
+              </Button>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowConfigDialog(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveConfig}>
+                Salvar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Crop Dialog */}
+      <Dialog open={showCropDialog} onOpenChange={setShowCropDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Ajustar Enquadramento do Logo</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <div className="relative h-[400px] bg-muted rounded-lg overflow-hidden">
+              {institutionLogo && (
+                <Cropper
+                  image={institutionLogo}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={undefined}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
+                />
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Zoom: {zoom.toFixed(1)}x</label>
+                <Slider
+                  value={[zoom]}
+                  onValueChange={([v]) => setZoom(v)}
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowCropDialog(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveConfig}>
+                Aplicar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

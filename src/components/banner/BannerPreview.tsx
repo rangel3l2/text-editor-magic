@@ -40,6 +40,7 @@ const BannerPreview = ({ content, onImageConfigChange }: BannerPreviewProps) => 
         columnLayout={content.columnLayout || '2'}
         institutionLogo={content.institutionLogo}
         institutionName={content.institution}
+        logoConfig={content.logoConfig}
       />
     </Card>
   );

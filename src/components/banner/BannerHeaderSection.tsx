@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import LogoUpload from './header/LogoUpload';
+import type { LogoConfig } from './header/LogoUpload';
 import InstitutionInput from './header/InstitutionInput';
 import ColumnLayoutSelector from './header/ColumnLayoutSelector';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -18,12 +19,13 @@ interface BannerHeaderSectionProps {
     authorEmail: string;
     institution: string;
     institutionLogo?: string;
+    logoConfig?: LogoConfig;
     eventLogo?: string;
     advisors?: string;
     themeColor?: string;
     columnLayout?: '2' | '3';
   };
-  handleChange: (field: string, data: string) => void;
+  handleChange: (field: string, data: any) => void;
 }
 
 const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps) => {
@@ -261,6 +263,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     <div className="space-y-6">
       <LogoUpload 
         institutionLogo={content.institutionLogo}
+        logoConfig={content.logoConfig}
         handleChange={handleChange}
       />
       

@@ -58,6 +58,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
             authors: savedContent.authors || '',
             institution: savedContent.institution || '',
             institutionLogo: savedContent.institutionLogo || '',
+            logoConfig: savedContent.logoConfig,
             introduction: savedContent.introduction || '',
             objectives: savedContent.objectives || '',
             methodology: savedContent.methodology || '',
