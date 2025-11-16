@@ -7,21 +7,10 @@ import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Upload, Clipboard, Settings } from 'lucide-react';
+import { Upload, Clipboard, Settings, RotateCw } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import Cropper from 'react-easy-crop';
-
-interface Point {
-  x: number;
-  y: number;
-}
-
-interface Area {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 export interface LogoConfig {
   maxHeight: number; // in rem
@@ -51,10 +40,15 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [maxHeight, setMaxHeight] = useState(logoConfig?.maxHeight || 10);
   const [logoWidth, setLogoWidth] = useState(logoConfig?.width || 40);
-  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
+  const [crop, setCrop] = useState<Crop>({
+    unit: '%',
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100
+  });
   const [rotation, setRotation] = useState(0);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const pasteAreaRef = useRef<HTMLDivElement>(null);
@@ -65,7 +59,13 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
       setMaxHeight(logoConfig.maxHeight || 10);
       setLogoWidth(logoConfig.width || 40);
       if (logoConfig.crop) {
-        setCrop({ x: logoConfig.crop.x, y: logoConfig.crop.y });
+        setCrop({
+          unit: '%',
+          x: logoConfig.crop.x,
+          y: logoConfig.crop.y,
+          width: logoConfig.crop.width,
+          height: logoConfig.crop.height
+        });
       }
     }
   }, [logoConfig]);
@@ -268,12 +268,12 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
     const newConfig: LogoConfig = {
       maxHeight: maxHeight,
       width: logoWidth,
-      crop: croppedAreaPixels ? {
-        x: croppedAreaPixels.x,
-        y: croppedAreaPixels.y,
-        width: croppedAreaPixels.width,
-        height: croppedAreaPixels.height
-      } : logoConfig?.crop,
+      crop: {
+        x: crop.x,
+        y: crop.y,
+        width: crop.width,
+        height: crop.height
+      },
       position: logoConfig?.position || { x: 0, y: 0 }
     };
     
@@ -288,7 +288,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
         
         toast({
           title: 'Configuração salva',
-          description: `Logo: ${logoWidth}% largura, ${maxHeight}rem altura${croppedAreaPixels ? ', com crop aplicado' : ''}`,
+          description: `Logo: ${logoWidth}% largura, ${maxHeight}rem altura, crop: ${crop.width.toFixed(0)}%×${crop.height.toFixed(0)}%`,
         });
       } catch (err) {
         console.error('Erro ao salvar configuração do logo:', err);
@@ -309,8 +309,15 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
     setShowCropDialog(false);
   };
 
-  const onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
-    setCroppedAreaPixels(croppedAreaPixels);
+  const handleResetCrop = () => {
+    setCrop({
+      unit: '%',
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100
+    });
+    setRotation(0);
   };
 
   return (
@@ -480,45 +487,36 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
       <Dialog open={showCropDialog} onOpenChange={setShowCropDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Ajustar Enquadramento do Logo</DialogTitle>
+            <DialogTitle>Recortar Logo</DialogTitle>
             <p className="text-sm text-muted-foreground">
-              Arraste para reposicionar, use zoom para cortar partes superior/inferior (ideal para faixas)
+              Arraste as alças para selecionar a área que deseja manter (ideal para criar faixas horizontais)
             </p>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
-            <div className="relative h-[500px] bg-muted rounded-lg overflow-hidden">
+            <div className="relative bg-muted rounded-lg overflow-hidden flex items-center justify-center" style={{ minHeight: '500px' }}>
               {institutionLogo && (
-                <Cropper
-                  image={institutionLogo}
+                <ReactCrop
                   crop={crop}
-                  zoom={zoom}
-                  rotation={rotation}
+                  onChange={(c) => setCrop(c)}
                   aspect={undefined}
-                  objectFit="contain"
-                  onCropChange={setCrop}
-                  onZoomChange={setZoom}
-                  onRotationChange={setRotation}
-                  onCropComplete={onCropComplete}
-                  showGrid={true}
-                  cropShape="rect"
-                  restrictPosition={false}
-                />
+                  style={{ maxHeight: '500px', maxWidth: '100%' }}
+                >
+                  <img
+                    ref={imgRef}
+                    src={institutionLogo}
+                    alt="Logo para recorte"
+                    style={{
+                      maxHeight: '500px',
+                      maxWidth: '100%',
+                      display: 'block',
+                      transform: `rotate(${rotation}deg)`
+                    }}
+                  />
+                </ReactCrop>
               )}
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Zoom: {zoom.toFixed(1)}x (use para cortar topo/base)</label>
-                <Slider
-                  value={[zoom]}
-                  onValueChange={([v]) => setZoom(v)}
-                  min={0.5}
-                  max={5}
-                  step={0.1}
-                  className="w-full"
-                />
-              </div>
-              
               <div className="space-y-2">
                 <label className="text-sm font-medium">Rotação: {rotation}°</label>
                 <Slider
@@ -535,23 +533,10 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => { setZoom(1); setRotation(0); }}
+                  onClick={handleResetCrop}
                 >
-                  Resetar
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setZoom(zoom + 0.1)}
-                >
-                  Zoom +
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setZoom(Math.max(1, zoom - 0.1))}
-                >
-                  Zoom -
+                  <RotateCw className="w-4 h-4 mr-2" />
+                  Resetar Crop
                 </Button>
               </div>
             </div>
@@ -561,7 +546,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
                 Cancelar
               </Button>
               <Button onClick={handleSaveConfig}>
-                Aplicar Corte
+                Aplicar Recorte
               </Button>
             </div>
           </div>
