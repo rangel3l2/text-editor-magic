@@ -20,7 +20,7 @@ export const LogoInteractive = ({
   const [isDragging, setIsDragging] = useState(false);
   
   // Use logoConfig directly as source of truth
-  const width = logoConfig?.width || 40;
+  const width = logoConfig?.width || 100;
   const height = logoConfig?.maxHeight || 10;
   const position = logoConfig?.position || { x: 0, y: 0 };
   const crop = logoConfig?.crop;
@@ -114,8 +114,13 @@ export const LogoInteractive = ({
 
   // Styles for cropped/un-cropped rendering
   const getImageStyles = (): React.CSSProperties => {
-    // If no crop or invalid crop, show full image
-    if (!crop || crop.width === 0 || crop.height === 0 || crop.width === 100 && crop.height === 100) {
+    // If no crop or default crop (100% with no offset), show full image
+    const isDefaultCrop = !crop || 
+                         crop.width === 0 || 
+                         crop.height === 0 || 
+                         (crop.width === 100 && crop.height === 100 && crop.x === 0 && crop.y === 0);
+    
+    if (isDefaultCrop) {
       return {
         maxHeight: `${height}rem`,
         width: '100%',
