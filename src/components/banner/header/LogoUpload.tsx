@@ -386,7 +386,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
               className="relative w-full mx-auto overflow-hidden bg-muted flex items-center justify-center"
               style={{ 
                 maxHeight: `${maxHeight}rem`,
-                height: logoConfig?.crop ? `${maxHeight}rem` : 'auto'
+                height: (logoConfig?.crop && logoConfig.crop.width < 100) ? `${maxHeight}rem` : 'auto'
               }}
             >
               <img 
@@ -394,10 +394,12 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
                 alt="Logo da Instituição" 
                 className="object-contain"
                 style={{
-                  maxHeight: logoConfig?.crop ? 'none' : `${maxHeight}rem`,
-                  width: logoConfig?.crop ? `${10000 / (logoConfig.crop.width || 100)}%` : '100%',
+                  maxHeight: (logoConfig?.crop && logoConfig.crop.width < 100) ? 'none' : `${maxHeight}rem`,
+                  width: (logoConfig?.crop && logoConfig.crop.width < 100) 
+                    ? `${10000 / logoConfig.crop.width}%` 
+                    : '100%',
                   height: 'auto',
-                  transform: logoConfig?.crop 
+                  transform: (logoConfig?.crop && logoConfig.crop.width < 100)
                     ? `translate(${-logoConfig.crop.x}%, ${-logoConfig.crop.y}%)` 
                     : 'none',
                   display: 'block'
