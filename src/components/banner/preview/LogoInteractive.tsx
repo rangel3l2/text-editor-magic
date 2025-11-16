@@ -128,22 +128,21 @@ export const LogoInteractive = ({
     transition: isResizing || isDragging ? 'none' : 'transform 0.2s ease',
     cursor: editable ? (isDragging ? 'grabbing' : 'grab') : 'default',
     display: 'inline-block',
-    maxWidth: `${width}%`,
+    width: `${width}%`,
   };
 
   const imageStyle: React.CSSProperties = {
     maxHeight: `${height}rem`,
-    maxWidth: '100%',
+    width: '100%',
     height: 'auto',
-    width: 'auto',
     objectFit: 'contain',
     display: 'block',
-    ...getCropStyle(),
+    // Temporariamente desativamos o clip-path até converter corretamente para percentuais
   };
 
   if (!editable) {
     return (
-      <div style={{ maxWidth: `${width}%`, display: 'inline-block' }}>
+      <div style={{ width: `${width}%`, display: 'inline-block' }}>
         <img src={src} alt={alt} style={imageStyle} className="object-contain" />
       </div>
     );
