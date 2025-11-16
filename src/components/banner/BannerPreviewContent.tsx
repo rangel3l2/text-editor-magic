@@ -120,7 +120,7 @@ const BannerPreviewContent = ({ previewHtml, columnLayout = '2', institutionLogo
   
   const headerSection = doc.querySelector('.banner-header');
   const extractedInstitutionName = headerSection?.querySelector('.institution')?.innerHTML || institutionName || '';
-  const extractedInstitutionLogo = headerSection?.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src') || institutionLogo || '';
+  const extractedInstitutionLogo = (institutionLogo || headerSection?.querySelector('img[alt="Logo da Instituição"]')?.getAttribute('src') || '');
   const title = doc.querySelector('h1')?.innerHTML || '';
   const authors = doc.querySelector('.authors')?.innerHTML || '';
 
