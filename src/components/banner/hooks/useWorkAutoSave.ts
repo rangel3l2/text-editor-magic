@@ -71,45 +71,4 @@ export const useWorkAutoSave = ({
     return () => clearTimeout(debounceTimeout);
   }, [content, bannerContent, user, currentWorkId, isLoading]);
 
-  // Immediate save when institutionLogo changes (ensures logo removal persists quickly)
-  useEffect(() => {
-    if (!currentWorkId || !user || isLoading) return;
-
-    const generateUniqueTitle = () => {
-      const timestamp = new Date().toLocaleString('pt-BR');
-      const randomId = Math.floor(Math.random() * 10000);
-      return `Trabalho Desconhecido #${randomId} (${timestamp})`;
-    };
-
-    const saveNow = async () => {
-      const workTitle = content.title?.replace(/<[^>]*>/g, '').trim() || generateUniqueTitle();
-      const completeContent = {
-        ...bannerContent,
-        title: content.title || '',
-        authors: content.authors || '',
-        institution: content.institution || '',
-        institutionLogo: content.institutionLogo || '',
-        introduction: content.introduction || '',
-        objectives: content.objectives || '',
-        methodology: content.methodology || '',
-        results: content.results || '',
-        conclusion: content.conclusion || '',
-        references: content.references || '',
-        acknowledgments: content.acknowledgments || '',
-        advisors: content.advisors || '',
-      };
-      try {
-        const { error } = await supabase
-          .from('work_in_progress')
-          .update({ title: workTitle, content: completeContent, last_modified: new Date().toISOString() })
-          .eq('id', currentWorkId)
-          .eq('user_id', user.id);
-        if (error) console.error('Error saving work (logo change):', error);
-      } catch (err) {
-        console.error('Error saving work (logo change):', err);
-      }
-    };
-
-    saveNow();
-  }, [content.institutionLogo, bannerContent, user, currentWorkId, isLoading]);
 };

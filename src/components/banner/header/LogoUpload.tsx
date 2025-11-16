@@ -172,31 +172,45 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
     // Persist change if a work exists
     if (user && id) {
       try {
-        const { data, error } = await supabase
-          .from('work_in_progress')
-          .select('content')
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .maybeSingle();
+        // Use backend function to persist (avoids CORS issues)
+        const { error: fnError } = await supabase.functions.invoke('update-work-content', {
+          body: { id, contentPatch: { institutionLogo: '' } }
+        });
 
-        if (error) throw error;
-
-        if (data?.content) {
-          const newContent = { ...(data.content as any), institutionLogo: '' };
-          const { error: updateError } = await supabase
-            .from('work_in_progress')
-            .update({ content: newContent, last_modified: new Date().toISOString() })
-            .eq('id', id)
-            .eq('user_id', user.id);
-          if (updateError) throw updateError;
-        }
+        if (fnError) throw fnError;
 
         toast({
           title: 'Logo removido',
           description: 'A alteração foi salva.',
         });
       } catch (err) {
-        console.error('Erro ao persistir remoção do logo:', err);
+        console.error('Erro ao persistir remoção do logo (function):', err);
+        // Fallback direto no banco
+        try {
+          const { data, error } = await supabase
+            .from('work_in_progress')
+            .select('content')
+            .eq('id', id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (error) throw error;
+
+          const newContent = { ...(data?.content as any || {}), institutionLogo: '' };
+          const { error: updateError } = await supabase
+            .from('work_in_progress')
+            .update({ content: newContent, last_modified: new Date().toISOString() })
+            .eq('id', id)
+            .eq('user_id', user.id);
+          if (updateError) throw updateError;
+
+          toast({
+            title: 'Logo removido',
+            description: 'A alteração foi salva.',
+          });
+        } catch (fallbackErr) {
+          console.error('Erro ao persistir remoção do logo (fallback):', fallbackErr);
+        }
       }
     }
   };
