@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Upload, Clipboard } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 
 interface LogoUploadProps {
   institutionLogo?: string;
@@ -18,6 +19,7 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const pasteAreaRef = useRef<HTMLDivElement>(null);
+  const { id } = useParams();
 
   const uploadFile = async (file: File) => {
     try {
@@ -162,6 +164,43 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
     }
   };
 
+  const handleRemoveLogo = async (e?: React.MouseEvent) => {
+    e?.stopPropagation?.();
+    // Update UI immediately
+    handleChange('institutionLogo', '');
+
+    // Persist change if a work exists
+    if (user && id) {
+      try {
+        const { data, error } = await supabase
+          .from('work_in_progress')
+          .select('content')
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data?.content) {
+          const newContent = { ...(data.content as any), institutionLogo: '' };
+          const { error: updateError } = await supabase
+            .from('work_in_progress')
+            .update({ content: newContent, last_modified: new Date().toISOString() })
+            .eq('id', id)
+            .eq('user_id', user.id);
+          if (updateError) throw updateError;
+        }
+
+        toast({
+          title: 'Logo removido',
+          description: 'A alteração foi salva.',
+        });
+      } catch (err) {
+        console.error('Erro ao persistir remoção do logo:', err);
+      }
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -184,8 +223,8 @@ const LogoUpload = ({ institutionLogo, handleChange }: LogoUploadProps) => {
               type="button"
               variant="destructive"
               size="sm"
-              className="absolute top-2 right-2"
-              onClick={() => handleChange('institutionLogo', '')}
+              className="absolute top-2 right-2 z-10"
+              onClick={handleRemoveLogo}
             >
               Remover
             </Button>
