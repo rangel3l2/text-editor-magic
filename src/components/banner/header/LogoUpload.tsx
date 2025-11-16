@@ -49,6 +49,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
   });
   const [completedCrop, setCompletedCrop] = useState<Crop | null>(null);
   const [aspectRatio, setAspectRatio] = useState<number | undefined>(undefined);
+  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -79,7 +80,8 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
   }, [logoConfig]);
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const { width, height } = e.currentTarget;
+    const { width, height, naturalWidth, naturalHeight } = e.currentTarget;
+    setImageDimensions({ width: naturalWidth, height: naturalHeight });
     if (!logoConfig?.crop) {
       // Initialize with full image
       setCrop({
@@ -90,6 +92,15 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
         height: 100
       });
     }
+  };
+
+  // Calculate pixel dimensions from percentage crop
+  const getPixelDimensions = () => {
+    if (!imageDimensions) return { width: 0, height: 0 };
+    return {
+      width: Math.round((crop.width / 100) * imageDimensions.width),
+      height: Math.round((crop.height / 100) * imageDimensions.height)
+    };
   };
 
   const uploadFile = async (file: File) => {
@@ -371,12 +382,28 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
       <CardContent className="space-y-4">
         {institutionLogo && (
           <div className="relative w-full max-w-md mx-auto mb-4 border-2 border-border rounded-lg p-4 bg-background">
-            <img 
-              src={institutionLogo} 
-              alt="Logo da Instituição" 
-              className="w-full h-auto object-contain"
-              style={{ maxHeight: `${maxHeight}rem` }}
-            />
+            <div 
+              className="relative w-full mx-auto overflow-hidden bg-muted flex items-center justify-center"
+              style={{ 
+                maxHeight: `${maxHeight}rem`,
+                height: logoConfig?.crop ? `${maxHeight}rem` : 'auto'
+              }}
+            >
+              <img 
+                src={institutionLogo} 
+                alt="Logo da Instituição" 
+                className="object-contain"
+                style={{
+                  maxHeight: logoConfig?.crop ? 'none' : `${maxHeight}rem`,
+                  width: logoConfig?.crop ? `${10000 / (logoConfig.crop.width || 100)}%` : '100%',
+                  height: 'auto',
+                  transform: logoConfig?.crop 
+                    ? `translate(${-logoConfig.crop.x}%, ${-logoConfig.crop.y}%)` 
+                    : 'none',
+                  display: 'block'
+                }}
+              />
+            </div>
             <div className="absolute top-2 right-2 z-10 flex gap-2">
               <Button
                 type="button"
@@ -546,6 +573,9 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
                       onChange={(e) => setCrop({ ...crop, width: Number(e.target.value) })}
                       className="h-9"
                     />
+                    {imageDimensions && (
+                      <p className="text-xs text-muted-foreground">{getPixelDimensions().width}px</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-muted-foreground">Height</label>
@@ -555,6 +585,9 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
                       onChange={(e) => setCrop({ ...crop, height: Number(e.target.value) })}
                       className="h-9"
                     />
+                    {imageDimensions && (
+                      <p className="text-xs text-muted-foreground">{getPixelDimensions().height}px</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -622,30 +655,39 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
             </div>
 
             {/* Right Panel - Image Preview */}
-            <div className="flex-1 bg-muted p-8 flex items-center justify-center overflow-hidden">
+            <div className="flex-1 bg-muted p-8 flex items-center justify-center overflow-hidden relative">
               {institutionLogo && (
-                <ReactCrop
-                  crop={crop}
-                  onChange={(c, pc) => {
-                    setCrop(c);
-                    setCompletedCrop(pc);
-                  }}
-                  onComplete={(c) => setCompletedCrop(c)}
-                  aspect={aspectRatio}
-                  className="max-h-full max-w-full"
-                >
-                  <img
-                    ref={imgRef}
-                    src={institutionLogo}
-                    alt="Logo para recorte"
-                    onLoad={onImageLoad}
-                    style={{
-                      maxHeight: 'calc(95vh - 64px)',
-                      maxWidth: '100%',
-                      display: 'block'
+                <>
+                  <ReactCrop
+                    crop={crop}
+                    onChange={(c, pc) => {
+                      setCrop(c);
+                      setCompletedCrop(pc);
                     }}
-                  />
-                </ReactCrop>
+                    onComplete={(c) => setCompletedCrop(c)}
+                    aspect={aspectRatio}
+                    className="max-h-full max-w-full"
+                  >
+                    <img
+                      ref={imgRef}
+                      src={institutionLogo}
+                      alt="Logo para recorte"
+                      onLoad={onImageLoad}
+                      style={{
+                        maxHeight: 'calc(95vh - 64px)',
+                        maxWidth: '100%',
+                        display: 'block'
+                      }}
+                    />
+                  </ReactCrop>
+                  
+                  {/* Floating dimension indicator */}
+                  {imageDimensions && crop.width > 0 && crop.height > 0 && (
+                    <div className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-2 rounded-lg shadow-lg font-mono text-sm">
+                      {getPixelDimensions().width} × {getPixelDimensions().height} px
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
