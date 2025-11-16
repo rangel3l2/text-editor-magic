@@ -16,7 +16,7 @@ export const LogoInteractive = ({
   onConfigChange,
   editable = false 
 }: LogoInteractiveProps) => {
-  const [isResizing, setIsResizing] = useState(false);
+  const [isResizing, setIsResizing] = useState<'width' | 'height' | false>(false);
   const [isDragging, setIsDragging] = useState(false);
   const [width, setWidth] = useState(logoConfig?.width || 40);
   const [height, setHeight] = useState(logoConfig?.maxHeight || 10);
@@ -24,11 +24,20 @@ export const LogoInteractive = ({
   const imgRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
-  const handleMouseDownResize = (e: React.MouseEvent) => {
+  // Update state when logoConfig changes
+  useEffect(() => {
+    if (logoConfig) {
+      setWidth(logoConfig.width || 40);
+      setHeight(logoConfig.maxHeight || 10);
+      setPosition(logoConfig.position || { x: 0, y: 0 });
+    }
+  }, [logoConfig]);
+
+  const handleMouseDownResize = (e: React.MouseEvent, direction: 'width' | 'height') => {
     if (!editable) return;
     e.preventDefault();
     e.stopPropagation();
-    setIsResizing(true);
+    setIsResizing(direction);
     startPos.current = { 
       x: e.clientX, 
       y: e.clientY, 
@@ -51,10 +60,14 @@ export const LogoInteractive = ({
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isResizing) {
+      if (isResizing === 'width') {
         const deltaX = e.clientX - startPos.current.x;
-        const newWidth = Math.max(20, Math.min(100, startPos.current.width + (deltaX / 5)));
+        const newWidth = Math.max(10, Math.min(100, startPos.current.width + (deltaX / 2)));
         setWidth(newWidth);
+      } else if (isResizing === 'height') {
+        const deltaY = e.clientY - startPos.current.y;
+        const newHeight = Math.max(5, Math.min(30, startPos.current.height + (deltaY / 20)));
+        setHeight(newHeight);
       } else if (isDragging) {
         const newX = e.clientX - startPos.current.x;
         const newY = e.clientY - startPos.current.y;
@@ -116,17 +129,23 @@ export const LogoInteractive = ({
       
       {editable && (
         <>
-          {/* Resize handles */}
+          {/* Resize handle - Width (right side) */}
           <div
-            className="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{ transform: 'translate(50%, 50%)' }}
-            onMouseDown={handleMouseDownResize}
-          />
-          <div
-            className="absolute top-0 right-0 w-3 h-3 bg-primary rounded-full cursor-nesw-resize opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-1/2 right-0 w-4 h-8 bg-primary rounded-lg cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
             style={{ transform: 'translate(50%, -50%)' }}
-            onMouseDown={handleMouseDownResize}
-          />
+            onMouseDown={(e) => handleMouseDownResize(e, 'width')}
+          >
+            <div className="w-0.5 h-4 bg-primary-foreground" />
+          </div>
+          
+          {/* Resize handle - Height (bottom side) */}
+          <div
+            className="absolute bottom-0 left-1/2 w-8 h-4 bg-primary rounded-lg cursor-ns-resize opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+            style={{ transform: 'translate(-50%, 50%)' }}
+            onMouseDown={(e) => handleMouseDownResize(e, 'height')}
+          >
+            <div className="h-0.5 w-4 bg-primary-foreground" />
+          </div>
           
           {/* Border on hover */}
           <div className="absolute inset-0 border-2 border-primary opacity-0 group-hover:opacity-50 pointer-events-none transition-opacity rounded" />
