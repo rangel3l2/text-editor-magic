@@ -1,8 +1,10 @@
 import { sanitizeHtml } from "@/utils/sanitize";
+import type { LogoConfig } from "../header/LogoUpload";
 
 interface PreviewHeaderProps {
   institutionName: string;
   institutionLogo?: string;
+  logoConfig?: LogoConfig;
   title?: string;
   authors?: string;
 }
@@ -10,6 +12,7 @@ interface PreviewHeaderProps {
 const PreviewHeader = ({ 
   institutionName, 
   institutionLogo,
+  logoConfig,
   title,
   authors
 }: PreviewHeaderProps) => {
@@ -28,7 +31,10 @@ const PreviewHeader = ({
             <img 
               src={institutionLogo} 
               alt="Logo da Instituição" 
-              className="max-h-32 max-w-[40%] w-auto object-contain"
+              className="max-w-[40%] w-auto object-contain"
+              style={{ 
+                maxHeight: logoConfig?.maxHeight ? `${logoConfig.maxHeight}rem` : '10rem'
+              }}
             />
           )}
           {institutionName && (

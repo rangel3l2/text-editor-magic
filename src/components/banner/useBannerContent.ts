@@ -4,12 +4,15 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 
+import type { LogoConfig } from './header/LogoUpload';
+
 export interface BannerContent {
   title: string;
   authors: string;
   authorEmail: string;
   institution: string;
   institutionLogo?: string;
+  logoConfig?: LogoConfig;
   eventLogo?: string;
   introduction: string;
   objectives: string;
