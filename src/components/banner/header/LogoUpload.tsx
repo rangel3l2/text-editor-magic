@@ -47,7 +47,8 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
     width: 100,
     height: 100
   });
-  const [rotation, setRotation] = useState(0);
+  const [completedCrop, setCompletedCrop] = useState<Crop | null>(null);
+  const [aspectRatio, setAspectRatio] = useState<number | undefined>(undefined);
   const imgRef = useRef<HTMLImageElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -66,9 +67,30 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
           width: logoConfig.crop.width,
           height: logoConfig.crop.height
         });
+        setCompletedCrop({
+          unit: '%',
+          x: logoConfig.crop.x,
+          y: logoConfig.crop.y,
+          width: logoConfig.crop.width,
+          height: logoConfig.crop.height
+        });
       }
     }
   }, [logoConfig]);
+
+  const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget;
+    if (!logoConfig?.crop) {
+      // Initialize with full image
+      setCrop({
+        unit: '%',
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100
+      });
+    }
+  };
 
   const uploadFile = async (file: File) => {
     try {
@@ -265,14 +287,15 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
   };
 
   const handleSaveConfig = async () => {
+    const cropToSave = completedCrop || crop;
     const newConfig: LogoConfig = {
       maxHeight: maxHeight,
       width: logoWidth,
       crop: {
-        x: crop.x,
-        y: crop.y,
-        width: crop.width,
-        height: crop.height
+        x: cropToSave.x,
+        y: cropToSave.y,
+        width: cropToSave.width,
+        height: cropToSave.height
       },
       position: logoConfig?.position || { x: 0, y: 0 }
     };
@@ -288,7 +311,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
         
         toast({
           title: 'Configuração salva',
-          description: `Logo: ${logoWidth}% largura, ${maxHeight}rem altura, crop: ${crop.width.toFixed(0)}%×${crop.height.toFixed(0)}%`,
+          description: `Crop aplicado: ${cropToSave.width.toFixed(0)}%×${cropToSave.height.toFixed(0)}%`,
         });
       } catch (err) {
         console.error('Erro ao salvar configuração do logo:', err);
@@ -317,7 +340,22 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
       width: 100,
       height: 100
     });
-    setRotation(0);
+    setCompletedCrop(null);
+    setAspectRatio(undefined);
+  };
+
+  const handleAspectRatioChange = (value: string) => {
+    if (value === 'freeform') {
+      setAspectRatio(undefined);
+    } else if (value === '16:9') {
+      setAspectRatio(16 / 9);
+    } else if (value === '21:9') {
+      setAspectRatio(21 / 9);
+    } else if (value === '16:3') {
+      setAspectRatio(16 / 3);
+    } else if (value === '1:1') {
+      setAspectRatio(1);
+    }
   };
 
   return (
@@ -485,69 +523,130 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
 
       {/* Crop Dialog */}
       <Dialog open={showCropDialog} onOpenChange={setShowCropDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>Recortar Logo</DialogTitle>
-            <p className="text-sm text-muted-foreground">
-              Arraste as alças para selecionar a área que deseja manter (ideal para criar faixas horizontais)
-            </p>
-          </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
-            <div className="relative bg-muted rounded-lg overflow-hidden flex items-center justify-center" style={{ minHeight: '500px' }}>
+        <DialogContent className="max-w-6xl max-h-[95vh] p-0">
+          <div className="flex h-[95vh]">
+            {/* Left Panel - Controls */}
+            <div className="w-80 border-r border-border p-6 flex flex-col gap-6 overflow-y-auto">
+              <DialogHeader className="p-0">
+                <DialogTitle>Recortar Logo</DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  Arraste as alças para selecionar a área
+                </p>
+              </DialogHeader>
+
+              {/* Crop Rectangle Info */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold">Crop Rectangle</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Width</label>
+                    <Input
+                      type="number"
+                      value={Math.round(crop.width)}
+                      onChange={(e) => setCrop({ ...crop, width: Number(e.target.value) })}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Height</label>
+                    <Input
+                      type="number"
+                      value={Math.round(crop.height)}
+                      onChange={(e) => setCrop({ ...crop, height: Number(e.target.value) })}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Aspect Ratio */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold">Aspect Ratio</label>
+                <select
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  value={aspectRatio === undefined ? 'freeform' : aspectRatio === 16/9 ? '16:9' : aspectRatio === 21/9 ? '21:9' : aspectRatio === 16/3 ? '16:3' : aspectRatio === 1 ? '1:1' : 'freeform'}
+                  onChange={(e) => handleAspectRatioChange(e.target.value)}
+                >
+                  <option value="freeform">FreeForm</option>
+                  <option value="16:9">16:9</option>
+                  <option value="21:9">21:9 (Ultra Wide)</option>
+                  <option value="16:3">16:3 (Banner)</option>
+                  <option value="1:1">1:1 (Quadrado)</option>
+                </select>
+              </div>
+
+              {/* Crop Position */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold">Crop Position</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Position (Y)</label>
+                    <Input
+                      type="number"
+                      value={Math.round(crop.y)}
+                      onChange={(e) => setCrop({ ...crop, y: Number(e.target.value) })}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Position (X)</label>
+                    <Input
+                      type="number"
+                      value={Math.round(crop.x)}
+                      onChange={(e) => setCrop({ ...crop, x: Number(e.target.value) })}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Reset Button */}
+              <Button 
+                variant="outline" 
+                onClick={handleResetCrop}
+                className="w-full"
+              >
+                <RotateCw className="w-4 h-4 mr-2" />
+                Reset
+              </Button>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-2 pt-4 mt-auto border-t">
+                <Button onClick={handleSaveConfig} className="w-full" size="lg">
+                  Crop →
+                </Button>
+                <Button variant="outline" onClick={() => setShowCropDialog(false)} className="w-full">
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Panel - Image Preview */}
+            <div className="flex-1 bg-muted p-8 flex items-center justify-center overflow-hidden">
               {institutionLogo && (
                 <ReactCrop
                   crop={crop}
-                  onChange={(c) => setCrop(c)}
-                  aspect={undefined}
-                  style={{ maxHeight: '500px', maxWidth: '100%' }}
+                  onChange={(c, pc) => {
+                    setCrop(c);
+                    setCompletedCrop(pc);
+                  }}
+                  onComplete={(c) => setCompletedCrop(c)}
+                  aspect={aspectRatio}
+                  className="max-h-full max-w-full"
                 >
                   <img
                     ref={imgRef}
                     src={institutionLogo}
                     alt="Logo para recorte"
+                    onLoad={onImageLoad}
                     style={{
-                      maxHeight: '500px',
+                      maxHeight: 'calc(95vh - 64px)',
                       maxWidth: '100%',
-                      display: 'block',
-                      transform: `rotate(${rotation}deg)`
+                      display: 'block'
                     }}
                   />
                 </ReactCrop>
               )}
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Rotação: {rotation}°</label>
-                <Slider
-                  value={[rotation]}
-                  onValueChange={([v]) => setRotation(v)}
-                  min={-45}
-                  max={45}
-                  step={1}
-                  className="w-full"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleResetCrop}
-                >
-                  <RotateCw className="w-4 h-4 mr-2" />
-                  Resetar Crop
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setShowCropDialog(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleSaveConfig}>
-                Aplicar Recorte
-              </Button>
             </div>
           </div>
         </DialogContent>
