@@ -149,7 +149,16 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
         throw dbError;
       }
 
+      // Update UI immediately
       handleChange('institutionLogo', publicUrl);
+      // Reset crop/position so a recorte antigo não "expulse" a nova imagem da tela
+      const defaultConfig = {
+        maxHeight: logoConfig?.maxHeight || 10,
+        width: logoConfig?.width || 100,
+        position: { x: 0, y: 0 },
+        crop: { x: 0, y: 0, width: 100, height: 100 },
+      };
+      handleChange('logoConfig', defaultConfig);
 
       toast({
         title: "Logo enviado com sucesso",
