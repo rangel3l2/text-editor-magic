@@ -4,6 +4,7 @@ import { OnboardingTutorial } from "./OnboardingTutorial";
 import { useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import BannerLayout from "./banner/BannerLayout";
 import BannerHeader from "./banner/BannerHeader";
 import BannerContent from "./banner/BannerContent";
@@ -16,6 +17,7 @@ import { useWorkCreator } from "./banner/hooks/useWorkCreator";
 import { useWorkAutoSave } from "./banner/hooks/useWorkAutoSave";
 import BannerTemplateSelector from "./banner/templates/BannerTemplateSelector";
 import type { BannerTemplatePreset } from "@/hooks/useBannerTemplates";
+import type { LogoConfig } from "./banner/header/LogoUpload";
 
 const BannerEditor = () => {
   const { user } = useAuth();
@@ -104,6 +106,22 @@ const BannerEditor = () => {
     }));
   };
 
+  const handleLogoConfigChange = async (logoConfig: LogoConfig) => {
+    handleChange('logoConfig', logoConfig);
+    
+    // Salvar no banco
+    if (user && currentWorkId) {
+      try {
+        const { error: fnError } = await supabase.functions.invoke('update-work-content', {
+          body: { id: currentWorkId, contentPatch: { logoConfig } }
+        });
+        if (fnError) console.error('Erro ao salvar config do logo:', fnError);
+      } catch (err) {
+        console.error('Erro ao salvar config do logo:', err);
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -124,6 +142,7 @@ const BannerEditor = () => {
         setPreviewOpen={setPreviewOpen}
         content={content}
         onImageConfigChange={onImageConfigChange}
+        onLogoConfigChange={handleLogoConfigChange}
       >
         <div className="space-y-8">
           <BannerHeader 

@@ -16,9 +16,19 @@ interface BannerPreviewContentProps {
   institutionLogo?: string;
   institutionName?: string;
   logoConfig?: LogoConfig;
+  editable?: boolean;
+  onLogoConfigChange?: (config: LogoConfig) => void;
 }
 
-const BannerPreviewContent = ({ previewHtml, columnLayout = '2', institutionLogo, institutionName, logoConfig }: BannerPreviewContentProps) => {
+const BannerPreviewContent = ({ 
+  previewHtml, 
+  columnLayout = '2', 
+  institutionLogo, 
+  institutionName, 
+  logoConfig,
+  editable = false,
+  onLogoConfigChange
+}: BannerPreviewContentProps) => {
   const [sections, setSections] = useState<HTMLElement[]>([]);
   const [draggedSection, setDraggedSection] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -150,6 +160,8 @@ const BannerPreviewContent = ({ previewHtml, columnLayout = '2', institutionLogo
             logoConfig={logoConfig}
             title={title}
             authors={authors}
+            editable={editable}
+            onLogoConfigChange={onLogoConfigChange}
           />
 
           <PreviewColumns
