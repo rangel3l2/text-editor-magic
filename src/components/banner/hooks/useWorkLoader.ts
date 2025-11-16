@@ -16,17 +16,21 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
-  const hasLoaded = useRef(false);
+  const isFetching = useRef(false);
+  const errorToastShown = useRef(false);
+  const attemptsRef = useRef(0);
 
   useEffect(() => {
     const loadWork = async () => {
-      if (!id || !user || hasLoaded.current || currentWorkId === id) {
-        setIsLoading(false);
-        return;
-      }
+        if (!id || !user || isFetching.current || currentWorkId === id || attemptsRef.current >= 3) {
+          setIsLoading(false);
+          return;
+        }
 
       try {
         setIsLoading(true);
+        attemptsRef.current += 1;
+        isFetching.current = true;
         console.log(`Loading work ${id}`);
 
         const { data, error } = await supabase
@@ -41,10 +45,9 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         if (!data) {
           toast({
             title: "Trabalho não encontrado",
-            description: "O trabalho que você selecionou não foi encontrado ou você não tem permissão para acessá-lo.",
+            description: "O trabalho selecionado não foi encontrado ou você não tem permissão.",
             variant: "destructive",
           });
-          navigate('/');
           return;
         }
 
@@ -72,26 +75,26 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
           
           setBannerContent(completeContent);
           setCurrentWorkId(id);
-          hasLoaded.current = true;
         }
       } catch (error: any) {
         console.error('Error loading work:', error);
-        toast({
-          title: "Erro ao carregar trabalho",
-          description: "Ocorreu um erro ao carregar o trabalho. Por favor, tente novamente mais tarde.",
-          variant: "destructive",
-        });
-        navigate('/');
+        if (!errorToastShown.current) {
+          toast({
+            title: "Erro ao carregar trabalho",
+            description: "Falha temporária de rede. Tente novamente em instantes.",
+            variant: "destructive",
+          });
+          errorToastShown.current = true;
+        }
       } finally {
         setIsLoading(false);
+        isFetching.current = false;
       }
     };
 
     loadWork();
 
-    return () => {
-      hasLoaded.current = false;
-    };
+    
   }, [id, user]);
 
   return {
