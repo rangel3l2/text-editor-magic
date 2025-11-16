@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.generate-article-latex]
 verify_jwt = false
+
+[functions.update-work-content]
+verify_jwt = true
