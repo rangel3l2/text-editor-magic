@@ -96,7 +96,7 @@ const BannerPreviewContent = ({
 
   const getImageStyle = (imageUrl: string) => {
     const settings = imageSettings[imageUrl];
-    
+
     const style: React.CSSProperties = {
       maxWidth: '100%',
       height: 'auto',
@@ -105,24 +105,75 @@ const BannerPreviewContent = ({
 
     if (!settings) return style;
 
-    style.transform = `scale(${settings.scale}) rotate(${settings.rotation}deg)`;
-    style.transition = 'transform 0.2s';
+    const transforms: string[] = [];
 
-    if (settings.alignment === 'left') {
-      style.float = 'left';
-      style.marginRight = '1rem';
-      style.maxWidth = '60%';
-    } else if (settings.alignment === 'right') {
-      style.float = 'right';
-      style.marginLeft = '1rem';
-      style.maxWidth = '60%';
-    } else {
-      style.display = 'block';
-      style.margin = '1rem auto';
-      style.maxWidth = '90%';
+    if (settings.crop) {
+      // Translate image so that the selected crop area appears within the wrapper
+      transforms.push(`translate(${-settings.crop.x}px, ${-settings.crop.y}px)`);
+    }
+
+    if (typeof settings.scale === 'number') {
+      transforms.push(`scale(${settings.scale})`);
+    }
+
+    if (typeof settings.rotation === 'number') {
+      transforms.push(`rotate(${settings.rotation}deg)`);
+    }
+
+    if (transforms.length) {
+      style.transform = transforms.join(' ');
+      style.transition = 'transform 0.2s';
+      style.willChange = 'transform';
+      // When cropping, alignment floats are handled on the wrapper, not the image
+    }
+
+    if (!settings.crop) {
+      // Only apply alignment on the image when not using crop wrapper
+      if (settings.alignment === 'left') {
+        style.float = 'left';
+        style.marginRight = '1rem';
+        style.maxWidth = '60%';
+      } else if (settings.alignment === 'right') {
+        style.float = 'right';
+        style.marginLeft = '1rem';
+        style.maxWidth = '60%';
+      } else {
+        style.display = 'block';
+        style.margin = '1rem auto';
+        style.maxWidth = '90%';
+      }
     }
 
     return style;
+  };
+
+  const getImageWrapperStyle = (imageUrl: string) => {
+    const settings = imageSettings[imageUrl];
+    if (!settings || !settings.crop) return null;
+
+    const wrapper: React.CSSProperties = {
+      width: `${settings.crop.width}px`,
+      height: `${settings.crop.height}px`,
+      overflow: 'hidden',
+      display: 'inline-block',
+    };
+
+    if (settings.alignment === 'left') {
+      wrapper.float = 'left';
+      // Provide spacing consistent with previous image alignment
+      (wrapper as any).marginRight = '1rem';
+      (wrapper as any).maxWidth = '60%';
+    } else if (settings.alignment === 'right') {
+      wrapper.float = 'right';
+      (wrapper as any).marginLeft = '1rem';
+      (wrapper as any).maxWidth = '60%';
+    } else {
+      wrapper.display = 'block';
+      (wrapper as any).margin = '1rem auto';
+      (wrapper as any).maxWidth = '90%';
+    }
+
+    return wrapper;
   };
 
   if (!previewHtml) return null;
@@ -164,17 +215,21 @@ const BannerPreviewContent = ({
             onLogoConfigChange={onLogoConfigChange}
           />
 
-          <PreviewColumns
-            sections={sections}
-            draggedSection={draggedSection}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            getImageStyle={getImageStyle}
-            onImageClick={handleImageClick}
-            columnLayout={columnLayout}
-          />
+          {/* Conteúdo em colunas começa após o cabeçalho */}
+          <div style={{ marginTop: '1.5rem' }}>
+            <PreviewColumns
+              sections={sections}
+              draggedSection={draggedSection}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              getImageStyle={getImageStyle}
+              getImageWrapperStyle={getImageWrapperStyle}
+              onImageClick={handleImageClick}
+              columnLayout={columnLayout}
+            />
+          </div>
         </div>
       </div>
 
