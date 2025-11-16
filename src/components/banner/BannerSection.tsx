@@ -31,7 +31,10 @@ const BannerSection = ({
       const imageUrl = srcMatch[1];
       const style = getImageStyle(imageUrl);
       const styleString = Object.entries(style)
-        .map(([key, value]) => `${key}:${value}`)
+        .map(([key, value]) => {
+          const kebabKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+          return `${kebabKey}:${value}`;
+        })
         .join(';');
       
       return `<img${attributes} style="${styleString}" class="cursor-pointer hover:opacity-80 transition-opacity" data-image-url="${imageUrl}" />`;
