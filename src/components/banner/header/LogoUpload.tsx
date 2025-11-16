@@ -494,13 +494,14 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
                   zoom={zoom}
                   rotation={rotation}
                   aspect={undefined}
-                  objectFit="horizontal-cover"
+                  objectFit="contain"
                   onCropChange={setCrop}
                   onZoomChange={setZoom}
                   onRotationChange={setRotation}
                   onCropComplete={onCropComplete}
                   showGrid={true}
                   cropShape="rect"
+                  restrictPosition={false}
                 />
               )}
             </div>
@@ -511,9 +512,9 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
                 <Slider
                   value={[zoom]}
                   onValueChange={([v]) => setZoom(v)}
-                  min={1}
-                  max={3}
-                  step={0.05}
+                  min={0.5}
+                  max={5}
+                  step={0.1}
                   className="w-full"
                 />
               </div>
