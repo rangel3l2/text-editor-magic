@@ -204,9 +204,29 @@ export const useBannerImages = (workId: string | undefined, userId: string | und
 
       if (dbError) throw dbError;
 
-      // Reorder remaining images
+      // Update local state immediately
       const remainingImages = images.filter(img => img.id !== imageId);
-      await reorderImages(remainingImages);
+      
+      // Renumber and update in database
+      const updates = remainingImages.map((img, index) => ({
+        ...img,
+        display_order: index,
+        caption: img.caption.replace(/Figura \d+/, `Figura ${index + 1}`)
+      }));
+
+      // Update database
+      for (const update of updates) {
+        await supabase
+          .from('banner_work_images')
+          .update({ 
+            display_order: update.display_order,
+            caption: update.caption 
+          })
+          .eq('id', update.id);
+      }
+
+      // Update state with renumbered images
+      setImages(updates);
 
       toast({
         title: 'Imagem removida',

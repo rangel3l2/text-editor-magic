@@ -84,22 +84,30 @@ const BannerPreviewContent = ({ previewHtml, columnLayout = '2', institutionLogo
 
   const getImageStyle = (imageUrl: string) => {
     const settings = imageSettings[imageUrl];
-    if (!settings) return {};
-
+    
     const style: React.CSSProperties = {
-      transform: `scale(${settings.scale}) rotate(${settings.rotation}deg)`,
-      transition: 'transform 0.2s',
+      maxWidth: '100%',
+      height: 'auto',
+      objectFit: 'contain',
     };
+
+    if (!settings) return style;
+
+    style.transform = `scale(${settings.scale}) rotate(${settings.rotation}deg)`;
+    style.transition = 'transform 0.2s';
 
     if (settings.alignment === 'left') {
       style.float = 'left';
       style.marginRight = '1rem';
+      style.maxWidth = '60%';
     } else if (settings.alignment === 'right') {
       style.float = 'right';
       style.marginLeft = '1rem';
+      style.maxWidth = '60%';
     } else {
       style.display = 'block';
-      style.margin = '0 auto';
+      style.margin = '1rem auto';
+      style.maxWidth = '90%';
     }
 
     return style;
