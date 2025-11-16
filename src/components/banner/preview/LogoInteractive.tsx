@@ -112,14 +112,27 @@ export const LogoInteractive = ({
     }
   }, [isResizing, isDragging, width, height, position, crop, onConfigChange]);
 
-  // Apply crop using object-position and overflow if crop data exists
-  const getCropStyle = (): React.CSSProperties => {
-    if (!crop || !crop.width || !crop.height) return {};
-    
-    // crop is in percentages from react-image-crop
-    // We use clip-path with percentages
+  // Styles for cropped/un-cropped rendering
+  const getImageStyles = (): React.CSSProperties => {
+    if (!crop || !crop.width || !crop.height) {
+      return {
+        maxHeight: `${height}rem`,
+        width: '100%',
+        height: 'auto',
+        objectFit: 'contain',
+        display: 'block',
+      };
+    }
+
+    // Scale image so the crop fills the container, then shift image so crop's top-left aligns
+    const scaledWidthPercent = (10000 / crop.width); // e.g., crop 50% => img width 200%
     return {
-      clipPath: `inset(${crop.y}% ${100 - crop.x - crop.width}% ${100 - crop.y - crop.height}% ${crop.x}%)`
+      width: `${scaledWidthPercent}%`,
+      height: 'auto',
+      maxHeight: 'none',
+      objectFit: 'fill',
+      transform: `translate(${-crop.x}%, ${-crop.y}%)`,
+      display: 'block',
     };
   };
 
@@ -129,21 +142,16 @@ export const LogoInteractive = ({
     cursor: editable ? (isDragging ? 'grabbing' : 'grab') : 'default',
     display: 'inline-block',
     width: `${width}%`,
+    height: `${height}rem`,
+    overflow: crop ? 'hidden' : 'visible',
   };
 
-  const imageStyle: React.CSSProperties = {
-    maxHeight: `${height}rem`,
-    width: '100%',
-    height: 'auto',
-    objectFit: 'contain',
-    display: 'block',
-    ...getCropStyle(),
-  };
+  const imageStyle: React.CSSProperties = getImageStyles();
 
   if (!editable) {
     return (
-      <div style={{ width: `${width}%`, display: 'inline-block' }}>
-        <img src={src} alt={alt} style={imageStyle} className="object-contain" />
+      <div style={containerStyle}>
+        <img src={src} alt={alt} style={imageStyle} className="select-none" />
       </div>
     );
   }
@@ -158,7 +166,7 @@ export const LogoInteractive = ({
         src={src} 
         alt={alt} 
         style={imageStyle}
-        className="w-full object-contain select-none"
+        className="select-none"
         onMouseDown={handleMouseDownDrag}
         draggable={false}
       />
