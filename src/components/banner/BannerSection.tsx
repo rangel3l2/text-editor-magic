@@ -9,6 +9,7 @@ interface BannerSectionProps {
   onDragLeave: (e: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (e: React.DragEvent<HTMLDivElement>, index: number) => void;
   getImageStyle: (imageUrl: string) => React.CSSProperties;
+  getImageWrapperStyle: (imageUrl: string) => React.CSSProperties | null;
   onImageClick: (imageUrl: string) => void;
 }
 
@@ -20,6 +21,7 @@ const BannerSection = ({
   onDragLeave,
   onDrop,
   getImageStyle,
+  getImageWrapperStyle,
   onImageClick
 }: BannerSectionProps) => {
   const processedHtml = section.innerHTML.replace(
@@ -29,15 +31,28 @@ const BannerSection = ({
       if (!srcMatch) return match;
       
       const imageUrl = srcMatch[1];
-      const style = getImageStyle(imageUrl);
-      const styleString = Object.entries(style)
+      const imgStyle = getImageStyle(imageUrl);
+      const wrapperStyle = getImageWrapperStyle(imageUrl);
+
+      const imgStyleString = Object.entries(imgStyle)
         .map(([key, value]) => {
           const kebabKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
           return `${kebabKey}:${value}`;
         })
         .join(';');
+
+      if (wrapperStyle && Object.keys(wrapperStyle).length > 0) {
+        const wrapperStyleString = Object.entries(wrapperStyle)
+          .map(([key, value]) => {
+            const kebabKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+            return `${kebabKey}:${value}`;
+          })
+          .join(';');
+
+        return `<span style="${wrapperStyleString}" class="image-crop-wrapper cursor-pointer"><img${attributes} style="${imgStyleString}" class="hover:opacity-80 transition-opacity" data-image-url="${imageUrl}" /></span>`;
+      }
       
-      return `<img${attributes} style="${styleString}" class="cursor-pointer hover:opacity-80 transition-opacity" data-image-url="${imageUrl}" />`;
+      return `<img${attributes} style="${imgStyleString}" class="cursor-pointer hover:opacity-80 transition-opacity" data-image-url="${imageUrl}" />`;
     }
   );
 
