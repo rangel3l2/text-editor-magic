@@ -25,6 +25,8 @@ export const LogoInteractive = ({
   const position = logoConfig?.position || { x: 0, y: 0 };
   const crop = logoConfig?.crop;
 
+  const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
+
   const containerRef = useRef<HTMLDivElement>(null);
   const startPos = useRef({ x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 });
 
@@ -131,13 +133,33 @@ export const LogoInteractive = ({
     }
 
     // When cropped: scale so the visible portion fills the container width
-    const scalePercent = (100 / crop.width) * 100;
-    
+    const isPixelCrop = !!crop && (crop.width > 100 || crop.height > 100 || crop.x > 100 || crop.y > 100);
+
+    // If crop looks pixel-based but image size unknown yet, fallback to full image to avoid miniatura
+    if (isPixelCrop && naturalSize.width === 0) {
+      return {
+        maxHeight: `${height}rem`,
+        width: '100%',
+        height: 'auto',
+        objectFit: 'contain',
+        display: 'block',
+      };
+    }
+
+    const imgW = Math.max(naturalSize.width, 1);
+    const imgH = Math.max(naturalSize.height, 1);
+
+    const cropWidthRatio = isPixelCrop ? crop.width / imgW : crop.width / 100; // 0..1
+    const cropXRatio = isPixelCrop ? crop.x / imgW : crop.x / 100; // 0..1
+    const cropYRatio = isPixelCrop ? crop.y / imgH : crop.y / 100; // 0..1
+
+    const scalePercent = (1 / cropWidthRatio) * 100;
+
     return {
       width: `${scalePercent}%`,
       height: 'auto',
       objectFit: 'contain',
-      transform: `translate(-${crop.x * (100/crop.width)}%, -${crop.y * (100/crop.height)}%)`,
+      transform: `translate(-${cropXRatio * 100}%, -${cropYRatio * 100}%)`,
       display: 'block',
       minHeight: '100%',
     };
@@ -162,7 +184,9 @@ export const LogoInteractive = ({
   if (!editable) {
     return (
       <div style={containerStyle}>
-        <img src={src} alt={alt} style={imageStyle} className="select-none" />
+        <img src={src} alt={alt} style={imageStyle} className="select-none" 
+          onLoad={(e) => setNaturalSize({ width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight })}
+        />
       </div>
     );
   }
@@ -179,6 +203,7 @@ export const LogoInteractive = ({
         style={imageStyle}
         className="select-none"
         onMouseDown={handleMouseDownDrag}
+        onLoad={(e) => setNaturalSize({ width: e.currentTarget.naturalWidth, height: e.currentTarget.naturalHeight })}
         draggable={false}
       />
       
