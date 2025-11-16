@@ -77,55 +77,68 @@ const BannerTemplateSelector = ({ onSelectTemplate, currentTemplateId }: BannerT
           <Button
             key={template.id}
             variant={currentTemplateId === template.id ? 'default' : 'outline'}
-            className="w-full h-auto p-4 flex flex-col items-start gap-2"
+            className="w-full h-auto p-0 flex flex-col items-start gap-0 overflow-hidden"
             onClick={() => {
               onSelectTemplate(template);
               setIsExpanded(false);
             }}
           >
-            <div className="flex items-start justify-between w-full">
-              <div className="flex items-center gap-2">
-                <Palette className="w-5 h-5" />
-                <span className="font-semibold text-base">{template.name}</span>
+            {/* Preview visual do template */}
+            {template.thumbnail_url && (
+              <div className="w-full h-32 overflow-hidden">
+                <img 
+                  src={template.thumbnail_url} 
+                  alt={`Preview ${template.name}`}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <div className="flex items-center gap-1">
-                {template.layout_config.columns === 2 ? (
-                  <Columns2 className="w-4 h-4" />
-                ) : (
-                  <Columns3 className="w-4 h-4" />
-                )}
-                <span className="text-xs">{template.layout_config.columns} cols</span>
-              </div>
-            </div>
-            
-            {template.description && (
-              <p className="text-xs text-muted-foreground text-left">
-                {template.description}
-              </p>
             )}
             
-            <div className="flex gap-1 flex-wrap">
-              <Badge 
-                variant="secondary" 
-                style={{ backgroundColor: template.colors.primary, color: '#ffffff' }}
-                className="h-5"
-              >
-                Primária
-              </Badge>
-              <Badge 
-                variant="secondary" 
-                style={{ backgroundColor: template.colors.secondary, color: '#ffffff' }}
-                className="h-5"
-              >
-                Secundária
-              </Badge>
-              <Badge 
-                variant="secondary" 
-                style={{ backgroundColor: template.colors.accent, color: '#ffffff' }}
-                className="h-5"
-              >
-                Destaque
-              </Badge>
+            <div className="w-full p-4 flex flex-col gap-2">
+              <div className="flex items-start justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <Palette className="w-5 h-5" />
+                  <span className="font-semibold text-base">{template.name}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {template.layout_config.columns === 2 ? (
+                    <Columns2 className="w-4 h-4" />
+                  ) : (
+                    <Columns3 className="w-4 h-4" />
+                  )}
+                  <span className="text-xs">{template.layout_config.columns} cols</span>
+                </div>
+              </div>
+              
+              {template.description && (
+                <p className="text-xs text-muted-foreground text-left">
+                  {template.description}
+                </p>
+              )}
+              
+              <div className="flex gap-1 flex-wrap">
+                <Badge 
+                  variant="secondary" 
+                  style={{ backgroundColor: template.colors.primary, color: '#ffffff' }}
+                  className="h-5"
+                >
+                  Primária
+                </Badge>
+                <Badge 
+                  variant="secondary" 
+                  style={{ backgroundColor: template.colors.secondary, color: '#ffffff' }}
+                  className="h-5"
+                >
+                  Secundária
+                </Badge>
+                <Badge 
+                  variant="secondary" 
+                  style={{ backgroundColor: template.colors.accent, color: '#ffffff' }}
+                  className="h-5"
+                >
+                  Destaque
+                </Badge>
+              </div>
             </div>
           </Button>
         ))}
