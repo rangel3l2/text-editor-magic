@@ -33,7 +33,7 @@ const PreviewHeader = ({
       <div className="banner-header flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-4 w-full">
           {institutionLogo && (
-            <div style={{ width: `${logoConfig?.width || 100}%`, maxWidth: '50%' }}>
+            <div className="shrink-0" style={{ width: `${logoConfig?.width || 100}%` }}>
               <LogoInteractive
                 src={institutionLogo}
                 alt="Logo da Instituição"
