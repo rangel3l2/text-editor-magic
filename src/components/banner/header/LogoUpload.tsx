@@ -266,7 +266,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
 
   const handleSaveConfig = async () => {
     const newConfig: LogoConfig = {
-      maxHeight,
+      maxHeight: maxHeight,
       width: logoWidth,
       crop: croppedAreaPixels ? {
         x: croppedAreaPixels.x,
@@ -274,7 +274,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
         width: croppedAreaPixels.width,
         height: croppedAreaPixels.height
       } : logoConfig?.crop,
-      position: logoConfig?.position
+      position: logoConfig?.position || { x: 0, y: 0 }
     };
     
     handleChange('logoConfig', newConfig);
@@ -285,18 +285,28 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
           body: { id, contentPatch: { logoConfig: newConfig } }
         });
         if (fnError) throw fnError;
+        
+        toast({
+          title: 'Configuração salva',
+          description: `Logo: ${logoWidth}% largura, ${maxHeight}rem altura${croppedAreaPixels ? ', com crop aplicado' : ''}`,
+        });
       } catch (err) {
         console.error('Erro ao salvar configuração do logo:', err);
+        toast({
+          title: 'Erro ao salvar',
+          description: 'Não foi possível salvar as configurações',
+          variant: 'destructive'
+        });
       }
+    } else {
+      toast({
+        title: 'Configuração aplicada',
+        description: `Logo: ${logoWidth}% largura, ${maxHeight}rem altura`,
+      });
     }
     
     setShowConfigDialog(false);
     setShowCropDialog(false);
-    
-    toast({
-      title: 'Configuração salva',
-      description: 'As configurações do logo foram atualizadas',
-    });
   };
 
   const onCropComplete = (croppedArea: Area, croppedAreaPixels: Area) => {
