@@ -126,21 +126,25 @@ export const LogoInteractive = ({
   const containerStyle: React.CSSProperties = {
     transform: position.x !== 0 || position.y !== 0 ? `translate(${position.x}px, ${position.y}px)` : undefined,
     transition: isResizing || isDragging ? 'none' : 'transform 0.2s ease',
-    width: `${width}%`,
     cursor: editable ? (isDragging ? 'grabbing' : 'grab') : 'default',
+    display: 'inline-block',
+    maxWidth: `${width}%`,
   };
 
   const imageStyle: React.CSSProperties = {
     maxHeight: `${height}rem`,
-    width: '100%',
+    maxWidth: '100%',
+    height: 'auto',
+    width: 'auto',
     objectFit: 'contain',
+    display: 'block',
     ...getCropStyle(),
   };
 
   if (!editable) {
     return (
-      <div style={{ width: `${width}%` }}>
-        <img src={src} alt={alt} style={imageStyle} className="w-full object-contain" />
+      <div style={{ maxWidth: `${width}%`, display: 'inline-block' }}>
+        <img src={src} alt={alt} style={imageStyle} className="object-contain" />
       </div>
     );
   }
