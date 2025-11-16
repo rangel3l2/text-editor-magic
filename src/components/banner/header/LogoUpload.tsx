@@ -80,16 +80,35 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
   }, [logoConfig]);
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const { width, height, naturalWidth, naturalHeight } = e.currentTarget;
+    const { naturalWidth, naturalHeight } = e.currentTarget;
     setImageDimensions({ width: naturalWidth, height: naturalHeight });
+
+    // If we already have a crop in config, normalize it to percentages for the UI
+    if (logoConfig?.crop) {
+      const c = logoConfig.crop as any;
+      const looksPixel = c.width > 100 || c.height > 100 || c.x > 100 || c.y > 100;
+      if (looksPixel) {
+        const pctCrop: Crop = {
+          unit: '%',
+          x: (c.x / naturalWidth) * 100,
+          y: (c.y / naturalHeight) * 100,
+          width: (c.width / naturalWidth) * 100,
+          height: (c.height / naturalHeight) * 100,
+        };
+        setCrop(pctCrop);
+        setCompletedCrop(pctCrop);
+        return;
+      }
+    }
+
+    // Initialize with full image when no crop
     if (!logoConfig?.crop) {
-      // Initialize with full image
       setCrop({
         unit: '%',
         x: 0,
         y: 0,
         width: 100,
-        height: 100
+        height: 100,
       });
     }
   };
@@ -580,12 +599,19 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
                     <label className="text-xs font-medium text-muted-foreground">Width</label>
                     <Input
                       type="number"
-                      value={Math.round(crop.width)}
-                      onChange={(e) => setCrop({ ...crop, width: Number(e.target.value) })}
+                      value={imageDimensions ? Math.round((crop.width / 100) * imageDimensions.width) : 0}
+                      onChange={(e) => {
+                        if (!imageDimensions) return;
+                        const px = Number(e.target.value) || 0;
+                        const pct = Math.max(1, Math.min(100, (px / imageDimensions.width) * 100));
+                        setCrop({ ...crop, width: pct });
+                      }}
+                      min={1}
+                      max={imageDimensions?.width}
                       className="h-9"
                     />
                     {imageDimensions && (
-                      <p className="text-xs text-muted-foreground">{getPixelDimensions().width}px</p>
+                      <p className="text-xs text-muted-foreground">{Math.round((crop.width / 100) * imageDimensions.width)}px</p>
                     )}
                   </div>
                   <div className="space-y-2">
