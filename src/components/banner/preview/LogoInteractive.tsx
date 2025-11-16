@@ -124,15 +124,18 @@ export const LogoInteractive = ({
       };
     }
 
-    // Scale image so the crop fills the container, then shift image so crop's top-left aligns
-    const scaledWidthPercent = (10000 / crop.width); // e.g., crop 50% => img width 200%
+    // When cropped: scale so the visible portion fills the container width
+    // crop.width is the percentage of original image that's visible
+    // To make that fill 100% of container, scale image to (100/crop.width)%
+    const scalePercent = (100 / crop.width) * 100;
+    
     return {
-      width: `${scaledWidthPercent}%`,
+      width: `${scalePercent}%`,
       height: 'auto',
-      maxHeight: 'none',
-      objectFit: 'fill',
-      transform: `translate(${-crop.x}%, ${-crop.y}%)`,
+      objectFit: 'contain',
+      transform: `translate(-${crop.x * (100/crop.width)}%, -${crop.y * (100/crop.height)}%)`,
       display: 'block',
+      minHeight: '100%',
     };
   };
 
@@ -142,8 +145,10 @@ export const LogoInteractive = ({
     cursor: editable ? (isDragging ? 'grabbing' : 'grab') : 'default',
     display: 'inline-block',
     width: `${width}%`,
-    height: `${height}rem`,
+    maxHeight: `${height}rem`,
+    height: crop ? `${height}rem` : 'auto',
     overflow: crop ? 'hidden' : 'visible',
+    position: 'relative',
   };
 
   const imageStyle: React.CSSProperties = getImageStyles();
