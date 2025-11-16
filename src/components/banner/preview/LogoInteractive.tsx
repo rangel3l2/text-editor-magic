@@ -114,7 +114,8 @@ export const LogoInteractive = ({
 
   // Styles for cropped/un-cropped rendering
   const getImageStyles = (): React.CSSProperties => {
-    if (!crop || !crop.width || !crop.height) {
+    // If no crop or invalid crop, show full image
+    if (!crop || crop.width === 0 || crop.height === 0 || crop.width === 100 && crop.height === 100) {
       return {
         maxHeight: `${height}rem`,
         width: '100%',
@@ -125,8 +126,6 @@ export const LogoInteractive = ({
     }
 
     // When cropped: scale so the visible portion fills the container width
-    // crop.width is the percentage of original image that's visible
-    // To make that fill 100% of container, scale image to (100/crop.width)%
     const scalePercent = (100 / crop.width) * 100;
     
     return {
@@ -139,6 +138,8 @@ export const LogoInteractive = ({
     };
   };
 
+  const hasCrop = crop && crop.width > 0 && crop.height > 0 && !(crop.width === 100 && crop.height === 100 && crop.x === 0 && crop.y === 0);
+
   const containerStyle: React.CSSProperties = {
     transform: position.x !== 0 || position.y !== 0 ? `translate(${position.x}px, ${position.y}px)` : undefined,
     transition: isResizing || isDragging ? 'none' : 'transform 0.2s ease',
@@ -146,8 +147,8 @@ export const LogoInteractive = ({
     display: 'inline-block',
     width: `${width}%`,
     maxHeight: `${height}rem`,
-    height: crop ? `${height}rem` : 'auto',
-    overflow: crop ? 'hidden' : 'visible',
+    height: hasCrop ? `${height}rem` : 'auto',
+    overflow: hasCrop ? 'hidden' : 'visible',
     position: 'relative',
   };
 
