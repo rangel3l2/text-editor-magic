@@ -76,7 +76,7 @@ export const generateLatexContent = (content: any) => {
   
   parts.push('<div style="display: flex; align-items: center; gap: 1rem; flex: 1;">');
   if (content.institutionLogo) {
-    parts.push('<img src="' + content.institutionLogo + '" alt="Logo da Instituição" style="max-height: 5rem; width: auto; object-fit: contain;" />');
+    parts.push('<img src="' + content.institutionLogo + '" alt="Logo da Instituição" style="max-height: 10rem; max-width: 40%; width: auto; height: auto; object-fit: contain;" />');
   }
   if (processedInstitution) {
     parts.push('<div style="flex: 1; text-align: right; font-size: 1.5rem; font-weight: bold; color: ' + themeColor + ';">' + processedInstitution + '</div>');

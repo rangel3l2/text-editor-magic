@@ -28,7 +28,7 @@ const PreviewHeader = ({
             <img 
               src={institutionLogo} 
               alt="Logo da Instituição" 
-              className="max-h-20 w-auto object-contain"
+              className="max-h-32 max-w-[40%] w-auto object-contain"
             />
           )}
           {institutionName && (
