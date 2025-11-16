@@ -134,29 +134,44 @@ export type Database = {
         Row: {
           content: Json
           created_at: string | null
+          default_institution_name: string | null
+          default_logo_url: string | null
           id: string
+          is_public: boolean | null
           latex_template: string
+          share_token: string | null
           title: string
           updated_at: string | null
           user_id: string | null
+          views_count: number | null
         }
         Insert: {
           content: Json
           created_at?: string | null
+          default_institution_name?: string | null
+          default_logo_url?: string | null
           id?: string
+          is_public?: boolean | null
           latex_template: string
+          share_token?: string | null
           title: string
           updated_at?: string | null
           user_id?: string | null
+          views_count?: number | null
         }
         Update: {
           content?: Json
           created_at?: string | null
+          default_institution_name?: string | null
+          default_logo_url?: string | null
           id?: string
+          is_public?: boolean | null
           latex_template?: string
+          share_token?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string | null
+          views_count?: number | null
         }
         Relationships: []
       }
@@ -400,6 +415,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      generate_share_token: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
