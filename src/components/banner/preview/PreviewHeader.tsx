@@ -31,15 +31,17 @@ const PreviewHeader = ({
   return (
     <div className="flex flex-col w-full mb-4">
       <div className="banner-header flex items-center justify-between p-4 border-b">
-        <div className="flex items-center gap-4 flex-1">
+        <div className="flex items-center gap-4 w-full">
           {institutionLogo && (
-            <LogoInteractive
-              src={institutionLogo}
-              alt="Logo da Instituição"
-              logoConfig={logoConfig}
-              onConfigChange={onLogoConfigChange}
-              editable={editable}
-            />
+            <div style={{ width: `${logoConfig?.width || 100}%`, maxWidth: '50%' }}>
+              <LogoInteractive
+                src={institutionLogo}
+                alt="Logo da Instituição"
+                logoConfig={logoConfig}
+                onConfigChange={onLogoConfigChange}
+                editable={editable}
+              />
+            </div>
           )}
           {institutionName && (
             <div 

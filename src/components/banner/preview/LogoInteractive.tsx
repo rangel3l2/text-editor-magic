@@ -150,7 +150,7 @@ export const LogoInteractive = ({
     transition: isResizing || isDragging ? 'none' : 'transform 0.2s ease',
     cursor: editable ? (isDragging ? 'grabbing' : 'grab') : 'default',
     display: 'inline-block',
-    width: `${width}%`,
+    width: '100%',
     maxHeight: `${height}rem`,
     height: hasCrop ? `${height}rem` : 'auto',
     overflow: hasCrop ? 'hidden' : 'visible',
@@ -215,7 +215,7 @@ export const LogoInteractive = ({
           
           {/* Size indicator */}
           <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            {width.toFixed(0)}% × {height.toFixed(1)}rem
+            {height.toFixed(1)}rem
           </div>
         </>
       )}
