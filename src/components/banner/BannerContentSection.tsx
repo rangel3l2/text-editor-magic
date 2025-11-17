@@ -103,6 +103,9 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
         </CardContent>
       </Card>
 
+      {/* Images Section for Methodology */}
+      <BannerImagesSection />
+
       <Card>
         <CardHeader>
           <CardTitle>Resultados</CardTitle>
@@ -123,7 +126,7 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
         </CardContent>
       </Card>
 
-      {/* Images Section */}
+      {/* Images Section for Results */}
       <BannerImagesSection />
 
       <Card>
