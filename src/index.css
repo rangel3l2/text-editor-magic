@@ -320,35 +320,55 @@
   margin-bottom: 1cm;
 }
 
-/* Título e cabeçalho devem ocupar toda a largura */
-.banner-tiptap-content h1 {
+/* Título e cabeçalho devem ocupar toda a largura - FORÇANDO */
+.banner-tiptap-content h1,
+.banner-tiptap-content .ProseMirror h1 {
   font-size: 28pt !important;
   font-weight: bold !important;
   text-align: center !important;
   text-transform: uppercase !important;
   margin: 0 0 1cm 0 !important;
-  column-span: all;
-  -webkit-column-span: all;
-  display: block;
-  width: 100%;
+  column-span: all !important;
+  -webkit-column-span: all !important;
+  -moz-column-span: all !important;
+  display: block !important;
+  width: 100% !important;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
-/* Autores/Docentes/Discentes devem ocupar toda a largura */
+/* Autores/Docentes/Discentes devem ocupar toda a largura - FORÇANDO */
 .banner-tiptap-content .authors,
 .banner-tiptap-content .banner-authors,
 .banner-tiptap-content p.authors,
 .banner-tiptap-content .docente,
-.banner-tiptap-content .discentes {
-  column-span: all;
-  -webkit-column-span: all;
+.banner-tiptap-content .discentes,
+.banner-tiptap-content .ProseMirror .authors,
+.banner-tiptap-content .ProseMirror p.authors,
+.banner-tiptap-content .ProseMirror .docente,
+.banner-tiptap-content .ProseMirror .discentes {
+  column-span: all !important;
+  -webkit-column-span: all !important;
+  -moz-column-span: all !important;
   text-align: center !important;
   font-size: 11pt !important;
   margin: 0.5cm 0 1cm 0 !important;
-  display: block;
-  width: 100%;
+  display: block !important;
+  width: 100% !important;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
-.banner-tiptap-content h2 {
+/* Parágrafos com estilo específico para autores */
+.banner-tiptap-content .ProseMirror p[style*="text-align: center"],
+.banner-tiptap-content .ProseMirror p[style*="text-align:center"] {
+  column-span: all !important;
+  -webkit-column-span: all !important;
+  -moz-column-span: all !important;
+}
+
+.banner-tiptap-content h2,
+.banner-tiptap-content .ProseMirror h2 {
   font-size: 16pt !important;
   font-weight: bold !important;
   margin-bottom: 0.4cm !important;
@@ -359,16 +379,18 @@
   page-break-after: avoid;
 }
 
-.banner-tiptap-content .banner-header {
-  column-span: all;
-  -webkit-column-span: all;
+.banner-tiptap-content .banner-header,
+.banner-tiptap-content .ProseMirror .banner-header {
+  column-span: all !important;
+  -webkit-column-span: all !important;
+  -moz-column-span: all !important;
   break-inside: avoid;
   page-break-inside: avoid;
   margin-bottom: 1cm;
   padding-bottom: 1cm;
   border-bottom: 3px solid #000;
-  display: block;
-  width: 100%;
+  display: block !important;
+  width: 100% !important;
 }
 
 .tiptap-editor-content {
