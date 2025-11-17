@@ -193,27 +193,39 @@ const RichTextEditor = ({
             <ContextMenuLabel>Inserir Anexo</ContextMenuLabel>
             <ContextMenuSeparator />
             <ContextMenuItem onClick={() => {
-              if (!onRequestAttachmentInsertion || !editorInstance) return;
+              if (!onRequestAttachmentInsertion || !editorInstance) {
+                console.log('🚫 Inserção cancelada:', { hasCallback: !!onRequestAttachmentInsertion, hasEditor: !!editorInstance });
+                return;
+              }
               const pos = editorInstance.model.document.selection.getFirstPosition();
               const path = pos && (pos as any).path ? (pos as any).path : [];
+              console.log('🖼️ Solicitando inserção de imagem. Path do cursor:', path, 'Seção:', sectionName);
               onRequestAttachmentInsertion({ type: 'figura', selectionPath: path });
             }}>
               <FileImage className="mr-2 h-4 w-4" />
               <span>Inserir Imagem</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => {
-              if (!onRequestAttachmentInsertion || !editorInstance) return;
+              if (!onRequestAttachmentInsertion || !editorInstance) {
+                console.log('🚫 Inserção cancelada:', { hasCallback: !!onRequestAttachmentInsertion, hasEditor: !!editorInstance });
+                return;
+              }
               const pos = editorInstance.model.document.selection.getFirstPosition();
               const path = pos && (pos as any).path ? (pos as any).path : [];
+              console.log('📊 Solicitando inserção de gráfico. Path do cursor:', path, 'Seção:', sectionName);
               onRequestAttachmentInsertion({ type: 'grafico', selectionPath: path });
             }}>
               <BarChart3 className="mr-2 h-4 w-4" />
               <span>Inserir Gráfico</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => {
-              if (!onRequestAttachmentInsertion || !editorInstance) return;
+              if (!onRequestAttachmentInsertion || !editorInstance) {
+                console.log('🚫 Inserção cancelada:', { hasCallback: !!onRequestAttachmentInsertion, hasEditor: !!editorInstance });
+                return;
+              }
               const pos = editorInstance.model.document.selection.getFirstPosition();
               const path = pos && (pos as any).path ? (pos as any).path : [];
+              console.log('📋 Solicitando inserção de tabela. Path do cursor:', path, 'Seção:', sectionName);
               onRequestAttachmentInsertion({ type: 'tabela', selectionPath: path });
             }}>
               <Table2 className="mr-2 h-4 w-4" />

@@ -42,34 +42,45 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
   };
 
   const handleRequestAttachmentInsertion = (sectionId: string, payload: { type: 'figura' | 'grafico' | 'tabela'; selectionPath: number[] }) => {
+    console.log('📍 BannerContentSection recebeu requisição:', { sectionId, type: payload.type, path: payload.selectionPath });
     setPendingInsertion({ sectionId, type: payload.type });
     setSelectionPaths(prev => ({ ...prev, [sectionId]: payload.selectionPath }));
+    console.log('💾 Path salvo para seção:', sectionId, '→', payload.selectionPath);
     const event = new CustomEvent('openAttachmentsManager', { 
       detail: { type: payload.type, sectionId } 
     });
     window.dispatchEvent(event);
+    console.log('📤 Evento openAttachmentsManager disparado');
   };
 
   // Escutar evento de anexo selecionado
   useEffect(() => {
     const handleAttachmentSelected = (event: CustomEvent) => {
+      console.log('📨 Evento attachmentSelected recebido:', event.detail);
       const { sectionId, attachmentId, attachmentType } = event.detail;
       insertAttachmentMarker(sectionId, attachmentId, attachmentType);
     };
 
+    console.log('👂 Listener attachmentSelected registrado. Editores disponíveis:', Object.keys(editorInstances));
     window.addEventListener('attachmentSelected' as any, handleAttachmentSelected);
     return () => {
+      console.log('🔇 Listener attachmentSelected removido');
       window.removeEventListener('attachmentSelected' as any, handleAttachmentSelected);
     };
   }, [editorInstances]);
 
   const insertAttachmentMarker = (sectionId: string, attachmentId: string, attachmentType: string) => {
+    console.log('🎯 Inserindo marcador de anexo:', { sectionId, attachmentId, attachmentType });
     const editor = editorInstances[sectionId];
-    if (!editor) return;
+    if (!editor) {
+      console.error('❌ Editor não encontrado para seção:', sectionId, 'Editores disponíveis:', Object.keys(editorInstances));
+      return;
+    }
 
     const typeLabel = attachmentType === 'figura' ? 'Imagem' : attachmentType === 'grafico' ? 'Gráfico' : 'Tabela';
     const typeIcon = attachmentType === 'figura' ? '🖼️' : attachmentType === 'grafico' ? '📊' : '📋';
 
+    console.log('✏️ Iniciando mudança no modelo do editor...');
     editor.model.change(writer => {
       const viewFragment = editor.data.processor.toView(
         `<div class="attachment-marker" data-attachment-id="${attachmentId}" data-attachment-type="${attachmentType}" style="background: hsl(var(--muted)); border: 2px dashed hsl(var(--border)); border-radius: 8px; padding: 16px; margin: 16px 0; text-align: center;">
@@ -82,15 +93,21 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
 
       const root = editor.model.document.getRoot();
       const path = selectionPaths[sectionId];
+      console.log('📍 Path recuperado para inserção:', path);
       if (path && path.length) {
         const position = writer.createPositionFromPath(root, path);
         writer.setSelection(position);
+        console.log('✅ Cursor posicionado no path salvo');
+      } else {
+        console.log('⚠️ Path não encontrado ou vazio, inserindo na posição atual');
       }
       editor.model.insertContent(modelFragment, editor.model.document.selection);
+      console.log('✅ Marcador inserido com sucesso!');
     });
 
     // Limpa o caminho salvo após inserir
     setSelectionPaths(prev => ({ ...prev, [sectionId]: [] }));
+    console.log('🧹 Path limpo para seção:', sectionId);
   };
 
   return (

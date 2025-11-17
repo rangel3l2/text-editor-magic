@@ -101,6 +101,7 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
   };
 
   const handleSelectAttachment = (imageId: string, imageType: string) => {
+    console.log('🎯 Anexo selecionado:', { imageId, imageType, selectionMode });
     if (selectionMode) {
       // Disparar evento para o BannerContentSection inserir o anexo
       const event = new CustomEvent('attachmentSelected', {
@@ -111,6 +112,7 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
         }
       });
       window.dispatchEvent(event);
+      console.log('📤 Evento attachmentSelected disparado:', event.detail);
       
       setSelectionMode(null);
       setOpen(false);
@@ -119,6 +121,8 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
         description: "O anexo foi inserido no texto na posição do cursor.",
         duration: 2000,
       });
+    } else {
+      console.warn('⚠️ Nenhum modo de seleção ativo. Anexo não foi inserido.');
     }
   };
 
