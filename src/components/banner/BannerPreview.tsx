@@ -12,9 +12,10 @@ interface BannerPreviewProps {
   content: any;
   onImageConfigChange: (imageId: string, config: any) => void;
   onLogoConfigChange?: (config: LogoConfig) => void;
+  onContentUpdate?: (field: string, value: string) => void;
 }
 
-const BannerPreview = ({ content, onImageConfigChange, onLogoConfigChange }: BannerPreviewProps) => {
+const BannerPreview = ({ content, onImageConfigChange, onLogoConfigChange, onContentUpdate }: BannerPreviewProps) => {
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const { toast } = useToast();
   const { id: workId } = useParams();
@@ -66,6 +67,33 @@ const BannerPreview = ({ content, onImageConfigChange, onLogoConfigChange }: Ban
     generatePreview();
   }, [content, workId, user?.id]);
 
+  const handleContentUpdate = (editedHtml: string) => {
+    if (!onContentUpdate) return;
+
+    // Parse o HTML editado para extrair as seções
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(editedHtml, 'text/html');
+    
+    // Mapeia as seções do HTML para os campos do conteúdo
+    const sectionFields = [
+      'introduction', 'objectives', 'methodology', 
+      'results', 'discussion', 'conclusion', 
+      'references', 'acknowledgments'
+    ];
+    
+    sectionFields.forEach((field) => {
+      const section = doc.querySelector(`[data-section-id="${field}"]`);
+      if (section) {
+        // Pega o innerHTML da seção, removendo apenas o wrapper externo
+        const sectionContent = section.innerHTML;
+        onContentUpdate(field, sectionContent);
+      }
+    });
+
+    // Regenerar o preview com o conteúdo atualizado
+    setPreviewHtml(editedHtml);
+  };
+
   return (
     <Card className="w-full h-full bg-white overflow-auto">
       <BannerPreviewContent 
@@ -76,6 +104,7 @@ const BannerPreview = ({ content, onImageConfigChange, onLogoConfigChange }: Ban
         logoConfig={content.logoConfig}
         editable={true}
         onLogoConfigChange={onLogoConfigChange}
+        onContentUpdate={handleContentUpdate}
       />
     </Card>
   );
