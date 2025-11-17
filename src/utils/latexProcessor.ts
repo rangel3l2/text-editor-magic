@@ -113,6 +113,26 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
   // Content em 2 colunas
   parts.push('<div style="column-count: 2; column-gap: 2cm; column-rule: 2px solid #000; text-align: justify;">');
   
+  // Filter and sort images by section and display_order
+  const introImages = images
+    .filter(img => img.section === 'introduction')
+    .sort((a, b) => a.display_order - b.display_order);
+  const objectivesImages = images
+    .filter(img => img.section === 'objectives')
+    .sort((a, b) => a.display_order - b.display_order);
+  const methodologyImages = images
+    .filter(img => img.section === 'methodology')
+    .sort((a, b) => a.display_order - b.display_order);
+  const resultsImages = images
+    .filter(img => img.section === 'results')
+    .sort((a, b) => a.display_order - b.display_order);
+  const discussionImages = images
+    .filter(img => img.section === 'discussion')
+    .sort((a, b) => a.display_order - b.display_order);
+  const conclusionImages = images
+    .filter(img => img.section === 'conclusion')
+    .sort((a, b) => a.display_order - b.display_order);
+  
   if (content.introduction) {
     const cleanIntro = cleanLatexCommands(content.introduction);
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
@@ -120,7 +140,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanIntro + '</div>');
     
     // Add images for introduction section
-    images.filter(img => img.section === 'introduction').forEach(img => {
+    introImages.forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
@@ -142,7 +162,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanObj + '</div>');
     
     // Add images for objectives section
-    images.filter(img => img.section === 'objectives').forEach(img => {
+    objectivesImages.forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
@@ -164,7 +184,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanMeth + '</div>');
     
     // Add images only for methodology section
-    images.filter(img => img.section === 'methodology').forEach(img => {
+    methodologyImages.forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
@@ -186,7 +206,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanRes + '</div>');
     
     // Add images only for results section
-    images.filter(img => img.section === 'results').forEach(img => {
+    resultsImages.forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
@@ -208,7 +228,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanDisc + '</div>');
     
     // Add images for discussion section
-    images.filter(img => img.section === 'discussion').forEach(img => {
+    discussionImages.forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
@@ -230,7 +250,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanConc + '</div>');
     
     // Add images for conclusion section
-    images.filter(img => img.section === 'conclusion').forEach(img => {
+    conclusionImages.forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
