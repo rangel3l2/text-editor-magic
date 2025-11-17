@@ -63,7 +63,7 @@ export const cleanHtmlTags = (text: string) => {
   return cleaned.replace(/\s+/g, ' ').trim();
 };
 
-export const generateLatexContent = (content: any) => {
+export const generateLatexContent = (content: any, images: any[] = []) => {
   const processedAuthors = cleanLatexCommands(content.authors);
   const processedAdvisors = cleanLatexCommands(content.advisors);
   const processedTitle = cleanLatexCommands(content.title);
@@ -71,6 +71,7 @@ export const generateLatexContent = (content: any) => {
   const themeColor = content.themeColor || '#1e40af';
 
   console.log('Generating latex with institutionLogo:', content.institutionLogo);
+  console.log('Images to include:', images);
 
   const parts: string[] = [];
   
@@ -136,6 +137,20 @@ export const generateLatexContent = (content: any) => {
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">METODOLOGIA</h2>');
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanMeth + '</div>');
+    
+    // Add images for methodology section
+    images.forEach(img => {
+      if (img.caption && img.url) {
+        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        if (img.source) {
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+        }
+        parts.push('</div>');
+      }
+    });
+    
     parts.push('</div>');
   }
   
@@ -144,6 +159,20 @@ export const generateLatexContent = (content: any) => {
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">RESULTADOS</h2>');
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanRes + '</div>');
+    
+    // Add images for results section (same images displayed here too)
+    images.forEach(img => {
+      if (img.caption && img.url) {
+        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        if (img.source) {
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+        }
+        parts.push('</div>');
+      }
+    });
+    
     parts.push('</div>');
   }
   
