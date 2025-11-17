@@ -201,10 +201,47 @@ serve(async (req) => {
       }
     }
 
-    // Generate LaTeX source
-    latexSource = generateLatexDocument(content, images);
+    // Generate LaTeX source with proper image filenames
+    const imagesForLatex = images.map((img, idx) => ({
+      ...img,
+      filename: `image_${idx + 1}.jpg`
+    }));
+    latexSource = generateLatexDocument(content, imagesForLatex);
     
     console.log('LaTeX source generated, length:', latexSource.length);
+
+    // Criar ZIP com LaTeX e imagens
+    const JSZip = (await import('https://esm.sh/jszip@3.10.1')).default;
+    const zip = new JSZip();
+
+    // Adicionar arquivo .tex ao ZIP
+    zip.file('banner.tex', latexSource);
+
+    // Baixar e adicionar imagens ao ZIP
+    console.log('Downloading images for ZIP:', images.length);
+    for (let idx = 0; idx < images.length; idx++) {
+      const img = images[idx];
+      const filename = `image_${idx + 1}.jpg`;
+      
+      try {
+        const imageResponse = await fetch(img.public_url);
+        if (imageResponse.ok) {
+          const imageBlob = await imageResponse.arrayBuffer();
+          zip.file(filename, imageBlob);
+          console.log(`Added ${filename} to ZIP`);
+        } else {
+          console.error(`Failed to download ${filename}:`, imageResponse.status);
+        }
+      } catch (err) {
+        console.error(`Error downloading ${filename}:`, err);
+      }
+    }
+
+    // Gerar ZIP em base64
+    const zipBlob = await zip.generateAsync({ type: 'uint8array' });
+    const base64Zip = btoa(new Uint8Array(zipBlob).reduce((d, b) => d + String.fromCharCode(b), ''));
+    
+    console.log('ZIP generated successfully, size:', zipBlob.length);
 
     // Usar API do ConvertHub para converter LaTeX em PDF
     const CONVERTHUB_API_KEY = Deno.env.get('CONVERTHUB_API_KEY');
@@ -248,7 +285,8 @@ serve(async (req) => {
       return new Response(JSON.stringify({ 
         pdf: base64Pdf,
         latex: latexSource,
-        message: 'PDF generated successfully (cached)' 
+        zip: base64Zip,
+        message: 'PDF and ZIP generated successfully (cached)' 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -288,7 +326,8 @@ serve(async (req) => {
         return new Response(JSON.stringify({ 
           pdf: base64Pdf,
           latex: latexSource,
-          message: 'PDF generated successfully' 
+          zip: base64Zip,
+          message: 'PDF and ZIP generated successfully' 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
@@ -301,11 +340,40 @@ serve(async (req) => {
       }
     }
 
-    // Timeout - retornar LaTeX como fallback
-    console.warn('ConvertHub job timeout, returning LaTeX source');
+    // Timeout - retornar LaTeX e ZIP como fallback
+    console.warn('ConvertHub job timeout, returning LaTeX source and ZIP');
     throw new Error('Conversion timeout');
   } catch (error) {
     console.error('Error:', error)
+    
+    // Tentar retornar pelo menos o ZIP se foi gerado
+    try {
+      const { content } = await req.json()
+      if (content.work_id && content.user_id) {
+        const JSZip = (await import('https://esm.sh/jszip@3.10.1')).default;
+        const zip = new JSZip();
+        zip.file('banner.tex', latexSource);
+        
+        const zipBlob = await zip.generateAsync({ type: 'uint8array' });
+        const base64Zip = btoa(new Uint8Array(zipBlob).reduce((d, b) => d + String.fromCharCode(b), ''));
+        
+        return new Response(
+          JSON.stringify({ 
+            compiled: false,
+            latex: latexSource || null,
+            zip: base64Zip,
+            message: 'PDF compilation failed, but ZIP with LaTeX generated successfully.'
+          }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200
+          }
+        )
+      }
+    } catch (zipError) {
+      console.error('ZIP generation failed:', zipError);
+    }
+    
     return new Response(
       JSON.stringify({ 
         compiled: false,
