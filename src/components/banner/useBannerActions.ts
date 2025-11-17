@@ -15,10 +15,6 @@ export const useBannerActions = (
   const { id } = useParams();
 
   const handleGeneratePDF = async () => {
-    if (!validateBannerContent(bannerContent)) {
-      return;
-    }
-
     try {
       const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
         body: { content: bannerContent }
@@ -53,10 +49,6 @@ export const useBannerActions = (
   };
 
   const handleShare = async () => {
-    if (!validateBannerContent(bannerContent)) {
-      return;
-    }
-
     try {
       const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
         body: { content: bannerContent }
