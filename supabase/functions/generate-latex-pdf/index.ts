@@ -153,26 +153,40 @@ serve(async (req) => {
     
     console.log('LaTeX source generated, length:', latexSource.length);
 
-    // Compile LaTeX to PDF using LaTeX.Online API
-    const latexApiUrl = 'https://latexonline.cc/compile';
-    const latexApiResponse = await fetch(latexApiUrl, {
+    // Compile LaTeX to PDF using texlive.net API
+    const formData = new FormData();
+    // texlive.net requires CRLF line endings
+    const latexWithCRLF = latexSource.replace(/\n/g, '\r\n');
+    formData.append('filecontents[]', latexWithCRLF);
+    formData.append('filename[]', 'document.tex');
+    formData.append('engine', 'pdflatex');
+    formData.append('return', 'pdf');
+
+    const compileResponse = await fetch('https://texlive.net/cgi-bin/latexcgi', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        text: latexSource,
-        command: 'pdflatex',
-      }),
+      body: formData,
     });
 
-    if (!latexApiResponse.ok) {
-      console.error('LaTeX compilation failed:', await latexApiResponse.text());
+    if (!compileResponse.ok) {
+      console.error('LaTeX compilation failed:', compileResponse.status, await compileResponse.text());
       throw new Error('Failed to compile LaTeX to PDF');
     }
 
-    // Get PDF as ArrayBuffer
-    const pdfBuffer = await latexApiResponse.arrayBuffer();
+    // Get the Location header which contains the PDF URL
+    const pdfUrl = compileResponse.headers.get('Location');
+    if (!pdfUrl) {
+      throw new Error('No PDF URL returned from compilation');
+    }
+
+    console.log('PDF URL:', pdfUrl);
+
+    // Download the compiled PDF
+    const pdfResponse = await fetch(`https://texlive.net${pdfUrl}`);
+    if (!pdfResponse.ok) {
+      throw new Error('Failed to download compiled PDF');
+    }
+
+    const pdfBuffer = await pdfResponse.arrayBuffer();
     
     // Convert to base64
     const base64Pdf = btoa(
