@@ -1,6 +1,11 @@
 export const cleanLatexCommands = (text: string) => {
   if (!text) return '';
   
+  // If text doesn't contain LaTeX commands, return as is (it's HTML)
+  if (!text.includes('\\')) {
+    return text;
+  }
+  
   return text
     .replace(/\\documentclass.*?\\begin{document}/s, '')
     .replace(/\\end{document}/, '')
@@ -12,7 +17,7 @@ export const cleanLatexCommands = (text: string) => {
     .replace(/\\textit{([^}]*)}/g, '$1')
     .replace(/\\begin{center}([\s\S]*?)\\end{center}/g, '$1')
     .replace(/\\begin{flushleft}([\s\S]*?)\\end{flushleft}/g, '$1')
-    .replace(/\\begin{multicols}{2}.*?\\end{multicols}/gs, '$1')
+    .replace(/\\begin{multicols}{2}([\s\S]*?)\\end{multicols}/gs, '$1')
     .replace(/\\setlength{\\columnsep}{[^}]+}/g, '')
     .replace(/\\vspace{[^}]+}/g, '')
     .replace(/\\noindent/g, '')
