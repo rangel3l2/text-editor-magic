@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { useAISettings } from '@/hooks/useAISettings';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -25,6 +26,16 @@ const AcademicAdvisor = ({ currentSection, articleContent }: AcademicAdvisorProp
   const [isLoading, setIsLoading] = useState(false);
   const [showMethodology, setShowMethodology] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { aiEnabled, isLoading: isLoadingSettings } = useAISettings();
+
+  // Don't render if AI is disabled
+  if (isLoadingSettings) {
+    return null;
+  }
+
+  if (!aiEnabled) {
+    return null;
+  }
 
   useEffect(() => {
     if (scrollAreaRef.current) {

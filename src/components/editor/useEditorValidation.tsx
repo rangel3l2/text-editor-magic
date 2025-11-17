@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { ToastDescription } from './ToastDescription';
 import { cleanHtmlTags } from '@/utils/latexProcessor';
 import { getValidationCache, setValidationCache } from '@/utils/validationCache';
+import { useAISettings } from '@/hooks/useAISettings';
 
 export const useEditorValidation = (sectionName: string, isValidationEnabled: boolean = true) => {
   const [validationResult, setValidationResult] = useState<any>(null);
@@ -12,6 +13,7 @@ export const useEditorValidation = (sectionName: string, isValidationEnabled: bo
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [currentSection, setCurrentSection] = useState<string>('');
   const { toast } = useToast();
+  const { aiEnabled } = useAISettings();
   const validationTimeoutRef = useRef<NodeJS.Timeout>();
   const lastValidationRef = useRef<number>(0);
   const retryAttemptsRef = useRef<number>(0);
@@ -29,6 +31,12 @@ export const useEditorValidation = (sectionName: string, isValidationEnabled: bo
   }, [sectionName]);
 
   const validateContent = useCallback(async (content: string) => {
+    // Não validar se a IA está desativada globalmente
+    if (!aiEnabled) {
+      console.log('AI validation disabled globally - skipping');
+      return;
+    }
+    
     // Não validar se as validações estão desabilitadas
     if (!isValidationEnabled) {
       console.log('Validation disabled - skipping');
@@ -230,7 +238,7 @@ export const useEditorValidation = (sectionName: string, isValidationEnabled: bo
       setIsValidating(false);
       setCurrentSection('');
     }
-  }, [sectionName, toast, getValidationInterval, isValidationEnabled]);
+  }, [sectionName, toast, getValidationInterval, isValidationEnabled, aiEnabled]);
 
   const scheduleValidation = useCallback((content: string) => {
     if (validationTimeoutRef.current) {
