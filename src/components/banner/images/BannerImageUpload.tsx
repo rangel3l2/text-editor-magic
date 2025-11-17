@@ -186,9 +186,9 @@ const BannerImageUpload = ({
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="imageType">Tipo</Label>
+              <Label htmlFor="upload-imageType">Tipo</Label>
               <Select value={imageType} onValueChange={(v) => setImageType(v as any)}>
-                <SelectTrigger>
+                <SelectTrigger id="upload-imageType">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -247,9 +247,9 @@ const BannerImageUpload = ({
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="section">Seção onde a imagem aparecerá</Label>
+              <Label htmlFor="upload-section">Seção onde a imagem aparecerá</Label>
               <Select value={section} onValueChange={setSection}>
-                <SelectTrigger>
+                <SelectTrigger id="upload-section">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

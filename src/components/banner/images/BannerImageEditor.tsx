@@ -164,9 +164,9 @@ const BannerImageEditor = ({
 
             {/* Section */}
             <div className="space-y-2">
-              <Label htmlFor="section">Seção onde a imagem aparecerá</Label>
+              <Label htmlFor="image-section">Seção onde a imagem aparecerá</Label>
               <Select value={section} onValueChange={setSection}>
-                <SelectTrigger>
+                <SelectTrigger id="image-section">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -185,9 +185,9 @@ const BannerImageEditor = ({
 
             {/* Column Position */}
             <div className="space-y-2">
-              <Label htmlFor="column">Posição na Coluna</Label>
+              <Label htmlFor="image-column">Posição na Coluna</Label>
               <Select value={columnPosition} onValueChange={setColumnPosition}>
-                <SelectTrigger>
+                <SelectTrigger id="image-column">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
