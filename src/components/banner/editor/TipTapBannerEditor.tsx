@@ -2,9 +2,11 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
-import { useEffect } from 'react';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 import { Button } from '@/components/ui/button';
-import { X, Save } from 'lucide-react';
+import { X, Save, Bold, Italic, List, AlignCenter, AlignLeft, AlignRight } from 'lucide-react';
+import { Toggle } from '@/components/ui/toggle';
 
 interface TipTapBannerEditorProps {
   initialContent: string;
@@ -22,11 +24,13 @@ const TipTapBannerEditor = ({
   const editor = useEditor({
     extensions: [
       StarterKit,
+      TextStyle,
+      Color,
       Image.configure({
-        inline: true,
+        inline: false,
         allowBase64: true,
         HTMLAttributes: {
-          style: 'max-width: 100%; height: auto; cursor: move;'
+          class: 'tiptap-image'
         }
       }),
       TextAlign.configure({
@@ -36,18 +40,7 @@ const TipTapBannerEditor = ({
     content: initialContent,
     editorProps: {
       attributes: {
-        class: 'tiptap-editor prose prose-sm max-w-none focus:outline-none',
-        style: `
-          width: 90cm;
-          min-height: 120cm;
-          padding: 2cm;
-          background: white;
-          font-family: 'Times New Roman', serif;
-          font-size: 12pt;
-          line-height: 1.5;
-          column-count: ${columnLayout === '3' ? '3' : '2'};
-          column-gap: 3rem;
-        `
+        class: 'tiptap-editor-content focus:outline-none',
       },
     },
   });
@@ -59,27 +52,99 @@ const TipTapBannerEditor = ({
     }
   };
 
+  if (!editor) return null;
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full h-full max-w-[95vw] max-h-[95vh] flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b bg-background">
-          <h2 className="text-lg font-semibold">Editar Banner</h2>
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-background rounded-lg shadow-xl w-full h-full max-w-[98vw] max-h-[98vh] flex flex-col">
+        {/* Header com título e ações */}
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b shrink-0">
+          <h2 className="text-base sm:text-lg font-semibold">Editar Banner Científico</h2>
           <div className="flex gap-2">
-            <Button onClick={handleSave} size="sm">
-              <Save className="w-4 h-4 mr-2" />
-              Salvar
+            <Button onClick={handleSave} size="sm" className="gap-2">
+              <Save className="w-4 h-4" />
+              <span className="hidden sm:inline">Salvar</span>
             </Button>
             <Button onClick={onClose} variant="outline" size="sm">
               <X className="w-4 h-4" />
             </Button>
           </div>
         </div>
+
+        {/* Toolbar de formatação */}
+        <div className="flex flex-wrap gap-1 p-2 border-b bg-muted/50 shrink-0">
+          <Toggle
+            size="sm"
+            pressed={editor.isActive('bold')}
+            onPressedChange={() => editor.chain().focus().toggleBold().run()}
+          >
+            <Bold className="w-4 h-4" />
+          </Toggle>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive('italic')}
+            onPressedChange={() => editor.chain().focus().toggleItalic().run()}
+          >
+            <Italic className="w-4 h-4" />
+          </Toggle>
+          <div className="w-px h-8 bg-border mx-1" />
+          <Toggle
+            size="sm"
+            pressed={editor.isActive('bulletList')}
+            onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
+          >
+            <List className="w-4 h-4" />
+          </Toggle>
+          <div className="w-px h-8 bg-border mx-1" />
+          <Toggle
+            size="sm"
+            pressed={editor.isActive({ textAlign: 'left' })}
+            onPressedChange={() => editor.chain().focus().setTextAlign('left').run()}
+          >
+            <AlignLeft className="w-4 h-4" />
+          </Toggle>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive({ textAlign: 'center' })}
+            onPressedChange={() => editor.chain().focus().setTextAlign('center').run()}
+          >
+            <AlignCenter className="w-4 h-4" />
+          </Toggle>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive({ textAlign: 'right' })}
+            onPressedChange={() => editor.chain().focus().setTextAlign('right').run()}
+          >
+            <AlignRight className="w-4 h-4" />
+          </Toggle>
+        </div>
         
-        <div className="flex-1 overflow-auto bg-gray-100 p-8">
-          <EditorContent 
-            editor={editor} 
-            className="shadow-lg"
-          />
+        {/* Área de edição com scroll */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-100 p-2 sm:p-4 md:p-8">
+          <div className="max-w-full mx-auto">
+            <div 
+              className="bg-white shadow-2xl mx-auto"
+              style={{
+                width: '90cm',
+                maxWidth: '100%',
+                minHeight: '120cm',
+                padding: '2cm',
+                transform: 'scale(0.4)',
+                transformOrigin: 'top center',
+              }}
+            >
+              <EditorContent 
+                editor={editor}
+                style={{
+                  columnCount: columnLayout === '3' ? 3 : 2,
+                  columnGap: '3rem',
+                  fontFamily: "'Times New Roman', serif",
+                  fontSize: '12pt',
+                  lineHeight: '1.5',
+                }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
