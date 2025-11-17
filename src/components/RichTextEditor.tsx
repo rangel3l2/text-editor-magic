@@ -28,7 +28,7 @@ interface RichTextEditorProps {
   sectionName?: string;
   onCustomImageUpload?: (file: File) => void;
   onEditorReady?: (editor: any) => void;
-  onRequestAttachmentInsertion?: (type: 'figura' | 'grafico' | 'tabela') => void;
+  onRequestAttachmentInsertion?: (payload: { type: 'figura' | 'grafico' | 'tabela'; selectionPath: number[] }) => void;
 }
 
 const RichTextEditor = ({ 
@@ -192,15 +192,30 @@ const RichTextEditor = ({
           <ContextMenuContent className="w-56">
             <ContextMenuLabel>Inserir Anexo</ContextMenuLabel>
             <ContextMenuSeparator />
-            <ContextMenuItem onClick={() => onRequestAttachmentInsertion('figura')}>
+            <ContextMenuItem onClick={() => {
+              if (!onRequestAttachmentInsertion || !editorInstance) return;
+              const pos = editorInstance.model.document.selection.getFirstPosition();
+              const path = pos ? pos.getPath() : [];
+              onRequestAttachmentInsertion({ type: 'figura', selectionPath: path });
+            }}>
               <FileImage className="mr-2 h-4 w-4" />
               <span>Inserir Imagem</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRequestAttachmentInsertion('grafico')}>
+            <ContextMenuItem onClick={() => {
+              if (!onRequestAttachmentInsertion || !editorInstance) return;
+              const pos = editorInstance.model.document.selection.getFirstPosition();
+              const path = pos ? pos.getPath() : [];
+              onRequestAttachmentInsertion({ type: 'grafico', selectionPath: path });
+            }}>
               <BarChart3 className="mr-2 h-4 w-4" />
               <span>Inserir Gráfico</span>
             </ContextMenuItem>
-            <ContextMenuItem onClick={() => onRequestAttachmentInsertion('tabela')}>
+            <ContextMenuItem onClick={() => {
+              if (!onRequestAttachmentInsertion || !editorInstance) return;
+              const pos = editorInstance.model.document.selection.getFirstPosition();
+              const path = pos ? pos.getPath() : [];
+              onRequestAttachmentInsertion({ type: 'tabela', selectionPath: path });
+            }}>
               <Table2 className="mr-2 h-4 w-4" />
               <span>Inserir Tabela</span>
             </ContextMenuItem>

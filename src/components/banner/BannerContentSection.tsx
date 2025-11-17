@@ -27,6 +27,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
   const { images } = useBannerImages(workId, user?.id);
   const [editorInstances, setEditorInstances] = useState<Record<string, any>>({});
   const [pendingInsertion, setPendingInsertion] = useState<{ sectionId: string; type: 'figura' | 'grafico' | 'tabela' } | null>(null);
+  const [selectionPaths, setSelectionPaths] = useState<Record<string, number[]>>({});
 
   // Filter attachments by section
   const introAttachments = images.filter(img => img.section === 'introduction').sort((a, b) => a.display_order - b.display_order);
@@ -40,12 +41,11 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
     setEditorInstances(prev => ({ ...prev, [sectionId]: editor }));
   };
 
-  const handleRequestAttachmentInsertion = (sectionId: string, type: 'figura' | 'grafico' | 'tabela') => {
-    setPendingInsertion({ sectionId, type });
-    // Aqui devemos disparar a abertura do BannerAttachmentsManager
-    // Vamos fazer isso via um evento customizado para que o BannerEditor possa capturar
+  const handleRequestAttachmentInsertion = (sectionId: string, payload: { type: 'figura' | 'grafico' | 'tabela'; selectionPath: number[] }) => {
+    setPendingInsertion({ sectionId, type: payload.type });
+    setSelectionPaths(prev => ({ ...prev, [sectionId]: payload.selectionPath }));
     const event = new CustomEvent('openAttachmentsManager', { 
-      detail: { type, sectionId } 
+      detail: { type: payload.type, sectionId } 
     });
     window.dispatchEvent(event);
   };
@@ -79,10 +79,18 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
         </div>`
       );
       const modelFragment = editor.data.toModel(viewFragment);
-      
-      // Insere no local do cursor
+
+      const root = editor.model.document.getRoot();
+      const path = selectionPaths[sectionId];
+      if (path && path.length) {
+        const position = writer.createPositionFromPath(root, path);
+        writer.setSelection(position);
+      }
       editor.model.insertContent(modelFragment, editor.model.document.selection);
     });
+
+    // Limpa o caminho salvo após inserir
+    setSelectionPaths(prev => ({ ...prev, [sectionId]: [] }));
   };
 
   return (
@@ -125,7 +133,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             placeholder="Ex: A problemática dos resíduos plásticos tem afetado significativamente os ecossistemas marinhos..."
             sectionName="Introdução"
             onEditorReady={(editor) => handleEditorReady('introduction', editor)}
-            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('introduction', type)}
+            onRequestAttachmentInsertion={(payload) => handleRequestAttachmentInsertion('introduction', payload)}
           />
         </CardContent>
       </Card>
@@ -147,7 +155,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             placeholder="Ex: • Objetivo Geral: Avaliar o impacto... • Objetivos Específicos: 1) Quantificar... 2) Analisar..."
             sectionName="Objetivos"
             onEditorReady={(editor) => handleEditorReady('objectives', editor)}
-            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('objectives', type)}
+            onRequestAttachmentInsertion={(payload) => handleRequestAttachmentInsertion('objectives', payload)}
           />
         </CardContent>
       </Card>
@@ -173,7 +181,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             sectionName="Metodologia"
             onCustomImageUpload={onImageUploadFromEditor}
             onEditorReady={(editor) => handleEditorReady('methodology', editor)}
-            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('methodology', type)}
+            onRequestAttachmentInsertion={(payload) => handleRequestAttachmentInsertion('methodology', payload)}
           />
         </CardContent>
       </Card>
@@ -198,7 +206,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             placeholder="Ex: Os resultados demonstraram que... A Figura 1 ilustra... A Tabela 1 apresenta..."
             sectionName="Resultados"
             onEditorReady={(editor) => handleEditorReady('results', editor)}
-            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('results', type)}
+            onRequestAttachmentInsertion={(payload) => handleRequestAttachmentInsertion('results', payload)}
           />
         </CardContent>
       </Card>
@@ -220,7 +228,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             placeholder="Ex: Os resultados obtidos corroboram com os estudos de Silva et al. (2022), que também observaram..."
             sectionName="Discussão"
             onEditorReady={(editor) => handleEditorReady('discussion', editor)}
-            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('discussion', type)}
+            onRequestAttachmentInsertion={(payload) => handleRequestAttachmentInsertion('discussion', payload)}
           />
         </CardContent>
       </Card>
@@ -242,7 +250,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             placeholder="Ex: Conclui-se que a metodologia proposta foi eficaz para... Os resultados sugerem que..."
             sectionName="Conclusão"
             onEditorReady={(editor) => handleEditorReady('conclusion', editor)}
-            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('conclusion', type)}
+            onRequestAttachmentInsertion={(payload) => handleRequestAttachmentInsertion('conclusion', payload)}
           />
         </CardContent>
       </Card>
