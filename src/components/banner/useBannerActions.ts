@@ -28,6 +28,25 @@ export const useBannerActions = (
 
       if (error) throw error;
 
+      // Baixar ZIP com LaTeX e imagens primeiro
+      if (data?.zip) {
+        const binaryString = atob(data.zip);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const zipBlob = new Blob([bytes], { type: 'application/zip' });
+        const zipUrl = window.URL.createObjectURL(zipBlob);
+        
+        const zipLink = document.createElement('a');
+        zipLink.href = zipUrl;
+        zipLink.download = 'banner-latex-completo.zip';
+        document.body.appendChild(zipLink);
+        zipLink.click();
+        document.body.removeChild(zipLink);
+        window.URL.revokeObjectURL(zipUrl);
+      }
+
       if (data?.pdf) {
         // Decodificar base64 usando API nativa do navegador
         const binaryString = atob(data.pdf);
@@ -46,22 +65,15 @@ export const useBannerActions = (
         document.body.removeChild(pdfLink);
         window.URL.revokeObjectURL(pdfUrl);
         
-        // Baixar também o .tex se disponível
-        if (data.latex) {
-          const texBlob = new Blob([data.latex], { type: 'application/x-tex' });
-          const texUrl = window.URL.createObjectURL(texBlob);
-          const texLink = document.createElement('a');
-          texLink.href = texUrl;
-          texLink.download = 'banner.tex';
-          document.body.appendChild(texLink);
-          texLink.click();
-          document.body.removeChild(texLink);
-          window.URL.revokeObjectURL(texUrl);
-        }
-        
         toast({
           title: "Arquivos gerados",
-          description: "PDF e LaTeX (.tex) foram baixados com sucesso",
+          description: data?.zip ? "PDF e ZIP com LaTeX completo foram baixados" : "PDF foi baixado com sucesso",
+          duration: 3000,
+        });
+      } else if (data?.zip) {
+        toast({
+          title: "ZIP gerado",
+          description: "Arquivo LaTeX completo com imagens foi baixado",
           duration: 3000,
         });
       } else if (data?.latex) {
@@ -108,6 +120,21 @@ export const useBannerActions = (
 
       if (error) throw error;
 
+      // Preparar arquivos para compartilhar
+      const files = [];
+
+      // Adicionar ZIP se disponível
+      if (data?.zip) {
+        const zipBinaryString = atob(data.zip);
+        const zipBytes = new Uint8Array(zipBinaryString.length);
+        for (let i = 0; i < zipBinaryString.length; i++) {
+          zipBytes[i] = zipBinaryString.charCodeAt(i);
+        }
+        const zipBlob = new Blob([zipBytes], { type: 'application/zip' });
+        const zipFile = new File([zipBlob], 'banner-latex-completo.zip', { type: 'application/zip' });
+        files.push(zipFile);
+      }
+
       if (data?.pdf) {
         // Decodificar base64 usando API nativa do navegador
         const binaryString = atob(data.pdf);
@@ -116,11 +143,12 @@ export const useBannerActions = (
           bytes[i] = binaryString.charCodeAt(i);
         }
         const pdfBlob = new Blob([bytes], { type: 'application/pdf' });
-        const file = new File([pdfBlob], 'banner-academico.pdf', { type: 'application/pdf' });
+        const pdfFile = new File([pdfBlob], 'banner-academico.pdf', { type: 'application/pdf' });
+        files.push(pdfFile);
 
-        if (navigator.share && navigator.canShare({ files: [file] })) {
+        if (navigator.share && navigator.canShare({ files })) {
           await navigator.share({
-            files: [file],
+            files,
             title: 'Banner Acadêmico',
             text: 'Compartilhar banner acadêmico'
           });
@@ -131,7 +159,7 @@ export const useBannerActions = (
             duration: 3000,
           });
         } else {
-          // Se não pode compartilhar, baixa o PDF e o .tex
+          // Se não pode compartilhar, baixa os arquivos
           const pdfUrl = window.URL.createObjectURL(pdfBlob);
           const tempLink = document.createElement('a');
           tempLink.href = pdfUrl;
@@ -141,22 +169,27 @@ export const useBannerActions = (
           document.body.removeChild(tempLink);
           window.URL.revokeObjectURL(pdfUrl);
           
-          // Baixar também o .tex se disponível
-          if (data.latex) {
-            const texBlob = new Blob([data.latex], { type: 'application/x-tex' });
-            const texUrl = window.URL.createObjectURL(texBlob);
-            const texLink = document.createElement('a');
-            texLink.href = texUrl;
-            texLink.download = 'banner.tex';
-            document.body.appendChild(texLink);
-            texLink.click();
-            document.body.removeChild(texLink);
-            window.URL.revokeObjectURL(texUrl);
+          // Baixar ZIP se disponível
+          if (data?.zip) {
+            const zipBinaryString = atob(data.zip);
+            const zipBytes = new Uint8Array(zipBinaryString.length);
+            for (let i = 0; i < zipBinaryString.length; i++) {
+              zipBytes[i] = zipBinaryString.charCodeAt(i);
+            }
+            const zipBlob = new Blob([zipBytes], { type: 'application/zip' });
+            const zipUrl = window.URL.createObjectURL(zipBlob);
+            const zipLink = document.createElement('a');
+            zipLink.href = zipUrl;
+            zipLink.download = 'banner-latex-completo.zip';
+            document.body.appendChild(zipLink);
+            zipLink.click();
+            document.body.removeChild(zipLink);
+            window.URL.revokeObjectURL(zipUrl);
           }
           
           toast({
             title: "Arquivos baixados",
-            description: "PDF e LaTeX (.tex) foram baixados para seu computador",
+            description: data?.zip ? "PDF e ZIP com LaTeX foram baixados" : "PDF foi baixado para seu computador",
             duration: 3000,
           });
         }
