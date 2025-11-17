@@ -217,7 +217,7 @@ const TipTapBannerEditor = ({
                 maxWidth: '100%',
                 minHeight: '120cm',
                 padding: '2cm',
-                transform: 'scale(0.4)',
+                transform: 'scale(0.5)',
                 transformOrigin: 'top center',
               }}
             >
