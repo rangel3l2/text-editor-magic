@@ -17,6 +17,7 @@ interface RichTextEditorProps {
   config?: any;
   placeholder?: string;
   sectionName?: string;
+  onCustomImageUpload?: (file: File) => void;
 }
 
 const RichTextEditor = ({ 
@@ -26,7 +27,8 @@ const RichTextEditor = ({
   minLines = 0, 
   config = {}, 
   placeholder,
-  sectionName = ''
+  sectionName = '',
+  onCustomImageUpload
 }: RichTextEditorProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [editorInstance, setEditorInstance] = useState<any>(null);
@@ -112,9 +114,10 @@ const RichTextEditor = ({
       ...config.image,
       upload: {
         types: ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff'],
-        handler: handleImageUpload
+        handler: onCustomImageUpload || handleImageUpload
       }
     },
+    customImageUploadHandler: onCustomImageUpload,
     clipboard: {
       ...config.clipboard,
       handleImages: true

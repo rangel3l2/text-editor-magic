@@ -17,9 +17,12 @@ interface BannerContentSectionProps {
     acknowledgments: string;
   };
   handleChange: (field: string, data: string) => void;
+  onImageUploadFromEditor?: (file: File) => void;
+  pendingImageFile?: File | null;
+  onImageProcessed?: () => void;
 }
 
-const BannerContentSection = ({ content, handleChange }: BannerContentSectionProps) => {
+const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor, pendingImageFile, onImageProcessed }: BannerContentSectionProps) => {
   return (
     <div className="space-y-6">
       <div className="bg-muted/30 p-4 rounded-lg mb-6">
@@ -99,12 +102,16 @@ const BannerContentSection = ({ content, handleChange }: BannerContentSectionPro
             config={editorConfig}
             placeholder="Ex: O estudo foi conduzido em três etapas: 1) Coleta de amostras... 2) Análise laboratorial... 3) Tratamento estatístico..."
             sectionName="Metodologia"
+            onCustomImageUpload={onImageUploadFromEditor}
           />
         </CardContent>
       </Card>
 
       {/* Images Section for Methodology */}
-      <BannerImagesSection />
+      <BannerImagesSection 
+        pendingImageFile={pendingImageFile}
+        onImageProcessed={onImageProcessed}
+      />
 
       <Card>
         <CardHeader>
