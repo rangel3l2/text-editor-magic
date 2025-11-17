@@ -35,7 +35,7 @@ const BannerImagesSection = ({ pendingImageFile, onImageProcessed }: BannerImage
   // Process pending image from editor
   useEffect(() => {
     if (pendingImageFile) {
-      handleUpload(pendingImageFile, 'figura', 'Imagem do editor', 'Inserida via editor de texto');
+      handleUpload(pendingImageFile, 'figura', 'Imagem do editor', 'Inserida via editor de texto', 'results');
       if (onImageProcessed) {
         onImageProcessed();
       }
@@ -51,7 +51,8 @@ const BannerImagesSection = ({ pendingImageFile, onImageProcessed }: BannerImage
     file: File, 
     imageType: 'figura' | 'grafico' | 'tabela',
     title: string,
-    source: string
+    source: string,
+    section: string = 'results'
   ) => {
     const image = await uploadImage(file);
     if (image) {
@@ -61,7 +62,8 @@ const BannerImagesSection = ({ pendingImageFile, onImageProcessed }: BannerImage
       await updateImage(image.id, { 
         caption: fullCaption,
         image_type: imageType,
-        source: source
+        source: source,
+        section: section
       });
     }
   };
@@ -82,8 +84,9 @@ const BannerImagesSection = ({ pendingImageFile, onImageProcessed }: BannerImage
       <CardHeader>
         <CardTitle>📷 Imagens e Figuras</CardTitle>
         <CardDescription>
-          Adicione imagens, gráficos e tabelas para seus resultados.
-          As imagens serão automaticamente posicionadas nas colunas e numeradas como Figura 1, Figura 2, etc.
+          Adicione imagens, gráficos e tabelas ao seu banner. 
+          Você pode escolher em qual seção cada imagem aparecerá (Introdução, Metodologia, Resultados, etc.).
+          As imagens são automaticamente numeradas como Figura 1, Figura 2, etc.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

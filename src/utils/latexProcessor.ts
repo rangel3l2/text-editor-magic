@@ -118,6 +118,20 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">INTRODUÇÃO</h2>');
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanIntro + '</div>');
+    
+    // Add images for introduction section
+    images.filter(img => img.section === 'introduction').forEach(img => {
+      if (img.caption && img.url) {
+        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        if (img.source) {
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+        }
+        parts.push('</div>');
+      }
+    });
+    
     parts.push('</div>');
   }
   
@@ -126,6 +140,20 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">OBJETIVOS</h2>');
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanObj + '</div>');
+    
+    // Add images for objectives section
+    images.filter(img => img.section === 'objectives').forEach(img => {
+      if (img.caption && img.url) {
+        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        if (img.source) {
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+        }
+        parts.push('</div>');
+      }
+    });
+    
     parts.push('</div>');
   }
   
@@ -135,8 +163,8 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">METODOLOGIA</h2>');
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanMeth + '</div>');
     
-    // Add images for methodology section
-    images.forEach(img => {
+    // Add images only for methodology section
+    images.filter(img => img.section === 'methodology').forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
@@ -157,8 +185,8 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">RESULTADOS</h2>');
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanRes + '</div>');
     
-    // Add images for results section (same images displayed here too)
-    images.forEach(img => {
+    // Add images only for results section
+    images.filter(img => img.section === 'results').forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
@@ -178,6 +206,20 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">DISCUSSÃO</h2>');
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanDisc + '</div>');
+    
+    // Add images for discussion section
+    images.filter(img => img.section === 'discussion').forEach(img => {
+      if (img.caption && img.url) {
+        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        if (img.source) {
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+        }
+        parts.push('</div>');
+      }
+    });
+    
     parts.push('</div>');
   }
   
@@ -186,6 +228,20 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">CONCLUSÃO</h2>');
     parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanConc + '</div>');
+    
+    // Add images for conclusion section
+    images.filter(img => img.section === 'conclusion').forEach(img => {
+      if (img.caption && img.url) {
+        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        if (img.source) {
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+        }
+        parts.push('</div>');
+      }
+    });
+    
     parts.push('</div>');
   }
   

@@ -28,6 +28,7 @@ const BannerImageEditor = ({
 }: BannerImageEditorProps) => {
   const [caption, setCaption] = useState(image?.caption || '');
   const [columnPosition, setColumnPosition] = useState<string>(image?.column_position?.toString() || 'auto');
+  const [section, setSection] = useState(image?.section || 'results');
   const [rotation, setRotation] = useState(image?.rotation || 0);
   const [brightness, setBrightness] = useState(image?.adjustments.brightness || 0);
   const [contrast, setContrast] = useState(image?.adjustments.contrast || 0);
@@ -57,6 +58,7 @@ const BannerImageEditor = ({
 
     await onSave(image.id, {
       caption: sanitizedCaption,
+      section,
       column_position: columnPosition === 'auto' ? null : parseInt(columnPosition),
       rotation,
       adjustments: {
@@ -157,6 +159,27 @@ const BannerImageEditor = ({
               />
               <p className={`text-xs ${captionError ? 'text-destructive' : 'text-muted-foreground'}`}>
                 {caption.length}/200 caracteres {captionError && '• ' + captionError}
+              </p>
+            </div>
+
+            {/* Section */}
+            <div className="space-y-2">
+              <Label htmlFor="section">Seção onde a imagem aparecerá</Label>
+              <Select value={section} onValueChange={setSection}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="introduction">Introdução</SelectItem>
+                  <SelectItem value="objectives">Objetivos</SelectItem>
+                  <SelectItem value="methodology">Metodologia</SelectItem>
+                  <SelectItem value="results">Resultados</SelectItem>
+                  <SelectItem value="discussion">Discussão</SelectItem>
+                  <SelectItem value="conclusion">Conclusão</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                A imagem será posicionada no final da seção selecionada
               </p>
             </div>
 

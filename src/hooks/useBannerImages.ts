@@ -11,6 +11,7 @@ export interface BannerImage {
   caption: string;
   image_type?: string;
   source?: string;
+  section?: string;
   column_position: number | null;
   width_cm: number | null;
   height_cm: number | null;

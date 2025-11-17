@@ -190,6 +190,7 @@ export type Database = {
           original_height: number | null
           original_width: number | null
           rotation: number | null
+          section: string | null
           source: string | null
           storage_path: string
           updated_at: string | null
@@ -211,6 +212,7 @@ export type Database = {
           original_height?: number | null
           original_width?: number | null
           rotation?: number | null
+          section?: string | null
           source?: string | null
           storage_path: string
           updated_at?: string | null
@@ -232,6 +234,7 @@ export type Database = {
           original_height?: number | null
           original_width?: number | null
           rotation?: number | null
+          section?: string | null
           source?: string | null
           storage_path?: string
           updated_at?: string | null
