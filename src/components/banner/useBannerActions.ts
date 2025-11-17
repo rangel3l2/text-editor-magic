@@ -30,19 +30,32 @@ export const useBannerActions = (
           bytes[i] = binaryString.charCodeAt(i);
         }
         const pdfBlob = new Blob([bytes], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(pdfBlob);
+        const pdfUrl = window.URL.createObjectURL(pdfBlob);
         
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'banner-academico.pdf';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        const pdfLink = document.createElement('a');
+        pdfLink.href = pdfUrl;
+        pdfLink.download = 'banner-academico.pdf';
+        document.body.appendChild(pdfLink);
+        pdfLink.click();
+        document.body.removeChild(pdfLink);
+        window.URL.revokeObjectURL(pdfUrl);
+        
+        // Baixar também o .tex se disponível
+        if (data.latex) {
+          const texBlob = new Blob([data.latex], { type: 'application/x-tex' });
+          const texUrl = window.URL.createObjectURL(texBlob);
+          const texLink = document.createElement('a');
+          texLink.href = texUrl;
+          texLink.download = 'banner.tex';
+          document.body.appendChild(texLink);
+          texLink.click();
+          document.body.removeChild(texLink);
+          window.URL.revokeObjectURL(texUrl);
+        }
         
         toast({
-          title: "PDF gerado",
-          description: "Seu banner acadêmico foi exportado com sucesso",
+          title: "Arquivos gerados",
+          description: "PDF e LaTeX (.tex) foram baixados com sucesso",
           duration: 3000,
         });
       } else if (data?.latex) {
@@ -106,18 +119,32 @@ export const useBannerActions = (
             duration: 3000,
           });
         } else {
-          const url = window.URL.createObjectURL(pdfBlob);
+          // Se não pode compartilhar, baixa o PDF e o .tex
+          const pdfUrl = window.URL.createObjectURL(pdfBlob);
           const tempLink = document.createElement('a');
-          tempLink.href = url;
+          tempLink.href = pdfUrl;
           tempLink.download = 'banner-academico.pdf';
           document.body.appendChild(tempLink);
           tempLink.click();
           document.body.removeChild(tempLink);
-          window.URL.revokeObjectURL(url);
+          window.URL.revokeObjectURL(pdfUrl);
+          
+          // Baixar também o .tex se disponível
+          if (data.latex) {
+            const texBlob = new Blob([data.latex], { type: 'application/x-tex' });
+            const texUrl = window.URL.createObjectURL(texBlob);
+            const texLink = document.createElement('a');
+            texLink.href = texUrl;
+            texLink.download = 'banner.tex';
+            document.body.appendChild(texLink);
+            texLink.click();
+            document.body.removeChild(texLink);
+            window.URL.revokeObjectURL(texUrl);
+          }
           
           toast({
-            title: "Download iniciado",
-            description: "O arquivo foi preparado para download no seu computador",
+            title: "Arquivos baixados",
+            description: "PDF e LaTeX (.tex) foram baixados para seu computador",
             duration: 3000,
           });
         }

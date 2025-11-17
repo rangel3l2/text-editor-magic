@@ -195,7 +195,8 @@ serve(async (req) => {
       const base64Pdf = btoa(new Uint8Array(pdfBuffer).reduce((d, b) => d + String.fromCharCode(b), ''));
       
       return new Response(JSON.stringify({ 
-        pdf: base64Pdf, 
+        pdf: base64Pdf,
+        latex: latexSource,
         message: 'PDF generated successfully (cached)' 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -234,7 +235,8 @@ serve(async (req) => {
         console.log('PDF generated successfully via ConvertHub, size:', pdfBuffer.byteLength);
         
         return new Response(JSON.stringify({ 
-          pdf: base64Pdf, 
+          pdf: base64Pdf,
+          latex: latexSource,
           message: 'PDF generated successfully' 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
