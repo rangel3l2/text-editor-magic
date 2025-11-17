@@ -25,14 +25,28 @@ const BannerImagesSection = () => {
     reorderImages
   } = useBannerImages(workId, user?.id);
 
-  const handleUpload = async (file: File, caption?: string) => {
+  const handleUpload = async (
+    file: File, 
+    imageType: 'figura' | 'grafico' | 'tabela',
+    title: string,
+    source: string
+  ) => {
     const image = await uploadImage(file);
-    if (image && caption) {
-      const figureNumber = images.length + 1;
-      const fullCaption = `Figura ${figureNumber}: ${caption}`;
-      await updateImage(image.id, { caption: fullCaption });
+    if (image) {
+      const typeLabel = imageType === 'figura' ? 'Figura' : imageType === 'grafico' ? 'Gráfico' : 'Tabela';
+      const count = images.filter(img => img.image_type === imageType).length + 1;
+      const fullCaption = `${typeLabel} ${count}: ${title}`;
+      await updateImage(image.id, { 
+        caption: fullCaption,
+        image_type: imageType,
+        source: source
+      });
     }
   };
+
+  const figuraCount = images.filter(img => img.image_type === 'figura').length;
+  const graficoCount = images.filter(img => img.image_type === 'grafico').length;
+  const tabelaCount = images.filter(img => img.image_type === 'tabela').length;
 
   const handleSaveEdit = async (imageId: string, updates: Partial<BannerImage>) => {
     await updateImage(imageId, updates);
@@ -88,6 +102,9 @@ const BannerImagesSection = () => {
           isUploading={isUploading}
           maxImages={10}
           currentCount={images.length}
+          figuraCount={figuraCount}
+          graficoCount={graficoCount}
+          tabelaCount={tabelaCount}
         />
 
         {/* Gallery */}

@@ -186,9 +186,11 @@ export type Database = {
           dpi: number | null
           height_cm: number | null
           id: string
+          image_type: string | null
           original_height: number | null
           original_width: number | null
           rotation: number | null
+          source: string | null
           storage_path: string
           updated_at: string | null
           user_id: string
@@ -205,9 +207,11 @@ export type Database = {
           dpi?: number | null
           height_cm?: number | null
           id?: string
+          image_type?: string | null
           original_height?: number | null
           original_width?: number | null
           rotation?: number | null
+          source?: string | null
           storage_path: string
           updated_at?: string | null
           user_id: string
@@ -224,9 +228,11 @@ export type Database = {
           dpi?: number | null
           height_cm?: number | null
           id?: string
+          image_type?: string | null
           original_height?: number | null
           original_width?: number | null
           rotation?: number | null
+          source?: string | null
           storage_path?: string
           updated_at?: string | null
           user_id?: string
