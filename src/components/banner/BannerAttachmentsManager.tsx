@@ -166,8 +166,8 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
             </p>
           </SheetHeader>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <div className="px-4 sm:px-6 pt-4 border-b bg-muted/20">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+            <div className="px-4 sm:px-6 pt-4 border-b bg-muted/20 flex-shrink-0">
               <TabsList className="grid w-full grid-cols-3 bg-muted/50">
                 <TabsTrigger value="images" className="text-xs sm:text-sm data-[state=active]:bg-background">
                   <FileImage className="h-4 w-4 mr-1.5" />
@@ -199,9 +199,9 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
               </TabsList>
             </div>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 h-[calc(100vh-280px)]">
               {/* Images Tab */}
-              <TabsContent value="images" className="mt-0 px-4 sm:px-6 py-6 space-y-6">
+              <TabsContent value="images" className="mt-0 px-4 sm:px-6 py-6 space-y-6 h-full">
                 {hasLowDPI && (
                   <Alert variant="default" className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
                     <AlertCircle className="h-4 w-4 text-orange-600" />
