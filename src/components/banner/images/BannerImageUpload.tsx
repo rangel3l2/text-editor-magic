@@ -5,31 +5,58 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface BannerImageUploadProps {
-  onUpload: (file: File, caption?: string) => Promise<void>;
+  onUpload: (file: File, imageType: 'figura' | 'grafico' | 'tabela', title: string, source: string) => Promise<void>;
   isUploading: boolean;
   maxImages?: number;
   currentCount?: number;
+  figuraCount?: number;
+  graficoCount?: number;
+  tabelaCount?: number;
 }
 
 const BannerImageUpload = ({ 
   onUpload, 
   isUploading, 
   maxImages = 10,
-  currentCount = 0 
+  currentCount = 0,
+  figuraCount = 0,
+  graficoCount = 0,
+  tabelaCount = 0
 }: BannerImageUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [showCaptionDialog, setShowCaptionDialog] = useState(false);
+  const [showTitleDialog, setShowTitleDialog] = useState(false);
+  const [showSourceDialog, setShowSourceDialog] = useState(false);
   const [pendingImage, setPendingImage] = useState<File | null>(null);
-  const [caption, setCaption] = useState('');
+  const [imageType, setImageType] = useState<'figura' | 'grafico' | 'tabela'>('figura');
+  const [title, setTitle] = useState('');
+  const [source, setSource] = useState('');
+
+  const getNextNumber = (type: 'figura' | 'grafico' | 'tabela') => {
+    switch(type) {
+      case 'figura': return figuraCount + 1;
+      case 'grafico': return graficoCount + 1;
+      case 'tabela': return tabelaCount + 1;
+    }
+  };
+
+  const getTypeLabel = (type: 'figura' | 'grafico' | 'tabela') => {
+    switch(type) {
+      case 'figura': return 'Figura';
+      case 'grafico': return 'Gráfico';
+      case 'tabela': return 'Tabela';
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
     if (files.length > 0 && currentCount < maxImages) {
       setPendingImage(files[0]);
-      setShowCaptionDialog(true);
+      setImageType('figura');
+      setShowTitleDialog(true);
     }
 
     // Reset input
@@ -50,7 +77,8 @@ const BannerImageUpload = ({
           const file = new File([blob], `imagem-${Date.now()}.png`, { type: blob.type });
           
           setPendingImage(file);
-          setShowCaptionDialog(true);
+          setImageType('figura');
+          setShowTitleDialog(true);
           return;
         }
       }
@@ -62,12 +90,21 @@ const BannerImageUpload = ({
     }
   };
 
-  const handleConfirmCaption = async () => {
-    if (pendingImage && caption.trim()) {
-      await onUpload(pendingImage, caption.trim());
-      setShowCaptionDialog(false);
+  const handleConfirmTitle = () => {
+    if (title.trim()) {
+      setShowTitleDialog(false);
+      setShowSourceDialog(true);
+    }
+  };
+
+  const handleConfirmSource = async () => {
+    if (pendingImage && title.trim() && source.trim()) {
+      await onUpload(pendingImage, imageType, title.trim(), source.trim());
+      setShowSourceDialog(false);
       setPendingImage(null);
-      setCaption('');
+      setTitle('');
+      setSource('');
+      setImageType('figura');
     }
   };
 
@@ -135,23 +172,85 @@ const BannerImageUpload = ({
         </CardContent>
       </Card>
 
-      <Dialog open={showCaptionDialog} onOpenChange={setShowCaptionDialog}>
+      {/* Dialog 1: Título da Imagem */}
+      <Dialog open={showTitleDialog} onOpenChange={setShowTitleDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Adicionar legenda</DialogTitle>
+            <DialogTitle>Título da Imagem</DialogTitle>
             <DialogDescription>
-              Descreva o conteúdo desta imagem. A numeração (Figura 1, 2, 3...) será adicionada automaticamente.
+              Selecione o tipo e insira o título. A numeração será adicionada automaticamente.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="caption">Legenda da imagem</Label>
+              <Label htmlFor="imageType">Tipo</Label>
+              <Select value={imageType} onValueChange={(v) => setImageType(v as any)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="figura">Figura {getNextNumber('figura')}</SelectItem>
+                  <SelectItem value="grafico">Gráfico {getNextNumber('grafico')}</SelectItem>
+                  <SelectItem value="tabela">Tabela {getNextNumber('tabela')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="title">Título</Label>
               <Input
-                id="caption"
-                placeholder="Ex: Resultados do experimento A mostrando..."
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
+                id="title"
+                placeholder={`${getTypeLabel(imageType)} ${getNextNumber(imageType)}: `}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                autoFocus
+              />
+              <p className="text-xs text-muted-foreground">
+                Será exibido como: {getTypeLabel(imageType)} {getNextNumber(imageType)}: {title || '...'}
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowTitleDialog(false);
+                setPendingImage(null);
+                setTitle('');
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmTitle}
+              disabled={!title.trim()}
+            >
+              Próximo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog 2: Fonte da Imagem */}
+      <Dialog open={showSourceDialog} onOpenChange={setShowSourceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Fonte da Imagem</DialogTitle>
+            <DialogDescription>
+              Informe a fonte ou origem desta imagem (será exibida abaixo da imagem).
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="source">Fonte</Label>
+              <Input
+                id="source"
+                placeholder="Ex: Adaptado de Silva et al. (2023)"
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
                 autoFocus
               />
             </div>
@@ -161,16 +260,15 @@ const BannerImageUpload = ({
             <Button
               variant="outline"
               onClick={() => {
-                setShowCaptionDialog(false);
-                setPendingImage(null);
-                setCaption('');
+                setShowSourceDialog(false);
+                setShowTitleDialog(true);
               }}
             >
-              Cancelar
+              Voltar
             </Button>
             <Button
-              onClick={handleConfirmCaption}
-              disabled={!caption.trim()}
+              onClick={handleConfirmSource}
+              disabled={!source.trim()}
             >
               Adicionar Imagem
             </Button>

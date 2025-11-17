@@ -9,6 +9,8 @@ export interface BannerImage {
   storage_path: string;
   display_order: number;
   caption: string;
+  image_type?: string;
+  source?: string;
   column_position: number | null;
   width_cm: number | null;
   height_cm: number | null;
@@ -208,11 +210,29 @@ export const useBannerImages = (workId: string | undefined, userId: string | und
       const remainingImages = images.filter(img => img.id !== imageId);
       
       // Renumber and update in database
-      const updates = remainingImages.map((img, index) => ({
-        ...img,
-        display_order: index,
-        caption: img.caption.replace(/Figura \d+/, `Figura ${index + 1}`)
-      }));
+      const updates = remainingImages.map((img, index) => {
+        let newCaption = img.caption || '';
+        
+        // Only renumber if caption exists and matches pattern
+        if (newCaption) {
+          const figuraMatch = newCaption.match(/^Figura \d+/);
+          const graficoMatch = newCaption.match(/^Gráfico \d+/);
+          const tabelaMatch = newCaption.match(/^Tabela \d+/);
+          
+          if (figuraMatch || graficoMatch || tabelaMatch) {
+            const type = img.image_type || 'figura';
+            const typeCount = remainingImages.filter((r, i) => i <= index && r.image_type === type).length;
+            const typeLabel = type === 'figura' ? 'Figura' : type === 'grafico' ? 'Gráfico' : 'Tabela';
+            newCaption = newCaption.replace(/^(Figura|Gráfico|Tabela) \d+/, `${typeLabel} ${typeCount}`);
+          }
+        }
+        
+        return {
+          ...img,
+          display_order: index,
+          caption: newCaption
+        };
+      });
 
       // Update database
       for (const update of updates) {
@@ -258,11 +278,22 @@ export const useBannerImages = (workId: string | undefined, userId: string | und
       }
 
       // Renumber captions
-      const renumbered = newOrder.map((img, index) => ({
-        ...img,
-        display_order: index,
-        caption: img.caption.replace(/Figura \d+/, `Figura ${index + 1}`)
-      }));
+      const renumbered = newOrder.map((img, index) => {
+        let newCaption = img.caption || '';
+        
+        if (newCaption) {
+          const type = img.image_type || 'figura';
+          const typeCount = newOrder.filter((r, i) => i <= index && r.image_type === type).length;
+          const typeLabel = type === 'figura' ? 'Figura' : type === 'grafico' ? 'Gráfico' : 'Tabela';
+          newCaption = newCaption.replace(/^(Figura|Gráfico|Tabela) \d+/, `${typeLabel} ${typeCount}`);
+        }
+        
+        return {
+          ...img,
+          display_order: index,
+          caption: newCaption
+        };
+      });
 
       setImages(renumbered);
     } catch (error) {
