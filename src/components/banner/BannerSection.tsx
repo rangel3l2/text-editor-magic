@@ -109,14 +109,33 @@ const BannerSection = ({
   const handleImageDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    e.stopPropagation();
     
     const target = e.target as HTMLElement;
-    const container = target.closest('.attachment-container');
-    if (container && draggedImageId && sectionId) {
-      const targetAttachmentId = container.getAttribute('data-attachment-id');
+    const container = target.closest('.attachment-container') as HTMLElement | null;
+
+    if (draggedImageId && sectionId) {
+      let targetAttachmentId: string | null = null;
+
+      if (container) {
+        targetAttachmentId = container.getAttribute('data-attachment-id');
+      } else if (contentRef.current) {
+        // Sem alvo explícito: calcula posição pela coordenada Y do drop
+        const y = (e as any).clientY ?? 0;
+        const containers = Array.from(
+          contentRef.current.querySelectorAll('.attachment-container')
+        ) as HTMLElement[];
+
+        // Encontra o primeiro container abaixo do ponto de drop
+        const next = containers.find((el) => el.getBoundingClientRect().top > y);
+        if (next) {
+          targetAttachmentId = next.getAttribute('data-attachment-id');
+        } else if (containers.length) {
+          // Se não há próximo, vamos enviar para o final
+          targetAttachmentId = '__END__';
+        }
+      }
+
       if (targetAttachmentId && targetAttachmentId !== draggedImageId) {
-        // Dispatch evento para reordenar imagens inline
         const event = new CustomEvent('reorderAttachmentInline', {
           detail: {
             sectionId,
@@ -127,6 +146,7 @@ const BannerSection = ({
         window.dispatchEvent(event);
       }
     }
+
     setDraggedImageId(null);
   };
 

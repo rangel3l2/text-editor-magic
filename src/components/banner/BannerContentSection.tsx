@@ -173,22 +173,52 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
       
       console.log('🎯 Tokens encontrados - Source:', srcToken, 'Target:', tgtToken);
       
-      if (!srcToken || !tgtToken) {
-        console.error('❌ Tokens não encontrados no HTML da seção');
+      if (srcToken && tgtToken) {
+        // Remove a primeira ocorrência do token de origem
+        let updated = currentHtml.replace(srcToken, '');
+        // Insere antes do token alvo
+        updated = updated.replace(tgtToken, `${srcToken}${tgtToken}`);
+
+        console.log('✅ Reordenação aplicada por tokens, atualizando conteúdo');
+        try {
+          handleChange(targetSection, updated);
+        } catch (e) {
+          console.error('❌ Falha ao aplicar reordenação inline (tokens):', e);
+        }
         return;
       }
 
-      // Remove a primeira ocorrência do token de origem
-      let updated = currentHtml.replace(srcToken, '');
-      // Insere antes do token alvo
-      updated = updated.replace(tgtToken, `${srcToken}${tgtToken}`);
-
-      console.log('✅ Reordenação aplicada, atualizando conteúdo');
-
+      // Fallback: reordenação baseada no HTML quando não há tokens (usa src da imagem)
       try {
+        const temp = document.createElement('div');
+        temp.innerHTML = currentHtml;
+
+        const escapeAttr = (v: string) => v.replace(/"/g, '\\"');
+        const srcSelector = sourceId ? `img[src="${escapeAttr(sourceId)}"]` : '';
+        const tgtSelector = targetId ? `img[src="${escapeAttr(targetId)}"]` : '';
+
+        const srcImg = srcSelector ? (temp.querySelector(srcSelector) as HTMLImageElement | null) : null;
+        const tgtImg = tgtSelector ? (temp.querySelector(tgtSelector) as HTMLImageElement | null) : null;
+
+        if (!srcImg || !tgtImg) {
+          console.warn('⚠️ Imagens não encontradas no HTML para fallback de reordenação.');
+          return;
+        }
+
+        const srcBlock = srcImg.closest('div');
+        const tgtBlock = tgtImg.closest('div');
+
+        if (!srcBlock || !tgtBlock || srcBlock === tgtBlock) {
+          console.warn('⚠️ Blocos não encontrados ou iguais para fallback de reordenação.');
+          return;
+        }
+
+        tgtBlock.parentElement?.insertBefore(srcBlock, tgtBlock);
+        const updated = temp.innerHTML;
         handleChange(targetSection, updated);
-      } catch (e) {
-        console.error('❌ Falha ao aplicar reordenação inline:', e);
+        console.log('✅ Reordenação por HTML aplicada (fallback)');
+      } catch (err) {
+        console.error('❌ Falha no fallback de reordenação por HTML:', err);
       }
     };
 
