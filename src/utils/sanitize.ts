@@ -14,7 +14,7 @@ export const sanitizeHtml = (dirty: string): string => {
       'ul', 'ol', 'li', 'blockquote', 'a', 'span', 'div', 'img', 'table',
       'thead', 'tbody', 'tr', 'th', 'td', 'code', 'pre', 'sub', 'sup'
     ],
-    ALLOWED_ATTR: ['class', 'href', 'src', 'alt', 'title', 'target', 'rel'],
-    ALLOW_DATA_ATTR: false,
+    ALLOWED_ATTR: ['class', 'href', 'src', 'alt', 'title', 'target', 'rel', 'style', 'draggable', 'id', 'width', 'height'],
+    ALLOW_DATA_ATTR: true,
   });
 };
