@@ -153,12 +153,38 @@ serve(async (req) => {
     
     console.log('LaTeX source generated, length:', latexSource.length);
 
-    // For now, return the LaTeX source
-    // In production, this would be compiled to PDF using a LaTeX engine
+    // Compile LaTeX to PDF using LaTeX.Online API
+    const latexApiUrl = 'https://latexonline.cc/compile';
+    const latexApiResponse = await fetch(latexApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        text: latexSource,
+        command: 'pdflatex',
+      }),
+    });
+
+    if (!latexApiResponse.ok) {
+      console.error('LaTeX compilation failed:', await latexApiResponse.text());
+      throw new Error('Failed to compile LaTeX to PDF');
+    }
+
+    // Get PDF as ArrayBuffer
+    const pdfBuffer = await latexApiResponse.arrayBuffer();
+    
+    // Convert to base64
+    const base64Pdf = btoa(
+      new Uint8Array(pdfBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+    );
+    
+    console.log('PDF generated successfully, size:', pdfBuffer.byteLength);
+
     return new Response(
       JSON.stringify({ 
-        latex: latexSource,
-        message: 'LaTeX source generated. In production, this would be compiled to PDF.'
+        pdf: base64Pdf,
+        message: 'PDF generated successfully'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
