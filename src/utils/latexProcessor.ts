@@ -70,9 +70,6 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
   const processedInstitution = cleanLatexCommands(content.institution);
   const themeColor = content.themeColor || '#1e40af';
 
-  console.log('Generating latex with institutionLogo:', content.institutionLogo);
-  console.log('Images to include:', images);
-
   const parts: string[] = [];
   
   parts.push('<div style="width: 100%; max-width: 120cm; margin: 0 auto; position: relative; background: white; font-family: \'Times New Roman\', Times, serif; padding: 2cm;">');
