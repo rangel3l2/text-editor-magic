@@ -266,37 +266,54 @@ export const useBannerImages = (workId: string | undefined, userId: string | und
   // Reorder images (drag and drop)
   const reorderImages = async (newOrder: BannerImage[]) => {
     try {
-      const updates = newOrder.map((img, index) => ({
-        id: img.id,
-        display_order: index
-      }));
+      // Group by section and assign display_order within each section
+      const sections: Record<string, BannerImage[]> = {};
+      newOrder.forEach(img => {
+        const section = img.section || 'results';
+        if (!sections[section]) sections[section] = [];
+        sections[section].push(img);
+      });
 
+      // Update display_order for each section
+      const updates: Array<{ id: string; display_order: number; caption: string }> = [];
+      
+      Object.values(sections).forEach(sectionImages => {
+        sectionImages.forEach((img, index) => {
+          let newCaption = img.caption || '';
+          
+          if (newCaption) {
+            const type = img.image_type || 'figura';
+            const typeCount = sectionImages.filter((r, i) => i <= index && r.image_type === type).length;
+            const typeLabel = type === 'figura' ? 'Figura' : type === 'grafico' ? 'Gráfico' : 'Tabela';
+            newCaption = newCaption.replace(/^(Figura|Gráfico|Tabela) \d+/, `${typeLabel} ${typeCount}`);
+          }
+          
+          updates.push({
+            id: img.id,
+            display_order: index,
+            caption: newCaption
+          });
+        });
+      });
+
+      // Apply updates to database
       for (const update of updates) {
         await supabase
           .from('banner_work_images')
-          .update({ display_order: update.display_order })
+          .update({ 
+            display_order: update.display_order,
+            caption: update.caption 
+          })
           .eq('id', update.id);
       }
 
-      // Renumber captions
-      const renumbered = newOrder.map((img, index) => {
-        let newCaption = img.caption || '';
-        
-        if (newCaption) {
-          const type = img.image_type || 'figura';
-          const typeCount = newOrder.filter((r, i) => i <= index && r.image_type === type).length;
-          const typeLabel = type === 'figura' ? 'Figura' : type === 'grafico' ? 'Gráfico' : 'Tabela';
-          newCaption = newCaption.replace(/^(Figura|Gráfico|Tabela) \d+/, `${typeLabel} ${typeCount}`);
-        }
-        
-        return {
-          ...img,
-          display_order: index,
-          caption: newCaption
-        };
+      // Update local state
+      const updatedImages = newOrder.map(img => {
+        const update = updates.find(u => u.id === img.id);
+        return update ? { ...img, display_order: update.display_order, caption: update.caption } : img;
       });
 
-      setImages(renumbered);
+      setImages(updatedImages);
     } catch (error) {
       console.error('Error reordering images:', error);
     }
