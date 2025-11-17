@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.update-work-content]
 verify_jwt = true
+
+[functions.generate-latex-pdf]
+verify_jwt = false
