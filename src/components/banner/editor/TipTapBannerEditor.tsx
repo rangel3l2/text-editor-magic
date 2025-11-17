@@ -7,6 +7,7 @@ import { Color } from '@tiptap/extension-color';
 import { Button } from '@/components/ui/button';
 import { X, Save, Bold, Italic, List, AlignCenter, AlignLeft, AlignRight } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
+import { useEffect } from 'react';
 
 interface TipTapBannerEditorProps {
   initialContent: string;
@@ -30,7 +31,8 @@ const TipTapBannerEditor = ({
         inline: false,
         allowBase64: true,
         HTMLAttributes: {
-          class: 'tiptap-image'
+          class: 'tiptap-image',
+          style: 'max-width: 100%; height: auto; cursor: pointer;'
         }
       }),
       TextAlign.configure({
@@ -42,8 +44,25 @@ const TipTapBannerEditor = ({
       attributes: {
         class: 'tiptap-editor-content focus:outline-none',
       },
+      handleDOMEvents: {
+        mousedown: (view, event) => {
+          const target = event.target as HTMLElement;
+          if (target.tagName === 'IMG') {
+            target.classList.add('tiptap-image-selected');
+            target.setAttribute('contenteditable', 'false');
+            return false;
+          }
+          return false;
+        }
+      }
     },
   });
+
+  useEffect(() => {
+    if (editor && initialContent) {
+      editor.commands.setContent(initialContent);
+    }
+  }, [editor, initialContent]);
 
   const handleSave = () => {
     if (editor) {
@@ -123,7 +142,7 @@ const TipTapBannerEditor = ({
         <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-100 p-2 sm:p-4 md:p-8">
           <div className="max-w-full mx-auto">
             <div 
-              className="bg-white shadow-2xl mx-auto"
+              className="bg-white shadow-2xl mx-auto banner-content"
               style={{
                 width: '90cm',
                 maxWidth: '100%',
@@ -131,16 +150,17 @@ const TipTapBannerEditor = ({
                 padding: '2cm',
                 transform: 'scale(0.4)',
                 transformOrigin: 'top center',
+                fontFamily: "'Times New Roman', serif",
+                fontSize: '12pt',
+                lineHeight: '1.5',
               }}
             >
               <EditorContent 
                 editor={editor}
+                className="tiptap-columns"
                 style={{
                   columnCount: columnLayout === '3' ? 3 : 2,
                   columnGap: '3rem',
-                  fontFamily: "'Times New Roman', serif",
-                  fontSize: '12pt',
-                  lineHeight: '1.5',
                 }}
               />
             </div>

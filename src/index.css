@@ -337,18 +337,43 @@
   height: auto;
   display: block;
   margin: 0.5cm auto;
-  cursor: pointer;
+  cursor: nwse-resize;
   border: 2px solid transparent;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  resize: both;
+  overflow: hidden;
+  position: relative;
 }
 
 .tiptap-editor-content .tiptap-image:hover {
   border-color: hsl(var(--primary));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.tiptap-editor-content .tiptap-image.ProseMirror-selectednode {
+.tiptap-editor-content .tiptap-image.ProseMirror-selectednode,
+.tiptap-editor-content .tiptap-image-selected {
   border-color: hsl(var(--primary));
-  outline: none;
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
+}
+
+.tiptap-columns .ProseMirror {
+  column-count: inherit;
+  column-gap: inherit;
+}
+
+.tiptap-columns .banner-section {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.tiptap-columns h1,
+.tiptap-columns h2,
+.tiptap-columns h3 {
+  column-span: none;
+  break-after: avoid;
+  page-break-after: avoid;
 }
 
 .tiptap-editor-content ul,
