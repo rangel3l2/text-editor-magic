@@ -153,11 +153,27 @@ serve(async (req) => {
     
     console.log('LaTeX source generated, length:', latexSource.length);
 
-    // Compile LaTeX to PDF using texlive.net API
+    // Try LaTeX.Online (GET) first
+    const latexOnlineUrl = 'https://latexonline.cc/compile?command=pdflatex&text=' + encodeURIComponent(latexSource);
+    const latexOnlineResp = await fetch(latexOnlineUrl, { method: 'GET' });
+
+    if (latexOnlineResp.ok && (latexOnlineResp.headers.get('content-type') || '').includes('application/pdf')) {
+      const pdfBuffer = await latexOnlineResp.arrayBuffer();
+      const base64Pdf = btoa(new Uint8Array(pdfBuffer).reduce((d, b) => d + String.fromCharCode(b), ''));
+      console.log('PDF generated via latexonline.cc, size:', pdfBuffer.byteLength);
+      return new Response(JSON.stringify({ pdf: base64Pdf, message: 'PDF generated successfully' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    } else {
+      console.error('latexonline.cc failed or returned non-PDF. Status:', latexOnlineResp.status, 'CT:', latexOnlineResp.headers.get('content-type'));
+    }
+
+    // Fallback: Compile via texlive.net API
     const formData = new FormData();
-    // texlive.net requires CRLF line endings
     const latexWithCRLF = latexSource.replace(/\n/g, '\r\n');
-    formData.append('filecontents[]', latexWithCRLF);
+    const texFile = new File([latexWithCRLF], 'document.tex', { type: 'application/x-tex' });
+    formData.append('filecontents[]', texFile, 'document.tex');
     formData.append('filename[]', 'document.tex');
     formData.append('engine', 'pdflatex');
     formData.append('return', 'pdf');
@@ -165,46 +181,48 @@ serve(async (req) => {
     const compileResponse = await fetch('https://texlive.net/cgi-bin/latexcgi', {
       method: 'POST',
       body: formData,
+      redirect: 'manual',
     });
 
-    if (!compileResponse.ok) {
-      console.error('LaTeX compilation failed:', compileResponse.status, await compileResponse.text());
+    if (compileResponse.status === 200) {
+      const ct = compileResponse.headers.get('content-type') || '';
+      if (ct.includes('application/pdf')) {
+        const pdfBuffer = await compileResponse.arrayBuffer();
+        const base64Pdf = btoa(new Uint8Array(pdfBuffer).reduce((d, b) => d + String.fromCharCode(b), ''));
+        console.log('PDF generated via texlive.net (direct), size:', pdfBuffer.byteLength);
+        return new Response(JSON.stringify({ pdf: base64Pdf, message: 'PDF generated successfully' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        });
+      }
+    }
+
+    if (compileResponse.status !== 302 && compileResponse.status !== 303) {
+      const bodyText = await compileResponse.text().catch(() => '[no-body]');
+      console.error('texlive.net failed:', compileResponse.status, bodyText);
       throw new Error('Failed to compile LaTeX to PDF');
     }
 
-    // Get the Location header which contains the PDF URL
-    const pdfUrl = compileResponse.headers.get('Location');
-    if (!pdfUrl) {
+    const location = compileResponse.headers.get('Location');
+    if (!location) {
       throw new Error('No PDF URL returned from compilation');
     }
-
+    const pdfUrl = location.startsWith('http') ? location : `https://texlive.net${location}`;
     console.log('PDF URL:', pdfUrl);
 
-    // Download the compiled PDF
-    const pdfResponse = await fetch(`https://texlive.net${pdfUrl}`);
+    const pdfResponse = await fetch(pdfUrl, { redirect: 'follow' });
     if (!pdfResponse.ok) {
-      throw new Error('Failed to download compiled PDF');
+      throw new Error(`Failed to download compiled PDF: ${pdfResponse.status}`);
     }
 
     const pdfBuffer = await pdfResponse.arrayBuffer();
-    
-    // Convert to base64
-    const base64Pdf = btoa(
-      new Uint8Array(pdfBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-    );
-    
-    console.log('PDF generated successfully, size:', pdfBuffer.byteLength);
+    const base64Pdf = btoa(new Uint8Array(pdfBuffer).reduce((d, b) => d + String.fromCharCode(b), ''));
+    console.log('PDF generated via texlive.net, size:', pdfBuffer.byteLength);
 
-    return new Response(
-      JSON.stringify({ 
-        pdf: base64Pdf,
-        message: 'PDF generated successfully'
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
-    )
+    return new Response(JSON.stringify({ pdf: base64Pdf, message: 'PDF generated successfully' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
   } catch (error) {
     console.error('Error:', error)
     return new Response(
