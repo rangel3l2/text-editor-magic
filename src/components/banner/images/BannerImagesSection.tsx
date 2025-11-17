@@ -25,8 +25,13 @@ const BannerImagesSection = () => {
     reorderImages
   } = useBannerImages(workId, user?.id);
 
-  const handleUpload = async (file: File) => {
-    await uploadImage(file);
+  const handleUpload = async (file: File, caption?: string) => {
+    const image = await uploadImage(file);
+    if (image && caption) {
+      const figureNumber = images.length + 1;
+      const fullCaption = `Figura ${figureNumber}: ${caption}`;
+      await updateImage(image.id, { caption: fullCaption });
+    }
   };
 
   const handleSaveEdit = async (imageId: string, updates: Partial<BannerImage>) => {
