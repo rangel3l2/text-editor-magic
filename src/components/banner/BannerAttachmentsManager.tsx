@@ -236,6 +236,8 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
                   <BannerImageUpload
                     onUpload={handleUpload}
                     isUploading={isUploading}
+                    defaultSection={selectionMode?.sectionId}
+                    defaultType={selectionMode?.type}
                   />
                 </div>
 
