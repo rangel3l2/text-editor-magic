@@ -151,7 +151,7 @@ serve(async (req) => {
     console.log('Generating LaTeX document for banner:', content);
 
     // Generate LaTeX source
-    const latexSource = generateLatexDocument(content);
+    latexSource = generateLatexDocument(content);
     
     console.log('LaTeX source generated, length:', latexSource.length);
 
