@@ -38,8 +38,42 @@ const BannerPreviewContent = ({
   const parseSections = (html: string) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    const sectionElements = Array.from(doc.querySelectorAll('.banner-section'));
-    return sectionElements as HTMLElement[];
+    const sectionElements = Array.from(doc.querySelectorAll('.banner-section')) as HTMLElement[];
+
+    // Garante que cada seção tenha um data-section-id confiável
+    const idsOrder = [
+      'introduction',
+      'objectives',
+      'methodology',
+      'results',
+      'discussion',
+      'conclusion',
+      'references',
+      'acknowledgments',
+    ];
+    sectionElements.forEach((el, idx) => {
+      if (!el.getAttribute('data-section-id')) {
+        const heading = el.querySelector('h1,h2,h3,h4,h5,h6');
+        const inferred = (heading?.textContent || '').toLowerCase().trim();
+        const map: Record<string, string> = {
+          introdu: 'introduction',
+          objeti: 'objectives',
+          metod: 'methodology',
+          resul: 'results',
+          discus: 'discussion',
+          conclu: 'conclusion',
+          refer: 'references',
+          agrade: 'acknowledgments',
+        };
+        let found: string | undefined;
+        for (const key in map) {
+          if (inferred.includes(key)) { found = map[key]; break; }
+        }
+        el.setAttribute('data-section-id', found || idsOrder[idx] || `section-${idx}`);
+      }
+    });
+
+    return sectionElements;
   };
 
   useEffect(() => {
