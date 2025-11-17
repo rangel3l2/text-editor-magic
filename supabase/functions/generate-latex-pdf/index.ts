@@ -155,78 +155,102 @@ serve(async (req) => {
     
     console.log('LaTeX source generated, length:', latexSource.length);
 
-    // Try LaTeX.Online (GET) first
-    const latexOnlineUrl = 'https://latexonline.cc/compile?command=pdflatex&text=' + encodeURIComponent(latexSource);
-    const latexOnlineResp = await fetch(latexOnlineUrl, { method: 'GET' });
+    // Usar API do ConvertHub para converter LaTeX em PDF
+    const CONVERTHUB_API_KEY = Deno.env.get('CONVERTHUB_API_KEY');
+    if (!CONVERTHUB_API_KEY) {
+      throw new Error('CONVERTHUB_API_KEY not configured');
+    }
 
-    if (latexOnlineResp.ok && (latexOnlineResp.headers.get('content-type') || '').includes('application/pdf')) {
-      const pdfBuffer = await latexOnlineResp.arrayBuffer();
+    // Converter LaTeX para base64
+    const latexBase64 = btoa(latexSource);
+    
+    // Enviar para ConvertHub
+    const convertResponse = await fetch('https://api.converthub.com/v2/convert/base64', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CONVERTHUB_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        file_base64: latexBase64,
+        filename: 'document.tex',
+        target_format: 'pdf',
+        output_filename: 'banner-academico.pdf',
+      }),
+    });
+
+    if (!convertResponse.ok) {
+      const errorText = await convertResponse.text();
+      console.error('ConvertHub conversion failed:', convertResponse.status, errorText);
+      throw new Error(`ConvertHub API error: ${convertResponse.status}`);
+    }
+
+    const convertData = await convertResponse.json();
+    console.log('ConvertHub job created:', convertData.job_id);
+
+    // Se já estiver completo (cache)
+    if (convertData.status === 'completed' && convertData.result?.download_url) {
+      const pdfResponse = await fetch(convertData.result.download_url);
+      const pdfBuffer = await pdfResponse.arrayBuffer();
       const base64Pdf = btoa(new Uint8Array(pdfBuffer).reduce((d, b) => d + String.fromCharCode(b), ''));
-      console.log('PDF generated via latexonline.cc, size:', pdfBuffer.byteLength);
-      return new Response(JSON.stringify({ pdf: base64Pdf, message: 'PDF generated successfully' }), {
+      
+      return new Response(JSON.stringify({ 
+        pdf: base64Pdf, 
+        message: 'PDF generated successfully (cached)' 
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
-    } else {
-      console.error('latexonline.cc failed or returned non-PDF. Status:', latexOnlineResp.status, 'CT:', latexOnlineResp.headers.get('content-type'));
     }
 
-    // Fallback: Compile via texlive.net API
-    const formData = new FormData();
-    const latexWithCRLF = latexSource.replace(/\n/g, '\r\n');
-    const texFile = new File([latexWithCRLF], 'document.tex', { type: 'application/x-tex' });
-    formData.append('filecontents[]', texFile, 'document.tex');
-    formData.append('filename[]', 'document.tex');
-    formData.append('engine', 'xelatex');
-    formData.append('return', 'pdf');
+    // Polling para aguardar conclusão (max 60s)
+    const jobId = convertData.job_id;
+    const maxAttempts = 30;
+    const pollInterval = 2000; // 2 segundos
 
-    const compileResponse = await fetch('https://texlive.net/cgi-bin/latexcgi', {
-      method: 'POST',
-      body: formData,
-      redirect: 'manual',
-    });
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
 
-    if (compileResponse.status === 200) {
-      const ct = compileResponse.headers.get('content-type') || '';
-      if (ct.includes('application/pdf')) {
-        const pdfBuffer = await compileResponse.arrayBuffer();
+      const statusResponse = await fetch(`https://api.converthub.com/v2/jobs/${jobId}`, {
+        headers: {
+          'Authorization': `Bearer ${CONVERTHUB_API_KEY}`,
+        },
+      });
+
+      if (!statusResponse.ok) {
+        console.error('Job status check failed:', statusResponse.status);
+        continue;
+      }
+
+      const statusData = await statusResponse.json();
+      console.log(`Job ${jobId} status:`, statusData.status);
+
+      if (statusData.status === 'completed' && statusData.result?.download_url) {
+        // Baixar o PDF convertido
+        const pdfResponse = await fetch(statusData.result.download_url);
+        const pdfBuffer = await pdfResponse.arrayBuffer();
         const base64Pdf = btoa(new Uint8Array(pdfBuffer).reduce((d, b) => d + String.fromCharCode(b), ''));
-        console.log('PDF generated via texlive.net (direct), size:', pdfBuffer.byteLength);
-        return new Response(JSON.stringify({ pdf: base64Pdf, message: 'PDF generated successfully' }), {
+        
+        console.log('PDF generated successfully via ConvertHub, size:', pdfBuffer.byteLength);
+        
+        return new Response(JSON.stringify({ 
+          pdf: base64Pdf, 
+          message: 'PDF generated successfully' 
+        }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
         });
       }
+
+      if (statusData.status === 'failed') {
+        console.error('ConvertHub job failed:', statusData.error);
+        throw new Error(`Conversion failed: ${statusData.error?.message || 'Unknown error'}`);
+      }
     }
 
-    if (compileResponse.status !== 301 && compileResponse.status !== 302 && compileResponse.status !== 303) {
-      const bodyText = await compileResponse.text().catch(() => '[no-body]');
-      console.error('texlive.net failed:', compileResponse.status, bodyText);
-      throw new Error('Failed to compile LaTeX to PDF');
-    }
-
-    const location = compileResponse.headers.get('Location');
-    if (!location) {
-      throw new Error('No PDF URL returned from compilation');
-    }
-    // texlive.net retorna a URL do .log, mas o PDF está no mesmo caminho com .pdf
-    let pdfUrl = location.startsWith('http') ? location : `https://texlive.net${location}`;
-    pdfUrl = pdfUrl.replace(/\.log$/, '.pdf'); // Trocar .log por .pdf
-    console.log('PDF URL:', pdfUrl);
-
-    const pdfResponse = await fetch(pdfUrl, { redirect: 'follow' });
-    if (!pdfResponse.ok) {
-      throw new Error(`Failed to download compiled PDF: ${pdfResponse.status}`);
-    }
-
-    const pdfBuffer = await pdfResponse.arrayBuffer();
-    const base64Pdf = btoa(new Uint8Array(pdfBuffer).reduce((d, b) => d + String.fromCharCode(b), ''));
-    console.log('PDF generated via texlive.net, size:', pdfBuffer.byteLength);
-
-    return new Response(JSON.stringify({ pdf: base64Pdf, message: 'PDF generated successfully' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
+    // Timeout - retornar LaTeX como fallback
+    console.warn('ConvertHub job timeout, returning LaTeX source');
+    throw new Error('Conversion timeout');
   } catch (error) {
     console.error('Error:', error)
     return new Response(
