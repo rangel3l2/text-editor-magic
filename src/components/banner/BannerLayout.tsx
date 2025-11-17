@@ -14,6 +14,7 @@ interface BannerLayoutProps {
   onImageConfigChange: (imageId: string, config: any) => void;
   onLogoConfigChange?: (config: LogoConfig) => void;
   onContentUpdate?: (field: string, value: string) => void;
+  onGeneratePDF?: () => void;
 }
 
 const BannerLayout = ({ 
@@ -23,7 +24,8 @@ const BannerLayout = ({
   content, 
   onImageConfigChange,
   onLogoConfigChange,
-  onContentUpdate
+  onContentUpdate,
+  onGeneratePDF
 }: BannerLayoutProps) => {
   return (
     <>
@@ -83,6 +85,7 @@ const BannerLayout = ({
               onImageConfigChange={onImageConfigChange}
               onLogoConfigChange={onLogoConfigChange}
               onContentUpdate={onContentUpdate}
+              onGeneratePDF={onGeneratePDF}
             />
           </div>
         </DialogContent>

@@ -299,7 +299,6 @@
   overflow-x: hidden;
 }
 
-.banner-tiptap-content, 
 .banner-tiptap-content.ProseMirror {
   outline: none;
   font-family: 'Times New Roman', Times, serif !important;
@@ -309,6 +308,10 @@
   column-count: 2;
   column-gap: 2cm;
   column-rule: 2px solid #000;
+}
+
+.banner-tiptap-content.ProseMirror[data-column-layout="3"] {
+  column-count: 3;
 }
 
 .banner-tiptap-content .banner-section {
