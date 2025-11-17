@@ -43,15 +43,22 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
     const editor = editorInstances[sectionId];
     if (!editor) return;
 
-    const viewFragment = editor.data.processor.toView(
-      `<div class="attachment-marker" data-attachment-id="${attachmentId}" data-attachment-type="${attachmentType}" style="background: hsl(var(--muted)); border: 2px dashed hsl(var(--border)); border-radius: 8px; padding: 16px; margin: 16px 0; text-align: center;">
-        <p style="margin: 0; color: hsl(var(--muted-foreground)); font-size: 14px;">
-          📎 ${attachmentType === 'figura' ? 'Imagem' : attachmentType === 'grafico' ? 'Gráfico' : 'Tabela'} será inserida aqui
-        </p>
-      </div>`
-    );
-    const modelFragment = editor.data.toModel(viewFragment);
-    editor.model.insertContent(modelFragment);
+    const typeLabel = attachmentType === 'figura' ? 'Imagem' : attachmentType === 'grafico' ? 'Gráfico' : 'Tabela';
+    const typeIcon = attachmentType === 'figura' ? '🖼️' : attachmentType === 'grafico' ? '📊' : '📋';
+
+    editor.model.change(writer => {
+      const viewFragment = editor.data.processor.toView(
+        `<div class="attachment-marker" data-attachment-id="${attachmentId}" data-attachment-type="${attachmentType}" style="background: hsl(var(--muted)); border: 2px dashed hsl(var(--border)); border-radius: 8px; padding: 16px; margin: 16px 0; text-align: center;">
+          <p style="margin: 0; color: hsl(var(--muted-foreground)); font-size: 14px; font-weight: 600;">
+            ${typeIcon} ${typeLabel} será inserida aqui
+          </p>
+        </div>`
+      );
+      const modelFragment = editor.data.toModel(viewFragment);
+      
+      // Insere no local do cursor
+      editor.model.insertContent(modelFragment, editor.model.document.selection);
+    });
   };
 
   return (
