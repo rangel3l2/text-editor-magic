@@ -22,7 +22,13 @@ export const useBannerActions = (
 
       if (error) throw error;
 
-      const pdfBlob = new Blob([Buffer.from(data.pdf, 'base64')], { type: 'application/pdf' });
+      // Decodificar base64 usando API nativa do navegador
+      const binaryString = atob(data.pdf);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const pdfBlob = new Blob([bytes], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(pdfBlob);
       
       const link = document.createElement('a');
@@ -56,7 +62,13 @@ export const useBannerActions = (
 
       if (error) throw error;
 
-      const pdfBlob = new Blob([Buffer.from(data.pdf, 'base64')], { type: 'application/pdf' });
+      // Decodificar base64 usando API nativa do navegador
+      const binaryString = atob(data.pdf);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const pdfBlob = new Blob([bytes], { type: 'application/pdf' });
       const file = new File([pdfBlob], 'banner-academico.pdf', { type: 'application/pdf' });
 
       if (navigator.share && navigator.canShare({ files: [file] })) {
