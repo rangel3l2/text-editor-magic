@@ -6,10 +6,12 @@ const corsHeaders = {
 }
 
 // Generate LaTeX document for science fair banner (90cm x 120cm)
-const generateLatexDocument = (content: any): string => {
+const generateLatexDocument = (content: any, images: any[] = []): string => {
   const cleanLatex = (text: string) => {
     if (!text) return '';
-    return text
+    // Remove placeholders de imagens
+    let cleaned = text.replace(/\[\[placeholder:[^\]]+\]\]/g, '');
+    return cleaned
       .replace(/&/g, '\\&')
       .replace(/%/g, '\\%')
       .replace(/\$/g, '\\$')
@@ -33,6 +35,26 @@ const generateLatexDocument = (content: any): string => {
   const conclusion = cleanLatex(content.conclusion || '');
   const references = cleanLatex(content.references || '');
   const acknowledgments = cleanLatex(content.acknowledgments || '');
+
+  // Gerar comandos para incluir imagens
+  let imageCommands = '';
+  if (images && images.length > 0) {
+    imageCommands = '% Imagens disponíveis (URLs abaixo):\n';
+    imageCommands += images.map((img, idx) => {
+      const imageUrl = img.public_url || '';
+      const filename = `image_${idx + 1}`;
+      const caption = img.caption ? cleanLatex(img.caption) : '';
+      const widthCm = img.width_cm || 8;
+      
+      return `% Imagem ${idx + 1}: ${imageUrl}
+% Baixe esta imagem e salve como ${filename}.jpg na mesma pasta do .tex
+\\begin{figure}[h]
+  \\centering
+  \\includegraphics[width=${widthCm}cm]{${filename}}
+  ${caption ? `\\caption{${caption}}` : ''}
+\\end{figure}`;
+    }).join('\n\n');
+  }
 
   return `\\documentclass[a0paper,landscape]{article}
 \\usepackage[utf8]{inputenc}
@@ -113,7 +135,7 @@ ${introduction ? `\\section*{INTRODUÇÃO}\n${introduction}\n` : ''}
 
 ${objectives ? `\\section*{OBJETIVOS}\n${objectives}\n` : ''}
 
-${methodology ? `\\section*{METODOLOGIA}\n${methodology}\n` : ''}
+${methodology ? `\\section*{METODOLOGIA}\n${methodology}\n${imageCommands ? imageCommands + '\n' : ''}` : ''}
 
 ${results ? `\\section*{RESULTADOS E DISCUSSÃO}\n${results}\n` : ''}
 
@@ -150,8 +172,37 @@ serve(async (req) => {
 
     console.log('Generating LaTeX document for banner:', content);
 
+    // Buscar imagens do banco de dados se houver work_id
+    let images: any[] = [];
+    if (content.work_id && content.user_id) {
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      const { data: imgData } = await supabase
+        .from('banner_work_images')
+        .select('*')
+        .eq('work_id', content.work_id)
+        .eq('user_id', content.user_id)
+        .order('display_order', { ascending: true });
+
+      if (imgData) {
+        // Buscar URLs públicas das imagens
+        images = imgData.map(img => {
+          const { data: urlData } = supabase.storage
+            .from('banner_images')
+            .getPublicUrl(img.storage_path);
+          return {
+            ...img,
+            public_url: urlData.publicUrl
+          };
+        });
+      }
+    }
+
     // Generate LaTeX source
-    latexSource = generateLatexDocument(content);
+    latexSource = generateLatexDocument(content, images);
     
     console.log('LaTeX source generated, length:', latexSource.length);
 
