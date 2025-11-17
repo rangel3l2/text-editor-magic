@@ -42,6 +42,7 @@ const PreviewColumns = ({
           getImageStyle={getImageStyle}
           getImageWrapperStyle={getImageWrapperStyle}
           onImageClick={onImageClick}
+          sectionId={section.getAttribute('data-section-id') || undefined}
         />
       ))}
     </div>
