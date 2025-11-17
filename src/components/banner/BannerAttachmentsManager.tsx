@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileImage, BarChart3, Table2, Plus } from 'lucide-react';
+import { FileImage, BarChart3, Table2, Paperclip } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -93,10 +93,17 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
         <SheetTrigger asChild>
           <Button
             size="lg"
-            className="fixed right-4 sm:right-6 bottom-20 sm:bottom-6 z-50 h-16 w-16 sm:h-14 sm:w-14 rounded-full shadow-2xl hover:shadow-xl transition-all hover:scale-110 bg-primary"
+            className="group fixed right-4 sm:right-6 bottom-20 sm:bottom-6 z-50 h-16 w-16 sm:h-14 sm:w-14 rounded-full shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all duration-300 hover:scale-110 bg-gradient-to-br from-primary via-primary to-primary/80 hover:from-primary/90 hover:via-primary hover:to-primary animate-fade-in border-2 border-primary-foreground/20"
           >
-            <Plus className="h-7 w-7 sm:h-6 sm:w-6" />
-            <span className="sr-only">Gerenciar Anexos</span>
+            <div className="relative">
+              <Paperclip className="h-6 w-6 sm:h-5 sm:w-5 transition-transform duration-300 group-hover:rotate-12 text-primary-foreground" />
+              {(imageCount + chartCount + tableCount) > 0 && (
+                <span className="absolute -top-2 -right-2 h-5 w-5 bg-destructive rounded-full text-[10px] font-bold flex items-center justify-center text-destructive-foreground animate-scale-in border-2 border-background">
+                  {imageCount + chartCount + tableCount}
+                </span>
+              )}
+            </div>
+            <span className="sr-only">Gerenciar Anexos do Banner</span>
           </Button>
         </SheetTrigger>
 
@@ -104,9 +111,11 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
           side="right"
           className="w-full sm:w-[600px] md:w-[700px] p-0 flex flex-col"
         >
-          <SheetHeader className="px-4 sm:px-6 py-4 border-b bg-muted/30">
+          <SheetHeader className="px-4 sm:px-6 py-4 border-b bg-gradient-to-r from-muted/30 to-muted/50">
             <SheetTitle className="flex items-center gap-2 text-lg">
-              <FileImage className="h-5 w-5" />
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Paperclip className="h-5 w-5 text-primary" />
+              </div>
               Anexos do Banner
             </SheetTitle>
             <p className="text-sm text-muted-foreground mt-1">
@@ -115,31 +124,31 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
           </SheetHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <div className="px-4 sm:px-6 pt-4 border-b">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="images" className="text-xs sm:text-sm">
+            <div className="px-4 sm:px-6 pt-4 border-b bg-muted/20">
+              <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+                <TabsTrigger value="images" className="text-xs sm:text-sm data-[state=active]:bg-background">
                   <FileImage className="h-4 w-4 mr-1.5" />
-                  Imagens
+                  <span className="hidden sm:inline">Imagens</span>
                   {imageCount > 0 && (
-                    <Badge variant="secondary" className="ml-1.5 text-xs">
+                    <Badge variant="secondary" className="ml-1.5 text-xs px-1.5">
                       {imageCount}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="charts" className="text-xs sm:text-sm">
+                <TabsTrigger value="charts" className="text-xs sm:text-sm data-[state=active]:bg-background">
                   <BarChart3 className="h-4 w-4 mr-1.5" />
-                  Gráficos
+                  <span className="hidden sm:inline">Gráficos</span>
                   {chartCount > 0 && (
-                    <Badge variant="secondary" className="ml-1.5 text-xs">
+                    <Badge variant="secondary" className="ml-1.5 text-xs px-1.5">
                       {chartCount}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="tables" className="text-xs sm:text-sm">
+                <TabsTrigger value="tables" className="text-xs sm:text-sm data-[state=active]:bg-background">
                   <Table2 className="h-4 w-4 mr-1.5" />
-                  Tabelas
+                  <span className="hidden sm:inline">Tabelas</span>
                   {tableCount > 0 && (
-                    <Badge variant="secondary" className="ml-1.5 text-xs">
+                    <Badge variant="secondary" className="ml-1.5 text-xs px-1.5">
                       {tableCount}
                     </Badge>
                   )}
