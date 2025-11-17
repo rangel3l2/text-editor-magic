@@ -156,7 +156,7 @@ serve(async (req) => {
   }
 
   let latexSource = '';
-
+  let base64Zip: string | null = null;
   try {
     const { content } = await req.json()
     
@@ -210,7 +210,8 @@ serve(async (req) => {
     
     console.log('LaTeX source generated, length:', latexSource.length);
 
-    // Criar ZIP com LaTeX e imagens
+    // Import base64 encoder and create ZIP com LaTeX e imagens
+    const { encode: b64encode } = await import('https://deno.land/std@0.168.0/encoding/base64.ts');
     const JSZip = (await import('https://esm.sh/jszip@3.10.1')).default;
     const zip = new JSZip();
 
@@ -238,10 +239,10 @@ serve(async (req) => {
     }
 
     // Gerar ZIP em base64
-    const zipBlob = await zip.generateAsync({ type: 'uint8array' });
-    const base64Zip = btoa(new Uint8Array(zipBlob).reduce((d, b) => d + String.fromCharCode(b), ''));
+    const zipBytes = await zip.generateAsync({ type: 'uint8array' });
+    base64Zip = b64encode(zipBytes);
     
-    console.log('ZIP generated successfully, size:', zipBlob.length);
+    console.log('ZIP generated successfully, size:', zipBytes.length);
 
     // Usar API do ConvertHub para converter LaTeX em PDF
     const CONVERTHUB_API_KEY = Deno.env.get('CONVERTHUB_API_KEY');
@@ -249,8 +250,8 @@ serve(async (req) => {
       throw new Error('CONVERTHUB_API_KEY not configured');
     }
 
-    // Converter LaTeX para base64
-    const latexBase64 = btoa(latexSource);
+    // Converter LaTeX para base64 (UTF-8 safe)
+    const latexBase64 = b64encode(new TextEncoder().encode(latexSource));
     
     // Enviar para ConvertHub
     const convertResponse = await fetch('https://api.converthub.com/v2/convert/base64', {
@@ -280,7 +281,7 @@ serve(async (req) => {
     if (convertData.status === 'completed' && convertData.result?.download_url) {
       const pdfResponse = await fetch(convertData.result.download_url);
       const pdfBuffer = await pdfResponse.arrayBuffer();
-      const base64Pdf = btoa(new Uint8Array(pdfBuffer).reduce((d, b) => d + String.fromCharCode(b), ''));
+      const base64Pdf = b64encode(new Uint8Array(pdfBuffer));
       
       return new Response(JSON.stringify({ 
         pdf: base64Pdf,
@@ -319,7 +320,7 @@ serve(async (req) => {
         // Baixar o PDF convertido
         const pdfResponse = await fetch(statusData.result.download_url);
         const pdfBuffer = await pdfResponse.arrayBuffer();
-        const base64Pdf = btoa(new Uint8Array(pdfBuffer).reduce((d, b) => d + String.fromCharCode(b), ''));
+        const base64Pdf = b64encode(new Uint8Array(pdfBuffer));
         
         console.log('PDF generated successfully via ConvertHub, size:', pdfBuffer.byteLength);
         
@@ -346,39 +347,12 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error)
     
-    // Tentar retornar pelo menos o ZIP se foi gerado
-    try {
-      const { content } = await req.json()
-      if (content.work_id && content.user_id) {
-        const JSZip = (await import('https://esm.sh/jszip@3.10.1')).default;
-        const zip = new JSZip();
-        zip.file('banner.tex', latexSource);
-        
-        const zipBlob = await zip.generateAsync({ type: 'uint8array' });
-        const base64Zip = btoa(new Uint8Array(zipBlob).reduce((d, b) => d + String.fromCharCode(b), ''));
-        
-        return new Response(
-          JSON.stringify({ 
-            compiled: false,
-            latex: latexSource || null,
-            zip: base64Zip,
-            message: 'PDF compilation failed, but ZIP with LaTeX generated successfully.'
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200
-          }
-        )
-      }
-    } catch (zipError) {
-      console.error('ZIP generation failed:', zipError);
-    }
-    
     return new Response(
       JSON.stringify({ 
         compiled: false,
         latex: latexSource || null,
-        message: 'Compilation failed; returning LaTeX source for client-side compilation.'
+        zip: base64Zip || null,
+        message: 'Compilation failed; returning LaTeX source and ZIP (if available).'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
