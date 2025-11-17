@@ -82,15 +82,6 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
 
     console.log('✏️ Iniciando mudança no modelo do editor...');
     editor.model.change(writer => {
-      const viewFragment = editor.data.processor.toView(
-        `<div class="attachment-marker" data-attachment-id="${attachmentId}" data-attachment-type="${attachmentType}" style="background: hsl(var(--muted)); border: 2px dashed hsl(var(--border)); border-radius: 8px; padding: 16px; margin: 16px 0; text-align: center;">
-          <p style="margin: 0; color: hsl(var(--muted-foreground)); font-size: 14px; font-weight: 600;">
-            ${typeIcon} ${typeLabel} será inserida aqui
-          </p>
-        </div>`
-      );
-      const modelFragment = editor.data.toModel(viewFragment);
-
       const root = editor.model.document.getRoot();
       const path = selectionPaths[sectionId];
       console.log('📍 Path recuperado para inserção:', path);
@@ -101,8 +92,9 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
       } else {
         console.log('⚠️ Path não encontrado ou vazio, inserindo na posição atual');
       }
-      editor.model.insertContent(modelFragment, editor.model.document.selection);
-      console.log('✅ Marcador inserido com sucesso!');
+      const token = `[[${attachmentType}:${attachmentId}]]`;
+      writer.insertText(`${typeIcon} ${typeLabel} aqui ${token}`, editor.model.document.selection);
+      console.log('✅ Marcador (texto) inserido com sucesso!');
     });
 
     // Limpa o caminho salvo após inserir
