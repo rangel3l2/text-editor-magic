@@ -166,6 +166,8 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
     window.addEventListener('reorderAttachmentInline' as any, handler as any);
     return () => window.removeEventListener('reorderAttachmentInline' as any, handler as any);
   }, [content, handleChange]);
+
+  return (
     <div className="space-y-6">
       <div className="bg-muted/30 p-4 rounded-lg mb-6">
         <h3 className="text-lg font-semibold mb-2">📐 Estrutura do Banner Científico</h3>
