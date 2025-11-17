@@ -197,15 +197,31 @@ const RichTextEditor = ({
                 console.log('🚫 Inserção cancelada:', { hasCallback: !!onRequestAttachmentInsertion, hasEditor: !!editorInstance });
                 return;
               }
-              const pos = editorInstance.model.document.selection.getFirstPosition();
-              const path = pos && (pos as any).path ? (pos as any).path : [];
               const placeholderId = `ph_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-              editorInstance.model.change((writer: any) => {
-                const tokenText = `[[placeholder:${placeholderId}]]`;
-                writer.insertText(tokenText, editorInstance.model.document.selection);
-              });
-              console.log('🖼️ Solicitando inserção de imagem. Path do cursor:', path, 'Seção:', sectionName, 'Placeholder:', placeholderId);
-              onRequestAttachmentInsertion({ type: 'figura', selectionPath: path, placeholderId });
+              
+              // Salvar a posição antes de qualquer operação
+              const selection = editorInstance.model.document.selection;
+              const position = selection.getFirstPosition();
+              const path = position && (position as any).path ? (position as any).path : [];
+              
+              try {
+                editorInstance.model.change((writer: any) => {
+                  const tokenText = `[[placeholder:${placeholderId}]] `;
+                  const root = editorInstance.model.document.getRoot();
+                  
+                  // Criar uma posição válida no final se a posição atual for inválida
+                  let insertPosition = position;
+                  if (!insertPosition || !insertPosition.root) {
+                    insertPosition = writer.createPositionAt(root, 'end');
+                  }
+                  
+                  writer.insertText(tokenText, insertPosition);
+                });
+                console.log('🖼️ Solicitando inserção de imagem. Path do cursor:', path, 'Seção:', sectionName, 'Placeholder:', placeholderId);
+                onRequestAttachmentInsertion({ type: 'figura', selectionPath: path, placeholderId });
+              } catch (error) {
+                console.error('Erro ao inserir placeholder:', error);
+              }
             }}>
               <FileImage className="mr-2 h-4 w-4" />
               <span>Inserir Imagem</span>
@@ -215,15 +231,29 @@ const RichTextEditor = ({
                 console.log('🚫 Inserção cancelada:', { hasCallback: !!onRequestAttachmentInsertion, hasEditor: !!editorInstance });
                 return;
               }
-              const pos = editorInstance.model.document.selection.getFirstPosition();
-              const path = pos && (pos as any).path ? (pos as any).path : [];
               const placeholderId = `ph_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-              editorInstance.model.change((writer: any) => {
-                const tokenText = `[[placeholder:${placeholderId}]]`;
-                writer.insertText(tokenText, editorInstance.model.document.selection);
-              });
-              console.log('📊 Solicitando inserção de gráfico. Path do cursor:', path, 'Seção:', sectionName, 'Placeholder:', placeholderId);
-              onRequestAttachmentInsertion({ type: 'grafico', selectionPath: path, placeholderId });
+              
+              const selection = editorInstance.model.document.selection;
+              const position = selection.getFirstPosition();
+              const path = position && (position as any).path ? (position as any).path : [];
+              
+              try {
+                editorInstance.model.change((writer: any) => {
+                  const tokenText = `[[placeholder:${placeholderId}]] `;
+                  const root = editorInstance.model.document.getRoot();
+                  
+                  let insertPosition = position;
+                  if (!insertPosition || !insertPosition.root) {
+                    insertPosition = writer.createPositionAt(root, 'end');
+                  }
+                  
+                  writer.insertText(tokenText, insertPosition);
+                });
+                console.log('📊 Solicitando inserção de gráfico. Path do cursor:', path, 'Seção:', sectionName, 'Placeholder:', placeholderId);
+                onRequestAttachmentInsertion({ type: 'grafico', selectionPath: path, placeholderId });
+              } catch (error) {
+                console.error('Erro ao inserir placeholder:', error);
+              }
             }}>
               <BarChart3 className="mr-2 h-4 w-4" />
               <span>Inserir Gráfico</span>
@@ -233,15 +263,29 @@ const RichTextEditor = ({
                 console.log('🚫 Inserção cancelada:', { hasCallback: !!onRequestAttachmentInsertion, hasEditor: !!editorInstance });
                 return;
               }
-              const pos = editorInstance.model.document.selection.getFirstPosition();
-              const path = pos && (pos as any).path ? (pos as any).path : [];
               const placeholderId = `ph_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-              editorInstance.model.change((writer: any) => {
-                const tokenText = `[[placeholder:${placeholderId}]]`;
-                writer.insertText(tokenText, editorInstance.model.document.selection);
-              });
-              console.log('📋 Solicitando inserção de tabela. Path do cursor:', path, 'Seção:', sectionName, 'Placeholder:', placeholderId);
-              onRequestAttachmentInsertion({ type: 'tabela', selectionPath: path, placeholderId });
+              
+              const selection = editorInstance.model.document.selection;
+              const position = selection.getFirstPosition();
+              const path = position && (position as any).path ? (position as any).path : [];
+              
+              try {
+                editorInstance.model.change((writer: any) => {
+                  const tokenText = `[[placeholder:${placeholderId}]] `;
+                  const root = editorInstance.model.document.getRoot();
+                  
+                  let insertPosition = position;
+                  if (!insertPosition || !insertPosition.root) {
+                    insertPosition = writer.createPositionAt(root, 'end');
+                  }
+                  
+                  writer.insertText(tokenText, insertPosition);
+                });
+                console.log('📋 Solicitando inserção de tabela. Path do cursor:', path, 'Seção:', sectionName, 'Placeholder:', placeholderId);
+                onRequestAttachmentInsertion({ type: 'tabela', selectionPath: path, placeholderId });
+              } catch (error) {
+                console.error('Erro ao inserir placeholder:', error);
+              }
             }}>
               <Table2 className="mr-2 h-4 w-4" />
               <span>Inserir Tabela</span>
