@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -106,6 +106,9 @@ const ImageCropTool = ({ image, isOpen, onClose, onSave }: ImageCropToolProps) =
       <DialogContent className="max-w-4xl h-[90vh]">
         <DialogHeader>
           <DialogTitle>Cortar Imagem</DialogTitle>
+          <DialogDescription>
+            Ajuste o zoom, rotação e selecione a área que deseja manter da imagem
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 relative bg-muted" style={{ height: '60vh' }}>

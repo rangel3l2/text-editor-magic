@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -517,6 +517,9 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Configurar Logo</DialogTitle>
+            <DialogDescription>
+              Ajuste a altura e largura do logo no banner
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
             <div className="space-y-3">
@@ -586,9 +589,9 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
             <div className="w-80 border-r border-border p-6 flex flex-col gap-6 overflow-y-auto">
               <DialogHeader className="p-0">
                 <DialogTitle>Recortar Logo</DialogTitle>
-                <p className="text-sm text-muted-foreground">
-                  Arraste as alças para selecionar a área
-                </p>
+                <DialogDescription>
+                  Arraste as alças para selecionar a área que deseja manter
+                </DialogDescription>
               </DialogHeader>
 
               {/* Crop Rectangle Info */}

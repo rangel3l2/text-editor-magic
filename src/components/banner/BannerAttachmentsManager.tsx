@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileImage, BarChart3, Table2, Paperclip } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBannerImages } from '@/hooks/useBannerImages';
 import { useAuth } from '@/contexts/AuthContext';
@@ -161,9 +161,9 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
               </div>
               Anexos do Banner
             </SheetTitle>
-            <p className="text-sm text-muted-foreground mt-1">
+            <SheetDescription className="text-sm mt-1">
               Gerencie imagens, gráficos e tabelas do seu banner científico
-            </p>
+            </SheetDescription>
           </SheetHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
