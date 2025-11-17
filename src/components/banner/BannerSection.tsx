@@ -153,34 +153,7 @@ const BannerSection = ({
         }
       }
 
-      if (targetAttachmentId && draggedImageId && targetAttachmentId !== draggedImageId) {
-        // 1) Reordena visualmente no Preview imediatamente (feedback instantâneo)
-        const root = contentRef.current;
-        const escapeQuotes = (s: string) => s.replace(/\"/g, '\\"');
-        const sourceSel = `.attachment-container[data-attachment-id="${escapeQuotes(draggedImageId)}"]`;
-        const source = root?.querySelector(sourceSel) as HTMLElement | null;
-        if (root && source) {
-          if (targetAttachmentId === '__END__') {
-            root.appendChild(source);
-          } else if (targetAttachmentId.startsWith('__PARA_INDEX__')) {
-            const idx = Number(targetAttachmentId.replace('__PARA_INDEX__', ''));
-            const topLevelBlocks = Array.from(root.children) as HTMLElement[];
-            const beforeEl = topLevelBlocks[idx] || null;
-            if (beforeEl) {
-              root.insertBefore(source, beforeEl);
-            } else {
-              root.appendChild(source);
-            }
-          } else {
-            const targetSel = `.attachment-container[data-attachment-id="${escapeQuotes(targetAttachmentId)}"]`;
-            const targetEl = root.querySelector(targetSel) as HTMLElement | null;
-            if (targetEl && targetEl !== source) {
-              root.insertBefore(source, targetEl);
-            }
-          }
-        }
-
-        // 2) Dispara evento global para persistir a alteração no conteúdo do editor
+      if (targetAttachmentId && targetAttachmentId !== draggedImageId) {
         const event = new CustomEvent('reorderAttachmentInline', {
           detail: {
             sectionId,
