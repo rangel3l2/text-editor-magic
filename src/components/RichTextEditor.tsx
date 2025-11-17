@@ -195,7 +195,7 @@ const RichTextEditor = ({
             <ContextMenuItem onClick={() => {
               if (!onRequestAttachmentInsertion || !editorInstance) return;
               const pos = editorInstance.model.document.selection.getFirstPosition();
-              const path = pos ? pos.getPath() : [];
+              const path = pos && (pos as any).path ? (pos as any).path : [];
               onRequestAttachmentInsertion({ type: 'figura', selectionPath: path });
             }}>
               <FileImage className="mr-2 h-4 w-4" />
@@ -204,7 +204,7 @@ const RichTextEditor = ({
             <ContextMenuItem onClick={() => {
               if (!onRequestAttachmentInsertion || !editorInstance) return;
               const pos = editorInstance.model.document.selection.getFirstPosition();
-              const path = pos ? pos.getPath() : [];
+              const path = pos && (pos as any).path ? (pos as any).path : [];
               onRequestAttachmentInsertion({ type: 'grafico', selectionPath: path });
             }}>
               <BarChart3 className="mr-2 h-4 w-4" />
@@ -213,7 +213,7 @@ const RichTextEditor = ({
             <ContextMenuItem onClick={() => {
               if (!onRequestAttachmentInsertion || !editorInstance) return;
               const pos = editorInstance.model.document.selection.getFirstPosition();
-              const path = pos ? pos.getPath() : [];
+              const path = pos && (pos as any).path ? (pos as any).path : [];
               onRequestAttachmentInsertion({ type: 'tabela', selectionPath: path });
             }}>
               <Table2 className="mr-2 h-4 w-4" />
