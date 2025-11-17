@@ -119,18 +119,36 @@ const BannerSection = ({
       if (container) {
         targetAttachmentId = container.getAttribute('data-attachment-id');
       } else if (contentRef.current) {
-        // Sem alvo explícito: calcula posição pela coordenada Y do drop
         const y = (e as any).clientY ?? 0;
-        const containers = Array.from(
-          contentRef.current.querySelectorAll('.attachment-container')
+
+        // Lista de blocos válidos para inserir antes
+        const blocks = Array.from(
+          contentRef.current.querySelectorAll(
+            '.attachment-container, p, div, ul, ol, table, blockquote, pre, h1, h2, h3, h4, h5, h6'
+          )
         ) as HTMLElement[];
 
-        // Encontra o primeiro container abaixo do ponto de drop
-        const next = containers.find((el) => el.getBoundingClientRect().top > y);
+        // Filtra o próprio contentRef
+        const filtered = blocks.filter((el) => el !== contentRef.current);
+
+        // Próximo elemento abaixo do ponto de drop
+        const next = filtered.find((el) => el.getBoundingClientRect().top > y) || null;
+
         if (next) {
-          targetAttachmentId = next.getAttribute('data-attachment-id');
-        } else if (containers.length) {
-          // Se não há próximo, vamos enviar para o final
+          if (next.classList.contains('attachment-container')) {
+            targetAttachmentId = next.getAttribute('data-attachment-id');
+          } else {
+            // Descobre o índice desse bloco dentro de todos os blocos "de topo" diretos
+            const topLevelBlocks = Array.from(
+              contentRef.current.children
+            ) as HTMLElement[];
+
+            const index = topLevelBlocks.findIndex((el) => el === next || el.contains(next));
+            if (index >= 0) {
+              targetAttachmentId = `__PARA_INDEX__${index}`;
+            }
+          }
+        } else {
           targetAttachmentId = '__END__';
         }
       }
