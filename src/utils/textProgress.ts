@@ -1,6 +1,7 @@
-export const calculateTextProgress = (text: string, maxLines: number, minLines: number) => {
-  // Remove HTML tags e espaços em branco extras
-  const plainText = text.replace(/<[^>]*>/g, '').trim();
+export const calculateTextProgress = (text: string | undefined, maxLines: number, minLines: number) => {
+  // Garante string segura e remove tags HTML e espaços
+  const safeText = (text ?? '').toString();
+  const plainText = safeText.replace(/<[^>]*>/g, '').trim();
   
   // Se o texto estiver vazio, retorna 0%
   if (!plainText) {

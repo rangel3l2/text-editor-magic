@@ -99,7 +99,10 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor, 
             onChange={(data) => handleChange('methodology', data)}
             maxLines={35}
             minLines={5}
-            config={editorConfig}
+            config={{
+              ...editorConfig,
+              toolbar: editorConfig.toolbar.filter((t: any) => t !== 'imageUpload')
+            }}
             placeholder="Ex: O estudo foi conduzido em três etapas: 1) Coleta de amostras... 2) Análise laboratorial... 3) Tratamento estatístico..."
             sectionName="Metodologia"
             onCustomImageUpload={onImageUploadFromEditor}
@@ -126,7 +129,10 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor, 
             onChange={(data) => handleChange('results', data)}
             maxLines={35}
             minLines={5}
-            config={editorConfig}
+            config={{
+              ...editorConfig,
+              toolbar: editorConfig.toolbar.filter((t: any) => t !== 'imageUpload')
+            }}
             placeholder="Ex: Os resultados demonstraram que... A Figura 1 ilustra... A Tabela 1 apresenta..."
             sectionName="Resultados"
           />
