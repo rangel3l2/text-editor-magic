@@ -292,6 +292,63 @@
 }
 
 /* TipTap Editor Styles */
+/* Banner TipTap Content - Deve ser idêntico ao visualizador */
+.banner-tiptap-content {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.banner-tiptap-content .ProseMirror {
+  outline: none;
+  font-family: 'Times New Roman', Times, serif !important;
+  font-size: 12pt !important;
+  line-height: 1.5 !important;
+  text-align: justify !important;
+  column-count: 2;
+  column-gap: 2cm;
+  column-rule: 2px solid #000;
+}
+
+.banner-tiptap-content .ProseMirror[data-column-layout="3"] {
+  column-count: 3;
+}
+
+.banner-tiptap-content .banner-section {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin-bottom: 1cm;
+}
+
+.banner-tiptap-content h1 {
+  font-size: 28pt !important;
+  font-weight: bold !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  margin: 0 !important;
+  column-span: all;
+}
+
+.banner-tiptap-content h2 {
+  font-size: 16pt !important;
+  font-weight: bold !important;
+  margin-bottom: 0.4cm !important;
+  color: #000 !important;
+  text-transform: uppercase !important;
+  text-decoration: underline !important;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.banner-tiptap-content .banner-header {
+  column-span: all;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  margin-bottom: 1cm;
+  padding-bottom: 1cm;
+  border-bottom: 3px solid #000;
+}
+
 .tiptap-editor-content {
   outline: none;
   width: 100%;
@@ -299,6 +356,7 @@
   overflow-x: hidden;
 }
 
+.banner-tiptap-content p,
 .tiptap-editor-content p {
   margin: 0.5em 0;
   text-align: justify;
@@ -309,8 +367,7 @@
   overflow-wrap: break-word;
 }
 
-.tiptap-editor-content h1,
-.tiptap-editor-content h2,
+.banner-tiptap-content h3,
 .tiptap-editor-content h3 {
   font-weight: bold;
   margin: 1em 0 0.5em 0;
@@ -318,93 +375,64 @@
   font-family: 'Times New Roman', Times, serif;
   break-inside: avoid;
   page-break-inside: avoid;
-}
-
-.tiptap-editor-content h1 {
-  font-size: 16pt;
-}
-
-.tiptap-editor-content h2 {
-  font-size: 14pt;
-}
-
-.tiptap-editor-content h3 {
   font-size: 11pt;
 }
 
+.banner-tiptap-content img,
 .tiptap-editor-content .tiptap-image {
   max-width: 100%;
   height: auto;
   display: block;
   margin: 0.5cm auto;
-  cursor: nwse-resize;
+  cursor: pointer;
   border: 2px solid transparent;
   transition: all 0.2s;
-  resize: both;
-  overflow: hidden;
   position: relative;
 }
 
+.banner-tiptap-content img:hover,
 .tiptap-editor-content .tiptap-image:hover {
   border-color: hsl(var(--primary));
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.banner-tiptap-content .tiptap-image-selected,
 .tiptap-editor-content .tiptap-image.ProseMirror-selectednode,
 .tiptap-editor-content .tiptap-image-selected {
-  border-color: hsl(var(--primary));
-  outline: 2px solid hsl(var(--primary));
+  border-color: hsl(var(--primary)) !important;
+  outline: 3px solid hsl(var(--primary)) !important;
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
+  box-shadow: 0 0 0 6px hsl(var(--primary) / 0.15) !important;
+  cursor: grab;
 }
 
-.tiptap-columns .ProseMirror {
-  column-count: inherit;
-  column-gap: inherit;
+.banner-tiptap-content .tiptap-image-selected::after,
+.tiptap-editor-content .tiptap-image-selected::after {
+  content: '↔️ Duplo clique para redimensionar';
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: hsl(var(--primary));
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
-.tiptap-columns .banner-section {
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-
-.tiptap-columns h1,
-.tiptap-columns h2,
-.tiptap-columns h3 {
-  column-span: none;
-  break-after: avoid;
-  page-break-after: avoid;
-}
-
+.banner-tiptap-content ul,
+.banner-tiptap-content ol,
 .tiptap-editor-content ul,
 .tiptap-editor-content ol {
   padding-left: 1.5em;
   margin: 0.5em 0;
 }
 
+.banner-tiptap-content li,
 .tiptap-editor-content li {
   margin: 0.25em 0;
-}
-
-/* Banner Section Styles within TipTap */
-.tiptap-editor-content .banner-section {
-  page-break-inside: avoid;
-  break-inside: avoid;
-  margin-bottom: 1cm;
-}
-
-.tiptap-editor-content .banner-section h3 {
-  font-size: 11pt;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 0.3cm;
-  color: #000;
-}
-
-.tiptap-editor-content .banner-section p {
-  text-align: justify;
-  margin: 0.3cm 0;
-  line-height: 1.5;
 }
 
 /* Evitar scroll horizontal no editor */
