@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminUserManagement from "../admin/AdminUserManagement";
 import AcademicWorkTypeManagement from "../admin/AcademicWorkTypeManagement";
 import SystemLogsViewer from "../admin/SystemLogsViewer";
+import AISettingsManagement from "../admin/AISettingsManagement";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface AdminSettingsDialogProps {
@@ -28,9 +29,10 @@ const AdminSettingsDialog = ({ isOpen, onOpenChange }: AdminSettingsDialogProps)
           <DialogTitle>Configurações do Sistema</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="work-types" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="work-types">Tipos de Trabalho</TabsTrigger>
             <TabsTrigger value="users">Gerenciar Administradores</TabsTrigger>
+            <TabsTrigger value="ai-settings">Configurações de IA</TabsTrigger>
             <TabsTrigger value="logs">Logs do Sistema</TabsTrigger>
           </TabsList>
           <TabsContent value="work-types" className="mt-4">
@@ -38,6 +40,9 @@ const AdminSettingsDialog = ({ isOpen, onOpenChange }: AdminSettingsDialogProps)
           </TabsContent>
           <TabsContent value="users" className="mt-4">
             <AdminUserManagement />
+          </TabsContent>
+          <TabsContent value="ai-settings" className="mt-4">
+            <AISettingsManagement />
           </TabsContent>
           <TabsContent value="logs" className="mt-4">
             <SystemLogsViewer />
