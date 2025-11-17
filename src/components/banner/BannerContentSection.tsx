@@ -88,6 +88,12 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
       if (current.includes(ph)) {
         const replaced = current.replace(ph, `${typeIcon} ${typeLabel} ${finalToken}`);
         editor.setData(replaced);
+        // Atualiza o estado externo para preservar o token no conteúdo
+        try {
+          handleChange(sectionId, replaced);
+        } catch (e) {
+          console.warn('Não foi possível propagar alteração para o estado externo:', e);
+        }
         console.log('✅ Placeholder substituído com sucesso');
         setSelectionPaths(prev => ({ ...prev, [sectionId]: [] }));
         return;
@@ -111,14 +117,55 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
       }
       writer.insertText(`${typeIcon} ${typeLabel} ${finalToken}`, editor.model.document.selection);
       console.log('✅ Marcador (texto) inserido com sucesso!');
+      // Sincroniza o conteúdo com o estado externo após a inserção
+      try {
+        const dataAfter = editor.getData();
+        handleChange(sectionId, dataAfter);
+      } catch (e) {
+        console.warn('Falha ao sincronizar conteúdo após inserção via modelo:', e);
+      }
     });
 
     // Limpa o caminho salvo após inserir
     setSelectionPaths(prev => ({ ...prev, [sectionId]: [] }));
     console.log('🧹 Path limpo para seção:', sectionId);
-  };
+  }; 
 
-  return (
+  // Reordenação inline arrastando imagens no preview (antes/depois de outra imagem)
+  useEffect(() => {
+    const handler = (event: CustomEvent) => {
+      const { sectionId: targetSection, sourceId, targetId } = event.detail || {};
+      if (!targetSection || targetSection !== 'introduction' && targetSection !== 'objectives' && targetSection !== 'methodology' && targetSection !== 'results' && targetSection !== 'discussion' && targetSection !== 'conclusion' && targetSection !== 'references') return;
+
+      const currentHtml = (content as any)[targetSection] as string;
+      if (!currentHtml) return;
+
+      // Localiza os tokens dos anexos
+      const tokenFor = (id: string) => {
+        const re = new RegExp(`\\[\\[(figura|grafico|tabela):${id}\\]\\]`, 'i');
+        const match = currentHtml.match(re);
+        return match ? match[0] : null;
+      };
+
+      const srcToken = tokenFor(sourceId);
+      const tgtToken = tokenFor(targetId);
+      if (!srcToken || !tgtToken) return;
+
+      // Remove a primeira ocorrência do token de origem
+      let updated = currentHtml.replace(srcToken, '');
+      // Insere antes do token alvo
+      updated = updated.replace(tgtToken, `${srcToken}${tgtToken}`);
+
+      try {
+        handleChange(targetSection, updated);
+      } catch (e) {
+        console.warn('Falha ao aplicar reordenação inline:', e);
+      }
+    };
+
+    window.addEventListener('reorderAttachmentInline' as any, handler as any);
+    return () => window.removeEventListener('reorderAttachmentInline' as any, handler as any);
+  }, [content, handleChange]);
     <div className="space-y-6">
       <div className="bg-muted/30 p-4 rounded-lg mb-6">
         <h3 className="text-lg font-semibold mb-2">📐 Estrutura do Banner Científico</h3>

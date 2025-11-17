@@ -135,7 +135,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
   
   if (content.introduction) {
     const cleanIntro = cleanLatexCommands(content.introduction);
-    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<div class="banner-section" data-section-id="introduction" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">INTRODUÇÃO</h2>');
     const introUsed = new Set<string>();
     const introProcessed = cleanIntro
@@ -148,7 +148,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
         if (img.source) {
           html += `<div style=\"font-size: 10pt; font-style: italic; color: #333;\">Fonte: ${img.source}</div>`;
         }
@@ -176,7 +176,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
   
   if (content.objectives) {
     const cleanObj = cleanLatexCommands(content.objectives);
-    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<div class="banner-section" data-section-id="objectives" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">OBJETIVOS</h2>');
     const objUsed = new Set<string>();
     const objProcessed = cleanObj
@@ -189,7 +189,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
         if (img.source) {
           html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
         }
@@ -217,7 +217,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
   
   if (content.methodology) {
     const cleanMeth = cleanLatexCommands(content.methodology);
-    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<div class="banner-section" data-section-id="methodology" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">METODOLOGIA</h2>');
     const methUsed = new Set<string>();
     const methProcessed = cleanMeth
@@ -230,7 +230,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
         if (img.source) {
           html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
         }
@@ -258,7 +258,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
   
   if (content.results) {
     const cleanRes = cleanLatexCommands(content.results);
-    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<div class="banner-section" data-section-id="results" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">RESULTADOS</h2>');
     const resUsed = new Set<string>();
     const resProcessed = cleanRes
@@ -271,7 +271,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
         if (img.source) {
           html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
         }
@@ -299,7 +299,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
   
   if (content.discussion) {
     const cleanDisc = cleanLatexCommands(content.discussion);
-    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<div class="banner-section" data-section-id="discussion" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">DISCUSSÃO</h2>');
     const discUsed = new Set<string>();
     const discProcessed = cleanDisc
@@ -312,7 +312,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
         if (img.source) {
           html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
         }
@@ -340,7 +340,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
   
   if (content.conclusion) {
     const cleanConc = cleanLatexCommands(content.conclusion);
-    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<div class="banner-section" data-section-id="conclusion" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">CONCLUSÃO</h2>');
     const concUsed = new Set<string>();
     const concProcessed = cleanConc
@@ -353,7 +353,7 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
         if (img.source) {
           html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
         }
