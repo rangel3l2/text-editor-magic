@@ -209,7 +209,9 @@ serve(async (req) => {
     if (!location) {
       throw new Error('No PDF URL returned from compilation');
     }
-    const pdfUrl = location.startsWith('http') ? location : `https://texlive.net${location}`;
+    // texlive.net retorna a URL do .log, mas o PDF está no mesmo caminho com .pdf
+    let pdfUrl = location.startsWith('http') ? location : `https://texlive.net${location}`;
+    pdfUrl = pdfUrl.replace(/\.log$/, '.pdf'); // Trocar .log por .pdf
     console.log('PDF URL:', pdfUrl);
 
     const pdfResponse = await fetch(pdfUrl, { redirect: 'follow' });
