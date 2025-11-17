@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface BannerImageUploadProps {
-  onUpload: (file: File, imageType: 'figura' | 'grafico' | 'tabela', title: string, source: string) => Promise<void>;
+  onUpload: (file: File, imageType: 'figura' | 'grafico' | 'tabela', title: string, source: string, section: string) => Promise<void>;
   isUploading: boolean;
   maxImages?: number;
   currentCount?: number;
@@ -33,6 +33,7 @@ const BannerImageUpload = ({
   const [imageType, setImageType] = useState<'figura' | 'grafico' | 'tabela'>('figura');
   const [title, setTitle] = useState('');
   const [source, setSource] = useState('');
+  const [section, setSection] = useState('results');
 
   const getNextNumber = (type: 'figura' | 'grafico' | 'tabela') => {
     switch(type) {
@@ -99,12 +100,13 @@ const BannerImageUpload = ({
 
   const handleConfirmSource = async () => {
     if (pendingImage && title.trim() && source.trim()) {
-      await onUpload(pendingImage, imageType, title.trim(), source.trim());
+      await onUpload(pendingImage, imageType, title.trim(), source.trim(), section);
       setShowSourceDialog(false);
       setPendingImage(null);
       setTitle('');
       setSource('');
       setImageType('figura');
+      setSection('results');
     }
   };
 
@@ -244,6 +246,26 @@ const BannerImageUpload = ({
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="section">Seção onde a imagem aparecerá</Label>
+              <Select value={section} onValueChange={setSection}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="introduction">Introdução</SelectItem>
+                  <SelectItem value="objectives">Objetivos</SelectItem>
+                  <SelectItem value="methodology">Metodologia</SelectItem>
+                  <SelectItem value="results">Resultados</SelectItem>
+                  <SelectItem value="discussion">Discussão</SelectItem>
+                  <SelectItem value="conclusion">Conclusão</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                A imagem será posicionada no final da seção selecionada
+              </p>
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="source">Fonte</Label>
               <Input
