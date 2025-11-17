@@ -102,12 +102,12 @@ export const generateLatexContent = (content: any) => {
 
   // Autores e Orientadores (abaixo do cabeçalho)
   if (processedAuthors || processedAdvisors) {
-    parts.push('<div style="text-align: center; padding: 0.5cm 0 1cm 0; border-bottom: 1px solid #ccc; margin-bottom: 1cm;">');
+    parts.push('<div class="authors" style="text-align: center; padding: 0.5cm 0 1cm 0; border-bottom: 1px solid #ccc; margin-bottom: 1cm;">');
     if (processedAuthors) {
-      parts.push('<div style="font-size: 12pt; margin-bottom: 0.2cm; color: #000;">' + processedAuthors + '</div>');
+      parts.push('<div class="authors-list" style="font-size: 12pt; margin-bottom: 0.2cm; color: #000;">' + processedAuthors + '</div>');
     }
     if (processedAdvisors) {
-      parts.push('<div style="font-size: 11pt; color: #333;"><strong>Orientador(a):</strong> ' + processedAdvisors + '</div>');
+      parts.push('<div class="advisors" style="font-size: 11pt; color: #333;"><strong>Orientador(a):</strong> ' + processedAdvisors + '</div>');
     }
     parts.push('</div>');
   }
