@@ -54,23 +54,32 @@ export function uploadAdapterPlugin(editor: any) {
     return new UploadAdapter(loader, customHandler);
   };
 
-  // Se há um customHandler, intercepta o comando de upload
+  // Se há um customHandler, intercepta o comando de upload quando o editor estiver pronto
   const customHandler = editor.config.get('customImageUploadHandler');
   if (customHandler) {
-    editor.commands.get('uploadImage').on('execute', (evt: any) => {
-      evt.stop();
-      
-      // Criar input de arquivo customizado
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.onchange = (e: any) => {
-        const file = e.target.files?.[0];
-        if (file) {
-          customHandler(file);
+    editor.on('ready', () => {
+      try {
+        const uploadImageCommand = editor.commands.get('uploadImage');
+        if (uploadImageCommand) {
+          uploadImageCommand.on('execute', (evt: any) => {
+            evt.stop();
+            
+            // Criar input de arquivo customizado
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e: any) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                customHandler(file);
+              }
+            };
+            input.click();
+          }, { priority: 'high' });
         }
-      };
-      input.click();
-    }, { priority: 'high' });
+      } catch (error) {
+        console.error('Error setting up custom image handler:', error);
+      }
+    });
   }
 }
