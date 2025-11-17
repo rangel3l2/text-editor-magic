@@ -58,6 +58,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
     const handleAttachmentSelected = (event: CustomEvent) => {
       console.log('📨 Evento attachmentSelected recebido:', event.detail);
       const { sectionId, attachmentId, attachmentType, placeholderId } = event.detail;
+      console.log('🔍 Buscando editor para seção:', sectionId, 'Editores disponíveis:', Object.keys(editorInstances));
       insertAttachmentMarker(sectionId, attachmentId, attachmentType, placeholderId);
     };
 
@@ -77,68 +78,88 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
       return;
     }
 
-    const typeLabel = attachmentType === 'figura' ? 'Imagem' : attachmentType === 'grafico' ? 'Gráfico' : 'Tabela';
-    const typeIcon = attachmentType === 'figura' ? '🖼️' : attachmentType === 'grafico' ? '📊' : '📋';
     const finalToken = `[[${attachmentType}:${attachmentId}]]`;
 
-    // 1) Tenta substituir placeholder exato no HTML (garante a posição precisa onde o usuário clicou)
-    if (placeholderId) {
-      const ph = `[[placeholder:${placeholderId}]]`;
-      const current = editor.getData();
-      if (current.includes(ph)) {
-        const replaced = current.replace(ph, `${typeIcon} ${typeLabel} ${finalToken}`);
-        editor.setData(replaced);
-        // Atualiza o estado externo para preservar o token no conteúdo
-        try {
-          handleChange(sectionId, replaced);
-        } catch (e) {
-          console.warn('Não foi possível propagar alteração para o estado externo:', e);
-        }
-        console.log('✅ Placeholder substituído com sucesso');
-        setSelectionPaths(prev => ({ ...prev, [sectionId]: [] }));
-        return;
-      } else {
-        console.warn('⚠️ Placeholder não encontrado no HTML. Fallback para path salvo.');
-      }
-    }
-
-    // 2) Fallback: usa path salvo para inserir no modelo
-    console.log('✏️ Iniciando mudança no modelo do editor (fallback)...');
+    // Sempre usa o modelo do editor diretamente para garantir a inserção na posição correta
+    console.log('✏️ Inserindo via modelo do editor...');
     editor.model.change((writer: any) => {
       const root = editor.model.document.getRoot();
+      
+      // Se temos um placeholder, procura e remove ele
+      if (placeholderId) {
+        const viewFragment = editor.data.parse(editor.getData());
+        const modelFragment = editor.data.toModel(viewFragment);
+        const range = editor.model.createRangeIn(modelFragment);
+        
+        for (const item of range.getItems()) {
+          if (item.is('$text') || item.is('$textProxy')) {
+            const text = item.data;
+            if (text && text.includes(`[[placeholder:${placeholderId}]]`)) {
+              console.log('✅ Placeholder encontrado no modelo, substituindo...');
+              // Encontrou o placeholder no modelo, vamos substituir
+              const currentData = editor.getData();
+              const replacedData = currentData.replace(`[[placeholder:${placeholderId}]]`, finalToken);
+              editor.setData(replacedData);
+              handleChange(sectionId, replacedData);
+              setSelectionPaths(prev => ({ ...prev, [sectionId]: [] }));
+              return;
+            }
+          }
+        }
+        console.warn('⚠️ Placeholder não encontrado no modelo');
+      }
+      
+      // Fallback: insere na posição salva ou no cursor atual
       const path = selectionPaths[sectionId];
       console.log('📍 Path recuperado para inserção:', path);
+      
       if (path && path.length) {
-        const position = writer.createPositionFromPath(root, path);
-        writer.setSelection(position);
-        console.log('✅ Cursor posicionado no path salvo');
-      } else {
-        console.log('⚠️ Path não encontrado ou vazio, inserindo na posição atual');
+        try {
+          const position = writer.createPositionFromPath(root, path);
+          writer.setSelection(position);
+          console.log('✅ Cursor posicionado no path salvo');
+        } catch (e) {
+          console.warn('⚠️ Erro ao posicionar cursor no path:', e);
+        }
       }
-      writer.insertText(`${typeIcon} ${typeLabel} ${finalToken}`, editor.model.document.selection);
-      console.log('✅ Marcador (texto) inserido com sucesso!');
-      // Sincroniza o conteúdo com o estado externo após a inserção
+      
+      writer.insertText(finalToken, editor.model.document.selection);
+      console.log('✅ Token inserido:', finalToken);
+    });
+    
+    // Sincroniza o conteúdo após inserção
+    setTimeout(() => {
       try {
         const dataAfter = editor.getData();
         handleChange(sectionId, dataAfter);
+        console.log('✅ Conteúdo sincronizado');
       } catch (e) {
-        console.warn('Falha ao sincronizar conteúdo após inserção via modelo:', e);
+        console.warn('Falha ao sincronizar conteúdo:', e);
       }
-    });
+    }, 100);
 
-    // Limpa o caminho salvo após inserir
+    // Limpa o caminho salvo
     setSelectionPaths(prev => ({ ...prev, [sectionId]: [] }));
     console.log('🧹 Path limpo para seção:', sectionId);
-  }; 
+  };
 
   // Reordenação inline arrastando imagens no preview (antes/depois de outra imagem)
   useEffect(() => {
     const handler = (event: CustomEvent) => {
+      console.log('🔄 Evento reorderAttachmentInline recebido:', event.detail);
       const { sectionId: targetSection, sourceId, targetId } = event.detail || {};
-      if (!targetSection || targetSection !== 'introduction' && targetSection !== 'objectives' && targetSection !== 'methodology' && targetSection !== 'results' && targetSection !== 'discussion' && targetSection !== 'conclusion' && targetSection !== 'references') return;
+      if (!targetSection || targetSection !== 'introduction' && targetSection !== 'objectives' && targetSection !== 'methodology' && targetSection !== 'results' && targetSection !== 'discussion' && targetSection !== 'conclusion' && targetSection !== 'references') {
+        console.warn('⚠️ Seção inválida:', targetSection);
+        return;
+      }
 
       const currentHtml = (content as any)[targetSection] as string;
-      if (!currentHtml) return;
+      if (!currentHtml) {
+        console.warn('⚠️ Conteúdo não encontrado para seção:', targetSection);
+        return;
+      }
+
+      console.log('🔍 Procurando tokens para reordenar. Source:', sourceId, 'Target:', targetId);
 
       // Localiza os tokens dos anexos
       const tokenFor = (id: string) => {
@@ -149,17 +170,25 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
 
       const srcToken = tokenFor(sourceId);
       const tgtToken = tokenFor(targetId);
-      if (!srcToken || !tgtToken) return;
+      
+      console.log('🎯 Tokens encontrados - Source:', srcToken, 'Target:', tgtToken);
+      
+      if (!srcToken || !tgtToken) {
+        console.error('❌ Tokens não encontrados no HTML da seção');
+        return;
+      }
 
       // Remove a primeira ocorrência do token de origem
       let updated = currentHtml.replace(srcToken, '');
       // Insere antes do token alvo
       updated = updated.replace(tgtToken, `${srcToken}${tgtToken}`);
 
+      console.log('✅ Reordenação aplicada, atualizando conteúdo');
+
       try {
         handleChange(targetSection, updated);
       } catch (e) {
-        console.warn('Falha ao aplicar reordenação inline:', e);
+        console.error('❌ Falha ao aplicar reordenação inline:', e);
       }
     };
 

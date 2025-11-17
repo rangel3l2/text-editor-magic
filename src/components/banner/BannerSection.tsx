@@ -28,44 +28,12 @@ const BannerSection = ({
 }: BannerSectionProps) => {
   const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
 
-  const processedHtml = section.innerHTML.replace(
-    /<img([^>]*)>/g,
-    (match, attributes) => {
-      const srcMatch = attributes.match(/src="([^"]*)"/);
-      const imageIdMatch = attributes.match(/data-image-id="([^"]*)"/);
-      if (!srcMatch) return match;
-      
-      const imageUrl = srcMatch[1];
-      const imageId = imageIdMatch ? imageIdMatch[1] : '';
-      const imgStyle = getImageStyle(imageUrl);
-      const wrapperStyle = getImageWrapperStyle(imageUrl);
-
-      const imgStyleString = Object.entries(imgStyle)
-        .map(([key, value]) => {
-          const kebabKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-          return `${kebabKey}:${value}`;
-        })
-        .join(';');
-
-      if (wrapperStyle && Object.keys(wrapperStyle).length > 0) {
-        const wrapperStyleString = Object.entries(wrapperStyle)
-          .map(([key, value]) => {
-            const kebabKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-            return `${kebabKey}:${value}`;
-          })
-          .join(';');
-
-        return `<span style="${wrapperStyleString}" class="image-crop-wrapper cursor-move"><img${attributes} draggable="true" style="${imgStyleString}" class="hover:opacity-80 transition-opacity hover:ring-2 hover:ring-primary" data-image-url="${imageUrl}" data-image-id="${imageId}" /></span>`;
-      }
-      
-      return `<img${attributes} draggable="true" style="${imgStyleString}" class="cursor-move hover:opacity-80 transition-opacity hover:ring-2 hover:ring-primary" data-image-url="${imageUrl}" data-image-id="${imageId}" />`;
-    }
-  );
+  const processedHtml = section.innerHTML;
 
   const handleClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     if (target.tagName === 'IMG') {
-      const imageUrl = target.getAttribute('data-image-url');
+      const imageUrl = target.getAttribute('data-image-url') || target.getAttribute('src');
       if (imageUrl) {
         onImageClick(imageUrl);
       }
@@ -74,28 +42,32 @@ const BannerSection = ({
 
   const handleImageDragStart = (e: React.DragEvent) => {
     const target = e.target as HTMLElement;
-    if (target.tagName === 'IMG') {
-      const imageId = target.getAttribute('data-image-id');
-      if (imageId) {
-        setDraggedImageId(imageId);
+    // Procura o container arrastável mais próximo
+    const container = target.closest('.attachment-container');
+    if (container) {
+      const attachmentId = container.getAttribute('data-attachment-id');
+      if (attachmentId) {
+        setDraggedImageId(attachmentId);
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', imageId);
-        target.style.opacity = '0.5';
+        e.dataTransfer.setData('text/plain', attachmentId);
+        (container as HTMLElement).style.opacity = '0.5';
       }
     }
   };
 
   const handleImageDragEnd = (e: React.DragEvent) => {
     const target = e.target as HTMLElement;
-    if (target.tagName === 'IMG') {
-      target.style.opacity = '1';
+    const container = target.closest('.attachment-container');
+    if (container) {
+      (container as HTMLElement).style.opacity = '1';
       setDraggedImageId(null);
     }
   };
 
   const handleImageDragOver = (e: React.DragEvent) => {
     const target = e.target as HTMLElement;
-    if (target.tagName === 'IMG' && draggedImageId) {
+    const container = target.closest('.attachment-container');
+    if (container && draggedImageId) {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
     }
@@ -106,15 +78,16 @@ const BannerSection = ({
     e.stopPropagation();
     
     const target = e.target as HTMLElement;
-    if (target.tagName === 'IMG' && draggedImageId && sectionId) {
-      const targetImageId = target.getAttribute('data-image-id');
-      if (targetImageId && targetImageId !== draggedImageId) {
+    const container = target.closest('.attachment-container');
+    if (container && draggedImageId && sectionId) {
+      const targetAttachmentId = container.getAttribute('data-attachment-id');
+      if (targetAttachmentId && targetAttachmentId !== draggedImageId) {
         // Dispatch evento para reordenar imagens inline
         const event = new CustomEvent('reorderAttachmentInline', {
           detail: {
             sectionId,
             sourceId: draggedImageId,
-            targetId: targetImageId
+            targetId: targetAttachmentId
           }
         });
         window.dispatchEvent(event);

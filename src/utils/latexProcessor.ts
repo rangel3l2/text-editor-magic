@@ -144,13 +144,13 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         introUsed.add(id);
-        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
-          html += `<div style=\"font-size: 10pt; font-style: italic; color: #333;\">Fonte: ${img.source}</div>`;
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
         }
         html += '</div>';
         return html;
@@ -185,11 +185,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         objUsed.add(id);
-        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
           html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
         }
@@ -226,11 +226,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         methUsed.add(id);
-        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
           html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
         }
@@ -267,11 +267,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         resUsed.add(id);
-        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
           html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
         }
@@ -308,11 +308,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         discUsed.add(id);
-        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
           html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
         }
@@ -349,11 +349,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         concUsed.add(id);
-        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
           html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
         }
