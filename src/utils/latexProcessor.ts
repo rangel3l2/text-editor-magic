@@ -178,10 +178,29 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     const cleanObj = cleanLatexCommands(content.objectives);
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">OBJETIVOS</h2>');
-    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanObj + '</div>');
+    const objUsed = new Set<string>();
+    const objProcessed = cleanObj
+      .replace(/\[\[placeholder:[^\]]+\]\]/g, '')
+      .replace(/(?:🖼️\s*Imagem|📊\s*Gráfico|📋\s*Tabela)?\s*\[\[(figura|grafico|tabela):([^\]]+)\]\]/g, (m, typ, id) => {
+        const img = images.find(i => i.id === id);
+        if (!img || !img.url) return '';
+        objUsed.add(id);
+        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        if (img.caption) {
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+        }
+        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        if (img.source) {
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
+        }
+        html += '</div>';
+        return html;
+      });
+
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + objProcessed + '</div>');
     
-    // Add images for objectives section
-    objectivesImages.forEach(img => {
+    // Add remaining images for objectives section (not already inlined)
+    objectivesImages.filter(img => !objUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
@@ -200,10 +219,29 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     const cleanMeth = cleanLatexCommands(content.methodology);
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">METODOLOGIA</h2>');
-    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanMeth + '</div>');
+    const methUsed = new Set<string>();
+    const methProcessed = cleanMeth
+      .replace(/\[\[placeholder:[^\]]+\]\]/g, '')
+      .replace(/(?:🖼️\s*Imagem|📊\s*Gráfico|📋\s*Tabela)?\s*\[\[(figura|grafico|tabela):([^\]]+)\]\]/g, (m, typ, id) => {
+        const img = images.find(i => i.id === id);
+        if (!img || !img.url) return '';
+        methUsed.add(id);
+        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        if (img.caption) {
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+        }
+        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        if (img.source) {
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
+        }
+        html += '</div>';
+        return html;
+      });
+
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + methProcessed + '</div>');
     
-    // Add images only for methodology section
-    methodologyImages.forEach(img => {
+    // Add remaining images for methodology section (not already inlined)
+    methodologyImages.filter(img => !methUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
@@ -222,10 +260,29 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     const cleanRes = cleanLatexCommands(content.results);
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">RESULTADOS</h2>');
-    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanRes + '</div>');
+    const resUsed = new Set<string>();
+    const resProcessed = cleanRes
+      .replace(/\[\[placeholder:[^\]]+\]\]/g, '')
+      .replace(/(?:🖼️\s*Imagem|📊\s*Gráfico|📋\s*Tabela)?\s*\[\[(figura|grafico|tabela):([^\]]+)\]\]/g, (m, typ, id) => {
+        const img = images.find(i => i.id === id);
+        if (!img || !img.url) return '';
+        resUsed.add(id);
+        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        if (img.caption) {
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+        }
+        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        if (img.source) {
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
+        }
+        html += '</div>';
+        return html;
+      });
+
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + resProcessed + '</div>');
     
-    // Add images only for results section
-    resultsImages.forEach(img => {
+    // Add remaining images for results section (not already inlined)
+    resultsImages.filter(img => !resUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
@@ -244,10 +301,29 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     const cleanDisc = cleanLatexCommands(content.discussion);
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">DISCUSSÃO</h2>');
-    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanDisc + '</div>');
+    const discUsed = new Set<string>();
+    const discProcessed = cleanDisc
+      .replace(/\[\[placeholder:[^\]]+\]\]/g, '')
+      .replace(/(?:🖼️\s*Imagem|📊\s*Gráfico|📋\s*Tabela)?\s*\[\[(figura|grafico|tabela):([^\]]+)\]\]/g, (m, typ, id) => {
+        const img = images.find(i => i.id === id);
+        if (!img || !img.url) return '';
+        discUsed.add(id);
+        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        if (img.caption) {
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+        }
+        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        if (img.source) {
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
+        }
+        html += '</div>';
+        return html;
+      });
+
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + discProcessed + '</div>');
     
-    // Add images for discussion section
-    discussionImages.forEach(img => {
+    // Add remaining images for discussion section (not already inlined)
+    discussionImages.filter(img => !discUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
@@ -266,10 +342,29 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     const cleanConc = cleanLatexCommands(content.conclusion);
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">CONCLUSÃO</h2>');
-    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanConc + '</div>');
+    const concUsed = new Set<string>();
+    const concProcessed = cleanConc
+      .replace(/\[\[placeholder:[^\]]+\]\]/g, '')
+      .replace(/(?:🖼️\s*Imagem|📊\s*Gráfico|📋\s*Tabela)?\s*\[\[(figura|grafico|tabela):([^\]]+)\]\]/g, (m, typ, id) => {
+        const img = images.find(i => i.id === id);
+        if (!img || !img.url) return '';
+        concUsed.add(id);
+        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        if (img.caption) {
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+        }
+        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        if (img.source) {
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
+        }
+        html += '</div>';
+        return html;
+      });
+
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + concProcessed + '</div>');
     
-    // Add images for conclusion section
-    conclusionImages.forEach(img => {
+    // Add remaining images for conclusion section (not already inlined)
+    conclusionImages.filter(img => !concUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
