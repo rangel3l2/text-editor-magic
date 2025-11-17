@@ -69,129 +69,111 @@ export const generateLatexContent = (content: any) => {
 
   const parts: string[] = [];
   
-  parts.push('<div style="width: 100%; max-width: 120cm; margin: 0 auto; position: relative; background: white; font-family: Arial, sans-serif; aspect-ratio: 3/4;">');
+  parts.push('<div style="width: 100%; max-width: 120cm; margin: 0 auto; position: relative; background: white; font-family: \'Times New Roman\', Times, serif; padding: 2cm;">');
   
-  // Header
-  parts.push('<div class="banner-header" style="display: flex; align-items: center; justify-content: space-between; padding: 2rem; border-bottom: 0.5rem solid ' + themeColor + '; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">');
+  // Header - Logo e Instituição à esquerda, Título à direita
+  parts.push('<div class="banner-header" style="display: grid; grid-template-columns: 1fr 2fr; gap: 2cm; align-items: start; padding-bottom: 1cm; border-bottom: 3px solid #000; margin-bottom: 1cm;">');
   
-  parts.push('<div style="display: flex; align-items: center; gap: 1rem; flex: 1;">');
+  // Lado esquerdo: Logo e Instituição
+  parts.push('<div style="display: flex; flex-direction: column; gap: 0.5cm;">');
   if (content.institutionLogo) {
-    const maxHeight = content.logoConfig?.maxHeight || 10;
-    const width = content.logoConfig?.width || 40;
-    parts.push('<img src="' + content.institutionLogo + '" alt="Logo da Instituição" style="max-height: ' + maxHeight + 'rem; width: ' + width + '%; height: auto; object-fit: contain;" />');
+    const maxHeight = content.logoConfig?.maxHeight || 8;
+    const width = content.logoConfig?.width || 100;
+    parts.push('<img src="' + content.institutionLogo + '" alt="Logo da Instituição" style="max-height: ' + maxHeight + 'cm; width: ' + width + '%; height: auto; object-fit: contain; margin-bottom: 0.3cm;" />');
   }
   if (processedInstitution) {
-    parts.push('<div style="flex: 1; text-align: right; font-size: 1.5rem; font-weight: bold; color: ' + themeColor + ';">' + processedInstitution + '</div>');
+    parts.push('<div style="font-size: 14pt; font-weight: bold; color: #000; line-height: 1.2; text-align: left; text-transform: uppercase;">' + processedInstitution + '</div>');
   }
   parts.push('</div>');
   
-  if (content.eventLogo) {
-    parts.push('<img src="' + content.eventLogo + '" alt="Evento" style="max-height: 5rem; width: auto; object-fit: contain; margin-left: 1rem;" />');
+  // Lado direito: Título
+  if (processedTitle) {
+    parts.push('<div style="display: flex; align-items: center; justify-content: center;">');
+    parts.push('<h1 style="font-size: 28pt; font-weight: bold; line-height: 1.2; color: #000; text-transform: uppercase; text-align: center; margin: 0;">' + processedTitle + '</h1>');
+    parts.push('</div>');
   }
   
   parts.push('</div>');
 
-  // Title section
-  if (processedTitle || processedAuthors || processedAdvisors) {
-    parts.push('<div style="text-align: center; padding: 1.5cm 2cm; background: white;">');
-    if (processedTitle) {
-      parts.push('<h1 style="font-size: 2.5cm; font-weight: bold; line-height: 1.2; margin-bottom: 0.8cm; color: ' + themeColor + '; text-transform: uppercase;">' + processedTitle + '</h1>');
-    }
+  // Autores e Orientadores (abaixo do cabeçalho)
+  if (processedAuthors || processedAdvisors) {
+    parts.push('<div style="text-align: center; padding: 0.5cm 0 1cm 0; border-bottom: 1px solid #ccc; margin-bottom: 1cm;">');
     if (processedAuthors) {
-      parts.push('<div style="font-size: 1.2cm; margin-top: 0.5cm; color: #333;">' + processedAuthors + '</div>');
-    }
-    if (content.authorEmail) {
-      parts.push('<div style="font-size: 0.9cm; margin-top: 0.3cm; color: #666; font-family: monospace;">' + content.authorEmail + '</div>');
+      parts.push('<div style="font-size: 12pt; margin-bottom: 0.2cm; color: #000;">' + processedAuthors + '</div>');
     }
     if (processedAdvisors) {
-      parts.push('<div style="font-size: 1.1cm; margin-top: 0.5cm; color: #444;"><strong>Orientador(a):</strong> ' + processedAdvisors + '</div>');
+      parts.push('<div style="font-size: 11pt; color: #333;"><strong>Orientador(a):</strong> ' + processedAdvisors + '</div>');
     }
     parts.push('</div>');
   }
 
-  // 3 columns
-  parts.push('<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5cm; padding: 2cm; min-height: 80cm;">');
+  // Content em 2 colunas
+  parts.push('<div style="column-count: 2; column-gap: 2cm; column-rule: 2px solid #000; text-align: justify;">');
   
-  // Column 1
-  parts.push('<div class="banner-section" style="display: flex; flex-direction: column; justify-content: space-between;">');
-  parts.push('<div>');
   if (content.introduction) {
     const cleanIntro = cleanLatexCommands(content.introduction);
-    parts.push('<div style="margin-bottom: 1.5cm;">');
-    parts.push('<h2 style="font-size: 1.2cm; font-weight: bold; margin-bottom: 0.5cm; color: ' + themeColor + '; border-bottom: 0.15cm solid ' + themeColor + '; padding-bottom: 0.3cm;">INTRODUÇÃO</h2>');
-    parts.push('<div style="font-size: 0.8cm; line-height: 1.4; text-align: justify;">' + cleanIntro + '</div>');
+    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">INTRODUÇÃO</h2>');
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanIntro + '</div>');
     parts.push('</div>');
   }
+  
   if (content.objectives) {
     const cleanObj = cleanLatexCommands(content.objectives);
-    parts.push('<div style="margin-bottom: 1.5cm;">');
-    parts.push('<h2 style="font-size: 1.2cm; font-weight: bold; margin-bottom: 0.5cm; color: ' + themeColor + '; border-bottom: 0.15cm solid ' + themeColor + '; padding-bottom: 0.3cm;">OBJETIVOS</h2>');
-    parts.push('<div style="font-size: 0.8cm; line-height: 1.4; text-align: justify;">' + cleanObj + '</div>');
+    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">OBJETIVOS</h2>');
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanObj + '</div>');
     parts.push('</div>');
   }
-  parts.push('</div>');
-  if (content.references) {
-    const cleanRef = cleanLatexCommands(content.references);
-    parts.push('<div style="margin-top: auto;">');
-    parts.push('<h2 style="font-size: 1cm; font-weight: bold; margin-bottom: 0.5cm; color: ' + themeColor + '; border-bottom: 0.15cm solid ' + themeColor + '; padding-bottom: 0.3cm;">REFERÊNCIAS</h2>');
-    parts.push('<div style="font-size: 0.6cm; line-height: 1.3; text-align: justify;">' + cleanRef + '</div>');
-    parts.push('</div>');
-  }
-  parts.push('</div>');
   
-  // Column 2
-  parts.push('<div class="banner-section" style="display: flex; flex-direction: column;">');
   if (content.methodology) {
     const cleanMeth = cleanLatexCommands(content.methodology);
-    parts.push('<div style="margin-bottom: 1.5cm;">');
-    parts.push('<h2 style="font-size: 1.2cm; font-weight: bold; margin-bottom: 0.5cm; color: ' + themeColor + '; border-bottom: 0.15cm solid ' + themeColor + '; padding-bottom: 0.3cm;">METODOLOGIA</h2>');
-    parts.push('<div style="font-size: 0.8cm; line-height: 1.4; text-align: justify;">' + cleanMeth + '</div>');
+    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">METODOLOGIA</h2>');
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanMeth + '</div>');
     parts.push('</div>');
   }
+  
   if (content.results) {
     const cleanRes = cleanLatexCommands(content.results);
-    parts.push('<div style="margin-bottom: 1.5cm;">');
-    parts.push('<h2 style="font-size: 1.2cm; font-weight: bold; margin-bottom: 0.5cm; color: ' + themeColor + '; border-bottom: 0.15cm solid ' + themeColor + '; padding-bottom: 0.3cm;">RESULTADOS</h2>');
-    parts.push('<div style="font-size: 0.8cm; line-height: 1.4; text-align: justify;">' + cleanRes + '</div>');
+    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">RESULTADOS</h2>');
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanRes + '</div>');
     parts.push('</div>');
   }
-  parts.push('</div>');
   
-  // Column 3
-  parts.push('<div class="banner-section" style="display: flex; flex-direction: column; justify-content: space-between;">');
-  parts.push('<div>');
   if (content.discussion) {
     const cleanDisc = cleanLatexCommands(content.discussion);
-    parts.push('<div style="margin-bottom: 1.5cm;">');
-    parts.push('<h2 style="font-size: 1.2cm; font-weight: bold; margin-bottom: 0.5cm; color: ' + themeColor + '; border-bottom: 0.15cm solid ' + themeColor + '; padding-bottom: 0.3cm;">DISCUSSÃO</h2>');
-    parts.push('<div style="font-size: 0.8cm; line-height: 1.4; text-align: justify;">' + cleanDisc + '</div>');
+    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">DISCUSSÃO</h2>');
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanDisc + '</div>');
     parts.push('</div>');
   }
+  
   if (content.conclusion) {
     const cleanConc = cleanLatexCommands(content.conclusion);
-    parts.push('<div style="margin-bottom: 1.5cm;">');
-    parts.push('<h2 style="font-size: 1.2cm; font-weight: bold; margin-bottom: 0.5cm; color: ' + themeColor + '; border-bottom: 0.15cm solid ' + themeColor + '; padding-bottom: 0.3cm;">CONCLUSÕES</h2>');
-    parts.push('<div style="font-size: 0.8cm; line-height: 1.4; text-align: justify;">' + cleanConc + '</div>');
+    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">CONCLUSÃO</h2>');
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanConc + '</div>');
     parts.push('</div>');
   }
-  parts.push('</div>');
+  
+  if (content.references) {
+    const cleanRef = cleanLatexCommands(content.references);
+    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">REFERÊNCIAS</h2>');
+    parts.push('<div style="font-size: 11pt; line-height: 1.4; text-align: justify; color: #000;">' + cleanRef + '</div>');
+    parts.push('</div>');
+  }
+  
   if (content.acknowledgments) {
     const cleanAck = cleanLatexCommands(content.acknowledgments);
-    parts.push('<div style="margin-top: auto;">');
-    parts.push('<h2 style="font-size: 1cm; font-weight: bold; margin-bottom: 0.5cm; color: ' + themeColor + '; border-bottom: 0.15cm solid ' + themeColor + '; padding-bottom: 0.3cm;">AGRADECIMENTOS</h2>');
-    parts.push('<div style="font-size: 0.7cm; line-height: 1.3; text-align: justify;">' + cleanAck + '</div>');
+    parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
+    parts.push('<h2 style="font-size: 14pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">AGRADECIMENTOS</h2>');
+    parts.push('<div style="font-size: 11pt; line-height: 1.4; text-align: justify; color: #000;">' + cleanAck + '</div>');
     parts.push('</div>');
   }
-  parts.push('</div>');
   
-  parts.push('</div>');
-
-  // Footer
-  parts.push('<div style="position: absolute; bottom: 0; left: 0; right: 0; height: 1.5cm; background: ' + themeColor + '; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.7cm;">');
-  if (content.qrCode) {
-    parts.push('<img src="' + content.qrCode + '" alt="QR" style="height: 1.2cm; margin-right: 0.5cm;" />');
-  }
-  parts.push('<span>Banner Científico Profissional | ' + new Date().getFullYear() + '</span>');
   parts.push('</div>');
 
   parts.push('</div>');
