@@ -137,16 +137,35 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     const cleanIntro = cleanLatexCommands(content.introduction);
     parts.push('<div class="banner-section" style="break-inside: avoid; margin-bottom: 1cm;">');
     parts.push('<h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 0.4cm; color: #000; text-transform: uppercase; text-decoration: underline;">INTRODUÇÃO</h2>');
-    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + cleanIntro + '</div>');
+    const introUsed = new Set<string>();
+    const introProcessed = cleanIntro
+      .replace(/\[\[placeholder:[^\]]+\]\]/g, '')
+      .replace(/(?:🖼️\s*Imagem|📊\s*Gráfico|📋\s*Tabela)?\s*\[\[(figura|grafico|tabela):([^\]]+)\]\]/g, (m, typ, id) => {
+        const img = images.find(i => i.id === id);
+        if (!img || !img.url) return '';
+        introUsed.add(id);
+        let html = '<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">';
+        if (img.caption) {
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+        }
+        html += `<img src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`;
+        if (img.source) {
+          html += `<div style=\"font-size: 10pt; font-style: italic; color: #333;\">Fonte: ${img.source}</div>`;
+        }
+        html += '</div>';
+        return html;
+      });
+
+    parts.push('<div style="font-size: 12pt; line-height: 1.5; text-align: justify; color: #000;">' + introProcessed + '</div>');
     
-    // Add images for introduction section
-    introImages.forEach(img => {
+    // Add remaining images for introduction section (not already inlined)
+    introImages.filter(img => !introUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
         parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
         parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
-          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+          parts.push(`<div style=\"font-size: 10pt; font-style: italic; color: #333;\">Fonte: ${img.source}</div>`);
         }
         parts.push('</div>');
       }
