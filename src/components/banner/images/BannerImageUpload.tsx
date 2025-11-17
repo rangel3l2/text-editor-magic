@@ -15,6 +15,8 @@ interface BannerImageUploadProps {
   figuraCount?: number;
   graficoCount?: number;
   tabelaCount?: number;
+  defaultSection?: string; // Seção pré-selecionada (quando inserindo via menu de contexto)
+  defaultType?: 'figura' | 'grafico' | 'tabela'; // Tipo pré-selecionado
 }
 
 const BannerImageUpload = ({ 
@@ -24,16 +26,18 @@ const BannerImageUpload = ({
   currentCount = 0,
   figuraCount = 0,
   graficoCount = 0,
-  tabelaCount = 0
+  tabelaCount = 0,
+  defaultSection,
+  defaultType = 'figura'
 }: BannerImageUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [showTitleDialog, setShowTitleDialog] = useState(false);
   const [showSourceDialog, setShowSourceDialog] = useState(false);
   const [pendingImage, setPendingImage] = useState<File | null>(null);
-  const [imageType, setImageType] = useState<'figura' | 'grafico' | 'tabela'>('figura');
+  const [imageType, setImageType] = useState<'figura' | 'grafico' | 'tabela'>(defaultType);
   const [title, setTitle] = useState('');
   const [source, setSource] = useState('');
-  const [section, setSection] = useState('results');
+  const [section, setSection] = useState(defaultSection || 'results');
 
   const getNextNumber = (type: 'figura' | 'grafico' | 'tabela') => {
     switch(type) {
@@ -56,7 +60,10 @@ const BannerImageUpload = ({
     
     if (files.length > 0 && currentCount < maxImages) {
       setPendingImage(files[0]);
-      setImageType('figura');
+      // Só reseta o tipo se não houver um defaultType
+      if (!defaultType) {
+        setImageType('figura');
+      }
       setShowTitleDialog(true);
     }
 
@@ -78,7 +85,10 @@ const BannerImageUpload = ({
           const file = new File([blob], `imagem-${Date.now()}.png`, { type: blob.type });
           
           setPendingImage(file);
-          setImageType('figura');
+          // Só reseta o tipo se não houver um defaultType
+          if (!defaultType) {
+            setImageType('figura');
+          }
           setShowTitleDialog(true);
           return;
         }
@@ -187,16 +197,27 @@ const BannerImageUpload = ({
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="upload-imageType">Tipo</Label>
-              <Select value={imageType} onValueChange={(v) => setImageType(v as any)}>
-                <SelectTrigger id="upload-imageType">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="figura">Figura {getNextNumber('figura')}</SelectItem>
-                  <SelectItem value="grafico">Gráfico {getNextNumber('grafico')}</SelectItem>
-                  <SelectItem value="tabela">Tabela {getNextNumber('tabela')}</SelectItem>
-                </SelectContent>
-              </Select>
+              {defaultType ? (
+                <div className="px-3 py-2 border rounded-md bg-muted text-sm">
+                  {imageType === 'figura' && `Figura ${getNextNumber('figura')}`}
+                  {imageType === 'grafico' && `Gráfico ${getNextNumber('grafico')}`}
+                  {imageType === 'tabela' && `Tabela ${getNextNumber('tabela')}`}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Tipo selecionado automaticamente
+                  </p>
+                </div>
+              ) : (
+                <Select value={imageType} onValueChange={(v) => setImageType(v as any)}>
+                  <SelectTrigger id="upload-imageType">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="figura">Figura {getNextNumber('figura')}</SelectItem>
+                    <SelectItem value="grafico">Gráfico {getNextNumber('grafico')}</SelectItem>
+                    <SelectItem value="tabela">Tabela {getNextNumber('tabela')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -248,22 +269,38 @@ const BannerImageUpload = ({
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="upload-section">Seção onde a imagem aparecerá</Label>
-              <Select value={section} onValueChange={setSection}>
-                <SelectTrigger id="upload-section">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="introduction">Introdução</SelectItem>
-                  <SelectItem value="objectives">Objetivos</SelectItem>
-                  <SelectItem value="methodology">Metodologia</SelectItem>
-                  <SelectItem value="results">Resultados</SelectItem>
-                  <SelectItem value="discussion">Discussão</SelectItem>
-                  <SelectItem value="conclusion">Conclusão</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                A imagem será posicionada no final da seção selecionada
-              </p>
+              {defaultSection ? (
+                <div className="px-3 py-2 border rounded-md bg-muted text-sm">
+                  {section === 'introduction' && 'Introdução'}
+                  {section === 'objectives' && 'Objetivos'}
+                  {section === 'methodology' && 'Metodologia'}
+                  {section === 'results' && 'Resultados'}
+                  {section === 'discussion' && 'Discussão'}
+                  {section === 'conclusion' && 'Conclusão'}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Inserindo na seção onde você clicou
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <Select value={section} onValueChange={setSection}>
+                    <SelectTrigger id="upload-section">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="introduction">Introdução</SelectItem>
+                      <SelectItem value="objectives">Objetivos</SelectItem>
+                      <SelectItem value="methodology">Metodologia</SelectItem>
+                      <SelectItem value="results">Resultados</SelectItem>
+                      <SelectItem value="discussion">Discussão</SelectItem>
+                      <SelectItem value="conclusion">Conclusão</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    A imagem será posicionada no final da seção selecionada
+                  </p>
+                </>
+              )}
             </div>
             
             <div className="space-y-2">
