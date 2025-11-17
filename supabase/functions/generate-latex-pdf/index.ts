@@ -133,6 +133,8 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  let latexSource = '';
+
   try {
     const { content } = await req.json()
     
@@ -175,7 +177,7 @@ serve(async (req) => {
     const texFile = new File([latexWithCRLF], 'document.tex', { type: 'application/x-tex' });
     formData.append('filecontents[]', texFile, 'document.tex');
     formData.append('filename[]', 'document.tex');
-    formData.append('engine', 'pdflatex');
+    formData.append('engine', 'xelatex');
     formData.append('return', 'pdf');
 
     const compileResponse = await fetch('https://texlive.net/cgi-bin/latexcgi', {
@@ -197,7 +199,7 @@ serve(async (req) => {
       }
     }
 
-    if (compileResponse.status !== 302 && compileResponse.status !== 303) {
+    if (compileResponse.status !== 301 && compileResponse.status !== 302 && compileResponse.status !== 303) {
       const bodyText = await compileResponse.text().catch(() => '[no-body]');
       console.error('texlive.net failed:', compileResponse.status, bodyText);
       throw new Error('Failed to compile LaTeX to PDF');
@@ -226,10 +228,14 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: 'Failed to generate PDF' }),
+      JSON.stringify({ 
+        compiled: false,
+        latex: latexSource || null,
+        message: 'Compilation failed; returning LaTeX source for client-side compilation.'
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: 200
       }
     )
   }
