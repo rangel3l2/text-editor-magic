@@ -24,6 +24,7 @@ const BannerEditor = () => {
   const { id } = useParams();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [hasEditedFirstField, setHasEditedFirstField] = useState(false);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
 
   const {
     content,
@@ -122,6 +123,14 @@ const BannerEditor = () => {
     }
   };
 
+  const handleImageUploadFromEditor = (file: File) => {
+    setPendingImageFile(file);
+  };
+
+  const handleImageProcessed = () => {
+    setPendingImageFile(null);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -164,6 +173,9 @@ const BannerEditor = () => {
             handleChange={handleFieldChange}
             selectedImage={selectedImage}
             onImageConfigChange={onImageConfigChange}
+            onImageUploadFromEditor={handleImageUploadFromEditor}
+            pendingImageFile={pendingImageFile}
+            onImageProcessed={handleImageProcessed}
           />
           <BannerActions
             onGeneratePDF={handleGeneratePDF}

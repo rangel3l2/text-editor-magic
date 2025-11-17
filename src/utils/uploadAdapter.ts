@@ -1,16 +1,25 @@
 class UploadAdapter {
   private loader: any;
   private controller: AbortController;
+  private customHandler?: (file: File) => void;
 
-  constructor(loader: any) {
+  constructor(loader: any, customHandler?: (file: File) => void) {
     this.loader = loader;
     this.controller = new AbortController();
+    this.customHandler = customHandler;
   }
 
   upload(): Promise<{ default: string }> {
     return new Promise((resolve, reject) => {
       try {
         this.loader.file.then((file: File) => {
+          // Se houver handler customizado, usa ele e não insere no editor
+          if (this.customHandler) {
+            this.customHandler(file);
+            reject('Image will be handled by custom handler');
+            return;
+          }
+
           const reader = new FileReader();
           
           reader.onload = () => {
@@ -41,6 +50,7 @@ class UploadAdapter {
 
 export function uploadAdapterPlugin(editor: any) {
   editor.plugins.get('FileRepository').createUploadAdapter = (loader: any) => {
-    return new UploadAdapter(loader);
+    const customHandler = editor.config.get('customImageUploadHandler');
+    return new UploadAdapter(loader, customHandler);
   };
 }

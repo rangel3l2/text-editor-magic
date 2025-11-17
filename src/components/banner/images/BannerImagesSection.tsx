@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useBannerImages } from '@/hooks/useBannerImages';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,11 +9,18 @@ import BannerImageEditor from './BannerImageEditor';
 import { BannerImage } from '@/hooks/useBannerImages';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/components/ui/use-toast';
 
-const BannerImagesSection = () => {
+interface BannerImagesSectionProps {
+  pendingImageFile?: File | null;
+  onImageProcessed?: () => void;
+}
+
+const BannerImagesSection = ({ pendingImageFile, onImageProcessed }: BannerImagesSectionProps = {}) => {
   const { id: workId } = useParams();
   const { user } = useAuth();
   const [editingImage, setEditingImage] = useState<BannerImage | null>(null);
+  const { toast } = useToast();
   
   const {
     images,
@@ -24,6 +31,21 @@ const BannerImagesSection = () => {
     deleteImage,
     reorderImages
   } = useBannerImages(workId, user?.id);
+
+  // Process pending image from editor
+  useEffect(() => {
+    if (pendingImageFile) {
+      handleUpload(pendingImageFile, 'figura', 'Imagem do editor', 'Inserida via editor de texto');
+      if (onImageProcessed) {
+        onImageProcessed();
+      }
+      toast({
+        title: "Imagem capturada",
+        description: "A imagem foi adicionada à galeria de imagens do banner",
+        duration: 3000,
+      });
+    }
+  }, [pendingImageFile]);
 
   const handleUpload = async (
     file: File, 

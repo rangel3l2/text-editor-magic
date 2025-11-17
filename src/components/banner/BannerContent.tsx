@@ -8,6 +8,9 @@ interface BannerContentProps {
   handleChange: (field: string, value: string) => void;
   selectedImage: string | null;
   onImageConfigChange: (imageId: string, config: any) => void;
+  onImageUploadFromEditor?: (file: File) => void;
+  pendingImageFile?: File | null;
+  onImageProcessed?: () => void;
 }
 
 const BannerContent = ({ 
@@ -15,6 +18,9 @@ const BannerContent = ({
   handleChange, 
   selectedImage, 
   onImageConfigChange,
+  onImageUploadFromEditor,
+  pendingImageFile,
+  onImageProcessed,
 }: BannerContentProps) => {
   return (
     <div className="w-full">
@@ -31,7 +37,13 @@ const BannerContent = ({
           <BannerHeaderSection content={content} handleChange={handleChange} />
         </TabsContent>
         <TabsContent value="content" className="mt-4">
-          <BannerContentSection content={content} handleChange={handleChange} />
+          <BannerContentSection 
+            content={content} 
+            handleChange={handleChange}
+            onImageUploadFromEditor={onImageUploadFromEditor}
+            pendingImageFile={pendingImageFile}
+            onImageProcessed={onImageProcessed}
+          />
         </TabsContent>
       </Tabs>
       
