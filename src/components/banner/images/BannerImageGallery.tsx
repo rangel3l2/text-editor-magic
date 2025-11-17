@@ -10,13 +10,17 @@ interface BannerImageGalleryProps {
   onReorder: (images: BannerImage[]) => void;
   onEdit: (image: BannerImage) => void;
   onDelete: (imageId: string) => void;
+  selectionMode?: boolean;
+  onSelect?: (imageId: string, imageType: string) => void;
 }
 
 const BannerImageGallery = ({
   images,
   onReorder,
   onEdit,
-  onDelete
+  onDelete,
+  selectionMode = false,
+  onSelect
 }: BannerImageGalleryProps) => {
   const [draggedItem, setDraggedItem] = useState<{ section: string; index: number } | null>(null);
   const [dragOverItem, setDragOverItem] = useState<{ section: string; index: number } | null>(null);
@@ -181,24 +185,37 @@ const BannerImageGallery = ({
                         )}
 
                         <div className="flex gap-2 pt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onEdit(image)}
-                            className="flex-1"
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Editar
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onDelete(image.id)}
-                            className="flex-1"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Excluir
-                          </Button>
+                          {selectionMode && onSelect ? (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => onSelect(image.id, imageType)}
+                              className="flex-1"
+                            >
+                              ✓ Inserir {typeLabel}
+                            </Button>
+                          ) : (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onEdit(image)}
+                                className="flex-1"
+                              >
+                                <Edit className="w-4 h-4 mr-2" />
+                                Editar
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onDelete(image.id)}
+                                className="flex-1"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Excluir
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

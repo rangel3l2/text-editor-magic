@@ -8,7 +8,15 @@ import { useEditorValidation } from './editor/useEditorValidation';
 import { useEditorProgress } from './editor/useEditorProgress';
 import { cleanHtmlTags } from '@/utils/latexProcessor';
 import { useValidationContext } from '@/contexts/ValidationContext';
-import AttachmentInserter from './banner/AttachmentInserter';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+  ContextMenuLabel,
+} from '@/components/ui/context-menu';
+import { FileImage, BarChart3, Table2 } from 'lucide-react';
 
 interface RichTextEditorProps {
   value: string;
@@ -20,7 +28,7 @@ interface RichTextEditorProps {
   sectionName?: string;
   onCustomImageUpload?: (file: File) => void;
   onEditorReady?: (editor: any) => void;
-  onInsertAttachment?: (attachmentId: string, attachmentType: string) => void;
+  onRequestAttachmentInsertion?: (type: 'figura' | 'grafico' | 'tabela') => void;
 }
 
 const RichTextEditor = ({ 
@@ -33,7 +41,7 @@ const RichTextEditor = ({
   sectionName = '',
   onCustomImageUpload,
   onEditorReady,
-  onInsertAttachment
+  onRequestAttachmentInsertion
 }: RichTextEditorProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [editorInstance, setEditorInstance] = useState<any>(null);
@@ -158,20 +166,9 @@ const RichTextEditor = ({
 
   return (
     <div className="editor-container relative space-y-2">
-      {onInsertAttachment && sectionName && (
-        <div className="flex justify-start">
-          <AttachmentInserter
-            sectionId={sectionName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}
-            onInsert={(attachmentId, attachmentType) => {
-              if (onInsertAttachment) {
-                onInsertAttachment(attachmentId, attachmentType);
-              }
-            }}
-          />
-        </div>
-      )}
-      
-      <EditorCore
+      <ContextMenu>
+        <ContextMenuTrigger className="w-full">
+          <EditorCore
         value={value}
         onChange={handleEditorChange}
         onReady={(editor) => {
@@ -188,7 +185,28 @@ const RichTextEditor = ({
         onFocus={() => setIsFocused(true)}
         onBlur={handleBlur}
         config={editorConfig}
-      />
+          />
+        </ContextMenuTrigger>
+
+        {onRequestAttachmentInsertion && (
+          <ContextMenuContent className="w-56">
+            <ContextMenuLabel>Inserir Anexo</ContextMenuLabel>
+            <ContextMenuSeparator />
+            <ContextMenuItem onClick={() => onRequestAttachmentInsertion('figura')}>
+              <FileImage className="mr-2 h-4 w-4" />
+              <span>Inserir Imagem</span>
+            </ContextMenuItem>
+            <ContextMenuItem onClick={() => onRequestAttachmentInsertion('grafico')}>
+              <BarChart3 className="mr-2 h-4 w-4" />
+              <span>Inserir Gráfico</span>
+            </ContextMenuItem>
+            <ContextMenuItem onClick={() => onRequestAttachmentInsertion('tabela')}>
+              <Table2 className="mr-2 h-4 w-4" />
+              <span>Inserir Tabela</span>
+            </ContextMenuItem>
+          </ContextMenuContent>
+        )}
+      </ContextMenu>
       
       {isFocused && (
         <EditorProgress

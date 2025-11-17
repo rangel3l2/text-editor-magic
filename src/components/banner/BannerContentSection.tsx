@@ -4,7 +4,7 @@ import editorConfig from '@/config/editorConfig';
 import { useBannerImages } from '@/hooks/useBannerImages';
 import { useAuth } from '@/contexts/AuthContext';
 import { useParams } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface BannerContentSectionProps {
   content: {
@@ -26,6 +26,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
   const { user } = useAuth();
   const { images } = useBannerImages(workId, user?.id);
   const [editorInstances, setEditorInstances] = useState<Record<string, any>>({});
+  const [pendingInsertion, setPendingInsertion] = useState<{ sectionId: string; type: 'figura' | 'grafico' | 'tabela' } | null>(null);
 
   // Filter attachments by section
   const introAttachments = images.filter(img => img.section === 'introduction').sort((a, b) => a.display_order - b.display_order);
@@ -38,6 +39,29 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
   const handleEditorReady = (sectionId: string, editor: any) => {
     setEditorInstances(prev => ({ ...prev, [sectionId]: editor }));
   };
+
+  const handleRequestAttachmentInsertion = (sectionId: string, type: 'figura' | 'grafico' | 'tabela') => {
+    setPendingInsertion({ sectionId, type });
+    // Aqui devemos disparar a abertura do BannerAttachmentsManager
+    // Vamos fazer isso via um evento customizado para que o BannerEditor possa capturar
+    const event = new CustomEvent('openAttachmentsManager', { 
+      detail: { type, sectionId } 
+    });
+    window.dispatchEvent(event);
+  };
+
+  // Escutar evento de anexo selecionado
+  useEffect(() => {
+    const handleAttachmentSelected = (event: CustomEvent) => {
+      const { sectionId, attachmentId, attachmentType } = event.detail;
+      insertAttachmentMarker(sectionId, attachmentId, attachmentType);
+    };
+
+    window.addEventListener('attachmentSelected' as any, handleAttachmentSelected);
+    return () => {
+      window.removeEventListener('attachmentSelected' as any, handleAttachmentSelected);
+    };
+  }, [editorInstances]);
 
   const insertAttachmentMarker = (sectionId: string, attachmentId: string, attachmentType: string) => {
     const editor = editorInstances[sectionId];
@@ -101,7 +125,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             placeholder="Ex: A problemática dos resíduos plásticos tem afetado significativamente os ecossistemas marinhos..."
             sectionName="Introdução"
             onEditorReady={(editor) => handleEditorReady('introduction', editor)}
-            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('introduction', attachmentId, attachmentType)}
+            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('introduction', type)}
           />
         </CardContent>
       </Card>
@@ -123,7 +147,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             placeholder="Ex: • Objetivo Geral: Avaliar o impacto... • Objetivos Específicos: 1) Quantificar... 2) Analisar..."
             sectionName="Objetivos"
             onEditorReady={(editor) => handleEditorReady('objectives', editor)}
-            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('objectives', attachmentId, attachmentType)}
+            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('objectives', type)}
           />
         </CardContent>
       </Card>
@@ -149,7 +173,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             sectionName="Metodologia"
             onCustomImageUpload={onImageUploadFromEditor}
             onEditorReady={(editor) => handleEditorReady('methodology', editor)}
-            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('methodology', attachmentId, attachmentType)}
+            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('methodology', type)}
           />
         </CardContent>
       </Card>
@@ -174,7 +198,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             placeholder="Ex: Os resultados demonstraram que... A Figura 1 ilustra... A Tabela 1 apresenta..."
             sectionName="Resultados"
             onEditorReady={(editor) => handleEditorReady('results', editor)}
-            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('results', attachmentId, attachmentType)}
+            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('results', type)}
           />
         </CardContent>
       </Card>
@@ -196,7 +220,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             placeholder="Ex: Os resultados obtidos corroboram com os estudos de Silva et al. (2022), que também observaram..."
             sectionName="Discussão"
             onEditorReady={(editor) => handleEditorReady('discussion', editor)}
-            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('discussion', attachmentId, attachmentType)}
+            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('discussion', type)}
           />
         </CardContent>
       </Card>
@@ -218,7 +242,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             placeholder="Ex: Conclui-se que a metodologia proposta foi eficaz para... Os resultados sugerem que..."
             sectionName="Conclusão"
             onEditorReady={(editor) => handleEditorReady('conclusion', editor)}
-            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('conclusion', attachmentId, attachmentType)}
+            onRequestAttachmentInsertion={(type) => handleRequestAttachmentInsertion('conclusion', type)}
           />
         </CardContent>
       </Card>

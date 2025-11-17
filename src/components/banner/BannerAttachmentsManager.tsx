@@ -27,6 +27,7 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
   const [editingImage, setEditingImage] = useState<BannerImage | null>(null);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('images');
+  const [selectionMode, setSelectionMode] = useState<{ sectionId: string; type: 'figura' | 'grafico' | 'tabela' } | null>(null);
   const { toast } = useToast();
 
   const {
@@ -38,6 +39,26 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
     deleteImage,
     reorderImages
   } = useBannerImages(workId, user?.id);
+
+  // Escutar evento de requisição de inserção de anexo
+  useEffect(() => {
+    const handleOpenAttachmentsManager = (event: CustomEvent) => {
+      const { type, sectionId } = event.detail;
+      setSelectionMode({ sectionId, type });
+      
+      // Abrir na aba correta
+      if (type === 'figura') setActiveTab('images');
+      else if (type === 'grafico') setActiveTab('charts');
+      else if (type === 'tabela') setActiveTab('tables');
+      
+      setOpen(true);
+    };
+
+    window.addEventListener('openAttachmentsManager' as any, handleOpenAttachmentsManager);
+    return () => {
+      window.removeEventListener('openAttachmentsManager' as any, handleOpenAttachmentsManager);
+    };
+  }, []);
 
   // Process pending image from editor
   useEffect(() => {
@@ -77,6 +98,28 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
 
   const handleSaveEdit = async (imageId: string, updates: Partial<BannerImage>) => {
     await updateImage(imageId, updates);
+  };
+
+  const handleSelectAttachment = (imageId: string, imageType: string) => {
+    if (selectionMode) {
+      // Disparar evento para o BannerContentSection inserir o anexo
+      const event = new CustomEvent('attachmentSelected', {
+        detail: {
+          sectionId: selectionMode.sectionId,
+          attachmentId: imageId,
+          attachmentType: imageType
+        }
+      });
+      window.dispatchEvent(event);
+      
+      setSelectionMode(null);
+      setOpen(false);
+      toast({
+        title: "Anexo inserido",
+        description: "O anexo foi inserido no texto na posição do cursor.",
+        duration: 2000,
+      });
+    }
   };
 
   const hasLowDPI = images.some(img => img.dpi < 200);
@@ -210,6 +253,8 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
                       onReorder={reorderImages}
                       onEdit={setEditingImage}
                       onDelete={deleteImage}
+                      selectionMode={selectionMode?.type === 'figura'}
+                      onSelect={handleSelectAttachment}
                     />
                   )}
                 </div>
@@ -244,6 +289,8 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
                       onReorder={reorderImages}
                       onEdit={setEditingImage}
                       onDelete={deleteImage}
+                      selectionMode={selectionMode?.type === 'grafico'}
+                      onSelect={handleSelectAttachment}
                     />
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
@@ -284,6 +331,8 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
                       onReorder={reorderImages}
                       onEdit={setEditingImage}
                       onDelete={deleteImage}
+                      selectionMode={selectionMode?.type === 'tabela'}
+                      onSelect={handleSelectAttachment}
                     />
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
