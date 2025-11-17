@@ -1,6 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import RichTextEditor from '../RichTextEditor';
 import editorConfig from '@/config/editorConfig';
+import SectionAttachmentIndicator from './SectionAttachmentIndicator';
+import { useBannerImages } from '@/hooks/useBannerImages';
+import { useAuth } from '@/contexts/AuthContext';
+import { useParams } from 'react-router-dom';
 
 interface BannerContentSectionProps {
   content: {
@@ -18,6 +22,18 @@ interface BannerContentSectionProps {
 }
 
 const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }: BannerContentSectionProps) => {
+  const { id: workId } = useParams();
+  const { user } = useAuth();
+  const { images } = useBannerImages(workId, user?.id);
+
+  // Filter attachments by section
+  const introAttachments = images.filter(img => img.section === 'introduction').sort((a, b) => a.display_order - b.display_order);
+  const objectivesAttachments = images.filter(img => img.section === 'objectives').sort((a, b) => a.display_order - b.display_order);
+  const methodologyAttachments = images.filter(img => img.section === 'methodology').sort((a, b) => a.display_order - b.display_order);
+  const resultsAttachments = images.filter(img => img.section === 'results').sort((a, b) => a.display_order - b.display_order);
+  const discussionAttachments = images.filter(img => img.section === 'discussion').sort((a, b) => a.display_order - b.display_order);
+  const conclusionAttachments = images.filter(img => img.section === 'conclusion').sort((a, b) => a.display_order - b.display_order);
+
   return (
     <div className="space-y-6">
       <div className="bg-muted/30 p-4 rounded-lg mb-6">
@@ -49,6 +65,10 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <SectionAttachmentIndicator 
+            sectionName="Introdução"
+            attachments={introAttachments}
+          />
           <RichTextEditor
             value={content.introduction}
             onChange={(data) => handleChange('introduction', data)}
@@ -69,6 +89,10 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <SectionAttachmentIndicator 
+            sectionName="Objetivos"
+            attachments={objectivesAttachments}
+          />
           <RichTextEditor
             value={content.objectives}
             onChange={(data) => handleChange('objectives', data)}
@@ -89,6 +113,10 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <SectionAttachmentIndicator 
+            sectionName="Metodologia"
+            attachments={methodologyAttachments}
+          />
           <RichTextEditor
             value={content.methodology}
             onChange={(data) => handleChange('methodology', data)}
@@ -113,6 +141,10 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <SectionAttachmentIndicator 
+            sectionName="Resultados"
+            attachments={resultsAttachments}
+          />
           <RichTextEditor
             value={content.results}
             onChange={(data) => handleChange('results', data)}
@@ -136,6 +168,10 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <SectionAttachmentIndicator 
+            sectionName="Discussão"
+            attachments={discussionAttachments}
+          />
           <RichTextEditor
             value={content.discussion}
             onChange={(data) => handleChange('discussion', data)}
@@ -156,6 +192,10 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <SectionAttachmentIndicator 
+            sectionName="Conclusão"
+            attachments={conclusionAttachments}
+          />
           <RichTextEditor
             value={content.conclusion}
             onChange={(data) => handleChange('conclusion', data)}
