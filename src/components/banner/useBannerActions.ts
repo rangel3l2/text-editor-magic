@@ -17,7 +17,13 @@ export const useBannerActions = (
   const handleGeneratePDF = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
-        body: { content: bannerContent }
+        body: { 
+          content: {
+            ...bannerContent,
+            work_id: id, // ID do trabalho
+            user_id: user?.id, // ID do usuário
+          }
+        }
       });
 
       if (error) throw error;
@@ -91,7 +97,13 @@ export const useBannerActions = (
   const handleShare = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
-        body: { content: bannerContent }
+        body: { 
+          content: {
+            ...bannerContent,
+            work_id: id,
+            user_id: user?.id,
+          }
+        }
       });
 
       if (error) throw error;
