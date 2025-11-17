@@ -113,7 +113,7 @@ export const useBannerImages = (workId: string | undefined, userId: string | und
           user_id: userId,
           storage_path: uploadData.path,
           display_order: images.length,
-          caption: `Figura ${images.length + 1} - Descreva aqui`,
+          caption: '',
           original_width: img.width,
           original_height: img.height,
           dpi: dpi
