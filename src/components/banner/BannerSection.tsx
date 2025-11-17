@@ -41,6 +41,7 @@ const BannerSection = ({
   };
 
   const handleImageDragStart = (e: React.DragEvent) => {
+    e.stopPropagation();
     const target = e.target as HTMLElement;
     // Procura o container arrastável mais próximo
     const container = target.closest('.attachment-container');
@@ -56,6 +57,7 @@ const BannerSection = ({
   };
 
   const handleImageDragEnd = (e: React.DragEvent) => {
+    e.stopPropagation();
     const target = e.target as HTMLElement;
     const container = target.closest('.attachment-container');
     if (container) {
@@ -65,6 +67,7 @@ const BannerSection = ({
   };
 
   const handleImageDragOver = (e: React.DragEvent) => {
+    e.stopPropagation();
     const target = e.target as HTMLElement;
     const container = target.closest('.attachment-container');
     if (container && draggedImageId) {
@@ -75,6 +78,7 @@ const BannerSection = ({
 
   const handleImageDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     e.stopPropagation();
     
     const target = e.target as HTMLElement;
