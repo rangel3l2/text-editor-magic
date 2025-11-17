@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import RichTextEditor from '../RichTextEditor';
 import editorConfig from '@/config/editorConfig';
-import BannerImagesSection from './images/BannerImagesSection';
 import BannerTableEditor from './tables/BannerTableEditor';
 import BannerChartEditor from './charts/BannerChartEditor';
 
@@ -18,11 +17,9 @@ interface BannerContentSectionProps {
   };
   handleChange: (field: string, data: string) => void;
   onImageUploadFromEditor?: (file: File) => void;
-  pendingImageFile?: File | null;
-  onImageProcessed?: () => void;
 }
 
-const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor, pendingImageFile, onImageProcessed }: BannerContentSectionProps) => {
+const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }: BannerContentSectionProps) => {
   return (
     <div className="space-y-6">
       <div className="bg-muted/30 p-4 rounded-lg mb-6">
@@ -110,12 +107,6 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor, 
         </CardContent>
       </Card>
 
-      {/* Images Section for Methodology */}
-      <BannerImagesSection 
-        pendingImageFile={pendingImageFile}
-        onImageProcessed={onImageProcessed}
-      />
-
       <Card>
         <CardHeader>
           <CardTitle>Resultados</CardTitle>
@@ -138,9 +129,6 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor, 
           />
         </CardContent>
       </Card>
-
-      {/* Images Section for Results */}
-      <BannerImagesSection />
 
       <Card>
         <CardHeader>

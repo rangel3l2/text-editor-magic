@@ -18,6 +18,7 @@ import { useWorkAutoSave } from "./banner/hooks/useWorkAutoSave";
 import BannerTemplateSelector from "./banner/templates/BannerTemplateSelector";
 import type { BannerTemplatePreset } from "@/hooks/useBannerTemplates";
 import type { LogoConfig } from "./banner/header/LogoUpload";
+import ImageManagerSidebar from "./banner/ImageManagerSidebar";
 
 const BannerEditor = () => {
   const { user } = useAuth();
@@ -187,6 +188,10 @@ const BannerEditor = () => {
           />
         </div>
       </BannerLayout>
+      <ImageManagerSidebar 
+        pendingImageFile={pendingImageFile}
+        onImageProcessed={handleImageProcessed}
+      />
     </>
   );
 };
