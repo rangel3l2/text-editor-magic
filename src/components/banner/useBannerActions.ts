@@ -22,28 +22,49 @@ export const useBannerActions = (
 
       if (error) throw error;
 
-      // Decodificar base64 usando API nativa do navegador
-      const binaryString = atob(data.pdf);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+      if (data?.pdf) {
+        // Decodificar base64 usando API nativa do navegador
+        const binaryString = atob(data.pdf);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const pdfBlob = new Blob([bytes], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(pdfBlob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'banner-academico.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        toast({
+          title: "PDF gerado",
+          description: "Seu banner acadêmico foi exportado com sucesso",
+          duration: 3000,
+        });
+      } else if (data?.latex) {
+        // Fallback: baixar o código LaTeX quando a compilação falhar
+        const texBlob = new Blob([data.latex], { type: 'application/x-tex' });
+        const url = window.URL.createObjectURL(texBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'banner.tex';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        toast({
+          title: "LaTeX gerado",
+          description: "A compilação falhou agora. Baixamos o arquivo .tex para você compilar depois.",
+          duration: 4000,
+        });
+      } else {
+        throw new Error('Resposta inesperada da função de geração de PDF');
       }
-      const pdfBlob = new Blob([bytes], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(pdfBlob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'banner-academico.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast({
-        title: "PDF gerado",
-        description: "Seu banner acadêmico foi exportado com sucesso",
-        duration: 3000,
-      });
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast({
@@ -62,42 +83,78 @@ export const useBannerActions = (
 
       if (error) throw error;
 
-      // Decodificar base64 usando API nativa do navegador
-      const binaryString = atob(data.pdf);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const pdfBlob = new Blob([bytes], { type: 'application/pdf' });
-      const file = new File([pdfBlob], 'banner-academico.pdf', { type: 'application/pdf' });
+      if (data?.pdf) {
+        // Decodificar base64 usando API nativa do navegador
+        const binaryString = atob(data.pdf);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const pdfBlob = new Blob([bytes], { type: 'application/pdf' });
+        const file = new File([pdfBlob], 'banner-academico.pdf', { type: 'application/pdf' });
 
-      if (navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Banner Acadêmico',
-          text: 'Compartilhar banner acadêmico'
-        });
-        
-        toast({
-          title: "Compartilhamento iniciado",
-          description: "Escolha como deseja compartilhar seu banner",
-          duration: 3000,
-        });
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'Banner Acadêmico',
+            text: 'Compartilhar banner acadêmico'
+          });
+          
+          toast({
+            title: "Compartilhamento iniciado",
+            description: "Escolha como deseja compartilhar seu banner",
+            duration: 3000,
+          });
+        } else {
+          const url = window.URL.createObjectURL(pdfBlob);
+          const tempLink = document.createElement('a');
+          tempLink.href = url;
+          tempLink.download = 'banner-academico.pdf';
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          document.body.removeChild(tempLink);
+          window.URL.revokeObjectURL(url);
+          
+          toast({
+            title: "Download iniciado",
+            description: "O arquivo foi preparado para download no seu computador",
+            duration: 3000,
+          });
+        }
+      } else if (data?.latex) {
+        // Fallback: compartilhar/baixar o .tex quando a compilação falhar
+        const texBlob = new Blob([data.latex], { type: 'application/x-tex' });
+        const file = new File([texBlob], 'banner.tex', { type: 'application/x-tex' });
+
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: 'LaTeX do Banner',
+            text: 'LaTeX gerado para compilação posterior'
+          });
+          toast({
+            title: "LaTeX compartilhado",
+            description: "A compilação falhou. Compartilhamos o .tex para você",
+            duration: 3000,
+          });
+        } else {
+          const url = window.URL.createObjectURL(texBlob);
+          const tempLink = document.createElement('a');
+          tempLink.href = url;
+          tempLink.download = 'banner.tex';
+          document.body.appendChild(tempLink);
+          tempLink.click();
+          document.body.removeChild(tempLink);
+          window.URL.revokeObjectURL(url);
+
+          toast({
+            title: "LaTeX gerado",
+            description: "Baixamos o .tex porque a compilação falhou agora",
+            duration: 3000,
+          });
+        }
       } else {
-        const url = window.URL.createObjectURL(pdfBlob);
-        const tempLink = document.createElement('a');
-        tempLink.href = url;
-        tempLink.download = 'banner-academico.pdf';
-        document.body.appendChild(tempLink);
-        tempLink.click();
-        document.body.removeChild(tempLink);
-        window.URL.revokeObjectURL(url);
-        
-        toast({
-          title: "Download iniciado",
-          description: "O arquivo foi preparado para download no seu computador",
-          duration: 3000,
-        });
+        throw new Error('Resposta inesperada da função de geração de PDF');
       }
     } catch (error) {
       console.error('Error sharing document:', error);
