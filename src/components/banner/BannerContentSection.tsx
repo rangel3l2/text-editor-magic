@@ -26,7 +26,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
   const { user } = useAuth();
   const { images } = useBannerImages(workId, user?.id);
   const [editorInstances, setEditorInstances] = useState<Record<string, any>>({});
-  const [pendingInsertion, setPendingInsertion] = useState<{ sectionId: string; type: 'figura' | 'grafico' | 'tabela' } | null>(null);
+  const [pendingInsertion, setPendingInsertion] = useState<{ sectionId: string; type: 'figura' | 'grafico' | 'tabela'; placeholderId?: string } | null>(null);
   const [selectionPaths, setSelectionPaths] = useState<Record<string, number[]>>({});
 
   // Filter attachments by section
@@ -41,13 +41,13 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
     setEditorInstances(prev => ({ ...prev, [sectionId]: editor }));
   };
 
-  const handleRequestAttachmentInsertion = (sectionId: string, payload: { type: 'figura' | 'grafico' | 'tabela'; selectionPath: number[] }) => {
-    console.log('📍 BannerContentSection recebeu requisição:', { sectionId, type: payload.type, path: payload.selectionPath });
-    setPendingInsertion({ sectionId, type: payload.type });
+  const handleRequestAttachmentInsertion = (sectionId: string, payload: { type: 'figura' | 'grafico' | 'tabela'; selectionPath: number[]; placeholderId?: string }) => {
+    console.log('📍 BannerContentSection recebeu requisição:', { sectionId, type: payload.type, path: payload.selectionPath, placeholderId: payload.placeholderId });
+    setPendingInsertion({ sectionId, type: payload.type, placeholderId: payload.placeholderId });
     setSelectionPaths(prev => ({ ...prev, [sectionId]: payload.selectionPath }));
     console.log('💾 Path salvo para seção:', sectionId, '→', payload.selectionPath);
     const event = new CustomEvent('openAttachmentsManager', { 
-      detail: { type: payload.type, sectionId } 
+      detail: { type: payload.type, sectionId, placeholderId: payload.placeholderId } 
     });
     window.dispatchEvent(event);
     console.log('📤 Evento openAttachmentsManager disparado');
@@ -57,8 +57,8 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
   useEffect(() => {
     const handleAttachmentSelected = (event: CustomEvent) => {
       console.log('📨 Evento attachmentSelected recebido:', event.detail);
-      const { sectionId, attachmentId, attachmentType } = event.detail;
-      insertAttachmentMarker(sectionId, attachmentId, attachmentType);
+      const { sectionId, attachmentId, attachmentType, placeholderId } = event.detail;
+      insertAttachmentMarker(sectionId, attachmentId, attachmentType, placeholderId);
     };
 
     console.log('👂 Listener attachmentSelected registrado. Editores disponíveis:', Object.keys(editorInstances));
@@ -69,8 +69,8 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
     };
   }, [editorInstances]);
 
-  const insertAttachmentMarker = (sectionId: string, attachmentId: string, attachmentType: string) => {
-    console.log('🎯 Inserindo marcador de anexo:', { sectionId, attachmentId, attachmentType });
+  const insertAttachmentMarker = (sectionId: string, attachmentId: string, attachmentType: string, placeholderId?: string) => {
+    console.log('🎯 Inserindo marcador de anexo:', { sectionId, attachmentId, attachmentType, placeholderId });
     const editor = editorInstances[sectionId];
     if (!editor) {
       console.error('❌ Editor não encontrado para seção:', sectionId, 'Editores disponíveis:', Object.keys(editorInstances));
@@ -79,9 +79,26 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
 
     const typeLabel = attachmentType === 'figura' ? 'Imagem' : attachmentType === 'grafico' ? 'Gráfico' : 'Tabela';
     const typeIcon = attachmentType === 'figura' ? '🖼️' : attachmentType === 'grafico' ? '📊' : '📋';
+    const finalToken = `[[${attachmentType}:${attachmentId}]]`;
 
-    console.log('✏️ Iniciando mudança no modelo do editor...');
-    editor.model.change(writer => {
+    // 1) Tenta substituir placeholder exato no HTML (garante a posição precisa onde o usuário clicou)
+    if (placeholderId) {
+      const ph = `[[placeholder:${placeholderId}]]`;
+      const current = editor.getData();
+      if (current.includes(ph)) {
+        const replaced = current.replace(ph, `${typeIcon} ${typeLabel} ${finalToken}`);
+        editor.setData(replaced);
+        console.log('✅ Placeholder substituído com sucesso');
+        setSelectionPaths(prev => ({ ...prev, [sectionId]: [] }));
+        return;
+      } else {
+        console.warn('⚠️ Placeholder não encontrado no HTML. Fallback para path salvo.');
+      }
+    }
+
+    // 2) Fallback: usa path salvo para inserir no modelo
+    console.log('✏️ Iniciando mudança no modelo do editor (fallback)...');
+    editor.model.change((writer: any) => {
       const root = editor.model.document.getRoot();
       const path = selectionPaths[sectionId];
       console.log('📍 Path recuperado para inserção:', path);
@@ -92,8 +109,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
       } else {
         console.log('⚠️ Path não encontrado ou vazio, inserindo na posição atual');
       }
-      const token = `[[${attachmentType}:${attachmentId}]]`;
-      writer.insertText(`${typeIcon} ${typeLabel} aqui ${token}`, editor.model.document.selection);
+      writer.insertText(`${typeIcon} ${typeLabel} ${finalToken}`, editor.model.document.selection);
       console.log('✅ Marcador (texto) inserido com sucesso!');
     });
 

@@ -28,7 +28,7 @@ interface RichTextEditorProps {
   sectionName?: string;
   onCustomImageUpload?: (file: File) => void;
   onEditorReady?: (editor: any) => void;
-  onRequestAttachmentInsertion?: (payload: { type: 'figura' | 'grafico' | 'tabela'; selectionPath: number[] }) => void;
+  onRequestAttachmentInsertion?: (payload: { type: 'figura' | 'grafico' | 'tabela'; selectionPath: number[]; placeholderId?: string }) => void;
 }
 
 const RichTextEditor = ({ 
@@ -199,8 +199,13 @@ const RichTextEditor = ({
               }
               const pos = editorInstance.model.document.selection.getFirstPosition();
               const path = pos && (pos as any).path ? (pos as any).path : [];
-              console.log('🖼️ Solicitando inserção de imagem. Path do cursor:', path, 'Seção:', sectionName);
-              onRequestAttachmentInsertion({ type: 'figura', selectionPath: path });
+              const placeholderId = `ph_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+              editorInstance.model.change((writer: any) => {
+                const tokenText = `[[placeholder:${placeholderId}]]`;
+                writer.insertText(tokenText, editorInstance.model.document.selection);
+              });
+              console.log('🖼️ Solicitando inserção de imagem. Path do cursor:', path, 'Seção:', sectionName, 'Placeholder:', placeholderId);
+              onRequestAttachmentInsertion({ type: 'figura', selectionPath: path, placeholderId });
             }}>
               <FileImage className="mr-2 h-4 w-4" />
               <span>Inserir Imagem</span>
@@ -212,8 +217,13 @@ const RichTextEditor = ({
               }
               const pos = editorInstance.model.document.selection.getFirstPosition();
               const path = pos && (pos as any).path ? (pos as any).path : [];
-              console.log('📊 Solicitando inserção de gráfico. Path do cursor:', path, 'Seção:', sectionName);
-              onRequestAttachmentInsertion({ type: 'grafico', selectionPath: path });
+              const placeholderId = `ph_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+              editorInstance.model.change((writer: any) => {
+                const tokenText = `[[placeholder:${placeholderId}]]`;
+                writer.insertText(tokenText, editorInstance.model.document.selection);
+              });
+              console.log('📊 Solicitando inserção de gráfico. Path do cursor:', path, 'Seção:', sectionName, 'Placeholder:', placeholderId);
+              onRequestAttachmentInsertion({ type: 'grafico', selectionPath: path, placeholderId });
             }}>
               <BarChart3 className="mr-2 h-4 w-4" />
               <span>Inserir Gráfico</span>
@@ -225,8 +235,13 @@ const RichTextEditor = ({
               }
               const pos = editorInstance.model.document.selection.getFirstPosition();
               const path = pos && (pos as any).path ? (pos as any).path : [];
-              console.log('📋 Solicitando inserção de tabela. Path do cursor:', path, 'Seção:', sectionName);
-              onRequestAttachmentInsertion({ type: 'tabela', selectionPath: path });
+              const placeholderId = `ph_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+              editorInstance.model.change((writer: any) => {
+                const tokenText = `[[placeholder:${placeholderId}]]`;
+                writer.insertText(tokenText, editorInstance.model.document.selection);
+              });
+              console.log('📋 Solicitando inserção de tabela. Path do cursor:', path, 'Seção:', sectionName, 'Placeholder:', placeholderId);
+              onRequestAttachmentInsertion({ type: 'tabela', selectionPath: path, placeholderId });
             }}>
               <Table2 className="mr-2 h-4 w-4" />
               <span>Inserir Tabela</span>

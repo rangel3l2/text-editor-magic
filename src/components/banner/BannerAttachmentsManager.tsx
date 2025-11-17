@@ -27,7 +27,7 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
   const [editingImage, setEditingImage] = useState<BannerImage | null>(null);
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('images');
-  const [selectionMode, setSelectionMode] = useState<{ sectionId: string; type: 'figura' | 'grafico' | 'tabela' } | null>(null);
+  const [selectionMode, setSelectionMode] = useState<{ sectionId: string; type: 'figura' | 'grafico' | 'tabela'; placeholderId?: string } | null>(null);
   const { toast } = useToast();
 
   const {
@@ -43,8 +43,8 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
   // Escutar evento de requisição de inserção de anexo
   useEffect(() => {
     const handleOpenAttachmentsManager = (event: CustomEvent) => {
-      const { type, sectionId } = event.detail;
-      setSelectionMode({ sectionId, type });
+      const { type, sectionId, placeholderId } = event.detail;
+      setSelectionMode({ sectionId, type, placeholderId });
       
       // Abrir na aba correta
       if (type === 'figura') setActiveTab('images');
@@ -108,7 +108,8 @@ const BannerAttachmentsManager = ({ pendingImageFile, onImageProcessed }: Banner
         detail: {
           sectionId: selectionMode.sectionId,
           attachmentId: imageId,
-          attachmentType: imageType
+          attachmentType: imageType,
+          placeholderId: selectionMode.placeholderId
         }
       });
       window.dispatchEvent(event);
