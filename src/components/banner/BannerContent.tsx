@@ -41,8 +41,6 @@ const BannerContent = ({
             content={content} 
             handleChange={handleChange}
             onImageUploadFromEditor={onImageUploadFromEditor}
-            pendingImageFile={pendingImageFile}
-            onImageProcessed={onImageProcessed}
           />
         </TabsContent>
       </Tabs>
