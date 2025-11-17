@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import ImageCropDialog, { ImageConfig } from '../ImageCropDialog';
 import { useToast } from "@/components/ui/use-toast";
@@ -31,6 +31,18 @@ const ImageSettings = ({
     if (!selectedImage) return;
 
     try {
+      // Garantir que o usuário está autenticado (RLS exige user_id)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Faça login",
+          description: "Você precisa estar logado para salvar os ajustes da imagem.",
+          variant: "destructive",
+          duration: 3000,
+        });
+        return;
+      }
+
       setImageSettings(prev => ({
         ...prev,
         [selectedImage]: config
@@ -40,7 +52,8 @@ const ImageSettings = ({
         .from('banner_images')
         .upsert({
           image_url: selectedImage,
-          position_data: config as Json
+          position_data: config as Json,
+          user_id: user.id,
         });
 
       if (error) throw error;
@@ -67,6 +80,7 @@ const ImageSettings = ({
       <DialogContent className="max-w-[95vw] w-[800px] max-h-[95vh] p-6">
         <VisuallyHidden>
           <DialogTitle>Configurações da Imagem</DialogTitle>
+          <DialogDescription>Ajuste de posição, recorte e alinhamento da imagem</DialogDescription>
         </VisuallyHidden>
         <ImageCropDialog
           imageUrl={selectedImage || ''}
