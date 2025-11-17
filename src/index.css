@@ -152,6 +152,21 @@
   hyphens: auto !important;
 }
 
+/* Estilos específicos para banner científico */
+.banner-section h2 {
+  font-family: 'Times New Roman', Times, serif !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important;
+  text-decoration: underline !important;
+}
+
+.banner-section p, .banner-section div {
+  font-family: 'Times New Roman', Times, serif !important;
+  font-size: 12pt !important;
+  line-height: 1.5 !important;
+  text-align: justify !important;
+}
+
 /* Estilo A4 para preview acadêmico - Container de páginas */
 .academic-preview-container {
   background: #f5f5f5;
