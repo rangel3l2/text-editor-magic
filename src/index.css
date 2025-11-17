@@ -320,13 +320,32 @@
   margin-bottom: 1cm;
 }
 
+/* Título e cabeçalho devem ocupar toda a largura */
 .banner-tiptap-content h1 {
   font-size: 28pt !important;
   font-weight: bold !important;
   text-align: center !important;
   text-transform: uppercase !important;
-  margin: 0 !important;
+  margin: 0 0 1cm 0 !important;
   column-span: all;
+  -webkit-column-span: all;
+  display: block;
+  width: 100%;
+}
+
+/* Autores/Docentes/Discentes devem ocupar toda a largura */
+.banner-tiptap-content .authors,
+.banner-tiptap-content .banner-authors,
+.banner-tiptap-content p.authors,
+.banner-tiptap-content .docente,
+.banner-tiptap-content .discentes {
+  column-span: all;
+  -webkit-column-span: all;
+  text-align: center !important;
+  font-size: 11pt !important;
+  margin: 0.5cm 0 1cm 0 !important;
+  display: block;
+  width: 100%;
 }
 
 .banner-tiptap-content h2 {
@@ -342,11 +361,14 @@
 
 .banner-tiptap-content .banner-header {
   column-span: all;
+  -webkit-column-span: all;
   break-inside: avoid;
   page-break-inside: avoid;
   margin-bottom: 1cm;
   padding-bottom: 1cm;
   border-bottom: 3px solid #000;
+  display: block;
+  width: 100%;
 }
 
 .tiptap-editor-content {
