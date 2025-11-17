@@ -1,9 +1,16 @@
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 import { useValidationContext } from '@/contexts/ValidationContext';
+import { useAISettings } from '@/hooks/useAISettings';
 
 const ValidationToggleButton = () => {
   const { isValidationVisible, toggleValidation } = useValidationContext();
+  const { aiEnabled, isLoading } = useAISettings();
+
+  // Don't render if AI is disabled or still loading
+  if (isLoading || !aiEnabled) {
+    return null;
+  }
 
   return (
     <Button

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AdminUserManagement from "@/components/admin/AdminUserManagement";
 import AcademicWorkTypeManagement from "@/components/admin/AcademicWorkTypeManagement";
 import { SharedBannerTemplates } from "@/components/admin/SharedBannerTemplates";
+import AISettingsManagement from "@/components/admin/AISettingsManagement";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsAdminOrModerator } from "@/hooks/useUserRole";
@@ -50,6 +51,7 @@ const AdminSettings = () => {
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="work-types">Tipos de Trabalho</TabsTrigger>
           <TabsTrigger value="banner-templates">Templates de Banner</TabsTrigger>
+          <TabsTrigger value="ai-settings">Configurações de IA</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -76,6 +78,10 @@ const AdminSettings = () => {
 
         <TabsContent value="banner-templates">
           <SharedBannerTemplates />
+        </TabsContent>
+
+        <TabsContent value="ai-settings">
+          <AISettingsManagement />
         </TabsContent>
       </Tabs>
     </div>
