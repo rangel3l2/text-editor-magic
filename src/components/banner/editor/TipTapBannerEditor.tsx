@@ -7,7 +7,7 @@ import { Color } from '@tiptap/extension-color';
 import { Button } from '@/components/ui/button';
 import { X, Save, Bold, Italic, List, AlignCenter, AlignLeft, AlignRight } from 'lucide-react';
 import { Toggle } from '@/components/ui/toggle';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface TipTapBannerEditorProps {
   initialContent: string;
@@ -22,6 +22,10 @@ const TipTapBannerEditor = ({
   onSave, 
   onClose 
 }: TipTapBannerEditorProps) => {
+  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
+  const [resizing, setResizing] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
+  
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -43,14 +47,48 @@ const TipTapBannerEditor = ({
     editorProps: {
       attributes: {
         class: 'tiptap-editor-content focus:outline-none',
+        'data-column-layout': columnLayout,
       },
       handleDOMEvents: {
         mousedown: (view, event) => {
           const target = event.target as HTMLElement;
+          
+          // Selecionar imagem ao clicar
           if (target.tagName === 'IMG') {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Remove seleção anterior
+            document.querySelectorAll('.tiptap-image-selected').forEach(img => {
+              img.classList.remove('tiptap-image-selected');
+            });
+            
+            // Adiciona seleção na imagem clicada
             target.classList.add('tiptap-image-selected');
-            target.setAttribute('contenteditable', 'false');
-            return false;
+            setSelectedImage(target as HTMLImageElement);
+            return true;
+          } else {
+            // Remove seleção se clicar fora
+            document.querySelectorAll('.tiptap-image-selected').forEach(img => {
+              img.classList.remove('tiptap-image-selected');
+            });
+            setSelectedImage(null);
+          }
+          return false;
+        },
+        dblclick: (view, event) => {
+          const target = event.target as HTMLElement;
+          
+          // Duplo clique em imagem para editar tamanho
+          if (target.tagName === 'IMG') {
+            event.preventDefault();
+            const currentWidth = target.style.width || '100%';
+            const newWidth = prompt('Digite a largura da imagem (ex: 50%, 300px):', currentWidth);
+            if (newWidth) {
+              target.style.width = newWidth;
+              target.style.height = 'auto';
+            }
+            return true;
           }
           return false;
         }
@@ -63,6 +101,36 @@ const TipTapBannerEditor = ({
       editor.commands.setContent(initialContent);
     }
   }, [editor, initialContent]);
+
+  // Adicionar controles de redimensionamento nas imagens
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    const handleImageResize = (e: MouseEvent) => {
+      if (!selectedImage || !resizing) return;
+      
+      const rect = selectedImage.getBoundingClientRect();
+      const newWidth = e.clientX - rect.left;
+      
+      if (newWidth > 50) {
+        selectedImage.style.width = `${newWidth}px`;
+        selectedImage.style.height = 'auto';
+      }
+    };
+
+    const handleMouseUp = () => {
+      setResizing(false);
+    };
+
+    if (resizing) {
+      document.addEventListener('mousemove', handleImageResize);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleImageResize);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [selectedImage, resizing]);
 
   const handleSave = () => {
     if (editor) {
@@ -142,6 +210,7 @@ const TipTapBannerEditor = ({
         <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-100 p-2 sm:p-4 md:p-8">
           <div className="max-w-full mx-auto">
             <div 
+              ref={editorRef}
               className="bg-white shadow-2xl mx-auto banner-content"
               style={{
                 width: '90cm',
@@ -150,22 +219,22 @@ const TipTapBannerEditor = ({
                 padding: '2cm',
                 transform: 'scale(0.4)',
                 transformOrigin: 'top center',
-                fontFamily: "'Times New Roman', serif",
-                fontSize: '12pt',
-                lineHeight: '1.5',
               }}
             >
               <EditorContent 
                 editor={editor}
-                className="tiptap-columns"
-                style={{
-                  columnCount: columnLayout === '3' ? 3 : 2,
-                  columnGap: '3rem',
-                }}
+                className="banner-tiptap-content"
               />
             </div>
           </div>
         </div>
+        
+        {/* Dica de uso */}
+        {selectedImage && (
+          <div className="shrink-0 p-2 bg-muted/50 border-t text-sm text-center text-muted-foreground">
+            💡 Duplo clique na imagem para alterar o tamanho
+          </div>
+        )}
       </div>
     </div>
   );
