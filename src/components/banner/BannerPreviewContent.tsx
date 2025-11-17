@@ -206,25 +206,25 @@ const BannerPreviewContent = ({
 
   return (
     <>
-      <div className="w-full h-full overflow-auto p-4 flex flex-col items-center justify-start bg-gray-100">
+      <div className="w-full h-full overflow-y-auto overflow-x-hidden p-4 flex flex-col items-center justify-start bg-gray-100">
         {editable && (
-          <div className="mb-4">
-            <Button onClick={handleOpenEditor} variant="default">
-              <Edit className="w-4 h-4 mr-2" />
+          <div className="mb-4 sticky top-4 z-10">
+            <Button onClick={handleOpenEditor} variant="default" size="lg">
+              <Edit className="w-5 h-5 mr-2" />
               Editar Banner
             </Button>
           </div>
         )}
         
         <div 
-          className="bg-white shadow-lg"
+          className="bg-white shadow-lg mx-auto"
           style={{
             width: '90cm',
-            height: '120cm',
+            maxWidth: '100%',
+            minHeight: '120cm',
             padding: '2cm',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            margin: '0 auto',
-            transform: 'scale(0.6)',
+            transform: 'scale(0.5)',
             transformOrigin: 'top center',
             display: 'flex',
             flexDirection: 'column',

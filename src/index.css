@@ -292,65 +292,83 @@
 }
 
 /* TipTap Editor Styles */
-.tiptap-editor {
+.tiptap-editor-content {
   outline: none;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
-.tiptap-editor p {
+.tiptap-editor-content p {
   margin: 0.5em 0;
   text-align: justify;
   font-family: 'Times New Roman', Times, serif;
   font-size: 12pt;
   line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-.tiptap-editor h1,
-.tiptap-editor h2,
-.tiptap-editor h3 {
+.tiptap-editor-content h1,
+.tiptap-editor-content h2,
+.tiptap-editor-content h3 {
   font-weight: bold;
   margin: 1em 0 0.5em 0;
   text-align: center;
   font-family: 'Times New Roman', Times, serif;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
-.tiptap-editor h1 {
+.tiptap-editor-content h1 {
   font-size: 16pt;
 }
 
-.tiptap-editor h2 {
+.tiptap-editor-content h2 {
   font-size: 14pt;
 }
 
-.tiptap-editor h3 {
+.tiptap-editor-content h3 {
   font-size: 11pt;
 }
 
-.tiptap-editor img {
+.tiptap-editor-content .tiptap-image {
   max-width: 100%;
   height: auto;
   display: block;
-  margin: 1cm auto;
-  cursor: move;
+  margin: 0.5cm auto;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
 }
 
-.tiptap-editor ul,
-.tiptap-editor ol {
+.tiptap-editor-content .tiptap-image:hover {
+  border-color: hsl(var(--primary));
+}
+
+.tiptap-editor-content .tiptap-image.ProseMirror-selectednode {
+  border-color: hsl(var(--primary));
+  outline: none;
+}
+
+.tiptap-editor-content ul,
+.tiptap-editor-content ol {
   padding-left: 1.5em;
   margin: 0.5em 0;
 }
 
-.tiptap-editor li {
+.tiptap-editor-content li {
   margin: 0.25em 0;
 }
 
 /* Banner Section Styles within TipTap */
-.tiptap-editor .banner-section {
+.tiptap-editor-content .banner-section {
   page-break-inside: avoid;
   break-inside: avoid;
   margin-bottom: 1cm;
 }
 
-.tiptap-editor .banner-section h3 {
+.tiptap-editor-content .banner-section h3 {
   font-size: 11pt;
   font-weight: bold;
   text-align: center;
@@ -358,8 +376,14 @@
   color: #000;
 }
 
-.tiptap-editor .banner-section p {
+.tiptap-editor-content .banner-section p {
   text-align: justify;
   margin: 0.3cm 0;
   line-height: 1.5;
+}
+
+/* Evitar scroll horizontal no editor */
+.ProseMirror {
+  overflow-x: hidden;
+  max-width: 100%;
 }
