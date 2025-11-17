@@ -103,11 +103,33 @@ const BannerSection = ({
   return (
     <div
       draggable
-      onDragStart={() => onDragStart(index)}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => onDrop(e, index)}
-      className="banner-section relative cursor-move transition-colors break-inside-avoid-column mb-4"
+      onDragStart={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.attachment-container')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        onDragStart(index);
+      }}
+      onDragOver={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.attachment-container')) {
+          // Deixe o gerenciamento para o handler interno de imagens
+          return;
+        }
+        onDragOver(e);
+      }}
+      onDragLeave={(e) => onDragLeave(e)}
+      onDrop={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.attachment-container')) {
+          // Drop tratado internamente para imagens
+          return;
+        }
+        onDrop(e, index);
+      }}
+      className="banner-section relative transition-colors break-inside-avoid-column mb-4"
       style={{
         fontFamily: 'Times New Roman, serif',
         fontSize: '10pt',
