@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { sanitizeHtml } from '@/utils/sanitize';
 
 interface BannerSectionProps {
@@ -28,7 +28,37 @@ const BannerSection = ({
 }: BannerSectionProps) => {
   const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
 
+  const contentRef = useRef<HTMLDivElement>(null);
   const processedHtml = section.innerHTML;
+
+  useEffect(() => {
+    const root = contentRef.current;
+    if (!root) return;
+    const imgs = Array.from(root.querySelectorAll('img')) as HTMLImageElement[];
+    imgs.forEach((img) => {
+      const parent = img.parentElement as HTMLElement | null;
+      if (!parent) return;
+      if (!parent.classList.contains('attachment-container')) {
+        const children = Array.from(parent.children);
+        const imgIndex = children.indexOf(img);
+        const hasBefore = imgIndex > 0 && children[imgIndex - 1].tagName === 'DIV';
+        const hasAfter = imgIndex < children.length - 1 && children[imgIndex + 1].tagName === 'DIV';
+        if (hasBefore && hasAfter) {
+          parent.classList.add('attachment-container');
+          parent.setAttribute(
+            'data-attachment-id',
+            img.getAttribute('data-attachment-id') ||
+              img.getAttribute('data-image-id') ||
+              img.getAttribute('data-image-url') ||
+              img.getAttribute('src') ||
+              ''
+          );
+          parent.setAttribute('draggable', 'true');
+          (parent as HTMLElement).style.cursor = 'move';
+        }
+      }
+    });
+  }, [processedHtml]);
 
   const handleClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -140,6 +170,7 @@ const BannerSection = ({
     >
       <div className="p-2 rounded">
         <div
+          ref={contentRef}
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(processedHtml) }}
           onClick={handleClick}
           onDragStart={handleImageDragStart}
