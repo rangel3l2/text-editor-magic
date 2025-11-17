@@ -13,6 +13,7 @@ interface BannerLayoutProps {
   content: any;
   onImageConfigChange: (imageId: string, config: any) => void;
   onLogoConfigChange?: (config: LogoConfig) => void;
+  onContentUpdate?: (field: string, value: string) => void;
 }
 
 const BannerLayout = ({ 
@@ -21,7 +22,8 @@ const BannerLayout = ({
   setPreviewOpen, 
   content, 
   onImageConfigChange,
-  onLogoConfigChange
+  onLogoConfigChange,
+  onContentUpdate
 }: BannerLayoutProps) => {
   return (
     <>
@@ -80,6 +82,7 @@ const BannerLayout = ({
               content={content}
               onImageConfigChange={onImageConfigChange}
               onLogoConfigChange={onLogoConfigChange}
+              onContentUpdate={onContentUpdate}
             />
           </div>
         </DialogContent>

@@ -4,6 +4,9 @@ import PreviewHeader from './preview/PreviewHeader';
 import PreviewColumns from './preview/PreviewColumns';
 import ImageSettings from './preview/ImageSettings';
 import BannerPreviewStyles from './preview/BannerPreviewStyles';
+import TipTapBannerEditor from './editor/TipTapBannerEditor';
+import { Button } from '@/components/ui/button';
+import { Edit } from 'lucide-react';
 import type { LogoConfig } from './header/LogoUpload';
 
 interface ImageSettingsConfig {
@@ -18,6 +21,7 @@ interface BannerPreviewContentProps {
   logoConfig?: LogoConfig;
   editable?: boolean;
   onLogoConfigChange?: (config: LogoConfig) => void;
+  onContentUpdate?: (html: string) => void;
 }
 
 const BannerPreviewContent = ({ 
@@ -27,13 +31,15 @@ const BannerPreviewContent = ({
   institutionName, 
   logoConfig,
   editable = false,
-  onLogoConfigChange
+  onLogoConfigChange,
+  onContentUpdate
 }: BannerPreviewContentProps) => {
   const [sections, setSections] = useState<HTMLElement[]>([]);
   const [draggedSection, setDraggedSection] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [imageSettings, setImageSettings] = useState<ImageSettingsConfig>({});
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   const parseSections = (html: string) => {
     const parser = new DOMParser();
@@ -92,6 +98,17 @@ const BannerPreviewContent = ({
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
     setIsImageDialogOpen(true);
+  };
+
+  const handleOpenEditor = () => {
+    setIsEditorOpen(true);
+  };
+
+  const handleSaveFromEditor = (html: string) => {
+    if (onContentUpdate) {
+      onContentUpdate(html);
+    }
+    setIsEditorOpen(false);
   };
 
   const getImageStyle = (imageUrl: string) => {
@@ -188,22 +205,32 @@ const BannerPreviewContent = ({
   const authors = doc.querySelector('.authors')?.innerHTML || '';
 
   return (
-    <div className="w-full h-full overflow-auto p-4 flex items-start justify-center bg-gray-100">
-      <div 
-        className="bg-white shadow-lg"
-        style={{
-          width: '90cm',
-          height: '120cm',
-          padding: '2cm',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-          margin: '0 auto',
-          transform: 'scale(0.6)',
-          transformOrigin: 'top center',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden'
-        }}
-      >
+    <>
+      <div className="w-full h-full overflow-auto p-4 flex flex-col items-center justify-start bg-gray-100">
+        {editable && (
+          <div className="mb-4">
+            <Button onClick={handleOpenEditor} variant="default">
+              <Edit className="w-4 h-4 mr-2" />
+              Editar Banner
+            </Button>
+          </div>
+        )}
+        
+        <div 
+          className="bg-white shadow-lg"
+          style={{
+            width: '90cm',
+            height: '120cm',
+            padding: '2cm',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            margin: '0 auto',
+            transform: 'scale(0.6)',
+            transformOrigin: 'top center',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }}
+        >
         <div className="banner-content flex-1 overflow-hidden">
           <PreviewHeader 
             institutionName={extractedInstitutionName}
@@ -233,16 +260,26 @@ const BannerPreviewContent = ({
         </div>
       </div>
 
-      <ImageSettings
-        selectedImage={selectedImage}
-        isImageDialogOpen={isImageDialogOpen}
-        setIsImageDialogOpen={setIsImageDialogOpen}
-        imageSettings={imageSettings}
-        setImageSettings={setImageSettings}
-      />
+        <ImageSettings
+          selectedImage={selectedImage}
+          isImageDialogOpen={isImageDialogOpen}
+          setIsImageDialogOpen={setIsImageDialogOpen}
+          imageSettings={imageSettings}
+          setImageSettings={setImageSettings}
+        />
 
-      <BannerPreviewStyles />
-    </div>
+        <BannerPreviewStyles />
+      </div>
+
+      {isEditorOpen && (
+        <TipTapBannerEditor
+          initialContent={previewHtml}
+          columnLayout={columnLayout}
+          onSave={handleSaveFromEditor}
+          onClose={() => setIsEditorOpen(false)}
+        />
+      )}
+    </>
   );
 };
 

@@ -290,3 +290,76 @@
     page-break-after: auto;
   }
 }
+
+/* TipTap Editor Styles */
+.tiptap-editor {
+  outline: none;
+}
+
+.tiptap-editor p {
+  margin: 0.5em 0;
+  text-align: justify;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+}
+
+.tiptap-editor h1,
+.tiptap-editor h2,
+.tiptap-editor h3 {
+  font-weight: bold;
+  margin: 1em 0 0.5em 0;
+  text-align: center;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.tiptap-editor h1 {
+  font-size: 16pt;
+}
+
+.tiptap-editor h2 {
+  font-size: 14pt;
+}
+
+.tiptap-editor h3 {
+  font-size: 11pt;
+}
+
+.tiptap-editor img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1cm auto;
+  cursor: move;
+}
+
+.tiptap-editor ul,
+.tiptap-editor ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.tiptap-editor li {
+  margin: 0.25em 0;
+}
+
+/* Banner Section Styles within TipTap */
+.tiptap-editor .banner-section {
+  page-break-inside: avoid;
+  break-inside: avoid;
+  margin-bottom: 1cm;
+}
+
+.tiptap-editor .banner-section h3 {
+  font-size: 11pt;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 0.3cm;
+  color: #000;
+}
+
+.tiptap-editor .banner-section p {
+  text-align: justify;
+  margin: 0.3cm 0;
+  line-height: 1.5;
+}
