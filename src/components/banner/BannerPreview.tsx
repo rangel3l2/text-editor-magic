@@ -64,7 +64,7 @@ const BannerPreview = ({ content, onImageConfigChange, onLogoConfigChange }: Ban
     };
 
     generatePreview();
-  }, [content, workId, user, toast]);
+  }, [content, workId, user?.id]);
 
   return (
     <Card className="w-full h-full bg-white overflow-auto">
