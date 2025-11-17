@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import TitleValidationFeedback from './TitleValidationFeedback';
 import { cleanHtmlTags } from '@/utils/latexProcessor';
+import { useAISettings } from '@/hooks/useAISettings';
 
 interface BannerHeaderSectionProps {
   content: {
@@ -36,6 +37,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
   const [validationAttempts, setValidationAttempts] = useState(0);
   const [lastValidationError, setLastValidationError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { aiEnabled, isLoading: isLoadingAISettings } = useAISettings();
 
   // Limpar feedback de validação quando o título muda significativamente
   useEffect(() => {
@@ -53,7 +55,27 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     }
   }, [content.title, titleValidation]);
 
+  // Limpar validação do título quando a IA for desativada
+  useEffect(() => {
+    if (!aiEnabled && !isLoadingAISettings) {
+      setTitleValidation(null);
+      setLastValidationError(null);
+      setValidationAttempts(0);
+      setIsValidatingTitle(false);
+    }
+  }, [aiEnabled, isLoadingAISettings]);
+
   const validateTitle = async (title: string) => {
+    // Aguardar carregamento das configurações de IA
+    if (isLoadingAISettings) {
+      return;
+    }
+    
+    // Não validar se a IA está desativada globalmente
+    if (!aiEnabled) {
+      return;
+    }
+    
     if (!title.trim()) return;
     
     setIsValidatingTitle(true);

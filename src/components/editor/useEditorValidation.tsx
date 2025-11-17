@@ -13,7 +13,7 @@ export const useEditorValidation = (sectionName: string, isValidationEnabled: bo
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [currentSection, setCurrentSection] = useState<string>('');
   const { toast } = useToast();
-  const { aiEnabled } = useAISettings();
+  const { aiEnabled, isLoading: isLoadingAISettings } = useAISettings();
   const validationTimeoutRef = useRef<NodeJS.Timeout>();
   const lastValidationRef = useRef<number>(0);
   const retryAttemptsRef = useRef<number>(0);
@@ -31,6 +31,12 @@ export const useEditorValidation = (sectionName: string, isValidationEnabled: bo
   }, [sectionName]);
 
   const validateContent = useCallback(async (content: string) => {
+    // Aguardar carregamento das configurações de IA
+    if (isLoadingAISettings) {
+      console.log('AI settings still loading - waiting');
+      return;
+    }
+    
     // Não validar se a IA está desativada globalmente
     if (!aiEnabled) {
       console.log('AI validation disabled globally - skipping');
@@ -258,6 +264,18 @@ export const useEditorValidation = (sectionName: string, isValidationEnabled: bo
       }
     };
   }, []);
+
+  // Limpar validações quando a IA for desativada
+  useEffect(() => {
+    if (!aiEnabled && !isLoadingAISettings) {
+      setValidationResult(null);
+      setErrorMessage(null);
+      setIsValidating(false);
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+      }
+    }
+  }, [aiEnabled, isLoadingAISettings]);
 
   return {
     validationResult,
