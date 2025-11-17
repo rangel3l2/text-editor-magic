@@ -8,6 +8,7 @@ import { useEditorValidation } from './editor/useEditorValidation';
 import { useEditorProgress } from './editor/useEditorProgress';
 import { cleanHtmlTags } from '@/utils/latexProcessor';
 import { useValidationContext } from '@/contexts/ValidationContext';
+import AttachmentInserter from './banner/AttachmentInserter';
 
 interface RichTextEditorProps {
   value: string;
@@ -18,6 +19,8 @@ interface RichTextEditorProps {
   placeholder?: string;
   sectionName?: string;
   onCustomImageUpload?: (file: File) => void;
+  onEditorReady?: (editor: any) => void;
+  onInsertAttachment?: (attachmentId: string, attachmentType: string) => void;
 }
 
 const RichTextEditor = ({ 
@@ -28,7 +31,9 @@ const RichTextEditor = ({
   config = {}, 
   placeholder,
   sectionName = '',
-  onCustomImageUpload
+  onCustomImageUpload,
+  onEditorReady,
+  onInsertAttachment
 }: RichTextEditorProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [editorInstance, setEditorInstance] = useState<any>(null);
@@ -152,13 +157,30 @@ const RichTextEditor = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="editor-container relative space-y-2">
+      {onInsertAttachment && sectionName && (
+        <div className="flex justify-start">
+          <AttachmentInserter
+            sectionId={sectionName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')}
+            onInsert={(attachmentId, attachmentType) => {
+              if (onInsertAttachment) {
+                onInsertAttachment(attachmentId, attachmentType);
+              }
+            }}
+          />
+        </div>
+      )}
+      
       <EditorCore
         value={value}
         onChange={handleEditorChange}
         onReady={(editor) => {
           setEditorInstance(editor);
           handleContentChange(value);
+          
+          if (onEditorReady) {
+            onEditorReady(editor);
+          }
         }}
         onError={(error) => {
           console.error('CKEditor error:', error);

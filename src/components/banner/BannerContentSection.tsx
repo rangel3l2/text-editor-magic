@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import RichTextEditor from '../RichTextEditor';
 import editorConfig from '@/config/editorConfig';
-import SectionAttachmentIndicator from './SectionAttachmentIndicator';
 import { useBannerImages } from '@/hooks/useBannerImages';
 import { useAuth } from '@/contexts/AuthContext';
 import { useParams } from 'react-router-dom';
+import { useState } from 'react';
 
 interface BannerContentSectionProps {
   content: {
@@ -25,6 +25,7 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
   const { id: workId } = useParams();
   const { user } = useAuth();
   const { images } = useBannerImages(workId, user?.id);
+  const [editorInstances, setEditorInstances] = useState<Record<string, any>>({});
 
   // Filter attachments by section
   const introAttachments = images.filter(img => img.section === 'introduction').sort((a, b) => a.display_order - b.display_order);
@@ -33,6 +34,25 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
   const resultsAttachments = images.filter(img => img.section === 'results').sort((a, b) => a.display_order - b.display_order);
   const discussionAttachments = images.filter(img => img.section === 'discussion').sort((a, b) => a.display_order - b.display_order);
   const conclusionAttachments = images.filter(img => img.section === 'conclusion').sort((a, b) => a.display_order - b.display_order);
+
+  const handleEditorReady = (sectionId: string, editor: any) => {
+    setEditorInstances(prev => ({ ...prev, [sectionId]: editor }));
+  };
+
+  const insertAttachmentMarker = (sectionId: string, attachmentId: string, attachmentType: string) => {
+    const editor = editorInstances[sectionId];
+    if (!editor) return;
+
+    const viewFragment = editor.data.processor.toView(
+      `<div class="attachment-marker" data-attachment-id="${attachmentId}" data-attachment-type="${attachmentType}" style="background: hsl(var(--muted)); border: 2px dashed hsl(var(--border)); border-radius: 8px; padding: 16px; margin: 16px 0; text-align: center;">
+        <p style="margin: 0; color: hsl(var(--muted-foreground)); font-size: 14px;">
+          📎 ${attachmentType === 'figura' ? 'Imagem' : attachmentType === 'grafico' ? 'Gráfico' : 'Tabela'} será inserida aqui
+        </p>
+      </div>`
+    );
+    const modelFragment = editor.data.toModel(viewFragment);
+    editor.model.insertContent(modelFragment);
+  };
 
   return (
     <div className="space-y-6">
@@ -65,10 +85,6 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SectionAttachmentIndicator 
-            sectionName="Introdução"
-            attachments={introAttachments}
-          />
           <RichTextEditor
             value={content.introduction}
             onChange={(data) => handleChange('introduction', data)}
@@ -77,6 +93,8 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             config={editorConfig}
             placeholder="Ex: A problemática dos resíduos plásticos tem afetado significativamente os ecossistemas marinhos..."
             sectionName="Introdução"
+            onEditorReady={(editor) => handleEditorReady('introduction', editor)}
+            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('introduction', attachmentId, attachmentType)}
           />
         </CardContent>
       </Card>
@@ -89,10 +107,6 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SectionAttachmentIndicator 
-            sectionName="Objetivos"
-            attachments={objectivesAttachments}
-          />
           <RichTextEditor
             value={content.objectives}
             onChange={(data) => handleChange('objectives', data)}
@@ -101,6 +115,8 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             config={editorConfig}
             placeholder="Ex: • Objetivo Geral: Avaliar o impacto... • Objetivos Específicos: 1) Quantificar... 2) Analisar..."
             sectionName="Objetivos"
+            onEditorReady={(editor) => handleEditorReady('objectives', editor)}
+            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('objectives', attachmentId, attachmentType)}
           />
         </CardContent>
       </Card>
@@ -113,10 +129,6 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SectionAttachmentIndicator 
-            sectionName="Metodologia"
-            attachments={methodologyAttachments}
-          />
           <RichTextEditor
             value={content.methodology}
             onChange={(data) => handleChange('methodology', data)}
@@ -129,6 +141,8 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             placeholder="Ex: O estudo foi conduzido em três etapas: 1) Coleta de amostras... 2) Análise laboratorial... 3) Tratamento estatístico..."
             sectionName="Metodologia"
             onCustomImageUpload={onImageUploadFromEditor}
+            onEditorReady={(editor) => handleEditorReady('methodology', editor)}
+            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('methodology', attachmentId, attachmentType)}
           />
         </CardContent>
       </Card>
@@ -141,10 +155,6 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SectionAttachmentIndicator 
-            sectionName="Resultados"
-            attachments={resultsAttachments}
-          />
           <RichTextEditor
             value={content.results}
             onChange={(data) => handleChange('results', data)}
@@ -156,6 +166,8 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             }}
             placeholder="Ex: Os resultados demonstraram que... A Figura 1 ilustra... A Tabela 1 apresenta..."
             sectionName="Resultados"
+            onEditorReady={(editor) => handleEditorReady('results', editor)}
+            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('results', attachmentId, attachmentType)}
           />
         </CardContent>
       </Card>
@@ -168,10 +180,6 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SectionAttachmentIndicator 
-            sectionName="Discussão"
-            attachments={discussionAttachments}
-          />
           <RichTextEditor
             value={content.discussion}
             onChange={(data) => handleChange('discussion', data)}
@@ -180,6 +188,8 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             config={editorConfig}
             placeholder="Ex: Os resultados obtidos corroboram com os estudos de Silva et al. (2022), que também observaram..."
             sectionName="Discussão"
+            onEditorReady={(editor) => handleEditorReady('discussion', editor)}
+            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('discussion', attachmentId, attachmentType)}
           />
         </CardContent>
       </Card>
@@ -192,10 +202,6 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SectionAttachmentIndicator 
-            sectionName="Conclusão"
-            attachments={conclusionAttachments}
-          />
           <RichTextEditor
             value={content.conclusion}
             onChange={(data) => handleChange('conclusion', data)}
@@ -204,6 +210,8 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
             config={editorConfig}
             placeholder="Ex: Conclui-se que a metodologia proposta foi eficaz para... Os resultados sugerem que..."
             sectionName="Conclusão"
+            onEditorReady={(editor) => handleEditorReady('conclusion', editor)}
+            onInsertAttachment={(attachmentId, attachmentType) => insertAttachmentMarker('conclusion', attachmentId, attachmentType)}
           />
         </CardContent>
       </Card>
