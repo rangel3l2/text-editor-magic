@@ -11,6 +11,15 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
     if (!text) return '';
     // Remove placeholders de imagens
     let cleaned = text.replace(/\[\[placeholder:[^\]]+\]\]/g, '');
+    // Remove HTML entities
+    cleaned = cleaned.replace(/&nbsp;/g, ' ');
+    cleaned = cleaned.replace(/&amp;/g, '\\&');
+    cleaned = cleaned.replace(/&lt;/g, '<');
+    cleaned = cleaned.replace(/&gt;/g, '>');
+    cleaned = cleaned.replace(/&quot;/g, '"');
+    // Remove HTML tags
+    cleaned = cleaned.replace(/<[^>]*>/g, '');
+    // Escape LaTeX special characters
     return cleaned
       .replace(/&/g, '\\&')
       .replace(/%/g, '\\%')
@@ -20,8 +29,7 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
       .replace(/{/g, '\\{')
       .replace(/}/g, '\\}')
       .replace(/~/g, '\\textasciitilde{}')
-      .replace(/\^/g, '\\textasciicircum{}')
-      .replace(/<[^>]*>/g, ''); // Remove HTML tags
+      .replace(/\^/g, '\\textasciicircum{}');
   };
 
   const title = cleanLatex(content.title || '');
@@ -50,7 +58,7 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
 % Baixe esta imagem e salve como ${filename}.jpg na mesma pasta do .tex
 \\begin{figure}[h]
   \\centering
-  \\includegraphics[width=${widthCm}cm]{${filename}}
+  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}
   ${caption ? `\\caption{${caption}}` : ''}
 \\end{figure}`;
     }).join('\n\n');
