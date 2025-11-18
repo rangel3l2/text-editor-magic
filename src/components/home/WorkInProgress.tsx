@@ -48,7 +48,7 @@ const WorkInProgress = () => {
       
       let query = supabase
         .from('work_in_progress')
-        .select('id, title, work_type, created_at, last_modified, user_id, profiles!inner(email)');
+        .select('id, title, work_type, created_at, last_modified, user_id');
       
       // If admin, get all works limited to 10, otherwise get only user's works
       if (isAdmin) {
@@ -69,11 +69,28 @@ const WorkInProgress = () => {
         return [];
       }
 
-      // Map works and add isComplete as false (since we removed it from the query)
+      if (!dbWorks || dbWorks.length === 0) return [];
+
+      // If admin, fetch user emails for listed works and map them
+      let emailMap: Record<string, string> = {};
+      if (isAdmin) {
+        const userIds = Array.from(new Set(dbWorks.map((w: any) => w.user_id).filter(Boolean)));
+        if (userIds.length > 0) {
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, email')
+            .in('id', userIds as string[]);
+          if (!profilesError && profiles) {
+            emailMap = Object.fromEntries(profiles.map((p: any) => [p.id, p.email]));
+          }
+        }
+      }
+
+      // Map works and add isComplete as false
       return (dbWorks || []).map((work: any) => ({ 
         ...work, 
         isComplete: false,
-        userEmail: work.profiles?.email 
+        userEmail: isAdmin ? emailMap[work.user_id] : undefined
       }));
     },
     enabled: !!user,
@@ -133,7 +150,7 @@ const WorkInProgress = () => {
       if (error) throw error;
       
       // Atualiza a cache do React Query
-      queryClient.invalidateQueries({ queryKey: ['works-basic', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['works-basic'] });
       
       toast({
         title: "Trabalho excluído",
