@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { useIsAdmin } from '@/hooks/useUserRole';
 
 interface UseWorkLoaderProps {
   id: string | undefined;
@@ -14,6 +15,7 @@ interface UseWorkLoaderProps {
 export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: isAdmin } = useIsAdmin(user);
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
   const isFetching = useRef(false);
@@ -33,12 +35,18 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         isFetching.current = true;
         console.log(`Loading work ${id}`);
 
-        const { data, error } = await supabase
+        // Build query - admins can view all works, regular users only their own
+        let query = supabase
           .from('work_in_progress')
           .select('content')
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .maybeSingle();
+          .eq('id', id);
+
+        // Only filter by user_id if not admin
+        if (!isAdmin) {
+          query = query.eq('user_id', user.id);
+        }
+
+        const { data, error } = await query.maybeSingle();
 
         if (error) throw error;
 
