@@ -11,6 +11,8 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
     if (!text) return '';
     // Remove placeholders de imagens
     let cleaned = text.replace(/\[\[placeholder:[^\]]+\]\]/g, '');
+    // Remove image markers like [[figura:id]], [[grafico:id]], [[tabela:id]]
+    cleaned = cleaned.replace(/(?:🖼️\s*Imagem|📊\s*Gráfico|📋\s*Tabela)?\s*\[\[(figura|grafico|tabela):[^\]]+\]\]/g, '');
     // Remove HTML entities
     cleaned = cleaned.replace(/&nbsp;/g, ' ');
     cleaned = cleaned.replace(/&amp;/g, '\\&');
@@ -43,25 +45,45 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
   const conclusion = cleanLatex(content.conclusion || '');
   const references = cleanLatex(content.references || '');
   const acknowledgments = cleanLatex(content.acknowledgments || '');
+  
+  // Get column layout (default to 2)
+  const columnLayout = content.columnLayout || '2';
+  const numColumns = columnLayout === '3' ? 3 : 2;
 
-  // Gerar comandos para incluir imagens
-  let imageCommands = '';
-  if (images && images.length > 0) {
-    imageCommands = '% Imagens disponíveis (URLs abaixo):\n';
-    imageCommands += images.map((img, idx) => {
-      const imageUrl = img.public_url || '';
-      const filename = `image_${idx + 1}`;
-      const caption = img.caption ? cleanLatex(img.caption) : '';
-      const widthCm = img.width_cm || 8;
-      
-      return `% Imagem ${idx + 1}: ${imageUrl}
-% Baixe esta imagem e salve como ${filename}.jpg na mesma pasta do .tex
-\\begin{center}
-  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}
-  ${caption ? `\\par\\small ${caption}` : ''}
-\\end{center}`;
-    }).join('\n\n');
-  }
+  // Helper function to generate image inclusion command
+  const generateImageCommand = (img: any, idx: number) => {
+    const filename = `image_${idx + 1}`;
+    const caption = img.caption ? cleanLatex(img.caption) : '';
+    const source = img.source ? cleanLatex(img.source) : '';
+    const widthCm = img.width_cm || 8;
+    
+    let cmd = '\\begin{center}\n';
+    if (caption) {
+      cmd += `  \\textbf{${caption}}\\\\\n  \\vspace{0.2cm}\n`;
+    }
+    cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\\\\\n`;
+    if (source) {
+      cmd += `  \\vspace{0.1cm}\n  \\small\\textit{Fonte: ${source}}\n`;
+    }
+    cmd += '\\end{center}\n';
+    return cmd;
+  };
+
+  // Organize images by section
+  const imagesBySection: Record<string, any[]> = {
+    introduction: [],
+    objectives: [],
+    methodology: [],
+    results: [],
+    conclusion: [],
+  };
+
+  images.forEach((img, idx) => {
+    const section = img.section || 'methodology';
+    if (imagesBySection[section]) {
+      imagesBySection[section].push({ ...img, idx });
+    }
+  });
 
   return `\\documentclass[landscape]{article}
 \\usepackage[utf8]{inputenc}
@@ -95,7 +117,7 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
   {\\normalfont\\fontsize{32}{38}\\bfseries\\color{primaryblue}}
   {}{0em}{}[\\color{lightblue}\\titlerule[4pt]]
 
-\\setlength{\\columnsep}{3cm}
+\\setlength{\\columnsep}{${numColumns === 3 ? '2cm' : '3cm'}}
 \\setlength{\\parindent}{0pt}
 \\setlength{\\parskip}{1em}
 
@@ -133,20 +155,20 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
 
 \\vspace{2cm}
 
-% Content in 2 columns
-\\begin{multicols}{2}
+% Content in ${numColumns} columns
+\\begin{multicols}{${numColumns}}
 \\fontsize{24}{29}\\selectfont
 \\justifying
 
-${introduction ? `\\section*{INTRODUÇÃO}\n${introduction}\n` : ''}
+${introduction ? `\\section*{INTRODUÇÃO}\n${introduction}\n${imagesBySection.introduction.map(img => generateImageCommand(img, img.idx)).join('\n')}\n` : ''}
 
-${objectives ? `\\section*{OBJETIVOS}\n${objectives}\n` : ''}
+${objectives ? `\\section*{OBJETIVOS}\n${objectives}\n${imagesBySection.objectives.map(img => generateImageCommand(img, img.idx)).join('\n')}\n` : ''}
 
-${methodology ? `\\section*{METODOLOGIA}\n${methodology}\n${imageCommands ? imageCommands + '\n' : ''}` : ''}
+${methodology ? `\\section*{METODOLOGIA}\n${methodology}\n${imagesBySection.methodology.map(img => generateImageCommand(img, img.idx)).join('\n')}\n` : ''}
 
-${results ? `\\section*{RESULTADOS E DISCUSSÃO}\n${results}\n` : ''}
+${results ? `\\section*{RESULTADOS E DISCUSSÃO}\n${results}\n${imagesBySection.results.map(img => generateImageCommand(img, img.idx)).join('\n')}\n` : ''}
 
-${conclusion ? `\\section*{CONCLUSÃO}\n${conclusion}\n` : ''}
+${conclusion ? `\\section*{CONCLUSÃO}\n${conclusion}\n${imagesBySection.conclusion.map(img => generateImageCommand(img, img.idx)).join('\n')}\n` : ''}
 
 ${references ? `\\section*{REFERÊNCIAS}\n${references}\n` : ''}
 

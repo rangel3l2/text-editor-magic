@@ -69,6 +69,8 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
   const processedTitle = cleanLatexCommands(content.title);
   const processedInstitution = cleanLatexCommands(content.institution);
   const themeColor = content.themeColor || '#1e40af';
+  const columnLayout = content.columnLayout || '2';
+  const numColumns = columnLayout === '3' ? 3 : 2;
 
   const parts: string[] = [];
   
@@ -110,8 +112,8 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     parts.push('</div>');
   }
 
-  // Content em 2 colunas
-  parts.push('<div style="column-count: 2; column-gap: 2cm; column-rule: 2px solid #000; text-align: justify;">');
+  // Content em colunas configuráveis
+  parts.push(`<div style="column-count: ${numColumns}; column-gap: 2cm; column-rule: 2px solid #000; text-align: justify;">`);
   
   // Filter and sort images by section and display_order
   const introImages = images
