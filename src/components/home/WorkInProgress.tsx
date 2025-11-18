@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { useIsAdmin } from "@/hooks/useUserRole";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ const WorkInProgress = () => {
   const [showAllWorks, setShowAllWorks] = useState(false);
   const [deleteWorkId, setDeleteWorkId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const { data: isAdmin } = useIsAdmin(user);
 
   const { data: workTypes } = useQuery({
     queryKey: ['academicWorkTypes'],
@@ -40,15 +42,22 @@ const WorkInProgress = () => {
   });
 
   const { data: works = [], isLoading } = useQuery({
-    queryKey: ['works-basic', user?.id],
+    queryKey: ['works-basic', user?.id, isAdmin],
     queryFn: async () => {
       if (!user) return [];
       
-      const { data: dbWorks, error } = await supabase
+      let query = supabase
         .from('work_in_progress')
-        .select('id, title, work_type, created_at, last_modified')
-        .eq('user_id', user.id)
-        .order('last_modified', { ascending: false });
+        .select('id, title, work_type, created_at, last_modified, user_id, profiles!inner(email)');
+      
+      // If admin, get all works limited to 10, otherwise get only user's works
+      if (isAdmin) {
+        query = query.order('last_modified', { ascending: false }).limit(10);
+      } else {
+        query = query.eq('user_id', user.id).order('last_modified', { ascending: false });
+      }
+        
+      const { data: dbWorks, error } = await query;
         
       if (error) {
         console.error('Error fetching works:', error);
@@ -61,7 +70,11 @@ const WorkInProgress = () => {
       }
 
       // Map works and add isComplete as false (since we removed it from the query)
-      return (dbWorks || []).map((work: any) => ({ ...work, isComplete: false }));
+      return (dbWorks || []).map((work: any) => ({ 
+        ...work, 
+        isComplete: false,
+        userEmail: work.profiles?.email 
+      }));
     },
     enabled: !!user,
     staleTime: 1000 * 60,
@@ -173,7 +186,9 @@ const WorkInProgress = () => {
 
   return (
     <div className="mb-12 sm:mb-16 px-3 sm:px-4">
-      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">Meus Trabalhos</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">
+        {isAdmin ? "Todos os Trabalhos (10 mais recentes)" : "Meus Trabalhos"}
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
         <Card className="shadow-lg">
           <CardHeader className="pb-4">
@@ -208,6 +223,9 @@ const WorkInProgress = () => {
                         </div>
                       </div>
                       <div className="mt-2 text-xs sm:text-sm text-muted-foreground space-y-0.5">
+                        {isAdmin && work.userEmail && (
+                          <p className="font-medium text-primary">Usuário: {work.userEmail}</p>
+                        )}
                         <p>Criado: {formatDate(work.created_at)}</p>
                         <p>Modificado: {formatDate(work.last_modified)}</p>
                       </div>
@@ -220,6 +238,7 @@ const WorkInProgress = () => {
                         e.stopPropagation();
                         setDeleteWorkId(work.id);
                       }}
+                      style={{ display: work.user_id === user?.id ? 'flex' : 'none' }}
                     >
                       <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
@@ -264,6 +283,9 @@ const WorkInProgress = () => {
                         </div>
                       </div>
                       <div className="mt-2 text-xs sm:text-sm text-muted-foreground space-y-0.5">
+                        {isAdmin && work.userEmail && (
+                          <p className="font-medium text-primary">Usuário: {work.userEmail}</p>
+                        )}
                         <p>Criado: {formatDate(work.created_at)}</p>
                         <p>Modificado: {formatDate(work.last_modified)}</p>
                       </div>
@@ -276,6 +298,7 @@ const WorkInProgress = () => {
                         e.stopPropagation();
                         setDeleteWorkId(work.id);
                       }}
+                      style={{ display: work.user_id === user?.id ? 'flex' : 'none' }}
                     >
                       <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
@@ -290,7 +313,7 @@ const WorkInProgress = () => {
       </div>
       
       {/* Botão Ver Mais */}
-      {hasMoreWorks && (
+      {!isAdmin && hasMoreWorks && (
         <div className="flex justify-center mt-6">
           <Button
             variant="outline"
