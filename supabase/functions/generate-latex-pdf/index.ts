@@ -56,15 +56,14 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
       
       return `% Imagem ${idx + 1}: ${imageUrl}
 % Baixe esta imagem e salve como ${filename}.jpg na mesma pasta do .tex
-\\begin{figure}[h]
-  \\centering
+\\begin{center}
   \\includegraphics[width=${widthCm}cm]{${filename}.jpg}
-  ${caption ? `\\caption{${caption}}` : ''}
-\\end{figure}`;
+  ${caption ? `\\par\\small ${caption}` : ''}
+\\end{center}`;
     }).join('\n\n');
   }
 
-  return `\\documentclass[a0paper,landscape]{article}
+  return `\\documentclass[landscape]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
 \\usepackage[brazilian]{babel}
