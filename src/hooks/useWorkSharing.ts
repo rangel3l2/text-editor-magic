@@ -190,25 +190,38 @@ export const useWorkSharing = (workId: string | undefined, userId: string | unde
     try {
       // Gerar token se não existir
       if (!shareToken) {
-        const { data: tokenData } = await supabase.rpc('generate_work_share_token');
+        const { data: tokenData, error: rpcError } = await supabase.rpc('generate_work_share_token');
+        
+        if (rpcError) {
+          console.error('Erro ao chamar RPC:', rpcError);
+          throw rpcError;
+        }
+
+        if (!tokenData) {
+          throw new Error('Token não foi gerado');
+        }
         
         const { error: updateError } = await supabase
           .from('work_in_progress')
           .update({ share_token: tokenData })
-          .eq('id', workId);
+          .eq('id', workId)
+          .eq('user_id', userId);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Erro ao salvar token:', updateError);
+          throw updateError;
+        }
 
         setShareToken(tokenData);
         return tokenData;
       }
 
       return shareToken;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao gerar link de compartilhamento:', error);
       toast({
         title: 'Erro',
-        description: 'Não foi possível gerar o link de compartilhamento',
+        description: error.message || 'Não foi possível gerar o link de compartilhamento',
         variant: 'destructive',
       });
       return null;
