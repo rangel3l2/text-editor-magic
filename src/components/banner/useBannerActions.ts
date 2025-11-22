@@ -22,7 +22,8 @@ export const useBannerActions = (
             ...bannerContent,
             work_id: id,
             user_id: user?.id,
-          }
+          },
+          mode: 'pdf'
         }
       });
 
@@ -71,7 +72,8 @@ export const useBannerActions = (
             ...bannerContent,
             work_id: id,
             user_id: user?.id,
-          }
+          },
+          mode: 'latex'
         }
       });
 
