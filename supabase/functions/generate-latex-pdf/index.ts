@@ -25,20 +25,23 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
   const cleanLatex = (text: string, sectionName: string = '') => {
     if (!text) return '';
     
-    // Extract inline images and replace with LaTeX commands
     let cleaned = text;
-    const sectionImages = extractImagesFromHtml(text);
-    let imageCommands = '';
     
+    // Replace inline images with LaTeX commands BEFORE removing HTML tags
+    const sectionImages = extractImagesFromHtml(text);
     sectionImages.forEach((img, idx) => {
       const imageKey = `${sectionName}_inline_${idx}`;
       if (inlineImages.has(imageKey)) {
         const filename = inlineImages.get(imageKey)!;
-        imageCommands += `\n\\begin{figure}[h]\n  \\centering\n  \\includegraphics[width=8cm]{${filename}}\n`;
+        let latexCommand = `\n\\begin{figure}[H]\n  \\centering\n  \\includegraphics[width=8cm]{${filename}}\n`;
         if (img.alt) {
-          imageCommands += `  \\caption{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}\n`;
+          latexCommand += `  \\caption{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}\n`;
         }
-        imageCommands += `\\end{figure}\n\n`;
+        latexCommand += `\\end{figure}\n`;
+        
+        // Find and replace the specific img tag with the LaTeX command
+        const imgRegex = new RegExp(`<img[^>]+src="${img.src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*>`, 'i');
+        cleaned = cleaned.replace(imgRegex, latexCommand);
       }
     });
     
@@ -52,10 +55,10 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
     cleaned = cleaned.replace(/&lt;/g, '<');
     cleaned = cleaned.replace(/&gt;/g, '>');
     cleaned = cleaned.replace(/&quot;/g, '"');
-    // Remove HTML tags (including img tags)
+    // Remove remaining HTML tags (but keep the LaTeX commands we added)
     cleaned = cleaned.replace(/<[^>]*>/g, '');
     // Remove quebras de linha múltiplas
-    cleaned = cleaned.replace(/\n\s*\n/g, '\n\n');
+    cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n');
     // Escape LaTeX special characters
     cleaned = cleaned
       .replace(/&/g, '\\&')
@@ -68,7 +71,7 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
       .replace(/~/g, '\\textasciitilde{}')
       .replace(/\^/g, '\\textasciicircum{}');
     
-    return cleaned + imageCommands;
+    return cleaned;
   };
 
   const title = cleanLatex(content.title || '', 'title');
