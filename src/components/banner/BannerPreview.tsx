@@ -14,9 +14,10 @@ interface BannerPreviewProps {
   onLogoConfigChange?: (config: LogoConfig) => void;
   onContentUpdate?: (field: string, value: string) => void;
   onGeneratePDF?: () => void;
+  onGenerateLatex?: () => void;
 }
 
-const BannerPreview = ({ content, onImageConfigChange, onLogoConfigChange, onContentUpdate, onGeneratePDF }: BannerPreviewProps) => {
+const BannerPreview = ({ content, onImageConfigChange, onLogoConfigChange, onContentUpdate, onGeneratePDF, onGenerateLatex }: BannerPreviewProps) => {
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const { toast } = useToast();
   const { id: workId } = useParams();
@@ -107,6 +108,7 @@ const BannerPreview = ({ content, onImageConfigChange, onLogoConfigChange, onCon
         onLogoConfigChange={onLogoConfigChange}
         onContentUpdate={handleContentUpdate}
         onGeneratePDF={onGeneratePDF}
+        onGenerateLatex={onGenerateLatex}
       />
     </Card>
   );
