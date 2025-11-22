@@ -33,6 +33,12 @@ const BannerImageEditor = ({
   const [brightness, setBrightness] = useState(image?.adjustments.brightness || 0);
   const [contrast, setContrast] = useState(image?.adjustments.contrast || 0);
   const [saturation, setSaturation] = useState(image?.adjustments.saturation || 0);
+  const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>(
+    (image?.adjustments as any)?.alignment || 'center'
+  );
+  const [widthPercent, setWidthPercent] = useState<number>(
+    (image?.adjustments as any)?.widthPercent || 85
+  );
   const [showCropTool, setShowCropTool] = useState(false);
   const { toast } = useToast();
 
@@ -64,7 +70,9 @@ const BannerImageEditor = ({
       adjustments: {
         brightness,
         contrast,
-        saturation
+        saturation,
+        alignment,
+        widthPercent
       }
     });
     onClose();
@@ -199,6 +207,40 @@ const BannerImageEditor = ({
               </Select>
               <p className="text-xs text-muted-foreground">
                 Deixe em "Automático" para posicionamento inteligente
+              </p>
+            </div>
+
+            {/* Alignment within column */}
+            <div className="space-y-2">
+              <Label htmlFor="image-alignment">Alinhamento da Imagem</Label>
+              <Select value={alignment} onValueChange={(v: 'left' | 'center' | 'right') => setAlignment(v)}>
+                <SelectTrigger id="image-alignment">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">Esquerda</SelectItem>
+                  <SelectItem value="center">Centro (padrão)</SelectItem>
+                  <SelectItem value="right">Direita</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Width control */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="image-width">Largura da Imagem</Label>
+                <span className="text-xs text-muted-foreground">{widthPercent}%</span>
+              </div>
+              <Slider
+                id="image-width"
+                value={[widthPercent]}
+                onValueChange={([value]) => setWidthPercent(value)}
+                min={40}
+                max={100}
+                step={5}
+              />
+              <p className="text-xs text-muted-foreground">
+                Ajuste a largura da imagem em relação à coluna
               </p>
             </div>
 
