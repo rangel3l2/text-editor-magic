@@ -33,14 +33,14 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
       const imageKey = `${sectionName}_inline_${idx}`;
       if (inlineImages.has(imageKey)) {
         const filename = inlineImages.get(imageKey)!;
-        imageCommands += `\n\\vspace{1cm}\n`;
-        imageCommands += `\\noindent\\begin{center}\n`;
-        imageCommands += `  \\includegraphics[width=15cm]{${filename}}\n\n`;
+        imageCommands += `\n% bloco seguro para imagens inline dentro de multicols\n`;
+        imageCommands += `\\begin{flushleft}\n`;
+        imageCommands += `    \\includegraphics[width=15cm]{${filename}}\n\n`;
         if (img.alt) {
-          imageCommands += `  \\par\\vspace{0.3cm}\n`;
-          imageCommands += `  {\\fontsize{28}{34}\\selectfont\\textit{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}}\n\n`;
+          imageCommands += `    \\vspace{0.3cm}\n`;
+          imageCommands += `    {\\fontsize{28}{34}\\selectfont\\textit{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}}\n\n`;
         }
-        imageCommands += `\\end{center}\n`;
+        imageCommands += `\\end{flushleft}\n\n`;
         imageCommands += `\\vspace{1cm}\n\n`;
       }
     });
@@ -100,20 +100,20 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
     const caption = img.caption ? cleanLatex(img.caption) : '';
     const source = img.source ? cleanLatex(img.source) : '';
     const widthCm = img.width_cm || 15;
+    const figureLabel = `Figura ${idx + 1}:`;
     
-    let cmd = '\n% Imagem inserida sem float para compatibilidade com multicols\n';
-    cmd += '\n\\vspace{1cm}\n';
-    cmd += '\\noindent\\begin{center}\n';
-    cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\n\n`;
+    let cmd = '\n% bloco seguro para imagens dentro de multicols\n';
+    cmd += '\\begin{flushleft}\n';
+    cmd += `    \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\n\n`;
     if (caption) {
-      cmd += `  \\par\\vspace{0.3cm}\n`;
-      cmd += `  {\\fontsize{28}{34}\\selectfont\\textit{${caption}}}\n\n`;
+      cmd += `    \\vspace{0.3cm}\n`;
+      cmd += `    {\\fontsize{28}{34}\\selectfont\\textbf{${figureLabel}} \\textit{${caption}}}\n\n`;
     }
     if (source) {
-      cmd += `  \\par\\vspace{0.2cm}\n`;
-      cmd += `  {\\fontsize{24}{30}\\selectfont\\textit{Fonte: ${source}}}\n\n`;
+      cmd += `    \\vspace{0.2cm}\n`;
+      cmd += `    {\\fontsize{24}{30}\\selectfont\\textit{Fonte: ${source}}}\n\n`;
     }
-    cmd += '\\end{center}\n';
+    cmd += '\\end{flushleft}\n';
     cmd += '\\vspace{1cm}\n\n';
     return cmd;
   };
