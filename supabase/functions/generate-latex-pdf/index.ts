@@ -24,26 +24,25 @@ const extractImagesFromHtml = (html: string): { src: string; alt: string }[] => 
 const generateLatexDocument = (content: any, images: any[] = [], inlineImages: Map<string, string> = new Map()): string => {
   const cleanLatex = (text: string, sectionName: string = '') => {
     if (!text) return '';
-    
-    let cleaned = text;
-    
-    // Replace inline images with LaTeX commands BEFORE removing HTML tags
+
+    // First, build LaTeX commands for inline images for this section
     const sectionImages = extractImagesFromHtml(text);
+    let imageCommands = '';
+
     sectionImages.forEach((img, idx) => {
       const imageKey = `${sectionName}_inline_${idx}`;
       if (inlineImages.has(imageKey)) {
         const filename = inlineImages.get(imageKey)!;
-        let latexCommand = `\n\\begin{figure}[H]\n  \\centering\n  \\includegraphics[width=8cm]{${filename}}\n`;
+        imageCommands += `\n\\begin{figure}[H]\n  \\centering\n  \\includegraphics[width=8cm]{${filename}}\n`;
         if (img.alt) {
-          latexCommand += `  \\caption{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}\n`;
+          imageCommands += `  \\caption{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}\n`;
         }
-        latexCommand += `\\end{figure}\n`;
-        
-        // Find and replace the specific img tag with the LaTeX command
-        const imgRegex = new RegExp(`<img[^>]+src="${img.src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*>`, 'i');
-        cleaned = cleaned.replace(imgRegex, latexCommand);
+        imageCommands += `\\end{figure}\n`;
       }
     });
+
+    // Remove img tags from the text so they don't appear as raw HTML
+    let cleaned = text.replace(/<img[^>]*>/g, '');
     
     // Remove placeholders de imagens
     cleaned = cleaned.replace(/\[\[placeholder:[^\]]+\]\]/g, '');
@@ -55,11 +54,11 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
     cleaned = cleaned.replace(/&lt;/g, '<');
     cleaned = cleaned.replace(/&gt;/g, '>');
     cleaned = cleaned.replace(/&quot;/g, '"');
-    // Remove remaining HTML tags (but keep the LaTeX commands we added)
+    // Remove remaining HTML tags
     cleaned = cleaned.replace(/<[^>]*>/g, '');
     // Remove quebras de linha múltiplas
     cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n');
-    // Escape LaTeX special characters
+    // Escape LaTeX special characters in the text content
     cleaned = cleaned
       .replace(/&/g, '\\&')
       .replace(/%/g, '\\%')
@@ -70,8 +69,9 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
       .replace(/}/g, '\\}')
       .replace(/~/g, '\\textasciitilde{}')
       .replace(/\^/g, '\\textasciicircum{}');
-    
-    return cleaned;
+
+    // Append the LaTeX image commands AFTER escaping, so they remain valid LaTeX
+    return cleaned + imageCommands;
   };
 
   const title = cleanLatex(content.title || '', 'title');
