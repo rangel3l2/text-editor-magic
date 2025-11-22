@@ -33,13 +33,15 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
       const imageKey = `${sectionName}_inline_${idx}`;
       if (inlineImages.has(imageKey)) {
         const filename = inlineImages.get(imageKey)!;
-        imageCommands += `\\vspace{0.5cm}\n`;
+        imageCommands += `\n\\vspace{1cm}\n`;
         imageCommands += `\\noindent\\begin{center}\n`;
-        imageCommands += `  \\includegraphics[width=8cm]{${filename}}\\\\\n`;
+        imageCommands += `  \\includegraphics[width=15cm]{${filename}}\n\n`;
         if (img.alt) {
-          imageCommands += `  {\\small \\textit{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}}\\\\\n`;
+          imageCommands += `  \\par\\vspace{0.3cm}\n`;
+          imageCommands += `  {\\fontsize{28}{34}\\selectfont\\textit{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}}\n\n`;
         }
         imageCommands += `\\end{center}\n`;
+        imageCommands += `\\vspace{1cm}\n\n`;
       }
     });
 
@@ -97,19 +99,22 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
     const filename = `image_${idx + 1}`;
     const caption = img.caption ? cleanLatex(img.caption) : '';
     const source = img.source ? cleanLatex(img.source) : '';
-    const widthCm = img.width_cm || 8;
+    const widthCm = img.width_cm || 15;
     
     let cmd = '\n% Imagem inserida sem float para compatibilidade com multicols\n';
-    cmd += '\n\\vspace{0.5cm}\n';
+    cmd += '\n\\vspace{1cm}\n';
     cmd += '\\noindent\\begin{center}\n';
-    cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\\\\\n`;
+    cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\n\n`;
     if (caption) {
-      cmd += `  {\\small \\textit{${caption}}}\\\\\n`;
+      cmd += `  \\par\\vspace{0.3cm}\n`;
+      cmd += `  {\\fontsize{28}{34}\\selectfont\\textit{${caption}}}\n\n`;
     }
     if (source) {
-      cmd += `  {\\scriptsize \\textit{Fonte: ${source}}}\\\\\n`;
+      cmd += `  \\par\\vspace{0.2cm}\n`;
+      cmd += `  {\\fontsize{24}{30}\\selectfont\\textit{Fonte: ${source}}}\n\n`;
     }
-    cmd += '\\end{center}\n\n';
+    cmd += '\\end{center}\n';
+    cmd += '\\vspace{1cm}\n\n';
     return cmd;
   };
 
