@@ -24,11 +24,13 @@ import ShareDialog from "./banner/sharing/ShareDialog";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
 
 const BannerEditor = () => {
   const { user } = useAuth();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
+  const { toast } = useToast();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [hasEditedFirstField, setHasEditedFirstField] = useState(false);
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
@@ -241,7 +243,25 @@ const BannerEditor = () => {
             previewHtml={content.previewHtml}
             onGeneratePDF={handleGeneratePDF}
             onGenerateLatex={handleGenerateLatex}
-            onShare={userPermission === 'owner' ? () => setShareDialogOpen(true) : handleShare}
+            onShare={() => {
+              if (!user) {
+                setShowLoginModal(true);
+                return;
+              }
+              if (!currentWorkId) {
+                toast({
+                  title: 'Aguarde',
+                  description: 'Salve o trabalho primeiro antes de compartilhar',
+                  variant: 'destructive',
+                });
+                return;
+              }
+              if (userPermission === 'owner') {
+                setShareDialogOpen(true);
+              } else {
+                handleShare();
+              }
+            }}
             onOpenPreview={() => setPreviewOpen(true)}
             onClearFields={handleClearFields}
           />
@@ -263,7 +283,25 @@ const BannerEditor = () => {
           <BannerActions
             onGeneratePDF={handleGeneratePDF}
             onGenerateLatex={handleGenerateLatex}
-            onShare={handleShare}
+            onShare={() => {
+              if (!user) {
+                setShowLoginModal(true);
+                return;
+              }
+              if (!currentWorkId) {
+                toast({
+                  title: 'Aguarde',
+                  description: 'Salve o trabalho primeiro antes de compartilhar',
+                  variant: 'destructive',
+                });
+                return;
+              }
+              if (userPermission === 'owner') {
+                setShareDialogOpen(true);
+              } else {
+                handleShare();
+              }
+            }}
             onLoadSavedContent={() => {}}
             onClearFields={handleClearFields}
             onOpenPreview={() => setPreviewOpen(true)}

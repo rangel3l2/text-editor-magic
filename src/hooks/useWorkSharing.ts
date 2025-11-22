@@ -43,30 +43,50 @@ export const useWorkSharing = (workId: string | undefined, userId: string | unde
     const loadSharingData = async () => {
       try {
         // Verificar se é o dono
-        const { data: work } = await supabase
+        const { data: work, error: workError } = await supabase
           .from('work_in_progress')
           .select('user_id, share_token')
           .eq('id', workId)
-          .single();
+          .maybeSingle();
 
-        if (work?.user_id === userId) {
+        if (workError) {
+          console.error('Erro ao carregar trabalho:', workError);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!work) {
+          console.log('Trabalho não encontrado');
+          setIsLoading(false);
+          return;
+        }
+
+        if (work.user_id === userId) {
           setUserPermission('owner');
           setShareToken(work.share_token);
         } else {
           // Verificar permissão do usuário
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('email')
             .eq('id', userId)
-            .single();
+            .maybeSingle();
+
+          if (profileError) {
+            console.error('Erro ao carregar perfil:', profileError);
+          }
 
           if (profile) {
-            const { data: share } = await supabase
+            const { data: share, error: shareError } = await supabase
               .from('work_shares')
               .select('permission')
               .eq('work_id', workId)
               .eq('shared_with_email', profile.email)
-              .single();
+              .maybeSingle();
+
+            if (shareError) {
+              console.error('Erro ao carregar compartilhamento:', shareError);
+            }
 
             setUserPermission(share?.permission || null);
           }
