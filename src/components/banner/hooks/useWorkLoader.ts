@@ -33,24 +33,12 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         isFetching.current = true;
         console.log(`Loading work ${id}`);
 
-        // Verifica se o usuário é admin para permitir carregar qualquer trabalho
-        const { data: isAdminResult, error: adminError } = await supabase
-          .rpc('has_role', { _user_id: user.id, _role: 'admin' });
-
-        if (adminError) {
-          console.error('Error checking admin role:', adminError);
-        }
-
-        let query = supabase
+        // Rely on database RLS policies to control access
+        const { data, error } = await supabase
           .from('work_in_progress')
           .select('content')
-          .eq('id', id);
-
-        if (!isAdminResult) {
-          query = query.eq('user_id', user.id);
-        }
-
-        const { data, error } = await query.maybeSingle();
+          .eq('id', id)
+          .maybeSingle();
 
         if (error) {
           console.error('Error loading work from database:', error);
