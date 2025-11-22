@@ -29,7 +29,8 @@ export const useBannerActions = (
             work_id: id,
             user_id: user?.id,
           },
-          mode: 'latex'
+          mode: 'latex',
+          projectTitle: bannerContent.title.replace(/<[^>]*>/g, '').trim()
         }
       });
 
@@ -93,7 +94,8 @@ export const useBannerActions = (
             work_id: id,
             user_id: user?.id,
           },
-          mode: 'latex'
+          mode: 'latex',
+          projectTitle: bannerContent.title.replace(/<[^>]*>/g, '').trim()
         }
       });
 

@@ -235,7 +235,7 @@ serve(async (req) => {
   let latexSource = '';
   let base64Zip: string | null = null;
   try {
-    const { content, mode = 'pdf' } = await req.json()
+    const { content, mode = 'pdf', projectTitle = 'banner' } = await req.json()
     
     if (!content) {
       return new Response(
@@ -312,8 +312,14 @@ serve(async (req) => {
       const JSZip = (await import('https://esm.sh/jszip@3.10.1')).default;
       const zip = new JSZip();
 
-      // Adicionar arquivo .tex ao ZIP
-      zip.file('banner.tex', latexSource);
+      // Sanitizar o título para usar como nome de arquivo
+      const sanitizedTitle = projectTitle
+        .replace(/[^a-zA-Z0-9\s-_]/g, '')
+        .replace(/\s+/g, '_')
+        .substring(0, 50) || 'banner';
+
+      // Adicionar arquivo .tex ao ZIP com o título do trabalho
+      zip.file(`${sanitizedTitle}.tex`, latexSource);
 
       // Adicionar logo de cabeçalho se houver
       if (content.institutionLogo) {
