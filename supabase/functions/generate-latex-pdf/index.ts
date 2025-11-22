@@ -299,46 +299,15 @@ serve(async (req) => {
       });
     }
 
-    // MODE: pdf (enviar .tex + imagens como ZIP para ConvertHub)
+    // MODE: pdf (enviar apenas .tex para ConvertHub)
     const CONVERTHUB_API_KEY = Deno.env.get('CONVERTHUB_API_KEY');
     if (!CONVERTHUB_API_KEY) {
       throw new Error('CONVERTHUB_API_KEY not configured');
     }
 
-    // Criar ZIP com .tex e imagens para enviar ao ConvertHub
-    const JSZip = (await import('https://esm.sh/jszip@3.10.1')).default;
-    const zip = new JSZip();
-
-    // Adicionar arquivo .tex ao ZIP
-    zip.file('banner.tex', latexSource);
-
-    // Baixar e adicionar imagens ao ZIP
-    console.log('Downloading images for PDF generation:', images.length);
-    for (let idx = 0; idx < images.length; idx++) {
-      const img = images[idx];
-      const filename = `image_${idx + 1}.jpg`;
-      
-      try {
-        const imageResponse = await fetch(img.public_url);
-        if (imageResponse.ok) {
-          const imageBlob = await imageResponse.arrayBuffer();
-          zip.file(filename, imageBlob);
-          console.log(`Added ${filename} to ZIP for PDF`);
-        } else {
-          console.error(`Failed to download ${filename}:`, imageResponse.status);
-        }
-      } catch (err) {
-        console.error(`Error downloading ${filename}:`, err);
-      }
-    }
-
-    // Gerar ZIP em base64
-    const zipBytes = await zip.generateAsync({ type: 'uint8array' });
-    const zipBase64 = b64encode(zipBytes);
+    // Enviar apenas o arquivo .tex para ConvertHub
+    const texBase64 = b64encode(new TextEncoder().encode(latexSource));
     
-    console.log('ZIP generated for PDF conversion, size:', zipBytes.length);
-
-    // Enviar ZIP para ConvertHub
     const convertResponse = await fetch('https://api.converthub.com/v2/convert/base64', {
       method: 'POST',
       headers: {
@@ -346,8 +315,8 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        file_base64: zipBase64,
-        filename: 'banner.zip',
+        file_base64: texBase64,
+        filename: 'banner.tex',
         target_format: 'pdf',
         output_filename: 'banner-academico.pdf',
       }),
