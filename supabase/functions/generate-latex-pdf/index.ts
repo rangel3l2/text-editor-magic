@@ -6,7 +6,7 @@ const corsHeaders = {
 }
 
 // Generate LaTeX document for science fair banner (90cm x 120cm)
-const generateLatexDocument = (content: any, images: any[] = [], mode: string = 'pdf'): string => {
+const generateLatexDocument = (content: any, images: any[] = []): string => {
   const cleanLatex = (text: string) => {
     if (!text) return '';
     // Remove placeholders de imagens
@@ -53,22 +53,15 @@ const generateLatexDocument = (content: any, images: any[] = [], mode: string = 
   const numColumns = columnLayout === '3' ? 3 : 2;
 
   // Helper function to generate image inclusion command
-  const generateImageCommand = (img: any, idx: number, mode: string) => {
+  const generateImageCommand = (img: any, idx: number) => {
+    const filename = `image_${idx + 1}`;
     const caption = img.caption ? cleanLatex(img.caption) : '';
     const source = img.source ? cleanLatex(img.source) : '';
     const widthCm = img.width_cm || 8;
     
     let cmd = '\n\\begin{figure}[h]\n';
     cmd += '  \\centering\n';
-    
-    // Para PDF, usar URL pública; para LaTeX, usar nome de arquivo local
-    if (mode === 'pdf' && img.public_url) {
-      cmd += `  \\includegraphics[width=${widthCm}cm]{${img.public_url}}\n`;
-    } else {
-      const filename = `image_${idx + 1}`;
-      cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\n`;
-    }
-    
+    cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\n`;
     if (caption) {
       cmd += `  \\caption{${caption}}\n`;
     }
@@ -180,15 +173,15 @@ ${images.find(img => img.section === 'header') ? `\\includegraphics[width=\\text
 \\justifying
 \\fontsize{40}{48}\\selectfont
 
-${introduction ? `% ===========================================================\n%                    INTRODUÇÃO\n% ===========================================================\n\n\\textbf{INTRODUÇÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${introduction}\n${imagesBySection.introduction.map(img => generateImageCommand(img, img.idx, mode)).join('')}\n\\vspace{1cm}\n` : ''}
+${introduction ? `% ===========================================================\n%                    INTRODUÇÃO\n% ===========================================================\n\n\\textbf{INTRODUÇÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${introduction}\n${imagesBySection.introduction.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${objectives ? `% ===========================================================\n%                    OBJETIVOS\n% ===========================================================\n\n\\textbf{OBJETIVOS}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${objectives}\n${imagesBySection.objectives.map(img => generateImageCommand(img, img.idx, mode)).join('')}\n\\vspace{1cm}\n` : ''}
+${objectives ? `% ===========================================================\n%                    OBJETIVOS\n% ===========================================================\n\n\\textbf{OBJETIVOS}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${objectives}\n${imagesBySection.objectives.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${methodology ? `% ===========================================================\n%                    METODOLOGIA\n% ===========================================================\n\n\\textbf{METODOLOGIA}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${methodology}\n${imagesBySection.methodology.map(img => generateImageCommand(img, img.idx, mode)).join('')}\n\\vspace{1cm}\n` : ''}
+${methodology ? `% ===========================================================\n%                    METODOLOGIA\n% ===========================================================\n\n\\textbf{METODOLOGIA}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${methodology}\n${imagesBySection.methodology.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${results ? `% ===========================================================\n%                    RESULTADOS E DISCUSSÃO\n% ===========================================================\n\n\\textbf{RESULTADOS E DISCUSSÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${results}\n${imagesBySection.results.map(img => generateImageCommand(img, img.idx, mode)).join('')}\n\\vspace{1cm}\n` : ''}
+${results ? `% ===========================================================\n%                    RESULTADOS E DISCUSSÃO\n% ===========================================================\n\n\\textbf{RESULTADOS E DISCUSSÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${results}\n${imagesBySection.results.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${conclusion ? `% ===========================================================\n%                    CONCLUSÃO\n% ===========================================================\n\n\\textbf{CONCLUSÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${conclusion}\n${imagesBySection.conclusion.map(img => generateImageCommand(img, img.idx, mode)).join('')}\n\\vspace{1.5cm}\n` : ''}
+${conclusion ? `% ===========================================================\n%                    CONCLUSÃO\n% ===========================================================\n\n\\textbf{CONCLUSÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${conclusion}\n${imagesBySection.conclusion.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1.5cm}\n` : ''}
 
 ${references ? `% ===========================================================\n%                    REFERÊNCIAS\n% ===========================================================\n\n\\textbf{REFERÊNCIAS}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${references}\n` : ''}
 
@@ -250,12 +243,12 @@ serve(async (req) => {
       }
     }
 
-    // Generate LaTeX source with proper image filenames or URLs depending on mode
+    // Generate LaTeX source with proper image filenames
     const imagesForLatex = images.map((img, idx) => ({
       ...img,
       filename: `image_${idx + 1}.jpg`
     }));
-    latexSource = generateLatexDocument(content, imagesForLatex, mode);
+    latexSource = generateLatexDocument(content, imagesForLatex);
     
     console.log('LaTeX source generated, length:', latexSource.length);
 
@@ -306,15 +299,46 @@ serve(async (req) => {
       });
     }
 
-    // MODE: pdf (enviar apenas .tex para ConvertHub)
+    // MODE: pdf (enviar .tex + imagens como ZIP para ConvertHub)
     const CONVERTHUB_API_KEY = Deno.env.get('CONVERTHUB_API_KEY');
     if (!CONVERTHUB_API_KEY) {
       throw new Error('CONVERTHUB_API_KEY not configured');
     }
 
-    // Enviar apenas o arquivo .tex para ConvertHub
-    const texBase64 = b64encode(new TextEncoder().encode(latexSource));
+    // Criar ZIP com .tex e imagens para enviar ao ConvertHub
+    const JSZip = (await import('https://esm.sh/jszip@3.10.1')).default;
+    const zip = new JSZip();
+
+    // Adicionar arquivo .tex ao ZIP
+    zip.file('banner.tex', latexSource);
+
+    // Baixar e adicionar imagens ao ZIP
+    console.log('Downloading images for PDF generation:', images.length);
+    for (let idx = 0; idx < images.length; idx++) {
+      const img = images[idx];
+      const filename = `image_${idx + 1}.jpg`;
+      
+      try {
+        const imageResponse = await fetch(img.public_url);
+        if (imageResponse.ok) {
+          const imageBlob = await imageResponse.arrayBuffer();
+          zip.file(filename, imageBlob);
+          console.log(`Added ${filename} to ZIP for PDF`);
+        } else {
+          console.error(`Failed to download ${filename}:`, imageResponse.status);
+        }
+      } catch (err) {
+        console.error(`Error downloading ${filename}:`, err);
+      }
+    }
+
+    // Gerar ZIP em base64
+    const zipBytes = await zip.generateAsync({ type: 'uint8array' });
+    const zipBase64 = b64encode(zipBytes);
     
+    console.log('ZIP generated for PDF conversion, size:', zipBytes.length);
+
+    // Enviar ZIP para ConvertHub
     const convertResponse = await fetch('https://api.converthub.com/v2/convert/base64', {
       method: 'POST',
       headers: {
@@ -322,8 +346,8 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        file_base64: texBase64,
-        filename: 'banner.tex',
+        file_base64: zipBase64,
+        filename: 'banner.zip',
         target_format: 'pdf',
         output_filename: 'banner-academico.pdf',
       }),
