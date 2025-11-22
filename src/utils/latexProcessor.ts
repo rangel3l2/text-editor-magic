@@ -146,13 +146,13 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         introUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
         if (img.caption) {
-          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
-          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`;
         }
         html += '</div>';
         return html;
@@ -163,11 +163,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for introduction section (not already inlined)
     introImages.filter(img => !introUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
-        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
-        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
-          parts.push(`<div style=\"font-size: 10pt; font-style: italic; color: #333;\">Fonte: ${img.source}</div>`);
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`);
         }
         parts.push('</div>');
       }
@@ -187,13 +187,13 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         objUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
         if (img.caption) {
-          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
-          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`;
         }
         html += '</div>';
         return html;
@@ -204,11 +204,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for objectives section (not already inlined)
     objectivesImages.filter(img => !objUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
-        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
-        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
-          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`);
         }
         parts.push('</div>');
       }
@@ -228,13 +228,13 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         methUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
         if (img.caption) {
-          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
-          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`;
         }
         html += '</div>';
         return html;
@@ -245,11 +245,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for methodology section (not already inlined)
     methodologyImages.filter(img => !methUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
-        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
-        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
-          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`);
         }
         parts.push('</div>');
       }
@@ -269,13 +269,13 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         resUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
         if (img.caption) {
-          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
-          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`;
         }
         html += '</div>';
         return html;
@@ -286,11 +286,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for results section (not already inlined)
     resultsImages.filter(img => !resUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
-        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
-        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
-          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`);
         }
         parts.push('</div>');
       }
@@ -310,13 +310,13 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         discUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
         if (img.caption) {
-          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
-          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`;
         }
         html += '</div>';
         return html;
@@ -327,11 +327,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for discussion section (not already inlined)
     discussionImages.filter(img => !discUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
-        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
-        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
-          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`);
         }
         parts.push('</div>');
       }
@@ -351,13 +351,13 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         concUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm 0; text-align: center; page-break-inside: avoid; cursor: move;">';
+        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
         if (img.caption) {
-          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`;
+          html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
-        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
+        html += `<img data-image-id="${id}" src="${img.url}" alt="${img.caption || ''}" style="width: 100%; height: auto; margin-bottom: 0.3cm; pointer-events: none;" />`;
         if (img.source) {
-          html += `<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`;
+          html += `<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`;
         }
         html += '</div>';
         return html;
@@ -368,11 +368,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for conclusion section (not already inlined)
     conclusionImages.filter(img => !concUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm 0; text-align: center; page-break-inside: avoid;">');
-        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.3cm; color: #000;">${img.caption}</div>`);
-        parts.push(`<img src="${img.url}" alt="${img.caption}" style="max-width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
+        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
+        parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
-          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333;">Fonte: ${img.source}</div>`);
+          parts.push(`<div style="font-size: 10pt; font-style: italic; color: #333; margin-top: 0.3cm;">Fonte: ${img.source}</div>`);
         }
         parts.push('</div>');
       }
