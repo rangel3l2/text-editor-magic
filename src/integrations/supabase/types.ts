@@ -535,6 +535,25 @@ export type Database = {
       }
       generate_share_token: { Args: never; Returns: string }
       generate_work_share_token: { Args: never; Returns: string }
+      get_shared_work: {
+        Args: { p_token: string }
+        Returns: {
+          content: Json | null
+          created_at: string | null
+          id: string
+          last_modified: string | null
+          share_token: string | null
+          title: string
+          user_id: string
+          work_type: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "work_in_progress"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

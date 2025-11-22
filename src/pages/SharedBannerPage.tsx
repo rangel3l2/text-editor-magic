@@ -18,82 +18,53 @@ export const SharedBannerPage = () => {
       }
 
       try {
-        // Buscar template pelo token
-        const { data: template, error } = await supabase
-          .from('banner_templates')
+        // Buscar trabalho pelo token
+        const { data: work, error } = await supabase
+          .from('work_in_progress')
           .select('*')
           .eq('share_token', token)
-          .eq('is_public', true)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
 
-        if (!template) {
+        if (!work) {
           toast({
-            title: 'Template não encontrado',
-            description: 'O link pode estar incorreto ou o template foi removido',
+            title: 'Trabalho não encontrado',
+            description: 'O link pode estar incorreto ou o trabalho foi removido',
             variant: 'destructive',
           });
           navigate('/');
           return;
         }
 
-        // Incrementar contador de visualizações
-        await supabase
-          .from('banner_templates')
-          .update({ views_count: (template.views_count || 0) + 1 })
-          .eq('id', template.id);
-
         // Verificar se usuário está autenticado
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-          // Redirecionar para login com retorno para criar banner com template
           toast({
             title: 'Faça login para continuar',
-            description: 'Você precisa estar logado para criar um banner',
+            description: 'Você precisa estar logado para visualizar este trabalho',
           });
           navigate('/', { 
             state: { 
-              templateToken: token,
               returnTo: `/banner/shared/${token}` 
             } 
           });
           return;
         }
 
-        // Criar novo trabalho com o template
-        const baseContent = (template.content as Record<string, any>) || {};
-        const { data: newWork, error: workError } = await supabase
-          .from('work_in_progress')
-          .insert({
-            user_id: user.id,
-            work_type: 'banner',
-            title: `Banner - ${template.title}`,
-            content: {
-              ...baseContent,
-              institution: template.default_institution_name || '',
-              institutionLogo: template.default_logo_url || '',
-              templateId: template.id,
-            },
-          })
-          .select()
-          .single();
-
-        if (workError) throw workError;
-
         toast({
-          title: 'Template carregado',
-          description: 'O banner foi criado com o template selecionado',
+          title: 'Trabalho carregado',
+          description: 'Redirecionando para o editor...',
         });
 
-        // Redirecionar para o editor de banner
-        navigate(`/?workId=${newWork.id}`);
+        // Redirecionar para o editor com o trabalho
+        navigate(`/?workId=${work.id}`);
       } catch (error) {
-        console.error('Erro ao carregar template compartilhado:', error);
+        console.error('Erro ao carregar trabalho compartilhado:', error);
         toast({
           title: 'Erro',
-          description: 'Não foi possível carregar o template',
+          description: 'Não foi possível carregar o trabalho',
           variant: 'destructive',
         });
         navigate('/');
