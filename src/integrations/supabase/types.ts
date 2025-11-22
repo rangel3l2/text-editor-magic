@@ -533,6 +533,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_view_shared_work: {
+        Args: { _user_id: string; _work_id: string }
+        Returns: boolean
+      }
       generate_share_token: { Args: never; Returns: string }
       generate_work_share_token: { Args: never; Returns: string }
       get_shared_work: {
