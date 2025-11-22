@@ -144,10 +144,10 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
 %                    CABEÇALHO / FAIXA
 % ===========================================================
 
-\\begin{center}
-% Imagem de cabeçalho (se fornecida)
-${images.find(img => img.section === 'header') ? `\\includegraphics[width=\\textwidth, height=10cm, keepaspectratio]{image_header.jpg}` : `{\\fontsize{36}{43}\\selectfont\\textbf{${institution}}}`}
-\\end{center}
+  \\begin{center}
+  % Imagem de cabeçalho (se fornecida)
+  ${content.institutionLogo ? `\\includegraphics[width=\\textwidth, height=10cm, keepaspectratio]{image_header.jpg}` : `{\\fontsize{36}{43}\\selectfont\\textbf{${institution}}}`}
+  \\end{center}
 
 % ===========================================================
 %                    TÍTULO
@@ -263,7 +263,23 @@ serve(async (req) => {
       // Adicionar arquivo .tex ao ZIP
       zip.file('banner.tex', latexSource);
 
-      // Baixar e adicionar imagens ao ZIP
+      // Adicionar logo de cabeçalho se houver
+      if (content.institutionLogo) {
+        try {
+          const headerResponse = await fetch(content.institutionLogo);
+          if (headerResponse.ok) {
+            const headerBlob = await headerResponse.arrayBuffer();
+            zip.file('image_header.jpg', headerBlob);
+            console.log('Added header logo image_header.jpg to ZIP');
+          } else {
+            console.error('Failed to download header logo:', headerResponse.status);
+          }
+        } catch (err) {
+          console.error('Error downloading header logo:', err);
+        }
+      }
+
+      // Baixar e adicionar demais imagens ao ZIP
       console.log('Downloading images for ZIP:', images.length);
       for (let idx = 0; idx < images.length; idx++) {
         const img = images[idx];
