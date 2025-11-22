@@ -36,11 +36,11 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
         imageCommands += `\n% bloco seguro para imagens inline dentro de multicols\n`;
         imageCommands += `\\begin{minipage}{\\linewidth}\n`;
         imageCommands += `\\begin{flushleft}\n`;
-        imageCommands += `    \\includegraphics[width=14cm]{${filename}}\n\n`;
         if (img.alt) {
-          imageCommands += `    \\vspace{0.4cm}\n`;
           imageCommands += `    {\\fontsize{28}{34}\\selectfont\\textit{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}}\n\n`;
+          imageCommands += `    \\vspace{0.4cm}\n`;
         }
+        imageCommands += `    \\includegraphics[width=14cm]{${filename}}\n\n`;
         imageCommands += `\\end{flushleft}\n`;
         imageCommands += `\\end{minipage}\n`;
         imageCommands += `\\vspace{1cm}\n\n`;
@@ -102,18 +102,17 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
     const caption = img.caption ? cleanLatex(img.caption) : '';
     const source = img.source ? cleanLatex(img.source) : '';
     const widthCm = img.width_cm || 14;
-    const figureLabel = `Figura ${idx + 1}:`;
     
     let cmd = '\n% bloco seguro para imagens dentro de multicols\n';
     cmd += '\\begin{minipage}{\\linewidth}\n';
     cmd += '\\begin{flushleft}\n';
-    cmd += `    \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\n\n`;
     if (caption) {
+      cmd += `    {\\fontsize{28}{34}\\selectfont\\textit{${caption}}}\n\n`;
       cmd += `    \\vspace{0.4cm}\n`;
-      cmd += `    {\\fontsize{28}{34}\\selectfont\\textbf{${figureLabel}} \\textit{${caption}}}\n\n`;
     }
+    cmd += `    \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\n\n`;
     if (source) {
-      cmd += `    \\vspace{0.2cm}\n`;
+      cmd += `    \\vspace{0.4cm}\n`;
       cmd += `    {\\fontsize{24}{30}\\selectfont\\textit{Fonte: ${source}}}\n\n`;
     }
     cmd += '\\end{flushleft}\n';
