@@ -200,7 +200,7 @@ serve(async (req) => {
   let latexSource = '';
   let base64Zip: string | null = null;
   try {
-    const { content } = await req.json()
+    const { content, mode = 'pdf' } = await req.json()
     
     if (!content) {
       return new Response(
@@ -252,50 +252,62 @@ serve(async (req) => {
     
     console.log('LaTeX source generated, length:', latexSource.length);
 
-    // Import base64 encoder and create ZIP com LaTeX e imagens
+    // Import base64 encoder
     const { encode: b64encode } = await import('https://deno.land/std@0.168.0/encoding/base64.ts');
-    const JSZip = (await import('https://esm.sh/jszip@3.10.1')).default;
-    const zip = new JSZip();
 
-    // Adicionar arquivo .tex ao ZIP
-    zip.file('banner.tex', latexSource);
+    // MODE: latex (gerar apenas ZIP com .tex + imagens)
+    if (mode === 'latex') {
+      const JSZip = (await import('https://esm.sh/jszip@3.10.1')).default;
+      const zip = new JSZip();
 
-    // Baixar e adicionar imagens ao ZIP
-    console.log('Downloading images for ZIP:', images.length);
-    for (let idx = 0; idx < images.length; idx++) {
-      const img = images[idx];
-      const filename = `image_${idx + 1}.jpg`;
-      
-      try {
-        const imageResponse = await fetch(img.public_url);
-        if (imageResponse.ok) {
-          const imageBlob = await imageResponse.arrayBuffer();
-          zip.file(filename, imageBlob);
-          console.log(`Added ${filename} to ZIP`);
-        } else {
-          console.error(`Failed to download ${filename}:`, imageResponse.status);
+      // Adicionar arquivo .tex ao ZIP
+      zip.file('banner.tex', latexSource);
+
+      // Baixar e adicionar imagens ao ZIP
+      console.log('Downloading images for ZIP:', images.length);
+      for (let idx = 0; idx < images.length; idx++) {
+        const img = images[idx];
+        const filename = `image_${idx + 1}.jpg`;
+        
+        try {
+          const imageResponse = await fetch(img.public_url);
+          if (imageResponse.ok) {
+            const imageBlob = await imageResponse.arrayBuffer();
+            zip.file(filename, imageBlob);
+            console.log(`Added ${filename} to ZIP`);
+          } else {
+            console.error(`Failed to download ${filename}:`, imageResponse.status);
+          }
+        } catch (err) {
+          console.error(`Error downloading ${filename}:`, err);
         }
-      } catch (err) {
-        console.error(`Error downloading ${filename}:`, err);
       }
+
+      // Gerar ZIP em base64
+      const zipBytes = await zip.generateAsync({ type: 'uint8array' });
+      base64Zip = b64encode(zipBytes);
+      
+      console.log('ZIP generated successfully, size:', zipBytes.length);
+
+      return new Response(JSON.stringify({ 
+        zip: base64Zip,
+        latex: latexSource,
+        message: 'LaTeX ZIP generated successfully' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
     }
 
-    // Gerar ZIP em base64
-    const zipBytes = await zip.generateAsync({ type: 'uint8array' });
-    base64Zip = b64encode(zipBytes);
-    
-    console.log('ZIP generated successfully, size:', zipBytes.length);
-
-    // Usar API do ConvertHub para converter LaTeX em PDF
+    // MODE: pdf (enviar apenas .tex para ConvertHub)
     const CONVERTHUB_API_KEY = Deno.env.get('CONVERTHUB_API_KEY');
     if (!CONVERTHUB_API_KEY) {
       throw new Error('CONVERTHUB_API_KEY not configured');
     }
 
-    // Enviar ZIP completo (com .tex + imagens) para ConvertHub
-    const zipBase64 = b64encode(zipBytes);
+    // Enviar apenas o arquivo .tex para ConvertHub
+    const texBase64 = b64encode(new TextEncoder().encode(latexSource));
     
-    // Enviar para ConvertHub
     const convertResponse = await fetch('https://api.converthub.com/v2/convert/base64', {
       method: 'POST',
       headers: {
@@ -303,8 +315,8 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        file_base64: zipBase64,
-        filename: 'banner.zip',
+        file_base64: texBase64,
+        filename: 'banner.tex',
         target_format: 'pdf',
         output_filename: 'banner-academico.pdf',
       }),
@@ -327,9 +339,7 @@ serve(async (req) => {
       
       return new Response(JSON.stringify({ 
         pdf: base64Pdf,
-        latex: latexSource,
-        zip: base64Zip,
-        message: 'PDF and ZIP generated successfully (cached)' 
+        message: 'PDF generated successfully (cached)' 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -368,9 +378,7 @@ serve(async (req) => {
         
         return new Response(JSON.stringify({ 
           pdf: base64Pdf,
-          latex: latexSource,
-          zip: base64Zip,
-          message: 'PDF and ZIP generated successfully' 
+          message: 'PDF generated successfully' 
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
@@ -383,8 +391,8 @@ serve(async (req) => {
       }
     }
 
-    // Timeout - retornar LaTeX e ZIP como fallback
-    console.warn('ConvertHub job timeout, returning LaTeX source and ZIP');
+    // Timeout - retornar LaTeX como fallback
+    console.warn('ConvertHub job timeout, returning LaTeX source');
     throw new Error('Conversion timeout');
   } catch (error) {
     console.error('Error:', error)
@@ -393,8 +401,7 @@ serve(async (req) => {
       JSON.stringify({ 
         compiled: false,
         latex: latexSource || null,
-        zip: base64Zip || null,
-        message: 'Compilation failed; returning LaTeX source and ZIP (if available).'
+        message: 'Compilation failed; returning LaTeX source (if available).'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
