@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { OnboardingTutorial } from "./OnboardingTutorial";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BannerLayout from "./banner/BannerLayout";
 import BannerHeader from "./banner/BannerHeader";
@@ -19,13 +19,20 @@ import BannerTemplateSelector from "./banner/templates/BannerTemplateSelector";
 import type { BannerTemplatePreset } from "@/hooks/useBannerTemplates";
 import type { LogoConfig } from "./banner/header/LogoUpload";
 import BannerAttachmentsManager from "./banner/BannerAttachmentsManager";
+import { useWorkSharing } from "@/hooks/useWorkSharing";
+import ShareDialog from "./banner/sharing/ShareDialog";
+import { Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const BannerEditor = () => {
   const { user } = useAuth();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [hasEditedFirstField, setHasEditedFirstField] = useState(false);
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   const {
     content,
@@ -61,6 +68,29 @@ const BannerEditor = () => {
   });
 
   const {
+    shares,
+    comments,
+    shareToken,
+    userPermission,
+    isLoading: sharingLoading,
+    generateShareLink,
+    shareWork,
+    updateShare,
+    removeShare,
+    addComment,
+    updateComment,
+    deleteComment,
+  } = useWorkSharing(currentWorkId || undefined, user?.id);
+
+  // Verificar token de compartilhamento
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token && !user) {
+      setShowLoginModal(true);
+    }
+  }, [searchParams, user]);
+
+  const {
     handleGeneratePDF,
     handleGenerateLatex,
     handleShare,
@@ -77,6 +107,11 @@ const BannerEditor = () => {
   };
 
   const handleFieldChange = async (field: string, value: string) => {
+    // Verificar permissões
+    if (userPermission === 'viewer' || userPermission === 'commenter') {
+      return; // Não permite edição
+    }
+
     // Permite digitar sempre, sem abrir modal automaticamente
     if (!user && !hasEditedFirstField) {
       setHasEditedFirstField(true);
@@ -95,6 +130,9 @@ const BannerEditor = () => {
       }, 1500);
     }
   };
+
+  const canEdit = userPermission === 'owner' || userPermission === 'editor';
+  const canComment = userPermission === 'owner' || userPermission === 'editor' || userPermission === 'commenter';
 
   const handleSelectTemplate = (template: BannerTemplatePreset) => {
     // Aplicar configurações do template ao banner
@@ -148,6 +186,19 @@ const BannerEditor = () => {
         isOpen={showLoginModal} 
         onClose={() => setShowLoginModal(false)} 
       />
+      
+      <ShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        workId={currentWorkId || ''}
+        shareToken={shareToken}
+        shares={shares}
+        onGenerateLink={generateShareLink}
+        onShareWork={shareWork}
+        onUpdateShare={updateShare}
+        onRemoveShare={removeShare}
+      />
+
       <BannerLayout
         previewOpen={previewOpen}
         setPreviewOpen={setPreviewOpen}
@@ -159,12 +210,38 @@ const BannerEditor = () => {
         onGenerateLatex={handleGenerateLatex}
       >
         <div className="space-y-8">
+          {/* Indicador de permissão */}
+          {userPermission && userPermission !== 'owner' && (
+            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                <div>
+                  <p className="font-medium">Trabalho compartilhado</p>
+                  <p className="text-sm text-muted-foreground">
+                    {userPermission === 'viewer' && 'Você tem permissão apenas para visualizar'}
+                    {userPermission === 'editor' && 'Você pode editar este trabalho'}
+                    {userPermission === 'commenter' && 'Você pode comentar nas seções'}
+                  </p>
+                </div>
+              </div>
+              <Badge variant={
+                userPermission === 'viewer' ? 'secondary' :
+                userPermission === 'editor' ? 'default' :
+                'outline'
+              }>
+                {userPermission === 'viewer' && 'Visualizador'}
+                {userPermission === 'editor' && 'Editor'}
+                {userPermission === 'commenter' && 'Comentador'}
+              </Badge>
+            </div>
+          )}
+
           <BannerHeader 
             title={content.title || "Novo Banner"}
             previewHtml={content.previewHtml}
             onGeneratePDF={handleGeneratePDF}
             onGenerateLatex={handleGenerateLatex}
-            onShare={handleShare}
+            onShare={userPermission === 'owner' ? () => setShareDialogOpen(true) : handleShare}
             onOpenPreview={() => setPreviewOpen(true)}
             onClearFields={handleClearFields}
           />
