@@ -88,39 +88,46 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
     }
   });
 
-  return `\\documentclass[landscape]{article}
+  return `\\documentclass{article}
+
+% Fonte estilo Arial (Helvetica)
+\\renewcommand{\\familydefault}{\\sfdefault}
+
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
 \\usepackage[brazilian]{babel}
+
+\\usepackage{pgfplots}
+\\pgfplotsset{compat=1.18}
+
 \\usepackage{geometry}
 \\usepackage{multicol}
-\\usepackage{graphicx}
 \\usepackage{xcolor}
-\\usepackage{titlesec}
+\\usepackage{graphicx}
 \\usepackage{ragged2e}
+\\usepackage{setspace}
 \\usepackage{float}
 \\usepackage{caption}
 
-% Banner dimensions: 90cm x 120cm (900mm x 1200mm)
+% Dimensões do banner (90 cm × 120 cm)
 \\geometry{
-  paperwidth=120cm,
-  paperheight=90cm,
-  margin=2cm,
-  top=2cm,
-  bottom=2cm,
-  left=2cm,
-  right=2cm
+  paperwidth=90cm,
+  paperheight=120cm,
+  margin=2cm
 }
 
-% Define colors
-\\definecolor{primaryblue}{RGB}{30,64,175}
-\\definecolor{lightblue}{RGB}{59,130,246}
-\\definecolor{bglight}{RGB}{240,249,255}
+% Espaçamento entre colunas
+\\setlength{\\columnsep}{${numColumns === 3 ? '2cm' : '3cm'}}
 
-% Section styling
-\\titleformat{\\section}
-  {\\normalfont\\fontsize{32}{38}\\bfseries\\color{primaryblue}}
-  {}{0em}{}[\\color{lightblue}\\titlerule[4pt]]
+% Tabulação nos parágrafos
+\\setlength{\\parindent}{2cm}
+
+% Espaçamento entre parágrafos
+\\setlength{\\parskip}{1em}
+
+% ------- CORES PERSONALIZADAS -------
+\\definecolor{titulo}{HTML}{0A4D8C}
+\\definecolor{boxbg}{HTML}{E9F2FA}
 
 % Caption styling
 \\captionsetup{
@@ -130,62 +137,55 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
   justification=centering
 }
 
-\\setlength{\\columnsep}{${numColumns === 3 ? '2cm' : '3cm'}}
-\\setlength{\\parindent}{0pt}
-\\setlength{\\parskip}{1em}
-
 \\begin{document}
 \\pagestyle{empty}
 
-% Header section with institution
+% ===========================================================
+%                    CABEÇALHO / FAIXA
+% ===========================================================
+
 \\begin{center}
-\\colorbox{bglight}{\\parbox{\\dimexpr\\textwidth-2\\fboxsep\\relax}{
-  \\vspace{1cm}
-  \\begin{minipage}{0.3\\textwidth}
-    % Logo placeholder (if institutionLogo provided)
-  \\end{minipage}
-  \\hfill
-  \\begin{minipage}{0.65\\textwidth}
-    \\raggedleft
-    \\fontsize{36}{43}\\selectfont\\textbf{${institution}}
-  \\end{minipage}
-  \\vspace{1cm}
-}}
+% Imagem de cabeçalho (se fornecida)
+${images.find(img => img.section === 'header') ? `\\includegraphics[width=\\textwidth, height=10cm, keepaspectratio]{image_header.jpg}` : `{\\fontsize{36}{43}\\selectfont\\textbf{${institution}}}`}
+\\end{center}
+
+% ===========================================================
+%                    TÍTULO
+% ===========================================================
+
+\\begin{center}
+    {\\fontsize{60}{70}\\selectfont \\textbf{\\textcolor{titulo}{\\MakeUppercase{${title}}}} \\par}
+
+    \\vspace{1.5cm}
+
+    {\\fontsize{30}{36}\\selectfont ${authors} \\par}
+
+    ${advisors ? `\\vspace{0.5cm}\n    {\\fontsize{30}{36}\\selectfont \\textbf{Orientador(a): ${advisors}} \\par}` : ''}
 \\end{center}
 
 \\vspace{2cm}
 
-% Title and authors
-\\begin{center}
-  {\\fontsize{52}{62}\\selectfont\\textbf{\\color{primaryblue}${title}}}
-  
-  \\vspace{1.5cm}
-  
-  {\\fontsize{28}{34}\\selectfont ${authors}}
-  
-  ${advisors ? `\\vspace{0.8cm}\n  {\\fontsize{28}{34}\\selectfont\\textbf{Orientador(a): ${advisors}}}` : ''}
-\\end{center}
+% ===========================================================
+%                    INÍCIO DAS ${numColumns === 3 ? 'TRÊS' : 'DUAS'} COLUNAS
+% ===========================================================
 
-\\vspace{2cm}
-
-% Content in ${numColumns} columns
 \\begin{multicols}{${numColumns}}
-\\fontsize{24}{29}\\selectfont
 \\justifying
+\\fontsize{40}{48}\\selectfont
 
-${introduction ? `\\section*{INTRODUÇÃO}\n${introduction}\n${imagesBySection.introduction.map(img => generateImageCommand(img, img.idx)).join('')}` : ''}
+${introduction ? `% ===========================================================\n%                    INTRODUÇÃO\n% ===========================================================\n\n\\textbf{INTRODUÇÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${introduction}\n${imagesBySection.introduction.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${objectives ? `\\section*{OBJETIVOS}\n${objectives}\n${imagesBySection.objectives.map(img => generateImageCommand(img, img.idx)).join('')}` : ''}
+${objectives ? `% ===========================================================\n%                    OBJETIVOS\n% ===========================================================\n\n\\textbf{OBJETIVOS}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${objectives}\n${imagesBySection.objectives.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${methodology ? `\\section*{METODOLOGIA}\n${methodology}\n${imagesBySection.methodology.map(img => generateImageCommand(img, img.idx)).join('')}` : ''}
+${methodology ? `% ===========================================================\n%                    METODOLOGIA\n% ===========================================================\n\n\\textbf{METODOLOGIA}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${methodology}\n${imagesBySection.methodology.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${results ? `\\section*{RESULTADOS E DISCUSSÃO}\n${results}\n${imagesBySection.results.map(img => generateImageCommand(img, img.idx)).join('')}` : ''}
+${results ? `% ===========================================================\n%                    RESULTADOS E DISCUSSÃO\n% ===========================================================\n\n\\textbf{RESULTADOS E DISCUSSÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${results}\n${imagesBySection.results.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${conclusion ? `\\section*{CONCLUSÃO}\n${conclusion}\n${imagesBySection.conclusion.map(img => generateImageCommand(img, img.idx)).join('')}` : ''}
+${conclusion ? `% ===========================================================\n%                    CONCLUSÃO\n% ===========================================================\n\n\\textbf{CONCLUSÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${conclusion}\n${imagesBySection.conclusion.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1.5cm}\n` : ''}
 
-${references ? `\\section*{REFERÊNCIAS}\n${references}` : ''}
+${references ? `% ===========================================================\n%                    REFERÊNCIAS\n% ===========================================================\n\n\\textbf{REFERÊNCIAS}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${references}\n` : ''}
 
-${acknowledgments ? `\\section*{AGRADECIMENTOS}\n${acknowledgments}` : ''}
+${acknowledgments ? `\\vspace{1.5cm}\n\n% ===========================================================\n%                    AGRADECIMENTOS\n% ===========================================================\n\n\\textbf{AGRADECIMENTOS}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${acknowledgments}\n` : ''}
 
 \\end{multicols}
 
