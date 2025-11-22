@@ -64,13 +64,17 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
           // Type cast the JSONB content to any
           const savedContent = data.content as any;
           
+          // Try to load logo from localStorage as fallback
+          const localLogo = localStorage.getItem(`banner_logo_${id}`);
+          const localLogoConfig = localStorage.getItem(`banner_logo_config_${id}`);
+          
           // Ensure we have default values for all fields if they're missing
           const completeContent = {
             title: savedContent.title || '',
             authors: savedContent.authors || '',
             institution: savedContent.institution || '',
-            institutionLogo: savedContent.institutionLogo || '',
-            logoConfig: savedContent.logoConfig,
+            institutionLogo: savedContent.institutionLogo || localLogo || '',
+            logoConfig: savedContent.logoConfig || (localLogoConfig ? JSON.parse(localLogoConfig) : undefined),
             introduction: savedContent.introduction || '',
             objectives: savedContent.objectives || '',
             methodology: savedContent.methodology || '',
