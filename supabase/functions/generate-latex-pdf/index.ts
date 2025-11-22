@@ -6,7 +6,7 @@ const corsHeaders = {
 }
 
 // Generate LaTeX document for science fair banner (90cm x 120cm)
-const generateLatexDocument = (content: any, images: any[] = []): string => {
+const generateLatexDocument = (content: any, images: any[] = [], mode: string = 'pdf'): string => {
   const cleanLatex = (text: string) => {
     if (!text) return '';
     // Remove placeholders de imagens
@@ -53,15 +53,22 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
   const numColumns = columnLayout === '3' ? 3 : 2;
 
   // Helper function to generate image inclusion command
-  const generateImageCommand = (img: any, idx: number) => {
-    const filename = `image_${idx + 1}`;
+  const generateImageCommand = (img: any, idx: number, mode: string) => {
     const caption = img.caption ? cleanLatex(img.caption) : '';
     const source = img.source ? cleanLatex(img.source) : '';
     const widthCm = img.width_cm || 8;
     
     let cmd = '\n\\begin{figure}[h]\n';
     cmd += '  \\centering\n';
-    cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\n`;
+    
+    // Para PDF, usar URL pública; para LaTeX, usar nome de arquivo local
+    if (mode === 'pdf' && img.public_url) {
+      cmd += `  \\includegraphics[width=${widthCm}cm]{${img.public_url}}\n`;
+    } else {
+      const filename = `image_${idx + 1}`;
+      cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\n`;
+    }
+    
     if (caption) {
       cmd += `  \\caption{${caption}}\n`;
     }
@@ -173,15 +180,15 @@ ${images.find(img => img.section === 'header') ? `\\includegraphics[width=\\text
 \\justifying
 \\fontsize{40}{48}\\selectfont
 
-${introduction ? `% ===========================================================\n%                    INTRODUÇÃO\n% ===========================================================\n\n\\textbf{INTRODUÇÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${introduction}\n${imagesBySection.introduction.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
+${introduction ? `% ===========================================================\n%                    INTRODUÇÃO\n% ===========================================================\n\n\\textbf{INTRODUÇÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${introduction}\n${imagesBySection.introduction.map(img => generateImageCommand(img, img.idx, mode)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${objectives ? `% ===========================================================\n%                    OBJETIVOS\n% ===========================================================\n\n\\textbf{OBJETIVOS}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${objectives}\n${imagesBySection.objectives.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
+${objectives ? `% ===========================================================\n%                    OBJETIVOS\n% ===========================================================\n\n\\textbf{OBJETIVOS}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${objectives}\n${imagesBySection.objectives.map(img => generateImageCommand(img, img.idx, mode)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${methodology ? `% ===========================================================\n%                    METODOLOGIA\n% ===========================================================\n\n\\textbf{METODOLOGIA}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${methodology}\n${imagesBySection.methodology.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
+${methodology ? `% ===========================================================\n%                    METODOLOGIA\n% ===========================================================\n\n\\textbf{METODOLOGIA}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${methodology}\n${imagesBySection.methodology.map(img => generateImageCommand(img, img.idx, mode)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${results ? `% ===========================================================\n%                    RESULTADOS E DISCUSSÃO\n% ===========================================================\n\n\\textbf{RESULTADOS E DISCUSSÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${results}\n${imagesBySection.results.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
+${results ? `% ===========================================================\n%                    RESULTADOS E DISCUSSÃO\n% ===========================================================\n\n\\textbf{RESULTADOS E DISCUSSÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${results}\n${imagesBySection.results.map(img => generateImageCommand(img, img.idx, mode)).join('')}\n\\vspace{1cm}\n` : ''}
 
-${conclusion ? `% ===========================================================\n%                    CONCLUSÃO\n% ===========================================================\n\n\\textbf{CONCLUSÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${conclusion}\n${imagesBySection.conclusion.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1.5cm}\n` : ''}
+${conclusion ? `% ===========================================================\n%                    CONCLUSÃO\n% ===========================================================\n\n\\textbf{CONCLUSÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${conclusion}\n${imagesBySection.conclusion.map(img => generateImageCommand(img, img.idx, mode)).join('')}\n\\vspace{1.5cm}\n` : ''}
 
 ${references ? `% ===========================================================\n%                    REFERÊNCIAS\n% ===========================================================\n\n\\textbf{REFERÊNCIAS}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${references}\n` : ''}
 
@@ -243,12 +250,12 @@ serve(async (req) => {
       }
     }
 
-    // Generate LaTeX source with proper image filenames
+    // Generate LaTeX source with proper image filenames or URLs depending on mode
     const imagesForLatex = images.map((img, idx) => ({
       ...img,
       filename: `image_${idx + 1}.jpg`
     }));
-    latexSource = generateLatexDocument(content, imagesForLatex);
+    latexSource = generateLatexDocument(content, imagesForLatex, mode);
     
     console.log('LaTeX source generated, length:', latexSource.length);
 
