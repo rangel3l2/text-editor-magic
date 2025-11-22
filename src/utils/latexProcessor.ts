@@ -146,7 +146,12 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         introUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
+        
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        let html = `<div class="attachment-container" draggable="true" data-attachment-id="${id}" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`;
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
@@ -163,7 +168,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for introduction section (not already inlined)
     introImages.filter(img => !introUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        parts.push(`<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`);
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
         parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
@@ -187,7 +196,12 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         objUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
+        
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        let html = `<div class="attachment-container" draggable="true" data-attachment-id="${id}" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`;
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
@@ -204,7 +218,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for objectives section (not already inlined)
     objectivesImages.filter(img => !objUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        parts.push(`<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`);
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
         parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
@@ -228,7 +246,12 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         methUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
+        
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        let html = `<div class="attachment-container" draggable="true" data-attachment-id="${id}" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`;
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
@@ -245,7 +268,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for methodology section (not already inlined)
     methodologyImages.filter(img => !methUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        parts.push(`<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`);
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
         parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
@@ -269,7 +296,12 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         resUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
+        
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        let html = `<div class="attachment-container" draggable="true" data-attachment-id="${id}" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`;
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
@@ -286,7 +318,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for results section (not already inlined)
     resultsImages.filter(img => !resUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        parts.push(`<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`);
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
         parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
@@ -310,7 +346,12 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         discUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
+        
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        let html = `<div class="attachment-container" draggable="true" data-attachment-id="${id}" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`;
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
@@ -327,7 +368,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for discussion section (not already inlined)
     discussionImages.filter(img => !discUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        parts.push(`<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`);
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
         parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {
@@ -351,7 +396,12 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
         const img = images.find(i => i.id === id);
         if (!img || !img.url) return '';
         concUsed.add(id);
-        let html = '<div class="attachment-container" draggable="true" data-attachment-id="' + id + '" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: center; width: 85%;">';
+        
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        let html = `<div class="attachment-container" draggable="true" data-attachment-id="${id}" style="margin: 1cm auto; text-align: center; page-break-inside: avoid; cursor: move; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`;
         if (img.caption) {
           html += `<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`;
         }
@@ -368,7 +418,11 @@ export const generateLatexContent = (content: any, images: any[] = []) => {
     // Add remaining images for conclusion section (not already inlined)
     conclusionImages.filter(img => !concUsed.has(img.id)).forEach(img => {
       if (img.caption && img.url) {
-        parts.push('<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; width: 85%;">');
+        const alignment = img.adjustments?.alignment || 'center';
+        const widthPercent = img.adjustments?.widthPercent || 85;
+        const alignStyle = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+        
+        parts.push(`<div style="margin: 1cm auto; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: ${alignStyle}; width: ${widthPercent}%;">`);
         parts.push(`<div style="font-size: 11pt; font-weight: bold; margin-bottom: 0.4cm; color: #000;">${img.caption}</div>`);
         parts.push(`<img src="${img.url}" alt="${img.caption}" style="width: 100%; height: auto; margin-bottom: 0.3cm;" />`);
         if (img.source) {

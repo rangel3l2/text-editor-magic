@@ -21,6 +21,8 @@ export interface BannerImage {
     brightness: number;
     contrast: number;
     saturation: number;
+    alignment?: 'left' | 'center' | 'right';
+    widthPercent?: number;
   };
   original_width: number;
   original_height: number;
@@ -59,7 +61,13 @@ export const useBannerImages = (workId: string | undefined, userId: string | und
             
             return {
               ...img,
-              adjustments: img.adjustments as { brightness: number; contrast: number; saturation: number },
+              adjustments: {
+                brightness: (img.adjustments as any)?.brightness || 0,
+                contrast: (img.adjustments as any)?.contrast || 0,
+                saturation: (img.adjustments as any)?.saturation || 0,
+                alignment: (img.adjustments as any)?.alignment || 'center',
+                widthPercent: (img.adjustments as any)?.widthPercent || 85
+              },
               url: urlData.publicUrl
             } as BannerImage;
           })
@@ -133,7 +141,13 @@ export const useBannerImages = (workId: string | undefined, userId: string | und
 
       const newImage = {
         ...imageData,
-        adjustments: imageData.adjustments as { brightness: number; contrast: number; saturation: number },
+        adjustments: {
+          brightness: (imageData.adjustments as any)?.brightness || 0,
+          contrast: (imageData.adjustments as any)?.contrast || 0,
+          saturation: (imageData.adjustments as any)?.saturation || 0,
+          alignment: (imageData.adjustments as any)?.alignment || 'center',
+          widthPercent: (imageData.adjustments as any)?.widthPercent || 85
+        },
         url: urlData.publicUrl
       } as BannerImage;
 
