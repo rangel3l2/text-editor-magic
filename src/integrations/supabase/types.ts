@@ -408,12 +408,54 @@ export type Database = {
         }
         Relationships: []
       }
+      work_comments: {
+        Row: {
+          comment_text: string
+          created_at: string | null
+          id: string
+          section_name: string
+          updated_at: string | null
+          user_email: string
+          user_id: string
+          work_id: string
+        }
+        Insert: {
+          comment_text: string
+          created_at?: string | null
+          id?: string
+          section_name: string
+          updated_at?: string | null
+          user_email: string
+          user_id: string
+          work_id: string
+        }
+        Update: {
+          comment_text?: string
+          created_at?: string | null
+          id?: string
+          section_name?: string
+          updated_at?: string | null
+          user_email?: string
+          user_id?: string
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_comments_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "work_in_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_in_progress: {
         Row: {
           content: Json | null
           created_at: string | null
           id: string
           last_modified: string | null
+          share_token: string | null
           title: string
           user_id: string
           work_type: string
@@ -423,6 +465,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_modified?: string | null
+          share_token?: string | null
           title?: string
           user_id: string
           work_type: string
@@ -432,11 +475,50 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_modified?: string | null
+          share_token?: string | null
           title?: string
           user_id?: string
           work_type?: string
         }
         Relationships: []
+      }
+      work_shares: {
+        Row: {
+          created_at: string | null
+          id: string
+          permission: Database["public"]["Enums"]["share_permission"]
+          shared_by: string
+          shared_with_email: string
+          updated_at: string | null
+          work_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["share_permission"]
+          shared_by: string
+          shared_with_email: string
+          updated_at?: string | null
+          work_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["share_permission"]
+          shared_by?: string
+          shared_with_email?: string
+          updated_at?: string | null
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_shares_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "work_in_progress"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -452,6 +534,7 @@ export type Database = {
         Returns: boolean
       }
       generate_share_token: { Args: never; Returns: string }
+      generate_work_share_token: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -472,6 +555,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "moderator"
+      share_permission: "viewer" | "editor" | "commenter"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -600,6 +684,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "moderator"],
+      share_permission: ["viewer", "editor", "commenter"],
     },
   },
 } as const
