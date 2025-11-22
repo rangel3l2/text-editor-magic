@@ -5,12 +5,45 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Extract images from HTML content
+const extractImagesFromHtml = (html: string): { src: string; alt: string }[] => {
+  if (!html) return [];
+  const imgRegex = /<img[^>]+src="([^"]+)"[^>]*(?:alt="([^"]*)")?[^>]*>/g;
+  const images: { src: string; alt: string }[] = [];
+  let match;
+  while ((match = imgRegex.exec(html)) !== null) {
+    images.push({
+      src: match[1],
+      alt: match[2] || ''
+    });
+  }
+  return images;
+};
+
 // Generate LaTeX document for science fair banner (90cm x 120cm)
-const generateLatexDocument = (content: any, images: any[] = []): string => {
-  const cleanLatex = (text: string) => {
+const generateLatexDocument = (content: any, images: any[] = [], inlineImages: Map<string, string> = new Map()): string => {
+  const cleanLatex = (text: string, sectionName: string = '') => {
     if (!text) return '';
+    
+    // Extract inline images and replace with LaTeX commands
+    let cleaned = text;
+    const sectionImages = extractImagesFromHtml(text);
+    let imageCommands = '';
+    
+    sectionImages.forEach((img, idx) => {
+      const imageKey = `${sectionName}_inline_${idx}`;
+      if (inlineImages.has(imageKey)) {
+        const filename = inlineImages.get(imageKey)!;
+        imageCommands += `\n\\begin{figure}[h]\n  \\centering\n  \\includegraphics[width=8cm]{${filename}}\n`;
+        if (img.alt) {
+          imageCommands += `  \\caption{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}\n`;
+        }
+        imageCommands += `\\end{figure}\n\n`;
+      }
+    });
+    
     // Remove placeholders de imagens
-    let cleaned = text.replace(/\[\[placeholder:[^\]]+\]\]/g, '');
+    cleaned = cleaned.replace(/\[\[placeholder:[^\]]+\]\]/g, '');
     // Remove image markers like [[figura:id]], [[grafico:id]], [[tabela:id]]
     cleaned = cleaned.replace(/(?:🖼️\s*Imagem|📊\s*Gráfico|📋\s*Tabela)?\s*\[\[(figura|grafico|tabela):[^\]]+\]\]/g, '');
     // Remove HTML entities
@@ -19,12 +52,12 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
     cleaned = cleaned.replace(/&lt;/g, '<');
     cleaned = cleaned.replace(/&gt;/g, '>');
     cleaned = cleaned.replace(/&quot;/g, '"');
-    // Remove HTML tags
+    // Remove HTML tags (including img tags)
     cleaned = cleaned.replace(/<[^>]*>/g, '');
     // Remove quebras de linha múltiplas
     cleaned = cleaned.replace(/\n\s*\n/g, '\n\n');
     // Escape LaTeX special characters
-    return cleaned
+    cleaned = cleaned
       .replace(/&/g, '\\&')
       .replace(/%/g, '\\%')
       .replace(/\$/g, '\\$')
@@ -34,19 +67,21 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
       .replace(/}/g, '\\}')
       .replace(/~/g, '\\textasciitilde{}')
       .replace(/\^/g, '\\textasciicircum{}');
+    
+    return cleaned + imageCommands;
   };
 
-  const title = cleanLatex(content.title || '');
-  const authors = cleanLatex(content.authors || '');
-  const advisors = cleanLatex(content.advisors || '');
-  const institution = cleanLatex(content.institution || '');
-  const introduction = cleanLatex(content.introduction || '');
-  const objectives = cleanLatex(content.objectives || '');
-  const methodology = cleanLatex(content.methodology || '');
-  const results = cleanLatex(content.results || '');
-  const conclusion = cleanLatex(content.conclusion || '');
-  const references = cleanLatex(content.references || '');
-  const acknowledgments = cleanLatex(content.acknowledgments || '');
+  const title = cleanLatex(content.title || '', 'title');
+  const authors = cleanLatex(content.authors || '', 'authors');
+  const advisors = cleanLatex(content.advisors || '', 'advisors');
+  const institution = cleanLatex(content.institution || '', 'institution');
+  const introduction = cleanLatex(content.introduction || '', 'introduction');
+  const objectives = cleanLatex(content.objectives || '', 'objectives');
+  const methodology = cleanLatex(content.methodology || '', 'methodology');
+  const results = cleanLatex(content.results || '', 'results');
+  const conclusion = cleanLatex(content.conclusion || '', 'conclusion');
+  const references = cleanLatex(content.references || '', 'references');
+  const acknowledgments = cleanLatex(content.acknowledgments || '', 'acknowledgments');
   
   // Get column layout (default to 2)
   const columnLayout = content.columnLayout || '2';
@@ -243,12 +278,29 @@ serve(async (req) => {
       }
     }
 
+    // Extract all inline images from content sections
+    const inlineImagesMap = new Map<string, string>();
+    const inlineImageUrls: { key: string; url: string }[] = [];
+    
+    const sections = ['introduction', 'objectives', 'methodology', 'results', 'conclusion', 'acknowledgments'];
+    sections.forEach(section => {
+      if (content[section]) {
+        const sectionImages = extractImagesFromHtml(content[section]);
+        sectionImages.forEach((img, idx) => {
+          const key = `${section}_inline_${idx}`;
+          const filename = `inline_${section}_${idx + 1}.jpg`;
+          inlineImagesMap.set(key, filename);
+          inlineImageUrls.push({ key, url: img.src });
+        });
+      }
+    });
+
     // Generate LaTeX source with proper image filenames
     const imagesForLatex = images.map((img, idx) => ({
       ...img,
       filename: `image_${idx + 1}.jpg`
     }));
-    latexSource = generateLatexDocument(content, imagesForLatex);
+    latexSource = generateLatexDocument(content, imagesForLatex, inlineImagesMap);
     
     console.log('LaTeX source generated, length:', latexSource.length);
 
@@ -296,6 +348,35 @@ serve(async (req) => {
           }
         } catch (err) {
           console.error(`Error downloading ${filename}:`, err);
+        }
+      }
+
+      // Baixar e adicionar imagens inline das seções de texto
+      console.log('Downloading inline images for ZIP:', inlineImageUrls.length);
+      for (const { key, url } of inlineImageUrls) {
+        const filename = inlineImagesMap.get(key);
+        if (!filename) continue;
+        
+        try {
+          // Handle base64 images
+          if (url.startsWith('data:image')) {
+            const base64Data = url.split(',')[1];
+            const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+            zip.file(filename, binaryData);
+            console.log(`Added inline base64 image ${filename} to ZIP`);
+          } else {
+            // Handle URL images
+            const imageResponse = await fetch(url);
+            if (imageResponse.ok) {
+              const imageBlob = await imageResponse.arrayBuffer();
+              zip.file(filename, imageBlob);
+              console.log(`Added inline image ${filename} to ZIP`);
+            } else {
+              console.error(`Failed to download inline image ${filename}:`, imageResponse.status);
+            }
+          }
+        } catch (err) {
+          console.error(`Error downloading inline image ${filename}:`, err);
         }
       }
 
