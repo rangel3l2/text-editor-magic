@@ -3,7 +3,6 @@ import { useState, useCallback, useEffect } from 'react';
 import LogoUpload from './header/LogoUpload';
 import type { LogoConfig } from './header/LogoUpload';
 import InstitutionInput from './header/InstitutionInput';
-import ColumnLayoutSelector from './header/ColumnLayoutSelector';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import RichTextEditor from '../RichTextEditor';
 import editorConfig from '@/config/editorConfig';
@@ -291,11 +290,6 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
       
       <InstitutionInput 
         institution={content.institution}
-        handleChange={handleChange}
-      />
-
-      <ColumnLayoutSelector
-        columnLayout={content.columnLayout || '2'}
         handleChange={handleChange}
       />
 
