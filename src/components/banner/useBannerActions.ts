@@ -58,8 +58,8 @@ export const useBannerActions = (
       console.error('Error generating PDF:', error);
       toast({
         title: "Erro ao gerar PDF",
-        description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
-        duration: 3000,
+        description: "Por enquanto, use o botão LaTeX para baixar o código e imagens",
+        duration: 5000,
       });
     }
   };
