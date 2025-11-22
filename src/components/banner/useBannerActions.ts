@@ -16,6 +16,12 @@ export const useBannerActions = (
 
   const handleGeneratePDF = async () => {
     try {
+      toast({
+        title: "Preparando projeto",
+        description: "Carregando arquivos no Overleaf...",
+        duration: 2000,
+      });
+
       const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
         body: { 
           content: {
@@ -23,42 +29,56 @@ export const useBannerActions = (
             work_id: id,
             user_id: user?.id,
           },
-          mode: 'pdf'
+          mode: 'latex'
         }
       });
 
       if (error) throw error;
 
-      if (data?.pdf) {
-        const binaryString = atob(data.pdf);
+      if (data?.zip) {
+        // Criar formulário para enviar ao Overleaf
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'https://www.overleaf.com/docs';
+        form.target = '_blank';
+        
+        // Adicionar o ZIP como arquivo
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'snip_uri';
+        
+        // Converter ZIP para base64 data URL
+        const binaryString = atob(data.zip);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
-        const pdfBlob = new Blob([bytes], { type: 'application/pdf' });
-        const pdfUrl = window.URL.createObjectURL(pdfBlob);
+        const zipBlob = new Blob([bytes], { type: 'application/zip' });
+        const reader = new FileReader();
         
-        const pdfLink = document.createElement('a');
-        pdfLink.href = pdfUrl;
-        pdfLink.download = 'banner-academico.pdf';
-        document.body.appendChild(pdfLink);
-        pdfLink.click();
-        document.body.removeChild(pdfLink);
-        window.URL.revokeObjectURL(pdfUrl);
+        reader.onload = () => {
+          input.value = reader.result as string;
+          form.appendChild(input);
+          document.body.appendChild(form);
+          form.submit();
+          document.body.removeChild(form);
+          
+          toast({
+            title: "✅ Projeto aberto no Overleaf!",
+            description: "No Overleaf, clique em 'Recompilar' (ou Ctrl+S) para gerar o PDF. O arquivo estará pronto em alguns segundos.",
+            duration: 8000,
+          });
+        };
         
-        toast({
-          title: "PDF gerado",
-          description: "PDF foi baixado com sucesso",
-          duration: 3000,
-        });
+        reader.readAsDataURL(zipBlob);
       } else {
-        throw new Error('Erro ao gerar PDF');
+        throw new Error('Não foi possível gerar os arquivos');
       }
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('Error opening in Overleaf:', error);
       toast({
-        title: "Erro ao gerar PDF",
-        description: "Por enquanto, use o botão LaTeX para baixar o código e imagens",
+        title: "Erro ao abrir Overleaf",
+        description: "Use o botão 'Baixar LaTeX' e faça upload manual no overleaf.com",
         duration: 5000,
       });
     }
@@ -130,75 +150,6 @@ export const useBannerActions = (
     }
   };
 
-  const handleOpenInOverleaf = async () => {
-    try {
-      toast({
-        title: "Preparando projeto",
-        description: "Gerando arquivos para o Overleaf...",
-        duration: 2000,
-      });
-
-      const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
-        body: { 
-          content: {
-            ...bannerContent,
-            work_id: id,
-            user_id: user?.id,
-          },
-          mode: 'latex'
-        }
-      });
-
-      if (error) throw error;
-
-      if (data?.zip) {
-        // Criar formulário para enviar ao Overleaf
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = 'https://www.overleaf.com/docs';
-        form.target = '_blank';
-        
-        // Adicionar o ZIP como arquivo
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'snip_uri';
-        
-        // Converter ZIP para base64 data URL
-        const binaryString = atob(data.zip);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        const zipBlob = new Blob([bytes], { type: 'application/zip' });
-        const reader = new FileReader();
-        
-        reader.onload = () => {
-          input.value = reader.result as string;
-          form.appendChild(input);
-          document.body.appendChild(form);
-          form.submit();
-          document.body.removeChild(form);
-          
-          toast({
-            title: "Abrindo Overleaf",
-            description: "Seu projeto está sendo carregado no Overleaf",
-            duration: 3000,
-          });
-        };
-        
-        reader.readAsDataURL(zipBlob);
-      } else {
-        throw new Error('Não foi possível gerar os arquivos');
-      }
-    } catch (error) {
-      console.error('Error opening in Overleaf:', error);
-      toast({
-        title: "Erro ao abrir Overleaf",
-        description: "Use o botão 'Baixar LaTeX' e faça upload manual no overleaf.com",
-        duration: 5000,
-      });
-    }
-  };
 
   const handleShare = async () => {
     try {
@@ -345,7 +296,6 @@ export const useBannerActions = (
   return {
     handleGeneratePDF,
     handleGenerateLatex,
-    handleOpenInOverleaf,
     handleShare,
     handleClearFields
   };
