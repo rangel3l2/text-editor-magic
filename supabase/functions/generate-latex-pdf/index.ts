@@ -21,6 +21,8 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
     cleaned = cleaned.replace(/&quot;/g, '"');
     // Remove HTML tags
     cleaned = cleaned.replace(/<[^>]*>/g, '');
+    // Remove quebras de linha múltiplas
+    cleaned = cleaned.replace(/\n\s*\n/g, '\n\n');
     // Escape LaTeX special characters
     return cleaned
       .replace(/&/g, '\\&')
@@ -57,15 +59,16 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
     const source = img.source ? cleanLatex(img.source) : '';
     const widthCm = img.width_cm || 8;
     
-    let cmd = '\\begin{center}\n';
+    let cmd = '\n\\begin{figure}[h]\n';
+    cmd += '  \\centering\n';
+    cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\n`;
     if (caption) {
-      cmd += `  \\textbf{${caption}}\\\\\n  \\vspace{0.2cm}\n`;
+      cmd += `  \\caption{${caption}}\n`;
     }
-    cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\\\\\n`;
     if (source) {
-      cmd += `  \\vspace{0.1cm}\n  \\small\\textit{Fonte: ${source}}\n`;
+      cmd += `  \\\\[0.1cm]\n  \\small\\textit{Fonte: ${source}}\n`;
     }
-    cmd += '\\end{center}\n';
+    cmd += '\\end{figure}\n\n';
     return cmd;
   };
 
@@ -95,6 +98,8 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
 \\usepackage{xcolor}
 \\usepackage{titlesec}
 \\usepackage{ragged2e}
+\\usepackage{float}
+\\usepackage{caption}
 
 % Banner dimensions: 90cm x 120cm (900mm x 1200mm)
 \\geometry{
@@ -116,6 +121,14 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
 \\titleformat{\\section}
   {\\normalfont\\fontsize{32}{38}\\bfseries\\color{primaryblue}}
   {}{0em}{}[\\color{lightblue}\\titlerule[4pt]]
+
+% Caption styling
+\\captionsetup{
+  font=small,
+  labelfont=bf,
+  textfont=it,
+  justification=centering
+}
 
 \\setlength{\\columnsep}{${numColumns === 3 ? '2cm' : '3cm'}}
 \\setlength{\\parindent}{0pt}
@@ -160,19 +173,19 @@ const generateLatexDocument = (content: any, images: any[] = []): string => {
 \\fontsize{24}{29}\\selectfont
 \\justifying
 
-${introduction ? `\\section*{INTRODUÇÃO}\n${introduction}\n${imagesBySection.introduction.map(img => generateImageCommand(img, img.idx)).join('\n')}\n` : ''}
+${introduction ? `\\section*{INTRODUÇÃO}\n${introduction}\n${imagesBySection.introduction.map(img => generateImageCommand(img, img.idx)).join('')}` : ''}
 
-${objectives ? `\\section*{OBJETIVOS}\n${objectives}\n${imagesBySection.objectives.map(img => generateImageCommand(img, img.idx)).join('\n')}\n` : ''}
+${objectives ? `\\section*{OBJETIVOS}\n${objectives}\n${imagesBySection.objectives.map(img => generateImageCommand(img, img.idx)).join('')}` : ''}
 
-${methodology ? `\\section*{METODOLOGIA}\n${methodology}\n${imagesBySection.methodology.map(img => generateImageCommand(img, img.idx)).join('\n')}\n` : ''}
+${methodology ? `\\section*{METODOLOGIA}\n${methodology}\n${imagesBySection.methodology.map(img => generateImageCommand(img, img.idx)).join('')}` : ''}
 
-${results ? `\\section*{RESULTADOS E DISCUSSÃO}\n${results}\n${imagesBySection.results.map(img => generateImageCommand(img, img.idx)).join('\n')}\n` : ''}
+${results ? `\\section*{RESULTADOS E DISCUSSÃO}\n${results}\n${imagesBySection.results.map(img => generateImageCommand(img, img.idx)).join('')}` : ''}
 
-${conclusion ? `\\section*{CONCLUSÃO}\n${conclusion}\n${imagesBySection.conclusion.map(img => generateImageCommand(img, img.idx)).join('\n')}\n` : ''}
+${conclusion ? `\\section*{CONCLUSÃO}\n${conclusion}\n${imagesBySection.conclusion.map(img => generateImageCommand(img, img.idx)).join('')}` : ''}
 
-${references ? `\\section*{REFERÊNCIAS}\n${references}\n` : ''}
+${references ? `\\section*{REFERÊNCIAS}\n${references}` : ''}
 
-${acknowledgments ? `\\section*{AGRADECIMENTOS}\n${acknowledgments}\n` : ''}
+${acknowledgments ? `\\section*{AGRADECIMENTOS}\n${acknowledgments}` : ''}
 
 \\end{multicols}
 
