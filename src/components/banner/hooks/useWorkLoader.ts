@@ -15,7 +15,7 @@ interface UseWorkLoaderProps {
 export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: isAdmin } = useIsAdmin(user);
+  const { data: isAdmin, isLoading: isLoadingAdmin } = useIsAdmin(user);
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
   const isFetching = useRef(false);
@@ -24,8 +24,9 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
 
   useEffect(() => {
     const loadWork = async () => {
-        if (!id || !user || isFetching.current || currentWorkId === id || attemptsRef.current >= 3) {
-          setIsLoading(false);
+        // Wait for admin status to load before fetching work
+        if (!id || !user || isFetching.current || currentWorkId === id || attemptsRef.current >= 3 || isLoadingAdmin) {
+          setIsLoading(isLoadingAdmin);
           return;
         }
 
@@ -33,7 +34,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         setIsLoading(true);
         attemptsRef.current += 1;
         isFetching.current = true;
-        console.log(`Loading work ${id}`);
+        console.log(`Loading work ${id}, isAdmin: ${isAdmin}`);
 
         // Build query - admins can view all works, regular users only their own
         let query = supabase
@@ -103,7 +104,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
     loadWork();
 
     
-  }, [id, user]);
+  }, [id, user, isAdmin, isLoadingAdmin]);
 
   return {
     isLoading,
