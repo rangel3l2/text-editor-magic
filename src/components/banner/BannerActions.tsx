@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { FileDown, RotateCcw, Share2, Trash2, Eye } from "lucide-react";
+import { FileDown, RotateCcw, Share2, Trash2, Eye, FileCode } from "lucide-react";
 
 interface BannerActionsProps {
   onGeneratePDF: () => void;
+  onGenerateLatex: () => void;
   onShare: () => void;
   onLoadSavedContent: () => void;
   onClearFields: () => void;
@@ -12,7 +13,8 @@ interface BannerActionsProps {
 }
 
 const BannerActions = ({ 
-  onGeneratePDF, 
+  onGeneratePDF,
+  onGenerateLatex,
   onShare, 
   onLoadSavedContent, 
   onClearFields,
@@ -38,8 +40,17 @@ const BannerActions = ({
         className="flex items-center gap-2 bg-primary hover:bg-primary/90 w-full sm:w-auto"
       >
         <FileDown className="h-4 w-4" />
-        <span className="hidden sm:inline">Baixar PDF</span>
-        <span className="sm:hidden">Baixar</span>
+        <span className="hidden sm:inline">Gerar PDF</span>
+        <span className="sm:hidden">PDF</span>
+      </Button>
+      <Button 
+        onClick={onGenerateLatex}
+        variant="outline"
+        className="flex items-center gap-2 w-full sm:w-auto"
+      >
+        <FileCode className="h-4 w-4" />
+        <span className="hidden sm:inline">Gerar LaTeX</span>
+        <span className="sm:hidden">LaTeX</span>
       </Button>
       <Button 
         onClick={onOpenPreview}

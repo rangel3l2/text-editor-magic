@@ -20,35 +20,15 @@ export const useBannerActions = (
         body: { 
           content: {
             ...bannerContent,
-            work_id: id, // ID do trabalho
-            user_id: user?.id, // ID do usuário
+            work_id: id,
+            user_id: user?.id,
           }
         }
       });
 
       if (error) throw error;
 
-      // Baixar ZIP com LaTeX e imagens primeiro
-      if (data?.zip) {
-        const binaryString = atob(data.zip);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        const zipBlob = new Blob([bytes], { type: 'application/zip' });
-        const zipUrl = window.URL.createObjectURL(zipBlob);
-        
-        const zipLink = document.createElement('a');
-        zipLink.href = zipUrl;
-        zipLink.download = 'banner-latex-completo.zip';
-        document.body.appendChild(zipLink);
-        zipLink.click();
-        document.body.removeChild(zipLink);
-        window.URL.revokeObjectURL(zipUrl);
-      }
-
       if (data?.pdf) {
-        // Decodificar base64 usando API nativa do navegador
         const binaryString = atob(data.pdf);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
@@ -66,18 +46,60 @@ export const useBannerActions = (
         window.URL.revokeObjectURL(pdfUrl);
         
         toast({
-          title: "Arquivos gerados",
-          description: data?.zip ? "PDF e ZIP com LaTeX completo foram baixados" : "PDF foi baixado com sucesso",
+          title: "PDF gerado",
+          description: "PDF foi baixado com sucesso",
           duration: 3000,
         });
-      } else if (data?.zip) {
+      } else {
+        throw new Error('Erro ao gerar PDF');
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleGenerateLatex = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-latex-pdf', {
+        body: { 
+          content: {
+            ...bannerContent,
+            work_id: id,
+            user_id: user?.id,
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.zip) {
+        const binaryString = atob(data.zip);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const zipBlob = new Blob([bytes], { type: 'application/zip' });
+        const zipUrl = window.URL.createObjectURL(zipBlob);
+        
+        const zipLink = document.createElement('a');
+        zipLink.href = zipUrl;
+        zipLink.download = 'banner-latex-completo.zip';
+        document.body.appendChild(zipLink);
+        zipLink.click();
+        document.body.removeChild(zipLink);
+        window.URL.revokeObjectURL(zipUrl);
+        
         toast({
-          title: "ZIP gerado",
-          description: "Arquivo LaTeX completo com imagens foi baixado",
+          title: "LaTeX gerado",
+          description: "ZIP com código LaTeX e imagens foi baixado",
           duration: 3000,
         });
       } else if (data?.latex) {
-        // Fallback: baixar o código LaTeX quando a compilação falhar
         const texBlob = new Blob([data.latex], { type: 'application/x-tex' });
         const url = window.URL.createObjectURL(texBlob);
         const link = document.createElement('a');
@@ -90,17 +112,17 @@ export const useBannerActions = (
 
         toast({
           title: "LaTeX gerado",
-          description: "A compilação falhou agora. Baixamos o arquivo .tex para você compilar depois.",
-          duration: 4000,
+          description: "Arquivo .tex foi baixado",
+          duration: 3000,
         });
       } else {
-        throw new Error('Resposta inesperada da função de geração de PDF');
+        throw new Error('Erro ao gerar LaTeX');
       }
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('Error generating LaTeX:', error);
       toast({
-        title: "Erro ao gerar PDF",
-        description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
+        title: "Erro ao gerar LaTeX",
+        description: "Ocorreu um erro ao gerar o arquivo. Tente novamente.",
         duration: 3000,
       });
     }
@@ -250,6 +272,7 @@ export const useBannerActions = (
 
   return {
     handleGeneratePDF,
+    handleGenerateLatex,
     handleShare,
     handleClearFields
   };

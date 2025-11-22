@@ -62,6 +62,7 @@ const BannerEditor = () => {
 
   const {
     handleGeneratePDF,
+    handleGenerateLatex,
     handleShare,
     handleClearFields
   } = useBannerActions(
@@ -161,6 +162,7 @@ const BannerEditor = () => {
             title={content.title || "Novo Banner"}
             previewHtml={content.previewHtml}
             onGeneratePDF={handleGeneratePDF}
+            onGenerateLatex={handleGenerateLatex}
             onShare={handleShare}
             onOpenPreview={() => setPreviewOpen(true)}
             onClearFields={handleClearFields}
@@ -182,6 +184,7 @@ const BannerEditor = () => {
           />
           <BannerActions
             onGeneratePDF={handleGeneratePDF}
+            onGenerateLatex={handleGenerateLatex}
             onShare={handleShare}
             onLoadSavedContent={() => {}}
             onClearFields={handleClearFields}

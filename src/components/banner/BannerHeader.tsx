@@ -1,12 +1,13 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { FileDown, Share2, Eye, RotateCcw } from "lucide-react";
+import { FileDown, Share2, Eye, RotateCcw, FileCode } from "lucide-react";
 import { sanitizeHtml } from "@/utils/sanitize";
 
 interface BannerHeaderProps {
   title: string;
   previewHtml?: string;
   onGeneratePDF: () => void;
+  onGenerateLatex: () => void;
   onShare: () => void;
   onOpenPreview: () => void;
   onClearFields: () => void;
@@ -16,6 +17,7 @@ const BannerHeader = ({
   title,
   previewHtml,
   onGeneratePDF,
+  onGenerateLatex,
   onShare,
   onOpenPreview,
   onClearFields 
@@ -41,7 +43,16 @@ const BannerHeader = ({
             className="hidden sm:flex"
           >
             <FileDown className="h-4 w-4 mr-2" />
-            Baixar PDF
+            Gerar PDF
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onGenerateLatex}
+            className="hidden sm:flex"
+          >
+            <FileCode className="h-4 w-4 mr-2" />
+            Gerar LaTeX
           </Button>
           <Button
             variant="outline"
