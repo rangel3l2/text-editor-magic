@@ -63,7 +63,6 @@ const BannerEditor = () => {
   const {
     handleGeneratePDF,
     handleGenerateLatex,
-    handleOpenInOverleaf,
     handleShare,
     handleClearFields
   } = useBannerActions(
@@ -187,12 +186,12 @@ const BannerEditor = () => {
           <BannerActions
             onGeneratePDF={handleGeneratePDF}
             onGenerateLatex={handleGenerateLatex}
-            onOpenInOverleaf={handleOpenInOverleaf}
             onShare={handleShare}
             onLoadSavedContent={() => {}}
             onClearFields={handleClearFields}
             onOpenPreview={() => setPreviewOpen(true)}
             onSave={() => {}}
+            isAuthenticated={!!user}
           />
         </div>
       </BannerLayout>

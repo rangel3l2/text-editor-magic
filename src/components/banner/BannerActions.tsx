@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { FileDown, RotateCcw, Share2, Trash2, Eye, FileCode, ExternalLink } from "lucide-react";
+import { FileDown, RotateCcw, Share2, Trash2, Eye, FileCode } from "lucide-react";
 
 interface BannerActionsProps {
   onGeneratePDF: () => void;
   onGenerateLatex: () => void;
-  onOpenInOverleaf: () => void;
   onShare: () => void;
   onLoadSavedContent: () => void;
   onClearFields: () => void;
@@ -16,7 +15,6 @@ interface BannerActionsProps {
 const BannerActions = ({ 
   onGeneratePDF,
   onGenerateLatex,
-  onOpenInOverleaf,
   onShare, 
   onLoadSavedContent, 
   onClearFields,
@@ -42,8 +40,8 @@ const BannerActions = ({
         className="flex items-center gap-2 bg-primary hover:bg-primary/90 w-full sm:w-auto"
       >
         <FileDown className="h-4 w-4" />
-        <span className="hidden sm:inline">Gerar PDF</span>
-        <span className="sm:hidden">PDF</span>
+        <span className="hidden sm:inline">Gerar PDF no Overleaf</span>
+        <span className="sm:hidden">Gerar PDF</span>
       </Button>
       <Button 
         onClick={onGenerateLatex}
@@ -53,15 +51,6 @@ const BannerActions = ({
         <FileCode className="h-4 w-4" />
         <span className="hidden sm:inline">Baixar LaTeX</span>
         <span className="sm:hidden">LaTeX</span>
-      </Button>
-      <Button 
-        onClick={onOpenInOverleaf}
-        variant="default"
-        className="flex items-center gap-2 w-full sm:w-auto bg-green-600 hover:bg-green-700"
-      >
-        <ExternalLink className="h-4 w-4" />
-        <span className="hidden sm:inline">Abrir no Overleaf</span>
-        <span className="sm:hidden">Overleaf</span>
       </Button>
       <Button 
         onClick={onOpenPreview}
