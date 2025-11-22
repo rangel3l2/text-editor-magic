@@ -33,11 +33,13 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
       const imageKey = `${sectionName}_inline_${idx}`;
       if (inlineImages.has(imageKey)) {
         const filename = inlineImages.get(imageKey)!;
-        imageCommands += `\n\\begin{figure}[H]\n  \\centering\n  \\includegraphics[width=8cm]{${filename}}\n`;
+        imageCommands += `\\vspace{0.5cm}\n`;
+        imageCommands += `\\noindent\\begin{center}\n`;
+        imageCommands += `  \\includegraphics[width=8cm]{${filename}}\\\\\n`;
         if (img.alt) {
-          imageCommands += `  \\caption{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}\n`;
+          imageCommands += `  {\\small \\textit{${img.alt.replace(/[&%$#_{}~^\\]/g, '\\$&')}}}\\\\\n`;
         }
-        imageCommands += `\\end{figure}\n`;
+        imageCommands += `\\end{center}\n`;
       }
     });
 
@@ -90,23 +92,24 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
   const columnLayout = content.columnLayout || '2';
   const numColumns = columnLayout === '3' ? 3 : 2;
 
-  // Helper function to generate image inclusion command
+  // Helper function to generate non-floating image block (compatible with multicols)
   const generateImageCommand = (img: any, idx: number) => {
     const filename = `image_${idx + 1}`;
     const caption = img.caption ? cleanLatex(img.caption) : '';
     const source = img.source ? cleanLatex(img.source) : '';
     const widthCm = img.width_cm || 8;
     
-    let cmd = '\n\\begin{figure}[h]\n';
-    cmd += '  \\centering\n';
-    cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\n`;
+    let cmd = '\n% Imagem inserida sem float para compatibilidade com multicols\n';
+    cmd += '\n\\vspace{0.5cm}\n';
+    cmd += '\\noindent\\begin{center}\n';
+    cmd += `  \\includegraphics[width=${widthCm}cm]{${filename}.jpg}\\\\\n`;
     if (caption) {
-      cmd += `  \\caption{${caption}}\n`;
+      cmd += `  {\\small \\textit{${caption}}}\\\\\n`;
     }
     if (source) {
-      cmd += `  \\\\[0.1cm]\n  \\small\\textit{Fonte: ${source}}\n`;
+      cmd += `  {\\scriptsize \\textit{Fonte: ${source}}}\\\\\n`;
     }
-    cmd += '\\end{figure}\n\n';
+    cmd += '\\end{center}\n\n';
     return cmd;
   };
 
