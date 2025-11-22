@@ -6,7 +6,7 @@ import ImageSettings from './preview/ImageSettings';
 import BannerPreviewStyles from './preview/BannerPreviewStyles';
 import TipTapBannerEditor from './editor/TipTapBannerEditor';
 import { Button } from '@/components/ui/button';
-import { Edit, FileDown } from 'lucide-react';
+import { Edit, FileDown, FileCode } from 'lucide-react';
 import type { LogoConfig } from './header/LogoUpload';
 
 interface ImageSettingsConfig {
@@ -23,6 +23,7 @@ interface BannerPreviewContentProps {
   onLogoConfigChange?: (config: LogoConfig) => void;
   onContentUpdate?: (html: string) => void;
   onGeneratePDF?: () => void;
+  onGenerateLatex?: () => void;
 }
 
 const BannerPreviewContent = ({ 
@@ -34,7 +35,8 @@ const BannerPreviewContent = ({
   editable = false,
   onLogoConfigChange,
   onContentUpdate,
-  onGeneratePDF
+  onGeneratePDF,
+  onGenerateLatex
 }: BannerPreviewContentProps) => {
   const [sections, setSections] = useState<HTMLElement[]>([]);
   const [draggedSection, setDraggedSection] = useState<number | null>(null);
@@ -219,6 +221,12 @@ const BannerPreviewContent = ({
               <Button onClick={onGeneratePDF} variant="default" size="lg">
                 <FileDown className="w-5 h-5 mr-2" />
                 Gerar PDF
+              </Button>
+            )}
+            {onGenerateLatex && (
+              <Button onClick={onGenerateLatex} variant="outline" size="lg">
+                <FileCode className="w-5 h-5 mr-2" />
+                Gerar LaTeX
               </Button>
             )}
           </div>

@@ -156,6 +156,7 @@ const BannerEditor = () => {
         onLogoConfigChange={handleLogoConfigChange}
         onContentUpdate={handleFieldChange}
         onGeneratePDF={handleGeneratePDF}
+        onGenerateLatex={handleGenerateLatex}
       >
         <div className="space-y-8">
           <BannerHeader 
