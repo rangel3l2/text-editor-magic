@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
-import { useIsAdmin } from '@/hooks/useUserRole';
 
 interface UseWorkLoaderProps {
   id: string | undefined;
@@ -15,7 +14,6 @@ interface UseWorkLoaderProps {
 export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: isAdmin, isLoading: isLoadingAdmin } = useIsAdmin(user);
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkId, setCurrentWorkId] = useState<string | null>(null);
   const isFetching = useRef(false);
@@ -24,51 +22,45 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
 
   useEffect(() => {
     const loadWork = async () => {
-        // Wait for admin status to load before fetching work
-        if (!id || !user || isFetching.current || currentWorkId === id || attemptsRef.current >= 3 || isLoadingAdmin) {
-          setIsLoading(isLoadingAdmin);
-          return;
-        }
+      if (!id || !user || isFetching.current || currentWorkId === id || attemptsRef.current >= 3) {
+        setIsLoading(false);
+        return;
+      }
 
       try {
         setIsLoading(true);
         attemptsRef.current += 1;
         isFetching.current = true;
-        console.log(`Loading work ${id}, isAdmin: ${isAdmin}`);
+        console.log(`Loading work ${id}`);
 
-        // Build query - admins can view all works, regular users only their own
-        let query = supabase
+        const { data, error } = await supabase
           .from('work_in_progress')
           .select('content')
-          .eq('id', id);
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-        // Only filter by user_id if not admin
-        if (!isAdmin) {
-          query = query.eq('user_id', user.id);
+        if (error) {
+          console.error('Error loading work from database:', error);
+          throw error;
         }
-
-        const { data, error } = await query.maybeSingle();
-
-        if (error) throw error;
 
         if (!data) {
           toast({
-            title: "Trabalho não encontrado",
-            description: "O trabalho selecionado não foi encontrado ou você não tem permissão.",
-            variant: "destructive",
+            title: 'Trabalho não encontrado',
+            description: 'O trabalho selecionado não foi encontrado ou você não tem permissão.',
+            variant: 'destructive',
           });
+          navigate('/');
           return;
         }
 
-        if (data?.content) {
-          // Type cast the JSONB content to any
+        if (data.content) {
           const savedContent = data.content as any;
-          
-          // Try to load logo from localStorage as fallback
+
           const localLogo = localStorage.getItem(`banner_logo_${id}`);
           const localLogoConfig = localStorage.getItem(`banner_logo_config_${id}`);
-          
-          // Ensure we have default values for all fields if they're missing
+
           const completeContent = {
             title: savedContent.title || '',
             authors: savedContent.authors || '',
@@ -85,7 +77,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
             previewHtml: savedContent.previewHtml || '',
             advisors: savedContent.advisors || '',
           };
-          
+
           setBannerContent(completeContent);
           setCurrentWorkId(id);
         }
@@ -93,9 +85,9 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
         console.error('Error loading work:', error);
         if (!errorToastShown.current) {
           toast({
-            title: "Erro ao carregar trabalho",
-            description: "Falha temporária de rede. Tente novamente em instantes.",
-            variant: "destructive",
+            title: 'Erro ao carregar trabalho',
+            description: 'Falha temporária de rede. Tente novamente em instantes.',
+            variant: 'destructive',
           });
           errorToastShown.current = true;
         }
@@ -106,9 +98,7 @@ export const useWorkLoader = ({ id, user, setBannerContent }: UseWorkLoaderProps
     };
 
     loadWork();
-
-    
-  }, [id, user, isAdmin, isLoadingAdmin]);
+  }, [id, user, currentWorkId, navigate, toast, setBannerContent]);
 
   return {
     isLoading,
