@@ -292,8 +292,8 @@ serve(async (req) => {
       throw new Error('CONVERTHUB_API_KEY not configured');
     }
 
-    // Converter LaTeX para base64 (UTF-8 safe)
-    const latexBase64 = b64encode(new TextEncoder().encode(latexSource));
+    // Enviar ZIP completo (com .tex + imagens) para ConvertHub
+    const zipBase64 = b64encode(zipBytes);
     
     // Enviar para ConvertHub
     const convertResponse = await fetch('https://api.converthub.com/v2/convert/base64', {
@@ -303,8 +303,8 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        file_base64: latexBase64,
-        filename: 'document.tex',
+        file_base64: zipBase64,
+        filename: 'banner.zip',
         target_format: 'pdf',
         output_filename: 'banner-academico.pdf',
       }),
