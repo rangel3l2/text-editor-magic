@@ -137,7 +137,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
       setUploading(true);
 
       const fileExt = file.name.split('.').pop();
-      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `logos/${user.id}/${crypto.randomUUID()}.${fileExt}`;
 
       // Upload to storage
       const { error: uploadError, data } = await supabase.storage
@@ -170,6 +170,7 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
 
       // Update UI immediately
       handleChange('institutionLogo', publicUrl);
+      
       // Reset crop/position so a recorte antigo não "expulse" a nova imagem da tela
       const defaultConfig = {
         maxHeight: logoConfig?.maxHeight || 10,
@@ -179,9 +180,31 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
       };
       handleChange('logoConfig', defaultConfig);
 
+      // Save to localStorage as backup
+      localStorage.setItem(`banner_logo_${id}`, publicUrl);
+      localStorage.setItem(`banner_logo_config_${id}`, JSON.stringify(defaultConfig));
+
+      // Save to database immediately if work exists
+      if (id) {
+        try {
+          const { error: fnError } = await supabase.functions.invoke('update-work-content', {
+            body: { 
+              id, 
+              contentPatch: { 
+                institutionLogo: publicUrl,
+                logoConfig: defaultConfig
+              } 
+            }
+          });
+          if (fnError) throw fnError;
+        } catch (err) {
+          console.error('Erro ao salvar logo no banco:', err);
+        }
+      }
+
       toast({
         title: "Logo enviado com sucesso",
-        description: "O logo da instituição foi atualizado",
+        description: "O logo da instituição foi atualizado e salvo",
         duration: 3000,
       });
     } catch (error) {
@@ -278,6 +301,12 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
     e?.stopPropagation?.();
     // Update UI immediately
     handleChange('institutionLogo', '');
+    
+    // Clear localStorage
+    if (id) {
+      localStorage.removeItem(`banner_logo_${id}`);
+      localStorage.removeItem(`banner_logo_config_${id}`);
+    }
 
     // Persist change if a work exists
     if (user && id) {
@@ -340,6 +369,11 @@ const LogoUpload = ({ institutionLogo, logoConfig, handleChange }: LogoUploadPro
     };
     
     handleChange('logoConfig', newConfig);
+    
+    // Save to localStorage
+    if (id) {
+      localStorage.setItem(`banner_logo_config_${id}`, JSON.stringify(newConfig));
+    }
     
     if (user && id) {
       try {
