@@ -150,6 +150,7 @@
   margin-bottom: 0 !important;
   word-spacing: normal !important;
   hyphens: auto !important;
+  text-indent: 1.25cm !important;
 }
 
 /* Estilos específicos para banner científico */
@@ -409,6 +410,7 @@
   line-height: 1.5;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  text-indent: 1.25cm;
 }
 
 .banner-tiptap-content h3,
