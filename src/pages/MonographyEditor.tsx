@@ -23,6 +23,13 @@ const MonographyEditor = () => {
   } = useMonographyContent();
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  const handleOverleaf = () => {
+    toast({
+      title: "Em desenvolvimento",
+      description: "Função de abrir no Overleaf em desenvolvimento para monografias...",
+    });
+  };
+
   const handleDownload = () => {
     toast({
       title: "Download",
@@ -49,6 +56,7 @@ const MonographyEditor = () => {
       <div className="container mx-auto p-6 space-y-6">
         <EditorHeader
           title="Nova Monografia"
+          onOverleaf={handleOverleaf}
           onDownload={handleDownload}
           onShare={handleShare}
           onPreview={() => setPreviewOpen(true)}

@@ -39,12 +39,73 @@ const ArticleEditor = () => {
     });
   };
 
-  const handleDownload = async () => {
-    // Validar se há conteúdo mínimo
+  const handleOverleaf = async () => {
     if (!content.title || !content.abstract) {
       toast({
         title: "Conteúdo incompleto",
-        description: "Preencha pelo menos o título e o resumo antes de gerar o PDF.",
+        description: "Preencha pelo menos o título e o resumo antes de abrir no Overleaf.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "Preparando projeto",
+        description: "Carregando no Overleaf...",
+        duration: 2000,
+      });
+
+      const { data, error } = await supabase.functions.invoke('generate-article-latex', {
+        body: { content }
+      });
+
+      if (error) throw error;
+
+      if (data?.latex) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'https://www.overleaf.com/docs';
+        form.target = '_blank';
+        
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'snip_uri';
+        
+        const blob = new Blob([data.latex], { type: 'text/plain' });
+        const reader = new FileReader();
+        
+        reader.onload = () => {
+          input.value = reader.result as string;
+          form.appendChild(input);
+          document.body.appendChild(form);
+          form.submit();
+          document.body.removeChild(form);
+          
+          toast({
+            title: "✅ Projeto aberto no Overleaf!",
+            description: "No Overleaf, clique em 'Recompilar' para gerar o PDF.",
+            duration: 8000,
+          });
+        };
+        
+        reader.readAsDataURL(blob);
+      }
+    } catch (error) {
+      console.error('Erro ao abrir no Overleaf:', error);
+      toast({
+        title: "Erro ao abrir Overleaf",
+        description: "Use o botão 'Baixar LaTeX' e faça upload manual.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!content.title || !content.abstract) {
+      toast({
+        title: "Conteúdo incompleto",
+        description: "Preencha pelo menos o título e o resumo antes de gerar o LaTeX.",
         variant: "destructive"
       });
       return;
@@ -63,7 +124,6 @@ const ArticleEditor = () => {
       if (error) throw error;
 
       if (data?.latex) {
-        // Criar arquivo .tex para download
         const blob = new Blob([data.latex], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -76,8 +136,8 @@ const ArticleEditor = () => {
 
         toast({
           title: "LaTeX gerado com sucesso!",
-          description: "Código LaTeX baixado. Cole em Overleaf.com ou TeXstudio para gerar o PDF com formatação ABNT completa.",
-          duration: 8000,
+          description: "Arquivo .tex baixado.",
+          duration: 5000,
         });
       }
     } catch (error) {
@@ -137,6 +197,7 @@ const ArticleEditor = () => {
         <div className="flex items-center justify-between gap-4">
           <EditorHeader
             title={content.title || "Novo Artigo Científico"}
+            onOverleaf={handleOverleaf}
             onDownload={handleDownload}
             onShare={handleShare}
             onPreview={() => setPreviewOpen(true)}
