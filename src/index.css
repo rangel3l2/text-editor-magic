@@ -404,13 +404,17 @@
 .banner-tiptap-content p,
 .tiptap-editor-content p {
   margin: 0.5em 0;
-  text-align: justify;
+  text-align: justify !important;
   font-family: 'Times New Roman', Times, serif;
   font-size: 12pt;
   line-height: 1.5;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  text-indent: 1.25cm;
+  text-indent: 1.25cm !important;
+}
+
+.banner-tiptap-content .ProseMirror p {
+  text-indent: 1.25cm !important;
 }
 
 .banner-tiptap-content h3,
