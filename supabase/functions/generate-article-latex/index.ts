@@ -11,6 +11,8 @@ const generateArticleLatex = (content: any): string => {
     if (!text) return '';
     
     return text
+      // Converter tags HTML de parágrafo em quebras de parágrafo LaTeX
+      .replace(/<\/p>\s*<p>/gi, '\n\n')
       .replace(/<p>/gi, '')
       .replace(/<\/p>/gi, '\n\n')
       .replace(/<br\s*\/?>/gi, '\n')
@@ -29,6 +31,8 @@ const generateArticleLatex = (content: any): string => {
       .replace(/[%$#_{}]/g, (match) => `\\${match}`)
       .replace(/~/g, '\\textasciitilde{}')
       .replace(/\^/g, '\\textasciicircum{}')
+      // Remove quebras de linha múltiplas (mais de 2)
+      .replace(/\n\s*\n\s*\n+/g, '\n\n')
       .trim();
   };
 
@@ -55,8 +59,11 @@ const generateArticleLatex = (content: any): string => {
 % Espaçamento 1.5
 \\onehalfspacing
 
-% Recuo de parágrafo 1.25cm
+% Recuo de parágrafo 1.25cm (ABNT)
 \\setlength{\\parindent}{1.25cm}
+
+% Espaçamento entre parágrafos (ABNT - sem espaço adicional)
+\\setlength{\\parskip}{0pt}
 
 % Formatação de seções (ABNT)
 \\titleformat{\\section}{\\normalfont\\fontsize{12}{15}\\bfseries\\MakeUppercase}{\\thesection}{1em}{}
