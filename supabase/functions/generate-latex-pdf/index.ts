@@ -189,13 +189,6 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
 % Espaçamento entre parágrafos (banner usa espaçamento para legibilidade)
 \\setlength{\\parskip}{1em}
 
-% Configurações para melhorar quebra de linha em colunas estreitas
-\\tolerance=1000
-\\emergencystretch=3em
-\\hyphenpenalty=10000
-\\exhyphenpenalty=100
-\\sloppy
-
 % ------- CORES PERSONALIZADAS -------
 \\definecolor{titulo}{HTML}{0A4D8C}
 \\definecolor{boxbg}{HTML}{E9F2FA}
@@ -241,7 +234,12 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
 % ===========================================================
 
   \\begin{multicols}{${numColumns}}
-  \\raggedright
+  \\setlength{\\parindent}{1.25cm} % recuo ABNT
+  \\setlength{\\emergencystretch}{5em} % evita linhas estouradas
+  \\tolerance=2000
+  \\hyphenpenalty=50
+  \\exhyphenpenalty=50
+  \\justifying % justifica o texto
   \\fontsize{32}{38}\\selectfont
 
 ${introduction ? `% ===========================================================\n%                    INTRODUÇÃO\n% ===========================================================\n\n\\textbf{INTRODUÇÃO}\\par\n\\noindent\\rule{\\linewidth}{3pt}\n\n${introduction}\n${imagesBySection.introduction.map(img => generateImageCommand(img, img.idx)).join('')}\n\\vspace{1cm}\n` : ''}
