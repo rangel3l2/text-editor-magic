@@ -10,6 +10,7 @@ interface EditorHeaderProps {
   onShare?: () => void;
   onPreview?: () => void;
   onClear?: () => void;
+  onOverleaf?: () => void;
   adminButton?: React.ReactNode;
 }
 
@@ -19,6 +20,7 @@ const EditorHeader = ({
   onShare,
   onPreview,
   onClear,
+  onOverleaf,
   adminButton
 }: EditorHeaderProps) => {
   // Limpar tags HTML do título para exibição
@@ -29,6 +31,17 @@ const EditorHeader = ({
       <h1 className="text-2xl font-bold">{displayTitle}</h1>
       <div className="flex items-center gap-2">
         {adminButton}
+        {onOverleaf && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onOverleaf}
+            className="hidden sm:flex"
+          >
+            <FileDown className="h-4 w-4 mr-2" />
+            Abrir no Overleaf
+          </Button>
+        )}
         <Button
           variant="outline"
           size="sm"
@@ -36,7 +49,7 @@ const EditorHeader = ({
           className="hidden sm:flex"
         >
           <FileDown className="h-4 w-4 mr-2" />
-          Gerar LaTeX
+          Baixar LaTeX
         </Button>
         <Button
           variant="outline"

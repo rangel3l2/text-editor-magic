@@ -28,6 +28,13 @@ const InterventionProjectEditor = () => {
     }));
   };
 
+  const handleOverleaf = () => {
+    toast({
+      title: "Em desenvolvimento",
+      description: "Função de abrir no Overleaf em desenvolvimento para projetos de intervenção...",
+    });
+  };
+
   const handleDownload = () => {
     toast({
       title: "Download",
@@ -61,6 +68,7 @@ const InterventionProjectEditor = () => {
       <div className="container mx-auto p-6">
         <EditorHeader
           title="Novo Projeto de Intervenção"
+          onOverleaf={handleOverleaf}
           onDownload={handleDownload}
           onShare={handleShare}
           onPreview={handlePreview}
