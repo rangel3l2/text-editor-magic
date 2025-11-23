@@ -59,6 +59,13 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
     cleaned = cleaned.replace(/\[\[placeholder:[^\]]+\]\]/g, '');
     // Remove image markers like [[figura:id]], [[grafico:id]], [[tabela:id]]
     cleaned = cleaned.replace(/(?:🖼️\s*Imagem|📊\s*Gráfico|📋\s*Tabela)?\s*\[\[(figura|grafico|tabela):[^\]]+\]\]/g, '');
+    
+    // Converter tags HTML de parágrafo em quebras de parágrafo LaTeX
+    cleaned = cleaned.replace(/<\/p>\s*<p>/gi, '\n\n');
+    cleaned = cleaned.replace(/<p>/gi, '');
+    cleaned = cleaned.replace(/<\/p>/gi, '\n\n');
+    cleaned = cleaned.replace(/<br\s*\/?>/gi, '\n');
+    
     // Remove HTML entities
     cleaned = cleaned.replace(/&nbsp;/g, ' ');
     cleaned = cleaned.replace(/&amp;/g, '\\&');
@@ -67,8 +74,8 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
     cleaned = cleaned.replace(/&quot;/g, '"');
     // Remove remaining HTML tags
     cleaned = cleaned.replace(/<[^>]*>/g, '');
-    // Remove quebras de linha múltiplas
-    cleaned = cleaned.replace(/\n\s*\n\s*\n/g, '\n\n');
+    // Remove quebras de linha múltiplas (mais de 2)
+    cleaned = cleaned.replace(/\n\s*\n\s*\n+/g, '\n\n');
     // Escape LaTeX special characters in the text content
     cleaned = cleaned
       .replace(/&/g, '\\&')
@@ -179,7 +186,7 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
 % Tabulação nos parágrafos (ABNT)
 \\setlength{\\parindent}{1.25cm}
 
-% Espaçamento entre parágrafos
+% Espaçamento entre parágrafos (banner usa espaçamento para legibilidade)
 \\setlength{\\parskip}{1em}
 
 % ------- CORES PERSONALIZADAS -------
