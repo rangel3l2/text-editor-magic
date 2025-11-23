@@ -176,8 +176,8 @@ const generateLatexDocument = (content: any, images: any[] = [], inlineImages: M
 % Espaçamento entre colunas
 \\setlength{\\columnsep}{${numColumns === 3 ? '2cm' : '3cm'}}
 
-% Tabulação nos parágrafos
-\\setlength{\\parindent}{2cm}
+% Tabulação nos parágrafos (ABNT)
+\\setlength{\\parindent}{1.25cm}
 
 % Espaçamento entre parágrafos
 \\setlength{\\parskip}{1em}
