@@ -18,6 +18,7 @@ import { ArticleTestUpload } from "@/components/article/ArticleTestUpload";
 import { useIsAdmin } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import ValidationToggleButton from "@/components/editor/ValidationToggleButton";
+import ArticleAttachmentsManager from "@/components/article/ArticleAttachmentsManager";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
@@ -468,6 +469,9 @@ const ArticleEditor = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Gerenciador de Anexos */}
+        <ArticleAttachmentsManager />
       </div>
     </MainLayout>
   );
