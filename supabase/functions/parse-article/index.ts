@@ -86,14 +86,28 @@ async function parseDOCX(buffer: ArrayBuffer): Promise<string> {
   return result.value;
 }
 
-async function extractArticleSectionsWithAI(text: string) {
+async function extractArticleSectionsWithAI(text: string, images?: Array<{url: string, caption?: string}>) {
   if (!LOVABLE_API_KEY) {
     console.error('LOVABLE_API_KEY não configurada, usando extração regex');
     return extractArticleSections(text);
   }
 
   try {
-    const prompt = `Analise cuidadosamente o texto de um artigo científico e extraia TODAS as seções principais. IGNORE cabeçalhos, rodapés e numeração de página.
+    let imagePromptPart = '';
+    if (images && images.length > 0) {
+      imagePromptPart = `\n\nIMAGENS ENCONTRADAS NO DOCUMENTO (${images.length} no total):
+      ${images.map((img, i) => `\nImagem ${i + 1}: ${img.caption || 'Sem legenda'}`).join('')}
+      
+      IMPORTANTE: Para cada imagem encontrada, identifique:
+      - O tipo (Figura, Gráfico ou Tabela)
+      - A legenda completa (ex: "Figura 1: Descrição...")
+      - A fonte (ex: "Fonte: Autores (2024)" ou "Fonte: Silva (2020)")
+      - A seção onde deve ser inserida
+      
+      Adicione ao JSON um campo "images" com array de objetos contendo: type, caption, source, section`;
+    }
+    
+    const prompt = `Analise cuidadosamente o texto de um artigo científico e extraia TODAS as seções principais. IGNORE cabeçalhos, rodapés e numeração de página.${imagePromptPart}
 
 INSTRUÇÕES CRÍTICAS:
 1. Extraia o conteúdo COMPLETO de cada seção, não apenas um resumo
@@ -147,6 +161,12 @@ SEÇÕES A EXTRAIR:
   - Seção após a conclusão com lista de citações formatadas
   Extraia TODO o conteúdo desta seção até o final do documento.
 
+**images** (SE HOUVER): Array com informações de cada imagem:
+  - type: "figura" | "grafico" | "tabela"
+  - caption: legenda completa (ex: "Figura 1: Esquema do processo")
+  - source: fonte da imagem (ex: "Fonte: Autores (2024)")
+  - section: seção onde aparece ("introduction" | "methodology" | "results" | "conclusion")
+
 Retorne APENAS JSON válido (sem markdown):
 {
   "title": "...",
@@ -161,7 +181,8 @@ Retorne APENAS JSON válido (sem markdown):
   "methodology": "...",
   "results": "...",
   "conclusion": "...",
-  "references": "..."
+  "references": "...",
+  "images": [{"type": "figura", "caption": "...", "source": "...", "section": "results"}, ...]
 }
 
 IMPORTANTE: 
@@ -232,6 +253,16 @@ ${text}`;
       }));
     }
 
+    // Processar imagens se existirem
+    if (aiResult.images && Array.isArray(aiResult.images)) {
+      result.images = aiResult.images.map((img: any) => ({
+        type: img.type || 'figura',
+        caption: img.caption || '',
+        source: img.source || 'Fonte: Documento original',
+        section: img.section || 'results'
+      }));
+    }
+
     console.log('Seções extraídas com sucesso:');
     console.log('- Title:', result.title ? 'OK' : 'VAZIO');
     console.log('- Introduction:', result.introduction ? 'OK' : 'VAZIO');
@@ -240,6 +271,7 @@ ${text}`;
     console.log('- Conclusion:', result.conclusion ? 'OK' : 'VAZIO');
     console.log('- References:', result.references ? 'OK' : 'VAZIO');
     console.log('- Theoretical Topics:', result.theoreticalTopics?.length || 0);
+    console.log('- Images:', result.images?.length || 0);
     
     return result;
 

@@ -19,6 +19,7 @@ import { useIsAdmin } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import ValidationToggleButton from "@/components/editor/ValidationToggleButton";
 import ArticleAttachmentsManager from "@/components/article/ArticleAttachmentsManager";
+import ArticleSummary from "@/components/article/ArticleSummary";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
@@ -208,6 +209,9 @@ const ArticleEditor = () => {
           <ValidationToggleButton />
         </div>
 
+        {/* Sumário de navegação */}
+        <ArticleSummary theoreticalTopicsCount={content.theoreticalTopics.length} />
+
         {/* Orientação Acadêmica */}
         <div className="mb-6">
           <AcademicAdvisor 
@@ -233,7 +237,7 @@ const ArticleEditor = () => {
             <Card>
               <CardContent className="space-y-6">
                 {/* Título e Subtítulo */}
-                <div className="space-y-4">
+                <div id="article-title" className="space-y-4 scroll-mt-20">
                   <h3 className="text-lg font-semibold">Título e Subtítulo</h3>
                   <RichTextEditor
                     value={content.title}
@@ -256,7 +260,7 @@ const ArticleEditor = () => {
                 <Separator />
 
                 {/* Autores e Instituição */}
-                <div className="space-y-4">
+                <div id="article-authors" className="space-y-4 scroll-mt-20">
                   <h3 className="text-lg font-semibold">Autores e Instituição</h3>
                   <RichTextEditor
                     value={content.authors}
@@ -287,7 +291,7 @@ const ArticleEditor = () => {
                 <Separator />
 
                 {/* Resumo em Português */}
-                <div className="space-y-4">
+                <div id="article-abstract" className="space-y-4 scroll-mt-20">
                   <h3 className="text-lg font-semibold">Resumo</h3>
                   <RichTextEditor
                     value={content.abstract}
@@ -337,7 +341,7 @@ const ArticleEditor = () => {
             <Card>
               <CardContent className="space-y-6">
                 {/* Introdução com editor guiado */}
-                <div className="space-y-4">
+                <div id="article-introduction" className="space-y-4 scroll-mt-20">
                   <h3 className="text-lg font-semibold">1. Introdução</h3>
                   <IntroductionEditor
                     value={content.introduction}
@@ -360,7 +364,7 @@ const ArticleEditor = () => {
                 <Separator />
 
                 {/* Metodologia */}
-                <div className="space-y-4">
+                <div id="article-methodology" className="space-y-4 scroll-mt-20">
                   <h3 className="text-lg font-semibold">
                     {2 + content.theoreticalTopics.length}. Metodologia
                   </h3>
@@ -377,7 +381,7 @@ const ArticleEditor = () => {
                 <Separator />
 
                 {/* 2.3 Resultados e Discussão */}
-                <div className="space-y-4">
+                <div id="article-results" className="space-y-4 scroll-mt-20">
                   <h3 className="text-lg font-semibold">
                     2.{content.theoreticalTopics.length + 1} Resultados e Discussão
                   </h3>
@@ -399,7 +403,7 @@ const ArticleEditor = () => {
                 <Separator />
 
                 {/* 3 Conclusão */}
-                <div className="space-y-4">
+                <div id="article-conclusion" className="space-y-4 scroll-mt-20">
                   <h3 className="text-lg font-semibold">
                     3 Conclusão
                   </h3>
@@ -424,7 +428,7 @@ const ArticleEditor = () => {
             <Card>
               <CardContent className="space-y-6">
                 {/* Referências */}
-                <div className="space-y-4">
+                <div id="article-references" className="space-y-4 scroll-mt-20">
                   <h3 className="text-lg font-semibold">Referências</h3>
                   <RichTextEditor
                     value={content.references}
@@ -439,7 +443,7 @@ const ArticleEditor = () => {
                 <Separator />
 
                 {/* Apêndices */}
-                <div className="space-y-4">
+                <div id="article-appendices" className="space-y-4 scroll-mt-20">
                   <h3 className="text-lg font-semibold">Apêndices</h3>
                   <RichTextEditor
                     value={content.appendices}
@@ -454,7 +458,7 @@ const ArticleEditor = () => {
                 <Separator />
 
                 {/* Anexos */}
-                <div className="space-y-4">
+                <div id="article-attachments" className="space-y-4 scroll-mt-20">
                   <h3 className="text-lg font-semibold">Anexos</h3>
                   <RichTextEditor
                     value={content.attachments}
