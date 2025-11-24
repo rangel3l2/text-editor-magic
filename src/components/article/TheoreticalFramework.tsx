@@ -38,8 +38,8 @@ const TheoreticalFramework = ({
       </div>
 
       <div className="space-y-4">
-        {topics.map((topic) => (
-          <Card key={topic.id}>
+        {topics.map((topic, index) => (
+          <Card key={topic.id} id={`article-theoretical-${index}`} className="scroll-mt-20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 {topic.order}. {topic.title || "Novo Tópico"}
