@@ -41,6 +41,63 @@ const WorkInProgress = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+  // Helper function to check if work is complete based on type and content
+  const isWorkComplete = (workType: string, content: any): boolean => {
+    if (!content) return false;
+
+    const checkFields = (fields: string[]): boolean => {
+      return fields.every(field => {
+        const value = content[field];
+        return value && typeof value === 'string' && value.trim().length > 0;
+      });
+    };
+
+    switch (workType.toLowerCase()) {
+      case 'banner':
+        // Pré-textuais relevantes + todas as seções textuais
+        return checkFields([
+          'title', 'authors', 'institution',
+          'introduction', 'objectives', 'methodology', 
+          'results', 'conclusion', 'references'
+        ]);
+      
+      case 'article':
+        // Artigo científico completo
+        return checkFields([
+          'title', 'authors', 'institution',
+          'abstract', 'introduction', 'methodology',
+          'results', 'discussion', 'conclusion', 'references'
+        ]);
+      
+      case 'monography':
+        // Monografia completa
+        return checkFields([
+          'title', 'authors', 'institution',
+          'abstract', 'introduction', 'theoreticalFramework',
+          'methodology', 'results', 'conclusion', 'references'
+        ]);
+      
+      case 'thesis':
+        // Tese/Dissertação completa
+        return checkFields([
+          'title', 'authors', 'institution',
+          'abstract', 'introduction', 'theoreticalFramework',
+          'methodology', 'results', 'discussion', 'conclusion', 'references'
+        ]);
+      
+      case 'intervention':
+        // Projeto de Intervenção completo
+        return checkFields([
+          'title', 'authors', 'institution',
+          'introduction', 'justification', 'objectives',
+          'methodology', 'expectedResults', 'references'
+        ]);
+      
+      default:
+        return false;
+    }
+  };
+
   const { data: works = [], isLoading } = useQuery({
     queryKey: ['works-basic', user?.id, isAdmin],
     queryFn: async () => {
@@ -48,7 +105,7 @@ const WorkInProgress = () => {
       
       let query = supabase
         .from('work_in_progress')
-        .select('id, title, work_type, created_at, last_modified, user_id');
+        .select('id, title, work_type, created_at, last_modified, user_id, content');
       
       // If admin, get all works limited to 10, otherwise get only user's works
       if (isAdmin) {
@@ -86,10 +143,10 @@ const WorkInProgress = () => {
         }
       }
 
-      // Map works and add isComplete as false
+      // Map works and determine if they are complete
       return (dbWorks || []).map((work: any) => ({ 
         ...work, 
-        isComplete: false,
+        isComplete: isWorkComplete(work.work_type, work.content),
         userEmail: isAdmin ? emailMap[work.user_id] : undefined
       }));
     },
