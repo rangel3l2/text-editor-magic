@@ -244,9 +244,18 @@
   margin-bottom: 0.5em !important;
   text-indent: 1.25cm !important;
   page-break-inside: avoid;
+  white-space: pre-wrap;
 }
 
-.academic-preview p:first-child {
+/* Sem recuo apenas no primeiro parágrafo após título de seção */
+.academic-preview h2.section-title + p,
+.academic-preview h2.section-title + div > p:first-child {
+  text-indent: 0 !important;
+}
+
+/* Sem recuo em elementos centralizados (título, autores, etc) */
+.academic-preview .text-center p,
+.academic-preview .text-center div {
   text-indent: 0 !important;
 }
 
