@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -6,12 +6,14 @@ import { cleanupHashFromUrl } from './authUtils';
 
 export const useAuthSession = () => {
   const [user, setUser] = useState<User | null>(null);
+  const previousUserRef = useRef<User | null>(null);
 
   useEffect(() => {
     // Check current session without showing toast
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user);
+        previousUserRef.current = session.user;
         cleanupHashFromUrl();
       }
     });
@@ -20,10 +22,11 @@ export const useAuthSession = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      const previousUser = user;
-      const currentUser = session?.user;
+      const previousUser = previousUserRef.current;
+      const currentUser = session?.user ?? null;
       
       setUser(currentUser);
+      previousUserRef.current = currentUser;
 
       // Only show login success toast when actually logging in
       if (event === 'SIGNED_IN' && !previousUser && currentUser) {
@@ -33,7 +36,7 @@ export const useAuthSession = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [user]);
+  }, []);
 
   return { user, setUser };
 };
