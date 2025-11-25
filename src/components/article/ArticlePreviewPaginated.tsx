@@ -62,7 +62,9 @@ const buildBlocks = (content: ArticleContent) => {
   blocks.push({ html: `<div class="mb-4 text-justify hyphens-auto">${sanitize(content.abstract)}</div>` });
   
   // Palavras-chave
-  blocks.push({ html: `<p class="mb-8 text-justify hyphens-auto"><span class="font-bold">Palavras-chave:</span> ${sanitize(content.keywords)}</p>` });
+  if (content.keywords && content.keywords.trim()) {
+    blocks.push({ html: `<p class="mb-4 keywords-line"><strong>Palavras-chave:</strong> ${sanitize(content.keywords)}</p>` });
+  }
 
   // Abstract - título
   blocks.push({ html: `<div class="mb-4"><h2 class="section-title">ABSTRACT</h2></div>` });
@@ -71,7 +73,9 @@ const buildBlocks = (content: ArticleContent) => {
   blocks.push({ html: `<div class="mb-4 text-justify hyphens-auto">${sanitize(content.englishAbstract)}</div>` });
   
   // Keywords
-  blocks.push({ html: `<p class="mb-8 text-justify hyphens-auto"><span class="font-bold">Keywords:</span> ${sanitize(content.englishKeywords)}</p>` });
+  if (content.englishKeywords && content.englishKeywords.trim()) {
+    blocks.push({ html: `<p class="mb-8 keywords-line"><strong>Keywords:</strong> ${sanitize(content.englishKeywords)}</p>` });
+  }
 
   // Introdução
   blocks.push({ html: `<h2 class="section-title">1 INTRODUÇÃO</h2>` });
