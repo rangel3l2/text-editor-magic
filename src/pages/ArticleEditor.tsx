@@ -23,17 +23,13 @@ import ArticleSummary from "@/components/article/ArticleSummary";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
-  const { content, isLoading, loadError, handleChange, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
+  const { content, isLoading, loadError, handleChange, updateMultipleFields, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
   const [previewOpen, setPreviewOpen] = useState(false);
   const { data: isAdmin } = useIsAdmin(user);
 
   const handleArticleParsed = (parsedContent: Partial<ArticleContent>) => {
-    // Preencher todos os campos com o conteúdo extraído
-    Object.entries(parsedContent).forEach(([key, value]) => {
-      if (value) {
-        handleChange(key as keyof ArticleContent, value);
-      }
-    });
+    // Atualizar todos os campos de uma só vez para evitar múltiplos re-renders
+    updateMultipleFields(parsedContent);
 
     toast({
       title: "Artigo importado!",

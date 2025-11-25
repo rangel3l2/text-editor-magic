@@ -105,6 +105,44 @@ export const useArticleContent = () => {
     }
   };
 
+  // Nova função para atualizar múltiplos campos de uma vez (usado no import)
+  const updateMultipleFields = (updates: Partial<ArticleContent>) => {
+    setContent(prev => ({
+      ...prev,
+      ...updates
+    }));
+
+    // Só salvar se temos user, id e o componente está montado
+    if (user && id && mountedRef.current) {
+      const saveContent = async () => {
+        try {
+          const newContent = { ...content, ...updates };
+          const { error } = await supabase
+            .from('work_in_progress')
+            .update({ 
+              content: newContent as any,
+              last_modified: new Date().toISOString()
+            })
+            .eq('id', id)
+            .eq('user_id', user.id);
+
+          if (error) throw error;
+        } catch (error) {
+          console.error('Error saving article content:', error);
+          if (mountedRef.current) {
+            toast({
+              title: "Erro ao salvar",
+              description: "Não foi possível salvar as alterações. Tente novamente.",
+              variant: "destructive",
+            });
+          }
+        }
+      };
+
+      saveContent();
+    }
+  };
+
   const addTheoreticalTopic = () => {
     const newTopic: TheoreticalTopic = {
       id: crypto.randomUUID(),
@@ -285,6 +323,7 @@ export const useArticleContent = () => {
     isLoading,
     loadError,
     handleChange,
+    updateMultipleFields,
     addTheoreticalTopic,
     updateTheoreticalTopic,
     removeTheoreticalTopic,
