@@ -11,6 +11,13 @@ export interface TheoreticalTopic {
   order: number;
 }
 
+export interface ArticleImage {
+  type: string; // "figura" | "grafico" | "tabela" | outros
+  caption: string;
+  source: string;
+  section: string; // "introduction" | "methodology" | "results" | "conclusion" | etc.
+}
+
 export interface ArticleContent {
   title: string;
   subtitle?: string;
@@ -30,6 +37,7 @@ export interface ArticleContent {
   appendices?: string;
   attachments?: string;
   approvalDate?: string;
+  images?: ArticleImage[];
 }
 
 export const useArticleContent = () => {
@@ -56,6 +64,7 @@ export const useArticleContent = () => {
     appendices: '',
     attachments: '',
     approvalDate: '',
+    images: [],
   };
 
   const [content, setContent] = useState<ArticleContent>(initialArticleContent);
