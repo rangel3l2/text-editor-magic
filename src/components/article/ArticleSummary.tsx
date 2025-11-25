@@ -34,7 +34,7 @@ const ArticleSummary = ({ theoreticalTopicsCount }: ArticleSummaryProps) => {
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 fixed left-4 top-20 z-40 shadow-lg"
+          className="gap-2 fixed left-4 top-32 z-30 shadow-lg"
         >
           <List className="h-4 w-4" />
           Sumário
