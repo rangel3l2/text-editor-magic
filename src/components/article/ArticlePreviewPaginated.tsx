@@ -61,8 +61,11 @@ const buildBlocks = (content: ArticleContent) => {
   // Orientadores
   blocks.push({ html: `<div class="mb-8 text-center">${sanitize(content.advisors)}</div>` });
 
+  // Marca fim dos pré-textuais antes do Resumo (para quebra de página)
+  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' as any });
+
   // Resumo - título
-  blocks.push({ html: `<div class="mb-4"><h2 class="section-title">RESUMO</h2></div>` });
+  blocks.push({ html: `<div class="mb-4"><h2 class="section-title unnumbered-section">RESUMO</h2></div>` });
   
   // Resumo - conteúdo
   blocks.push({ html: `<div class="mb-4 text-justify hyphens-auto">${sanitize(content.abstract)}</div>` });
@@ -73,8 +76,11 @@ const buildBlocks = (content: ArticleContent) => {
     blocks.push({ html: `<p class="mb-4 keywords-line"><strong>Palavras-chave:</strong> ${keywordsText}</p>` });
   }
 
+  // Marca fim do Resumo (para quebra de página antes do Abstract)
+  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' as any });
+
   // Abstract - título
-  blocks.push({ html: `<div class="mb-4"><h2 class="section-title">ABSTRACT</h2></div>` });
+  blocks.push({ html: `<div class="mb-4"><h2 class="section-title unnumbered-section">ABSTRACT</h2></div>` });
   
   // Abstract - conteúdo
   blocks.push({ html: `<div class="mb-4 text-justify hyphens-auto">${sanitize(content.englishAbstract)}</div>` });
@@ -84,6 +90,10 @@ const buildBlocks = (content: ArticleContent) => {
     const englishKeywordsText = sanitizePlain(content.englishKeywords);
     blocks.push({ html: `<p class="mb-8 keywords-line"><strong>Keywords:</strong> ${englishKeywordsText}</p>` });
   }
+
+  // Marca fim do Abstract (para quebra de página antes da Introdução)
+  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' as any });
+
 
   // Introdução
   blocks.push({ html: `<h2 class="section-title">1 INTRODUÇÃO</h2>` });
@@ -165,11 +175,18 @@ const buildBlocks = (content: ArticleContent) => {
       });
   }
 
+  // Marca fim da Conclusão (para quebra de página antes das Referências)
+  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' as any });
+
   // Referências (contam fora do total de páginas textuais, mas mostramos)
-  blocks.push({ html: `<div class="references"><h2 class="section-title">REFERÊNCIAS</h2></div>` });
+  blocks.push({ html: `<div class="references"><h2 class="section-title unnumbered-section">REFERÊNCIAS</h2></div>` });
   const refTemp = document.createElement('div');
   refTemp.innerHTML = sanitize(ensureParagraphs(content.references));
-  refTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => blocks.push({ html: (el as HTMLElement).outerHTML }));
+  refTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => {
+    const element = el as HTMLElement;
+    element.classList.add('reference-item');
+    blocks.push({ html: element.outerHTML });
+  });
 
   return blocks;
 };
@@ -208,6 +225,15 @@ const ArticlePreviewPaginated = ({ content }: ArticlePreviewPaginatedProps) => {
       if (block.mark === 'INTRO_END') {
         // Marca fim da introdução no índice da página atual
         introEndPageIndex = resultPages.length; // páginas finalizadas até agora
+        continue;
+      }
+
+      // Verifica se é uma quebra de página forçada
+      if (block.mark === 'PAGE_BREAK' || block.html.includes('<!-- PAGE_BREAK -->')) {
+        // Força nova página
+        resultPages.push(page.innerHTML);
+        sandbox.removeChild(page);
+        ({ page, contentWrap } = makePage());
         continue;
       }
 
