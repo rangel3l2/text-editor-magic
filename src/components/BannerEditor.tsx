@@ -21,6 +21,7 @@ import type { LogoConfig } from "./banner/header/LogoUpload";
 import BannerAttachmentsManager from "./banner/BannerAttachmentsManager";
 import { useWorkSharing } from "@/hooks/useWorkSharing";
 import ShareDialog from "./banner/sharing/ShareDialog";
+import { WorkImporter } from "@/components/WorkImporter";
 import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -165,6 +166,20 @@ const BannerEditor = () => {
     }
   };
 
+  const handleBannerParsed = (parsedContent: any) => {
+    // Atualizar campos do banner
+    Object.entries(parsedContent).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        handleChange(key as any, value as string);
+      }
+    });
+
+    toast({
+      title: "✅ Banner importado com sucesso!",
+      description: "Todos os campos foram preenchidos automaticamente. Revise o conteúdo.",
+    });
+  };
+
   const handleImageUploadFromEditor = (file: File) => {
     setPendingImageFile(file);
   };
@@ -264,6 +279,7 @@ const BannerEditor = () => {
             }}
             onOpenPreview={() => setPreviewOpen(true)}
             onClearFields={handleClearFields}
+            importButton={<WorkImporter workType="banner" onWorkParsed={handleBannerParsed} />}
           />
           
           <BannerTemplateSelector

@@ -17,3 +17,9 @@ verify_jwt = true
 
 [functions.generate-latex-pdf]
 verify_jwt = false
+
+[functions.parse-article]
+verify_jwt = true
+
+[functions.parse-banner]
+verify_jwt = true

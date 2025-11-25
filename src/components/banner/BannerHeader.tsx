@@ -11,6 +11,7 @@ interface BannerHeaderProps {
   onShare: () => void;
   onOpenPreview: () => void;
   onClearFields: () => void;
+  importButton?: React.ReactNode;
 }
 
 const BannerHeader = ({ 
@@ -20,7 +21,8 @@ const BannerHeader = ({
   onGenerateLatex,
   onShare,
   onOpenPreview,
-  onClearFields 
+  onClearFields,
+  importButton
 }: BannerHeaderProps) => {
   const headerContent = previewHtml ? previewHtml.split('<div class="banner-section"')[0] : '';
 
@@ -36,6 +38,7 @@ const BannerHeader = ({
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{parseHtmlContent(title)}</h1>
         <div className="flex items-center space-x-2">
+          {importButton}
           <Button
             variant="outline"
             size="sm"
