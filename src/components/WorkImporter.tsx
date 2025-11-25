@@ -48,20 +48,6 @@ export const WorkImporter = ({ workType, onWorkParsed }: WorkImporterProps) => {
     }
   };
 
-  const simulateProgress = (targetProgress: number) => {
-    const increment = 2;
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= targetProgress) {
-          clearInterval(interval);
-          return targetProgress;
-        }
-        return prev + increment;
-      });
-    }, 100);
-    return interval;
-  };
-
   const parseWorkContent = async () => {
     if (!file) return;
 
@@ -70,15 +56,30 @@ export const WorkImporter = ({ workType, onWorkParsed }: WorkImporterProps) => {
     setStatus("Enviando arquivo...");
 
     try {
-      // Simulação de progresso para upload (0-20%)
-      const uploadInterval = simulateProgress(20);
+      // Progresso inicial: enviando arquivo (0-15%)
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev < 15) return prev + 1;
+          return prev;
+        });
+      }, 100);
       
       const formData = new FormData();
       formData.append('file', file);
 
-      setStatus("Processando documento...");
-      simulateProgress(40);
+      // Upload concluído
+      setProgress(15);
+      setStatus("Extraindo texto do documento...");
+      
+      // Simular extração de texto (15-35%)
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setProgress(25);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setProgress(35);
 
+      setStatus("Analisando conteúdo com IA...");
+      setProgress(45);
+      
       const endpoint = workType === "article" ? "parse-article" : "parse-banner";
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`,
@@ -91,17 +92,24 @@ export const WorkImporter = ({ workType, onWorkParsed }: WorkImporterProps) => {
         }
       );
 
-      clearInterval(uploadInterval);
+      clearInterval(progressInterval);
+
+      // Progresso durante análise IA (45-85%)
+      const aiProgressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev < 85) return prev + 2;
+          return prev;
+        });
+      }, 200);
 
       if (!response.ok) {
+        clearInterval(aiProgressInterval);
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erro ao processar documento');
       }
 
-      setStatus("Analisando conteúdo com IA...");
-      setProgress(70);
-
       const parsedContent = await response.json();
+      clearInterval(aiProgressInterval);
       
       setStatus("Preenchendo campos...");
       setProgress(90);

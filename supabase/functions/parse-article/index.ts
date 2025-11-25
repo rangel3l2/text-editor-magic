@@ -119,17 +119,32 @@ SEÇÕES A EXTRAIR:
 
 **title**: Título principal do artigo (geralmente em MAIÚSCULAS ou negrito no início)
 
-**authors**: Nomes completos dos autores com numeração sobrescrita se houver (ex: João Silva¹, Maria Santos²)
+**authors**: Nomes completos dos autores com numeração sobrescrita (ex: João Silva¹, Maria Santos²). 
+  - Geralmente aparecem logo após o título e ANTES do "RESUMO"
+  - Têm superscripts ¹, ², ³
+  - Formato: "Nome Completo¹" ou "Nome Completo¹, Outro Nome²"
+  - NÃO confundir com títulos de seções, instituições ou palavras técnicas
 
-**advisors**: Orientadores (procure por "Orientador:", "Professor orientador:", ou notas de rodapé com ¹, ²)
+**advisors**: Nome(s) do(s) orientador(es). Procure nas NOTAS DE RODAPÉ da primeira página:
+  - Busque por linhas com ¹, ², ³ que mencionem "Professor", "Mestre", "Doutor"
+  - Exemplo: "² Mestre em... Professor no Instituto..." - EXTRAIA apenas o nome completo
+  - Se houver múltiplos autores, o orientador geralmente é o último (com maior número de superscript)
+  - Formato esperado: apenas o nome, sem cargos (ex: "Alex F. de Araujo")
 
 **abstract**: Conteúdo COMPLETO após "RESUMO" até "Palavras-chave"
 
-**keywords**: Lista após "Palavras-chave:" ou "Palavras chave:" até próxima seção
+**keywords**: APENAS a lista de palavras-chave após "Palavras-chave:" (separadas por vírgula)
+  - Parar ANTES de qualquer nota de rodapé ou informação dos autores
+  - NÃO incluir dados biográficos, e-mails ou informações institucionais
+  - Formato: "Palavra 1, Palavra 2, Palavra 3"
 
-**englishAbstract**: Conteúdo COMPLETO após "ABSTRACT" até "Keywords"
+**englishAbstract**: Conteúdo COMPLETO após "ABSTRACT" até "Keywords:"
+  - Parar ANTES de "Keywords:" 
+  - NÃO incluir "Data de aprovação" ou outras informações
 
-**englishKeywords**: Lista após "Keywords:" até próxima seção
+**englishKeywords**: APENAS a lista após "Keywords:" (separadas por vírgula)
+  - Parar ANTES de "Data de aprovação" ou qualquer outra informação
+  - Formato: "Keyword 1, Keyword 2, Keyword 3"
 
 **introduction**: TODA a seção 1 INTRODUÇÃO completa, do início até o final da seção (antes da seção 2)
 
@@ -185,12 +200,19 @@ Retorne APENAS JSON válido (sem markdown):
   "images": [{"type": "figura", "caption": "...", "source": "...", "section": "results"}, ...]
 }
 
-IMPORTANTE: 
+IMPORTANTE - REGRAS DE EXTRAÇÃO: 
 - Procure pelas seções em TODO o texto, não apenas no início
 - Resultados e Conclusão costumam estar no FINAL do documento
 - Referências sempre está no FINAL, após a conclusão
 - Se uma seção tiver um título diferente mas o conteúdo corresponder, inclua-a
 - NÃO deixe seções vazias se houver conteúdo relevante no documento
+
+IMPORTANTE - SEPARAÇÃO DE CAMPOS:
+- "authors" deve conter APENAS nomes (com superscripts ¹, ²)
+- "advisors" deve extrair o nome do orientador das notas de rodapé
+- "keywords" deve conter APENAS as palavras-chave, SEM notas de rodapé ou e-mails
+- "englishKeywords" deve conter APENAS as keywords, SEM "Data de aprovação"
+- NÃO misture informações de diferentes campos
 
 TEXTO DO ARTIGO:
 ${text}`;
@@ -204,7 +226,7 @@ ${text}`;
       body: JSON.stringify({
         model: 'google/gemini-2.5-pro',
         messages: [
-          { role: 'system', content: 'Você é um assistente especializado em análise de artigos científicos acadêmicos brasileiros. Você deve extrair TODAS as seções do documento, incluindo resultados, discussão, conclusão e referências. Retorne apenas JSON válido, sem markdown ou explicações adicionais.' },
+          { role: 'system', content: 'Você é um assistente especializado em análise de artigos científicos acadêmicos brasileiros. REGRAS CRÍTICAS: 1) "authors" são os nomes após o título (ex: "Rangel Silva¹, Maria Santos²"). 2) "advisors" é extraído das NOTAS DE RODAPÉ - busque por linhas com ² ou ³ que mencionem "Professor" e extraia APENAS o nome. 3) "keywords" são APENAS as palavras após "Palavras-chave:", SEM notas de rodapé. 4) Retorne apenas JSON válido, sem markdown.' },
           { role: 'user', content: prompt }
         ],
       }),
