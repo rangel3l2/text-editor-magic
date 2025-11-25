@@ -236,27 +236,32 @@
   line-height: 1.15;
 }
 
-.academic-preview p,
-.academic-preview div {
+.academic-preview p {
   text-align: justify !important;
   word-spacing: normal !important;
   hyphens: auto !important;
-  margin-bottom: 0.5em !important;
+  margin-bottom: 1em !important;
   text-indent: 1.25cm !important;
   page-break-inside: avoid;
-  white-space: pre-wrap;
 }
 
-/* Sem recuo apenas no primeiro parágrafo após título de seção */
-.academic-preview h2.section-title + p,
-.academic-preview h2.section-title + div > p:first-child {
+.academic-preview div {
+  word-spacing: normal !important;
+}
+
+/* Sem recuo no primeiro parágrafo após título de seção */
+.academic-preview h2 + p,
+.academic-preview h2.section-title + p {
   text-indent: 0 !important;
 }
 
-/* Sem recuo em elementos centralizados (título, autores, etc) */
+/* Sem recuo em textos centralizados e keywords */
 .academic-preview .text-center p,
-.academic-preview .text-center div {
+.academic-preview .mb-4.text-center,
+.academic-preview .mb-8.text-center,
+.academic-preview .keywords-line {
   text-indent: 0 !important;
+  text-align: justify !important;
 }
 
 .academic-preview .references {

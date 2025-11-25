@@ -255,9 +255,25 @@ ${text}`;
     
     console.log('Resposta da IA (primeiros 1000 chars):', content.substring(0, 1000));
     
-    // Remover markdown code blocks se presentes
-    const jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const aiResult = JSON.parse(jsonStr);
+    // Remover markdown code blocks e tratar caracteres problemáticos
+    let jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    // Tentar parse, se falhar, limpar e tentar novamente
+    let aiResult;
+    try {
+      aiResult = JSON.parse(jsonStr);
+    } catch (parseError) {
+      console.warn('Primeira tentativa de parse falhou, limpando JSON...', parseError);
+      // Remover caracteres de controle problemáticos mas preservar \n válidos
+      jsonStr = jsonStr.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+      // Tentar parse novamente
+      try {
+        aiResult = JSON.parse(jsonStr);
+      } catch (secondError) {
+        console.error('Segunda tentativa de parse também falhou:', secondError);
+        throw new Error('Não foi possível processar a resposta da IA. Tente novamente.');
+      }
+    }
 
     // Converter para HTML e adicionar instituição padrão
     const result: any = {
@@ -393,12 +409,20 @@ function extractArticleSections(text: string) {
 function cleanHtml(text: string): string {
   if (!text) return '';
   
-  // Converter para parágrafos básicos
-  const paragraphs = text
-    .split(/\n{2,}/)
+  // Preservar quebras de linha convertendo para <br> primeiro
+  let processed = text.replace(/\n/g, '<br>');
+  
+  // Converter duplas quebras em parágrafos
+  const paragraphs = processed
+    .split(/<br><br>/)
     .map(p => p.trim())
     .filter(p => p.length > 0)
-    .map(p => `<p>${p}</p>`)
+    .map(p => {
+      // Se já tem tags HTML, retorna como está
+      if (/<[a-z][\s\S]*>/i.test(p)) return p;
+      // Senão, envolve em <p>
+      return `<p>${p}</p>`;
+    })
     .join('');
   
   return paragraphs || `<p>${text}</p>`;
