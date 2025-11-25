@@ -14,8 +14,7 @@ import { toast } from "@/components/ui/use-toast";
 import TheoreticalFramework from "@/components/article/TheoreticalFramework";
 import IntroductionEditor from "@/components/academic/IntroductionEditor";
 import AcademicAdvisor from "@/components/article/AcademicAdvisor";
-import { ArticleTestUpload } from "@/components/article/ArticleTestUpload";
-import { useIsAdmin } from "@/hooks/useUserRole";
+import { WorkImporter } from "@/components/WorkImporter";
 import { supabase } from "@/integrations/supabase/client";
 import ValidationToggleButton from "@/components/editor/ValidationToggleButton";
 import ArticleAttachmentsManager from "@/components/article/ArticleAttachmentsManager";
@@ -25,7 +24,6 @@ const ArticleEditor = () => {
   const { user } = useAuth();
   const { content, isLoading, loadError, handleChange, updateMultipleFields, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
   const [previewOpen, setPreviewOpen] = useState(false);
-  const { data: isAdmin } = useIsAdmin(user);
 
   const handleArticleParsed = (parsedContent: Partial<ArticleContent>) => {
     // Atualizar todos os campos de uma só vez para evitar múltiplos re-renders
@@ -200,7 +198,7 @@ const ArticleEditor = () => {
             onShare={handleShare}
             onPreview={() => setPreviewOpen(true)}
             onClear={handleClear}
-            adminButton={isAdmin ? <ArticleTestUpload onArticleParsed={handleArticleParsed} /> : undefined}
+            adminButton={<WorkImporter workType="article" onWorkParsed={handleArticleParsed} />}
           />
           <ValidationToggleButton />
         </div>
