@@ -53,35 +53,39 @@ export const WorkImporter = ({ workType, onWorkParsed }: WorkImporterProps) => {
 
     setLoading(true);
     setProgress(0);
-    setStatus("Enviando arquivo...");
+    setStatus("Preparando arquivo...");
 
     try {
-      // Progresso inicial: enviando arquivo (0-15%)
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev < 15) return prev + 1;
-          return prev;
-        });
-      }, 100);
-      
       const formData = new FormData();
       formData.append('file', file);
 
-      // Upload concluído
-      setProgress(15);
-      setStatus("Extraindo texto do documento...");
-      
-      // Simular extração de texto (15-35%)
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setProgress(25);
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setProgress(35);
+      // Simula progresso mais linear e contínuo
+      const simulateProgress = (from: number, to: number, duration: number) => {
+        const steps = Math.floor(duration / 50);
+        const increment = (to - from) / steps;
+        let current = from;
+        
+        return setInterval(() => {
+          current = Math.min(current + increment, to);
+          setProgress(Math.floor(current));
+        }, 50);
+      };
 
-      setStatus("Analisando conteúdo com IA...");
-      setProgress(45);
+      // Fase 1: Upload (0-20%)
+      setStatus("Enviando arquivo...");
+      const uploadInterval = simulateProgress(0, 20, 800);
+      await new Promise(resolve => setTimeout(resolve, 800));
+      clearInterval(uploadInterval);
+      setProgress(20);
+
+      // Fase 2: Processamento inicial (20-40%)
+      setStatus("Extraindo texto do documento...");
+      const extractInterval = simulateProgress(20, 40, 1000);
       
       const endpoint = workType === "article" ? "parse-article" : "parse-banner";
-      const response = await fetch(
+      
+      // Inicia a chamada para o backend
+      const responsePromise = fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`,
         {
           method: 'POST',
@@ -91,34 +95,37 @@ export const WorkImporter = ({ workType, onWorkParsed }: WorkImporterProps) => {
           body: formData,
         }
       );
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      clearInterval(extractInterval);
+      setProgress(40);
 
-      clearInterval(progressInterval);
-
-      // Progresso durante análise IA (45-85%)
-      const aiProgressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev < 85) return prev + 2;
-          return prev;
-        });
-      }, 200);
+      // Fase 3: Análise com IA (40-85%) - PROGRESSO CONTÍNUO DURANTE A CHAMADA
+      setStatus("Analisando conteúdo com IA...");
+      const aiInterval = simulateProgress(40, 85, 3000); // 3 segundos de progresso suave
+      
+      // Aguarda a resposta enquanto o progresso continua
+      const response = await responsePromise;
+      
+      clearInterval(aiInterval);
 
       if (!response.ok) {
-        clearInterval(aiProgressInterval);
         const errorData = await response.json();
         throw new Error(errorData.error || 'Erro ao processar documento');
       }
 
       const parsedContent = await response.json();
-      clearInterval(aiProgressInterval);
       
+      // Fase 4: Finalização (85-100%)
       setStatus("Preenchendo campos...");
-      setProgress(90);
-
-      // Pequena pausa para dar tempo de ver o progresso
-      await new Promise(resolve => setTimeout(resolve, 500));
+      setProgress(85);
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setProgress(92);
       
       onWorkParsed(parsedContent);
-
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
       setProgress(100);
       setStatus("Concluído!");
 

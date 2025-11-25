@@ -107,44 +107,55 @@ async function extractArticleSectionsWithAI(text: string, images?: Array<{url: s
       Adicione ao JSON um campo "images" com array de objetos contendo: type, caption, source, section`;
     }
     
-    const prompt = `Analise cuidadosamente o texto de um artigo científico e extraia TODAS as seções principais. IGNORE cabeçalhos, rodapés e numeração de página.${imagePromptPart}
+    const prompt = `Analise este artigo científico brasileiro e extraia TODAS as seções com PRECISÃO ABSOLUTA.${imagePromptPart}
 
-INSTRUÇÕES CRÍTICAS:
-1. Extraia o conteúdo COMPLETO de cada seção, não apenas um resumo
-2. Mantenha toda a formatação e parágrafos originais
-3. Se uma seção não existir, retorne string vazia ""
-4. Para referências, extraia TODAS as referências bibliográficas completas
+EXEMPLO REAL DO DOCUMENTO QUE VOCÊ VAI PROCESSAR:
+- Título: "APLICAÇÃO DA INTELIGÊNCIA ARTIFICIAL NO PROCESSO DE ORIENTAÇÃO ACADÊMICA: UM ESTUDO SOBRE TCCS"
+- Autores (após título, ANTES do resumo): "Rangel Gomes Soares da Silva¹" E "Alex F. de Araujo²"
+- Notas de rodapé:
+  * ¹ Tecnólogo em Análise e Desenvolvimento de Sistemas. Instituto Federal de Mato Grosso do Sul...
+  * ² Mestre em Ciências da Computação... Professor no Instituto Federal de Mato Grosso do Sul...
+- Palavras-chave (após resumo): "Tecnologia Educacional, Teoria do Andaime, Escrita Científica, Pesquisa-Ação, Inteligência Artificial."
+- Keywords (após abstract): "Educational Technology, Scaffolding Theory, Scientific Writing, Action Research, Artificial Intelligence"
 
-SEÇÕES A EXTRAIR:
+REGRAS ABSOLUTAS DE EXTRAÇÃO:
 
-**title**: Título principal do artigo (geralmente em MAIÚSCULAS ou negrito no início)
+**title**: 
+  - Título completo em MAIÚSCULAS que aparece no INÍCIO do documento
+  - Exemplo correto: "APLICAÇÃO DA INTELIGÊNCIA ARTIFICIAL NO PROCESSO DE ORIENTAÇÃO ACADÊMICA: UM ESTUDO SOBRE TCCS"
 
-**authors**: Nomes completos dos autores com numeração sobrescrita (ex: João Silva¹, Maria Santos²). 
-  - Geralmente aparecem logo após o título e ANTES do "RESUMO"
-  - Têm superscripts ¹, ², ³
-  - Formato: "Nome Completo¹" ou "Nome Completo¹, Outro Nome²"
-  - NÃO confundir com títulos de seções, instituições ou palavras técnicas
+**authors**: 
+  - Nomes que aparecem IMEDIATAMENTE APÓS o título e ANTES de "RESUMO"
+  - Com superscript ¹ ou ²
+  - Formato: "Nome Completo¹, Outro Nome²" (separados por vírgula ou quebra de linha)
+  - EXEMPLO: "Rangel Gomes Soares da Silva¹, Alex F. de Araujo²"
+  - NÃO INCLUA: instituições, e-mails, cargos
 
-**advisors**: Nome(s) do(s) orientador(es). Procure nas NOTAS DE RODAPÉ da primeira página:
-  - Busque por linhas com ¹, ², ³ que mencionem "Professor", "Mestre", "Doutor"
-  - Exemplo: "² Mestre em... Professor no Instituto..." - EXTRAIA apenas o nome completo
-  - Se houver múltiplos autores, o orientador geralmente é o último (com maior número de superscript)
-  - Formato esperado: apenas o nome, sem cargos (ex: "Alex F. de Araujo")
+**advisors**: 
+  - PROCURE nas notas de rodapé (¹, ²) por quem tem "Professor" ou "Mestre" ou "Doutor"
+  - EXTRAIA APENAS O NOME da pessoa (primeira parte antes das qualificações)
+  - Se a nota diz "² Mestre em... Professor no Instituto...", extraia apenas "Alex F. de Araujo"
+  - Se houver 2 autores (¹ e ²), geralmente o ² é o orientador
+  - Formato esperado: "Nome Completo" (sem cargos, sem instituição)
 
-**abstract**: Conteúdo COMPLETO após "RESUMO" até "Palavras-chave"
+**abstract**: 
+  - Todo o parágrafo após "RESUMO" até a linha "Palavras-chave:"
+  - NÃO INCLUA a linha "Palavras-chave:" nem o que vem depois
 
-**keywords**: APENAS a lista de palavras-chave após "Palavras-chave:" (separadas por vírgula)
-  - Parar ANTES de qualquer nota de rodapé ou informação dos autores
-  - NÃO incluir dados biográficos, e-mails ou informações institucionais
-  - Formato: "Palavra 1, Palavra 2, Palavra 3"
+**keywords**: 
+  - SOMENTE as palavras que vêm IMEDIATAMENTE após "Palavras-chave:"
+  - Pare ANTES de qualquer nota de rodapé (¹, ²)
+  - EXEMPLO CORRETO: "Tecnologia Educacional, Teoria do Andaime, Escrita Científica, Pesquisa-Ação, Inteligência Artificial"
+  - NÃO INCLUA: "¹ Tecnólogo..." ou e-mails ou datas
 
-**englishAbstract**: Conteúdo COMPLETO após "ABSTRACT" até "Keywords:"
-  - Parar ANTES de "Keywords:" 
-  - NÃO incluir "Data de aprovação" ou outras informações
+**englishAbstract**: 
+  - Todo o texto após "ABSTRACT" até a linha "Keywords:"
+  - NÃO INCLUA "Keywords:" nem o que vem depois
 
-**englishKeywords**: APENAS a lista após "Keywords:" (separadas por vírgula)
-  - Parar ANTES de "Data de aprovação" ou qualquer outra informação
-  - Formato: "Keyword 1, Keyword 2, Keyword 3"
+**englishKeywords**: 
+  - SOMENTE as palavras após "Keywords:"
+  - Pare ANTES de "Data de aprovação:" ou qualquer outra informação
+  - EXEMPLO CORRETO: "Educational Technology, Scaffolding Theory, Scientific Writing, Action Research, Artificial Intelligence"
 
 **introduction**: TODA a seção 1 INTRODUÇÃO completa, do início até o final da seção (antes da seção 2)
 
@@ -207,12 +218,12 @@ IMPORTANTE - REGRAS DE EXTRAÇÃO:
 - Se uma seção tiver um título diferente mas o conteúdo corresponder, inclua-a
 - NÃO deixe seções vazias se houver conteúdo relevante no documento
 
-IMPORTANTE - SEPARAÇÃO DE CAMPOS:
-- "authors" deve conter APENAS nomes (com superscripts ¹, ²)
-- "advisors" deve extrair o nome do orientador das notas de rodapé
-- "keywords" deve conter APENAS as palavras-chave, SEM notas de rodapé ou e-mails
-- "englishKeywords" deve conter APENAS as keywords, SEM "Data de aprovação"
-- NÃO misture informações de diferentes campos
+VERIFICAÇÃO FINAL - VOCÊ DEVE:
+1. Verificar se "authors" contém APENAS nomes com ¹ ou ² (ex: "Rangel Gomes Soares da Silva¹, Alex F. de Araujo²")
+2. Verificar se "advisors" contém APENAS o nome extraído da nota de rodapé que menciona "Professor" (ex: "Alex F. de Araujo")
+3. Verificar se "keywords" NÃO contém notas de rodapé, e-mails ou qualquer texto que não seja palavra-chave
+4. Verificar se "englishKeywords" NÃO contém "Data de aprovação" ou qualquer texto adicional
+5. Se algum campo estiver com informações extras, LIMPE e deixe APENAS o conteúdo correto
 
 TEXTO DO ARTIGO:
 ${text}`;
@@ -224,9 +235,9 @@ ${text}`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'Você é um assistente especializado em análise de artigos científicos acadêmicos brasileiros. REGRAS CRÍTICAS: 1) "authors" são os nomes após o título (ex: "Rangel Silva¹, Maria Santos²"). 2) "advisors" é extraído das NOTAS DE RODAPÉ - busque por linhas com ² ou ³ que mencionem "Professor" e extraia APENAS o nome. 3) "keywords" são APENAS as palavras após "Palavras-chave:", SEM notas de rodapé. 4) Retorne apenas JSON válido, sem markdown.' },
+          { role: 'system', content: 'Você é um extrator de dados de artigos científicos brasileiros. Seja EXTREMAMENTE PRECISO. REGRAS ABSOLUTAS: 1) "authors": APENAS nomes após o título com ¹ ou ², NUNCA inclua notas de rodapé. 2) "advisors": Das notas de rodapé, extraia APENAS o nome completo de quem tem "Professor" (ex: de "² Mestre... Professor no IFMS" extraia só "Alex F. de Araujo"). 3) "keywords": APENAS palavras após "Palavras-chave:", PARE antes de qualquer ¹. 4) "englishKeywords": APENAS keywords, PARE antes de "Data de aprovação". 5) Retorne JSON puro sem markdown.' },
           { role: 'user', content: prompt }
         ],
       }),
