@@ -103,17 +103,59 @@ const buildBlocks = (content: ArticleContent) => {
   methTemp.innerHTML = sanitize(ensureParagraphs(content.methodology));
   methTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => blocks.push({ html: (el as HTMLElement).outerHTML }));
 
+  // Imagens da metodologia (se existirem)
+  if (content.images && content.images.length > 0) {
+    content.images
+      .filter((img) => img.section === 'methodology')
+      .forEach((img, index) => {
+        blocks.push({
+          html: `<figure class="mb-4 text-center">
+            <div class="text-justify hyphens-auto"><strong>${(img.type || 'Figura').toUpperCase()} ${index + 1}:</strong> ${sanitize(img.caption || '')}</div>
+            <div class="text-[10pt] italic text-justify hyphens-auto">${sanitize(img.source || '')}</div>
+          </figure>`
+        });
+      });
+  }
+
   // Resultados
   blocks.push({ html: `<h2 class="section-title">${2 + content.theoreticalTopics.length + 1} RESULTADOS E DISCUSSÃO</h2>` });
   const resTemp = document.createElement('div');
   resTemp.innerHTML = sanitize(ensureParagraphs(content.results));
   resTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => blocks.push({ html: (el as HTMLElement).outerHTML }));
 
+  // Imagens dos resultados (se existirem)
+  if (content.images && content.images.length > 0) {
+    content.images
+      .filter((img) => img.section === 'results')
+      .forEach((img, index) => {
+        blocks.push({
+          html: `<figure class="mb-4 text-center">
+            <div class="text-justify hyphens-auto"><strong>${(img.type || 'Figura').toUpperCase()} ${index + 1}:</strong> ${sanitize(img.caption || '')}</div>
+            <div class="text-[10pt] italic text-justify hyphens-auto">${sanitize(img.source || '')}</div>
+          </figure>`
+        });
+      });
+  }
+
   // Conclusão
   blocks.push({ html: `<h2 class="section-title">CONCLUSÃO</h2>` });
   const conclTemp = document.createElement('div');
   conclTemp.innerHTML = sanitize(ensureParagraphs(content.conclusion));
   conclTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => blocks.push({ html: (el as HTMLElement).outerHTML }));
+
+  // Imagens da conclusão (se existirem)
+  if (content.images && content.images.length > 0) {
+    content.images
+      .filter((img) => img.section === 'conclusion')
+      .forEach((img, index) => {
+        blocks.push({
+          html: `<figure class="mb-4 text-center">
+            <div class="text-justify hyphens-auto"><strong>${(img.type || 'Figura').toUpperCase()} ${index + 1}:</strong> ${sanitize(img.caption || '')}</div>
+            <div class="text-[10pt] italic text-justify hyphens-auto">${sanitize(img.source || '')}</div>
+          </figure>`
+        });
+      });
+  }
 
   // Referências (contam fora do total de páginas textuais, mas mostramos)
   blocks.push({ html: `<div class="references"><h2 class="section-title">REFERÊNCIAS</h2></div>` });

@@ -288,7 +288,10 @@ ${text}`;
       methodology: cleanHtml(aiResult.methodology || ''),
       results: cleanHtml(aiResult.results || ''),
       conclusion: cleanHtml(aiResult.conclusion || ''),
-      references: cleanHtml(aiResult.references || ''),
+      // Remove possíveis cabeçalhos duplicados como "REFERÊNCIAS" do início do conteúdo
+      references: cleanHtml(stripLeadingHeading(aiResult.references || '', [
+        /^REFER[ÊE]NCIAS?(?:\s+BIBLIOGR[ÁA]FICAS?)?[:\s-]*/i
+      ])),
       institution: 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul',
     };
 
@@ -426,4 +429,20 @@ function cleanHtml(text: string): string {
     .join('');
   
   return paragraphs || `<p>${text}</p>`;
+}
+
+// Remove cabeçalhos duplicados no início de seções (ex: "REFERÊNCIAS")
+function stripLeadingHeading(text: string, patterns: RegExp[]): string {
+  if (!text) return '';
+  let cleaned = text.trimStart();
+
+  for (const pattern of patterns) {
+    const match = cleaned.match(pattern);
+    if (match && match.index === 0) {
+      cleaned = cleaned.slice(match[0].length).trimStart();
+      break;
+    }
+  }
+
+  return cleaned;
 }
