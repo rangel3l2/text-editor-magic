@@ -284,14 +284,12 @@ ${text}`;
       keywords: cleanHtml(aiResult.keywords || ''),
       englishAbstract: cleanHtml(aiResult.englishAbstract || ''),
       englishKeywords: cleanHtml(aiResult.englishKeywords || ''),
-      introduction: cleanHtml(aiResult.introduction || ''),
-      methodology: cleanHtml(aiResult.methodology || ''),
-      results: cleanHtml(aiResult.results || ''),
-      conclusion: cleanHtml(aiResult.conclusion || ''),
+      introduction: cleanHtml(stripLeadingHeading(aiResult.introduction || '', INTRO_HEADING_PATTERNS)),
+      methodology: cleanHtml(stripLeadingHeading(aiResult.methodology || '', METHODOLOGY_HEADING_PATTERNS)),
+      results: cleanHtml(stripLeadingHeading(aiResult.results || '', RESULTS_HEADING_PATTERNS)),
+      conclusion: cleanHtml(stripLeadingHeading(aiResult.conclusion || '', CONCLUSION_HEADING_PATTERNS)),
       // Remove possíveis cabeçalhos duplicados como "REFERÊNCIAS" do início do conteúdo
-      references: cleanHtml(stripLeadingHeading(aiResult.references || '', [
-        /^REFER[ÊE]NCIAS?(?:\s+BIBLIOGR[ÁA]FICAS?)?[:\s-]*/i
-      ])),
+      references: cleanHtml(stripLeadingHeading(aiResult.references || '', REFERENCES_HEADING_PATTERNS)),
       institution: 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul',
     };
 
@@ -400,11 +398,11 @@ function extractArticleSections(text: string) {
     keywords: cleanHtml(keywords),
     englishAbstract: cleanHtml(englishAbstract),
     englishKeywords: cleanHtml(englishKeywords),
-    introduction: cleanHtml(introduction),
-    methodology: cleanHtml(methodology),
-    results: cleanHtml(results),
-    conclusion: cleanHtml(conclusion),
-    references: cleanHtml(references),
+    introduction: cleanHtml(stripLeadingHeading(introduction, INTRO_HEADING_PATTERNS)),
+    methodology: cleanHtml(stripLeadingHeading(methodology, METHODOLOGY_HEADING_PATTERNS)),
+    results: cleanHtml(stripLeadingHeading(results, RESULTS_HEADING_PATTERNS)),
+    conclusion: cleanHtml(stripLeadingHeading(conclusion, CONCLUSION_HEADING_PATTERNS)),
+    references: cleanHtml(stripLeadingHeading(references, REFERENCES_HEADING_PATTERNS)),
     institution: 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul',
   };
 }
@@ -430,6 +428,31 @@ function cleanHtml(text: string): string {
   
   return paragraphs || `<p>${text}</p>`;
 }
+
+// Padrões para remover cabeçalhos duplicados no início das seções
+const INTRO_HEADING_PATTERNS = [
+  /^(\s*\d+(\.\d+)*\s+)?INTRODU[ÇC][ÃA]O[:\s-]*/i,
+];
+
+const METHODOLOGY_HEADING_PATTERNS = [
+  /^(\s*\d+(\.\d+)*\s+)?(METODOLOGIA|MATERIAIS E M[ÉE]TODOS|PROCEDIMENTOS METODOL[ÓO]GICOS|M[ÉE]TODO)[:\s-]*/i,
+];
+
+const RESULTS_HEADING_PATTERNS = [
+  /^(\s*\d+(\.\d+)*\s+)?(RESULTADOS(?:\s+E\s+DISCUSS[ÃA]O(?:ES)?)?|AN[ÁA]LISE\s+DOS\s+RESULTADOS|DISCUSS[ÃA]O|AN[ÁA]LISE\s+E\s+DISCUSS[ÃA]O\s+DOS\s+RESULTADOS)[:\s-]*/i,
+];
+
+const CONCLUSION_HEADING_PATTERNS = [
+  /^(\s*\d+(\.\d+)*\s+)?(CONCLUS[ÃA]O(?:ES)?|CONSIDERA[ÇC][ÕO]ES\s+FINAIS|CONCLUS[ÕO]ES\s+E\s+CONSIDERA[ÇC][ÕO]ES\s+FINAIS)[:\s-]*/i,
+];
+
+const REFERENCES_HEADING_PATTERNS = [
+  /^REFER[ÊE]NCIAS?(?:\s+BIBLIOGR[ÁA]FICAS?)?[:\s-]*/i,
+];
+
+const TOPIC_HEADING_PATTERNS = [
+  /^\s*\d+(\.\d+)+\s+[^\n:]+[:\s-]*/i,
+];
 
 // Remove cabeçalhos duplicados no início de seções (ex: "REFERÊNCIAS")
 function stripLeadingHeading(text: string, patterns: RegExp[]): string {
