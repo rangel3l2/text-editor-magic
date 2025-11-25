@@ -10,7 +10,7 @@ export const sanitizeHtml = (dirty: string): string => {
   
   return DOMPurify.sanitize(dirty, {
     ALLOWED_TAGS: [
-      'p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
       'ul', 'ol', 'li', 'blockquote', 'a', 'span', 'div', 'img', 'table',
       'thead', 'tbody', 'tr', 'th', 'td', 'code', 'pre', 'sub', 'sup'
     ],
