@@ -1,8 +1,8 @@
-
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { useRef, useEffect } from 'react';
 import '@ckeditor/ckeditor5-build-classic/build/translations/pt-br';
+import editorConfig from '@/config/editorConfig';
 
 interface EditorCoreProps {
   value: string;
@@ -51,6 +51,7 @@ const EditorCore = ({
         config={{
           language: 'pt-br',
           removePlugins: ['MediaEmbed'],
+          toolbar: editorConfig.toolbar,
           enterMode: 2, // ENTER_P - cria <p> ao pressionar Enter
           shiftEnterMode: 1, // ENTER_BR - cria <br> ao pressionar Shift+Enter
           autoParagraph: true, // Envolve texto automaticamente em <p>

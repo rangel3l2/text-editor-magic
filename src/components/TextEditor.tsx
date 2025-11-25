@@ -2,6 +2,7 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import editorConfig from '@/config/editorConfig';
 
 const TextEditor = () => {
   const [content, setContent] = useState('');
@@ -30,23 +31,7 @@ const TextEditor = () => {
             config={{
               language: 'pt-br',
               removePlugins: ['MediaEmbed'],
-              toolbar: [
-                'heading',
-                '|',
-                'bold',
-                'italic',
-                'link',
-                'bulletedList',
-                'numberedList',
-                '|',
-                'outdent',
-                'indent',
-                '|',
-                'blockQuote',
-                'insertTable',
-                'undo',
-                'redo'
-              ]
+              toolbar: editorConfig.toolbar
             }}
             onChange={handleChange}
             onReady={(editor) => {
