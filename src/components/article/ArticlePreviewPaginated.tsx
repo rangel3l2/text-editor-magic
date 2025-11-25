@@ -39,7 +39,13 @@ const ensureParagraphs = (html: string): string => {
 // Constrói blocos HTML (títulos e parágrafos) prontos para paginar
 const buildBlocks = (content: ArticleContent) => {
   const blocks: { html: string; mark?: 'INTRO_END' }[] = [];
-  const sanitize = (s: string) => sanitizeHtml(cleanFeedbackComments(cleanLatexCommands(s || '')));
+  const sanitize = (s: string) => sanitizeHtml(cleanFeedbackComments(cleanLatexCommands(s || "")));
+  const sanitizePlain = (s: string) => {
+    const html = sanitize(s || "");
+    const temp = document.createElement("div");
+    temp.innerHTML = html;
+    return temp.textContent || temp.innerText || "";
+  };
 
   // Título
   blocks.push({ html: `<div class="text-center mb-8"><h1 class="text-2xl font-bold mb-2 uppercase leading-tight">${sanitize(content.title)}</h1></div>` });
@@ -63,7 +69,8 @@ const buildBlocks = (content: ArticleContent) => {
   
   // Palavras-chave
   if (content.keywords && content.keywords.trim()) {
-    blocks.push({ html: `<p class="mb-4 keywords-line"><strong>Palavras-chave:</strong> ${sanitize(content.keywords)}</p>` });
+    const keywordsText = sanitizePlain(content.keywords);
+    blocks.push({ html: `<p class="mb-4 keywords-line"><strong>Palavras-chave:</strong> ${keywordsText}</p>` });
   }
 
   // Abstract - título
@@ -74,7 +81,8 @@ const buildBlocks = (content: ArticleContent) => {
   
   // Keywords
   if (content.englishKeywords && content.englishKeywords.trim()) {
-    blocks.push({ html: `<p class="mb-8 keywords-line"><strong>Keywords:</strong> ${sanitize(content.englishKeywords)}</p>` });
+    const englishKeywordsText = sanitizePlain(content.englishKeywords);
+    blocks.push({ html: `<p class="mb-8 keywords-line"><strong>Keywords:</strong> ${englishKeywordsText}</p>` });
   }
 
   // Introdução
