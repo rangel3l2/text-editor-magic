@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { Progress } from "@/components/ui/progress";
+import editorConfig from '@/config/editorConfig';
 
 interface ProgressEditorProps {
   value: string;
@@ -34,6 +35,7 @@ const ProgressEditor = ({ value, onChange, maxLines, config, placeholder }: Prog
           config={{
             language: 'pt-br',
             removePlugins: ['MediaEmbed'],
+            toolbar: editorConfig.toolbar,
             placeholder: placeholder || `Digite aqui (máximo ${maxLines} linhas)...`,
             ...config
           }}
