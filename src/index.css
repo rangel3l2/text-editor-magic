@@ -264,14 +264,30 @@
   text-align: justify !important;
 }
 
+.academic-preview h2.unnumbered-section {
+  text-align: center;
+  font-weight: bold;
+  margin-top: 0;
+  margin-bottom: 1em;
+}
+
 .academic-preview .references {
   text-align: left !important;
   line-height: 1 !important;
 }
 
-.academic-preview .references p {
+.academic-preview .references p,
+.academic-preview .reference-item {
   text-align: left !important;
+  text-indent: 0 !important;
   margin-bottom: 1em !important;
+  line-height: 1 !important;
+  page-break-inside: avoid;
+}
+
+.academic-preview .reference-item strong,
+.academic-preview .reference-item b {
+  font-weight: bold !important;
 }
 
 .academic-preview .citation-block {

@@ -36,11 +36,12 @@ const generateArticleLatex = (content: any): string => {
       .trim();
   };
 
-  let latex = `\\documentclass[12pt,a4paper]{article}
+let latex = `\\documentclass[12pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage[portuguese]{babel}
 \\usepackage[T1]{fontenc}
-\\usepackage{times}
+\\usepackage{mathptmx}
+\\usepackage{url}
 \\usepackage{indentfirst}
 \\usepackage{geometry}
 \\usepackage{setspace}
@@ -69,6 +70,16 @@ const generateArticleLatex = (content: any): string => {
 \\titleformat{\\section}{\\normalfont\\fontsize{12}{15}\\bfseries\\MakeUppercase}{\\thesection}{1em}{}
 \\titleformat{\\subsection}{\\normalfont\\fontsize{12}{15}\\bfseries}{\\thesubsection}{1em}{}
 
+% Ambiente para citações longas (>3 linhas) - ABNT
+\\newenvironment{citacao}{%
+  \\begin{singlespacing}%
+  \\footnotesize%
+  \\setlength{\\leftskip}{4cm}%
+  \\setlength{\\parindent}{0cm}%
+}{%
+  \\end{singlespacing}%
+}
+
 \\begin{document}
 
 % Capa
@@ -90,12 +101,10 @@ ${cleanLatex(content.authors || '')}
 ${new Date().getFullYear()}
 \\end{center}
 
-\\newpage
+\\clearpage
 
 % Resumo
-\\begin{center}
-\\textbf{RESUMO}
-\\end{center}
+\\section*{RESUMO}
 
 \\noindent ${cleanLatex(content.abstract)}
 
@@ -104,15 +113,13 @@ ${new Date().getFullYear()}
 \\vspace{1cm}
 
 % Abstract
-\\begin{center}
-\\textbf{ABSTRACT}
-\\end{center}
+\\section*{ABSTRACT}
 
 \\noindent ${cleanLatex(content.englishAbstract)}
 
 \\noindent \\textbf{Keywords:} ${cleanLatex(content.englishKeywords)}
 
-\\newpage
+\\clearpage
 
 % Introdução
 \\section{INTRODUÇÃO}
@@ -138,11 +145,14 @@ ${cleanLatex(content.introduction)}
   latex += `\\section{CONCLUSÃO}\n${cleanLatex(content.conclusion)}\n\n`;
 
   // Referências
-  latex += `\\begin{center}
-\\textbf{REFERÊNCIAS}
-\\end{center}
+  latex += `\\clearpage
 
-\\noindent ${cleanLatex(content.references)}
+\\section*{REFERÊNCIAS}
+
+\\begin{singlespacing}
+\\raggedright
+${cleanLatex(content.references)}
+\\end{singlespacing}
 
 \\end{document}`;
 
