@@ -209,6 +209,60 @@
   padding-top: 2cm;
 }
 
+/* Estilos da página de capa */
+.cover-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  text-align: center;
+}
+
+.cover-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2cm;
+  width: 100%;
+}
+
+.cover-institution {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+
+.cover-title {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 14pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  line-height: 1.5;
+  margin-top: 3cm;
+}
+
+.cover-subtitle {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  margin-top: -1.5cm;
+}
+
+.cover-authors {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  margin-top: 2cm;
+}
+
+.cover-advisors {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+}
+
 .academic-preview h1 {
   font-family: 'Times New Roman', Times, serif;
   font-weight: bold;
