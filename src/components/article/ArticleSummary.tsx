@@ -19,10 +19,10 @@ const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryPr
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 fixed left-4 top-32 z-30 shadow-lg"
+          className="gap-2 fixed right-6 top-20 z-30 shadow-lg hover:shadow-xl transition-shadow md:right-8 md:top-24 backdrop-blur-sm bg-background/95 border-2"
         >
           <List className="h-4 w-4" />
-          Sumário
+          <span className="hidden sm:inline">Sumário</span>
         </Button>
       </SheetTrigger>
 
