@@ -11,6 +11,7 @@ export const useAISettings = () => {
 
   useEffect(() => {
     const fetchAISettings = async () => {
+      console.log('🔄 Fetching AI settings...');
       try {
         const { data, error } = await supabase
           .from('system_settings')
@@ -19,17 +20,19 @@ export const useAISettings = () => {
           .single();
 
         if (error) {
-          console.error('Error fetching AI settings:', error);
+          console.error('❌ Error fetching AI settings:', error);
           return;
         }
 
         if (data) {
           const settings = data.setting_value as unknown as AISettings;
+          console.log('✅ AI settings loaded:', settings);
           setAiEnabled(settings.enabled);
         }
       } catch (error) {
-        console.error('Error in fetchAISettings:', error);
+        console.error('❌ Error in fetchAISettings:', error);
       } finally {
+        console.log('✅ AI settings loading complete');
         setIsLoading(false);
       }
     };
