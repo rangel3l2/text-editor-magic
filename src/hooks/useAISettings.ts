@@ -21,13 +21,13 @@ export const useAISettings = () => {
 
         if (error) {
           console.error('❌ Error fetching AI settings:', error);
-          return;
-        }
-
-        if (data) {
+          // Don't return here - let finally block set isLoading to false
+        } else if (data) {
           const settings = data.setting_value as unknown as AISettings;
           console.log('✅ AI settings loaded:', settings);
           setAiEnabled(settings.enabled);
+        } else {
+          console.log('⚠️ No AI settings found - using default (enabled)');
         }
       } catch (error) {
         console.error('❌ Error in fetchAISettings:', error);
