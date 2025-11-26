@@ -39,12 +39,12 @@ export const useEditorValidation = (sectionName: string, isValidationEnabled: bo
       isValidating: isValidatingRef.current
     });
     
-    // Aguardar carregamento das configurações de IA
+    // Aguardar carregamento das configurações de IA, mas não bloquear validação
     if (isLoadingAISettings) {
-      console.log(`⏳ [${sectionName}] AI settings still loading - waiting`);
-      return;
+      console.log(`⏳ [${sectionName}] AI settings still loading - proceeding with default config`);
     }
     
+
     // Não validar se a IA está desativada globalmente
     if (!aiEnabled) {
       console.log(`❌ [${sectionName}] AI validation disabled globally - skipping`);
