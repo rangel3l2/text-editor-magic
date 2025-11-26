@@ -13,30 +13,6 @@ interface ArticleSummaryProps {
 const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryProps) => {
   const [open, setOpen] = useState(false);
 
-  const scrollToSection = (sectionId: string) => {
-    console.log('🔍 Procurando seção:', sectionId);
-    const element = document.getElementById(sectionId);
-    console.log('📍 Elemento encontrado:', element);
-    
-    if (element) {
-      const headerOffset = 100;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-      
-      setOpen(false);
-    } else {
-      console.error('❌ Elemento não encontrado no DOM:', sectionId);
-      // Tentar encontrar todos os elementos com ID no DOM
-      const allIds = Array.from(document.querySelectorAll('[id]')).map(el => el.id);
-      console.log('📋 Todos os IDs disponíveis:', allIds);
-    }
-  };
-
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -66,21 +42,21 @@ const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryPr
                 Pré-textuais
               </p>
               <button
-                onClick={() => onNavigate('article-title')}
+                onClick={() => { onNavigate('article-title'); setOpen(false); }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
               >
                 <span>Título</span>
                 <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
               <button
-                onClick={() => onNavigate('article-authors')}
+                onClick={() => { onNavigate('article-authors'); setOpen(false); }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
               >
                 <span>Autores</span>
                 <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
               <button
-                onClick={() => onNavigate('article-abstract')}
+                onClick={() => { onNavigate('article-abstract'); setOpen(false); }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
               >
                 <span>Resumo</span>
@@ -94,7 +70,7 @@ const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryPr
                 Elementos Textuais
               </p>
               <button
-                onClick={() => onNavigate('article-introduction')}
+                onClick={() => { onNavigate('article-introduction'); setOpen(false); }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
               >
                 <span>1. Introdução</span>
@@ -105,7 +81,7 @@ const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryPr
               {Array.from({ length: theoreticalTopicsCount }).map((_, index) => (
                 <button
                   key={`theoretical-${index}`}
-                  onClick={() => onNavigate(`article-theoretical-${index}`)}
+                  onClick={() => { onNavigate(`article-theoretical-${index}`); setOpen(false); }}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group pl-6"
                 >
                   <span>2.{index + 1} Tópico teórico {index + 1}</span>
@@ -114,7 +90,7 @@ const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryPr
               ))}
 
               <button
-                onClick={() => onNavigate('article-methodology')}
+                onClick={() => { onNavigate('article-methodology'); setOpen(false); }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
               >
                 <span>{2 + theoreticalTopicsCount}. Metodologia</span>
@@ -122,7 +98,7 @@ const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryPr
               </button>
 
               <button
-                onClick={() => onNavigate('article-results')}
+                onClick={() => { onNavigate('article-results'); setOpen(false); }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
               >
                 <span>{2 + theoreticalTopicsCount + 1}. Resultados e Discussão</span>
@@ -130,7 +106,7 @@ const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryPr
               </button>
 
               <button
-                onClick={() => onNavigate('article-conclusion')}
+                onClick={() => { onNavigate('article-conclusion'); setOpen(false); }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
               >
                 <span>3. Conclusão</span>
@@ -144,14 +120,14 @@ const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryPr
                 Pós-textuais
               </p>
               <button
-                onClick={() => onNavigate('article-references')}
+                onClick={() => { onNavigate('article-references'); setOpen(false); }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
               >
                 <span>Referências</span>
                 <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
               <button
-                onClick={() => onNavigate('article-appendices')}
+                onClick={() => { onNavigate('article-appendices'); setOpen(false); }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
               >
                 <span>Apêndices</span>
@@ -159,7 +135,7 @@ const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryPr
                 <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
               <button
-                onClick={() => onNavigate('article-attachments')}
+                onClick={() => { onNavigate('article-attachments'); setOpen(false); }}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
               >
                 <span>Anexos</span>
