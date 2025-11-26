@@ -48,7 +48,7 @@ const buildBlocks = (content: ArticleContent) => {
   };
 
   // Título
-  blocks.push({ html: `<div class="text-center mb-8"><h1 class="text-2xl font-bold mb-2 uppercase leading-tight">${sanitize(content.title)}</h1></div>` });
+  blocks.push({ html: `<div id="article-title" class="text-center mb-8"><h1 class="text-2xl font-bold mb-2 uppercase leading-tight">${sanitize(content.title)}</h1></div>` });
   
   // Subtítulo (se existir)
   if (content.subtitle) {
@@ -56,7 +56,7 @@ const buildBlocks = (content: ArticleContent) => {
   }
 
   // Autores
-  blocks.push({ html: `<div class="mb-4 text-center">${sanitize(content.authors)}</div>` });
+  blocks.push({ html: `<div id="article-authors" class="mb-4 text-center">${sanitize(content.authors)}</div>` });
   
   // Orientadores
   blocks.push({ html: `<div class="mb-8 text-center">${sanitize(content.advisors)}</div>` });
@@ -65,7 +65,7 @@ const buildBlocks = (content: ArticleContent) => {
   blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' as any });
 
   // Resumo - título
-  blocks.push({ html: `<div class="mb-4"><h2 class="section-title unnumbered-section">RESUMO</h2></div>` });
+  blocks.push({ html: `<div id="article-abstract" class="mb-4"><h2 class="section-title unnumbered-section">RESUMO</h2></div>` });
   
   // Resumo - conteúdo
   blocks.push({ html: `<div class="mb-4 text-justify hyphens-auto">${sanitize(content.abstract)}</div>` });
@@ -96,7 +96,7 @@ const buildBlocks = (content: ArticleContent) => {
 
 
   // Introdução
-  blocks.push({ html: `<h2 class="section-title">1 INTRODUÇÃO</h2>` });
+  blocks.push({ html: `<h2 id="article-introduction" class="section-title">1 INTRODUÇÃO</h2>` });
   const introHtml = ensureParagraphs(content.introduction);
   const introTemp = document.createElement('div');
   introTemp.innerHTML = sanitize(introHtml);
@@ -106,8 +106,8 @@ const buildBlocks = (content: ArticleContent) => {
   blocks.push({ html: '<!-- INTRO_END -->', mark: 'INTRO_END' });
 
   // Referencial teórico
-  content.theoreticalTopics.forEach((topic) => {
-    blocks.push({ html: `<h2 class="section-title">${topic.order} ${topic.title.toUpperCase()}</h2>` });
+  content.theoreticalTopics.forEach((topic, index) => {
+    blocks.push({ html: `<h2 id="article-theoretical-${index}" class="section-title">${topic.order} ${topic.title.toUpperCase()}</h2>` });
     const topicTemp = document.createElement('div');
     topicTemp.innerHTML = sanitize(ensureParagraphs(topic.content));
     topicTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => {
@@ -116,7 +116,7 @@ const buildBlocks = (content: ArticleContent) => {
   });
 
   // Metodologia
-  blocks.push({ html: `<h2 class="section-title">${2 + content.theoreticalTopics.length} METODOLOGIA</h2>` });
+  blocks.push({ html: `<h2 id="article-methodology" class="section-title">${2 + content.theoreticalTopics.length} METODOLOGIA</h2>` });
   const methTemp = document.createElement('div');
   methTemp.innerHTML = sanitize(ensureParagraphs(content.methodology));
   methTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => blocks.push({ html: (el as HTMLElement).outerHTML }));
@@ -136,7 +136,7 @@ const buildBlocks = (content: ArticleContent) => {
   }
 
   // Resultados
-  blocks.push({ html: `<h2 class="section-title">${2 + content.theoreticalTopics.length + 1} RESULTADOS E DISCUSSÃO</h2>` });
+  blocks.push({ html: `<h2 id="article-results" class="section-title">${2 + content.theoreticalTopics.length + 1} RESULTADOS E DISCUSSÃO</h2>` });
   const resTemp = document.createElement('div');
   resTemp.innerHTML = sanitize(ensureParagraphs(content.results));
   resTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => blocks.push({ html: (el as HTMLElement).outerHTML }));
@@ -156,7 +156,7 @@ const buildBlocks = (content: ArticleContent) => {
   }
 
   // Conclusão
-  blocks.push({ html: `<h2 class="section-title">CONCLUSÃO</h2>` });
+  blocks.push({ html: `<h2 id="article-conclusion" class="section-title">CONCLUSÃO</h2>` });
   const conclTemp = document.createElement('div');
   conclTemp.innerHTML = sanitize(ensureParagraphs(content.conclusion));
   conclTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => blocks.push({ html: (el as HTMLElement).outerHTML }));
@@ -179,7 +179,7 @@ const buildBlocks = (content: ArticleContent) => {
   blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' as any });
 
   // Referências (contam fora do total de páginas textuais, mas mostramos)
-  blocks.push({ html: `<div class="references"><h2 class="section-title unnumbered-section">REFERÊNCIAS</h2></div>` });
+  blocks.push({ html: `<div id="article-references" class="references"><h2 class="section-title unnumbered-section">REFERÊNCIAS</h2></div>` });
   const refTemp = document.createElement('div');
   refTemp.innerHTML = sanitize(ensureParagraphs(content.references));
   refTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => {
