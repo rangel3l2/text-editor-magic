@@ -24,6 +24,7 @@ const ArticleEditor = () => {
   const { user } = useAuth();
   const { content, isLoading, loadError, handleChange, updateMultipleFields, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"pre-textual" | "textual" | "post-textual">("pre-textual");
 
   const handleArticleParsed = (parsedContent: Partial<ArticleContent>) => {
     // Atualizar todos os campos de uma só vez para evitar múltiplos re-renders
@@ -204,7 +205,49 @@ const ArticleEditor = () => {
         </div>
 
         {/* Sumário de navegação */}
-        <ArticleSummary theoreticalTopicsCount={content.theoreticalTopics.length} />
+        <ArticleSummary 
+          theoreticalTopicsCount={content.theoreticalTopics.length}
+          onNavigate={(sectionId) => {
+            let targetTab: "pre-textual" | "textual" | "post-textual" = "pre-textual";
+
+            if (
+              sectionId === "article-introduction" ||
+              sectionId.startsWith("article-theoretical-") ||
+              sectionId === "article-methodology" ||
+              sectionId === "article-results" ||
+              sectionId === "article-conclusion"
+            ) {
+              targetTab = "textual";
+            } else if (
+              sectionId === "article-references" ||
+              sectionId === "article-appendices" ||
+              sectionId === "article-attachments"
+            ) {
+              targetTab = "post-textual";
+            } else {
+              targetTab = "pre-textual";
+            }
+
+            const scrollTo = () => {
+              const element = document.getElementById(sectionId);
+              if (element) {
+                const headerOffset = 100;
+                const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+                window.scrollTo({
+                  top: elementPosition - headerOffset,
+                  behavior: "smooth",
+                });
+              }
+            };
+
+            if (activeTab !== targetTab) {
+              setActiveTab(targetTab);
+              setTimeout(scrollTo, 100);
+            } else {
+              scrollTo();
+            }
+          }}
+        />
 
         {/* Orientação Acadêmica */}
         <div className="mb-6">
@@ -220,7 +263,7 @@ const ArticleEditor = () => {
           </DialogContent>
         </Dialog>
 
-        <Tabs defaultValue="pre-textual" className="w-full space-y-6">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "pre-textual" | "textual" | "post-textual")} className="w-full space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pre-textual">Elementos Pré-textuais</TabsTrigger>
             <TabsTrigger value="textual">Elementos Textuais</TabsTrigger>
