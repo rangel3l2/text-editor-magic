@@ -72,12 +72,14 @@ let latex = `\\documentclass[12pt,a4paper]{article}
 
 % Ambiente para citações longas (>3 linhas) - ABNT
 \\newenvironment{citacao}{%
+  \\vspace{0.5cm}%
   \\begin{singlespacing}%
   \\footnotesize%
   \\setlength{\\leftskip}{4cm}%
   \\setlength{\\parindent}{0cm}%
 }{%
   \\end{singlespacing}%
+  \\vspace{0.5cm}%
 }
 
 \\begin{document}
