@@ -142,11 +142,18 @@ const RichTextEditor = ({
     const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
     const minLen = isTitle ? 5 : 20;
     
+    console.log(`📝 [${sectionName}] Editor change:`, {
+      contentLength: data.trim().length,
+      minLen,
+      willScheduleValidation: data.trim().length > minLen
+    });
+    
     // Sempre permite a mudança, sem bloquear
     onChange(data);
     
     // Agendar validação com debounce
     if (data.trim().length > minLen) {
+      console.log(`⏰ [${sectionName}] Agendando validação...`);
       setContentToValidate(data);
       setShouldValidate(true);
     }

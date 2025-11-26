@@ -31,21 +31,29 @@ export const useEditorValidation = (sectionName: string, isValidationEnabled: bo
   }, [sectionName]);
 
   const validateContent = useCallback(async (content: string) => {
+    console.log(`🔍 [${sectionName}] validateContent chamado:`, {
+      isLoadingAISettings,
+      aiEnabled,
+      isValidationEnabled,
+      hasContent: !!content?.trim(),
+      isValidating: isValidatingRef.current
+    });
+    
     // Aguardar carregamento das configurações de IA
     if (isLoadingAISettings) {
-      console.log('AI settings still loading - waiting');
+      console.log(`⏳ [${sectionName}] AI settings still loading - waiting`);
       return;
     }
     
     // Não validar se a IA está desativada globalmente
     if (!aiEnabled) {
-      console.log('AI validation disabled globally - skipping');
+      console.log(`❌ [${sectionName}] AI validation disabled globally - skipping`);
       return;
     }
     
     // Não validar se as validações estão desabilitadas
     if (!isValidationEnabled) {
-      console.log('Validation disabled - skipping');
+      console.log(`🚫 [${sectionName}] Validation disabled - skipping`);
       return;
     }
     
