@@ -308,6 +308,36 @@
   font-family: 'Times New Roman', Times, serif;
 }
 
+/* Responsive scaling - mantém proporção A4 em dispositivos menores */
+@media (max-width: 768px) {
+  .academic-preview-container {
+    padding: 1rem;
+  }
+  
+  .academic-page {
+    width: 100%;
+    max-width: calc(100vw - 2rem);
+    height: auto;
+    min-height: calc((100vw - 2rem) * 1.414);
+    max-height: calc((100vw - 2rem) * 1.414);
+    padding: 10% 8% 8% 10%;
+  }
+}
+
+@media (max-width: 480px) {
+  .academic-preview-container {
+    padding: 0.5rem;
+  }
+  
+  .academic-page {
+    max-width: calc(100vw - 1rem);
+    min-height: calc((100vw - 1rem) * 1.414);
+    max-height: calc((100vw - 1rem) * 1.414);
+    padding: 10% 8% 8% 10%;
+    font-size: 10pt;
+  }
+}
+
 /* Print styles */
 @media print {
   .academic-preview-container {
@@ -319,6 +349,10 @@
     margin: 0;
     box-shadow: none;
     page-break-after: always;
+    width: 21cm;
+    height: 29.7cm;
+    min-height: 29.7cm;
+    max-height: 29.7cm;
   }
   
   .academic-page:last-child {
