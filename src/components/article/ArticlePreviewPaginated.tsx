@@ -38,7 +38,7 @@ const ensureParagraphs = (html: string): string => {
 
 // Constrói blocos HTML (títulos e parágrafos) prontos para paginar
 const buildBlocks = (content: ArticleContent) => {
-  const blocks: { html: string; mark?: 'INTRO_END' | 'COVER_PAGE' | 'PAGE_BREAK' }[] = [];
+  const blocks: { html: string; mark?: 'INTRO_END' }[] = [];
   const sanitize = (s: string) => sanitizeHtml(cleanFeedbackComments(cleanLatexCommands(s || "")));
   const sanitizePlain = (s: string) => {
     const html = sanitize(s || "");
@@ -47,22 +47,22 @@ const buildBlocks = (content: ArticleContent) => {
     return temp.textContent || temp.innerText || "";
   };
 
-  // CAPA (primeira página completa) - centralizada vertical e horizontalmente
-  const coverHtml = `
-    <div class="cover-page">
-      <div class="cover-content">
-        ${content.institution ? `<div class="cover-institution">${sanitize(content.institution)}</div>` : ''}
-        <div id="article-title" class="cover-title">${sanitize(content.title)}</div>
-        ${content.subtitle ? `<div class="cover-subtitle">${sanitize(content.subtitle)}</div>` : ''}
-        <div id="article-authors" class="cover-authors">${sanitize(content.authors)}</div>
-        <div class="cover-advisors">${sanitize(content.advisors)}</div>
-      </div>
-    </div>
-  `;
-  blocks.push({ html: coverHtml, mark: 'COVER_PAGE' });
+  // Título
+  blocks.push({ html: `<div id="article-title" class="text-center mb-8"><h1 class="text-2xl font-bold mb-2 uppercase leading-tight">${sanitize(content.title)}</h1></div>` });
+  
+  // Subtítulo (se existir)
+  if (content.subtitle) {
+    blocks.push({ html: `<div class="text-center mb-4"><h2 class="text-xl leading-tight">${sanitize(content.subtitle)}</h2></div>` });
+  }
 
-  // Quebra de página após a capa
-  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' });
+  // Autores
+  blocks.push({ html: `<div id="article-authors" class="mb-4 text-center">${sanitize(content.authors)}</div>` });
+  
+  // Orientadores
+  blocks.push({ html: `<div class="mb-8 text-center">${sanitize(content.advisors)}</div>` });
+
+  // Marca fim dos pré-textuais antes do Resumo (para quebra de página)
+  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' as any });
 
   // Resumo - título
   blocks.push({ html: `<div id="article-abstract" class="mb-4"><h2 class="section-title unnumbered-section">RESUMO</h2></div>` });
@@ -91,8 +91,9 @@ const buildBlocks = (content: ArticleContent) => {
     blocks.push({ html: `<p class="mb-8 keywords-line"><strong>Keywords:</strong> ${englishKeywordsText}</p>` });
   }
 
-  // Quebra de página antes da Introdução
-  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' });
+  // Marca fim do Abstract (para quebra de página antes da Introdução)
+  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' as any });
+
 
   // Introdução
   blocks.push({ html: `<h2 id="article-introduction" class="section-title">1 INTRODUÇÃO</h2>` });
@@ -114,9 +115,6 @@ const buildBlocks = (content: ArticleContent) => {
     });
   });
 
-  // Quebra de página antes da Metodologia (seção importante)
-  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' });
-
   // Metodologia
   blocks.push({ html: `<h2 id="article-methodology" class="section-title">${2 + content.theoreticalTopics.length} METODOLOGIA</h2>` });
   const methTemp = document.createElement('div');
@@ -136,9 +134,6 @@ const buildBlocks = (content: ArticleContent) => {
         });
       });
   }
-
-  // Quebra de página antes dos Resultados (seção importante)
-  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' });
 
   // Resultados
   blocks.push({ html: `<h2 id="article-results" class="section-title">${2 + content.theoreticalTopics.length + 1} RESULTADOS E DISCUSSÃO</h2>` });
@@ -160,9 +155,6 @@ const buildBlocks = (content: ArticleContent) => {
       });
   }
 
-  // Quebra de página antes da Conclusão (seção importante)
-  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' });
-
   // Conclusão
   blocks.push({ html: `<h2 id="article-conclusion" class="section-title">CONCLUSÃO</h2>` });
   const conclTemp = document.createElement('div');
@@ -183,8 +175,8 @@ const buildBlocks = (content: ArticleContent) => {
       });
   }
 
-  // Quebra de página antes das Referências (seção importante)
-  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' });
+  // Marca fim da Conclusão (para quebra de página antes das Referências)
+  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' as any });
 
   // Referências (contam fora do total de páginas textuais, mas mostramos)
   blocks.push({ html: `<div id="article-references" class="references"><h2 class="section-title unnumbered-section">REFERÊNCIAS</h2></div>` });
@@ -233,19 +225,6 @@ const ArticlePreviewPaginated = ({ content }: ArticlePreviewPaginatedProps) => {
       if (block.mark === 'INTRO_END') {
         // Marca fim da introdução no índice da página atual
         introEndPageIndex = resultPages.length; // páginas finalizadas até agora
-        continue;
-      }
-
-      // Se for a capa, coloca em uma página própria sem medição de altura
-      if (block.mark === 'COVER_PAGE') {
-        const holder = document.createElement('div');
-        holder.innerHTML = block.html;
-        const node = holder.firstElementChild as HTMLElement;
-        if (node) contentWrap.appendChild(node);
-        // Finaliza a página da capa
-        resultPages.push(page.innerHTML);
-        sandbox.removeChild(page);
-        ({ page, contentWrap } = makePage());
         continue;
       }
 
