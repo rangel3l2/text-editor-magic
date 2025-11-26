@@ -61,10 +61,7 @@ const buildBlocks = (content: ArticleContent) => {
   // Orientadores
   blocks.push({ html: `<div class="mb-8 text-center">${sanitize(content.advisors)}</div>` });
 
-  // Marca fim dos pré-textuais antes do Resumo (para quebra de página)
-  blocks.push({ html: '<!-- PAGE_BREAK -->', mark: 'PAGE_BREAK' as any });
-
-  // Resumo - título
+  // Resumo - título (MESMA PÁGINA que título/autores)
   blocks.push({ html: `<div id="article-abstract" class="mb-4"><h2 class="section-title unnumbered-section">RESUMO</h2></div>` });
   
   // Resumo - conteúdo
