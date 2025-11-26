@@ -253,26 +253,31 @@ ${text}`;
     const data = await response.json();
     const content = data.choices[0].message.content;
     
-    console.log('Resposta da IA (primeiros 1000 chars):', content.substring(0, 1000));
+    console.log('Resposta da IA (primeiros 500 chars):', content.substring(0, 500));
+    console.log('Resposta da IA (últimos 500 chars):', content.substring(content.length - 500));
     
-    // Remover markdown code blocks e tratar caracteres problemáticos
-    let jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    // Encontrar o JSON válido entre { e }
+    const firstBrace = content.indexOf('{');
+    const lastBrace = content.lastIndexOf('}');
     
-    // Tentar parse, se falhar, limpar e tentar novamente
+    if (firstBrace === -1 || lastBrace === -1) {
+      console.error('JSON não encontrado na resposta da IA');
+      return extractArticleSections(text);
+    }
+    
+    let jsonStr = content.substring(firstBrace, lastBrace + 1);
+    
+    // Remover caracteres de controle problemáticos mas preservar \n válidos
+    jsonStr = jsonStr.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    
     let aiResult;
     try {
       aiResult = JSON.parse(jsonStr);
+      console.log('✅ JSON parseado com sucesso');
     } catch (parseError) {
-      console.warn('Primeira tentativa de parse falhou, limpando JSON...', parseError);
-      // Remover caracteres de controle problemáticos mas preservar \n válidos
-      jsonStr = jsonStr.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-      // Tentar parse novamente
-      try {
-        aiResult = JSON.parse(jsonStr);
-      } catch (secondError) {
-        console.error('Segunda tentativa de parse também falhou:', secondError);
-        throw new Error('Não foi possível processar a resposta da IA. Tente novamente.');
-      }
+      console.error('❌ Erro ao fazer parse do JSON:', parseError);
+      console.error('JSON problemático (primeiros 500 chars):', jsonStr.substring(0, 500));
+      return extractArticleSections(text);
     }
 
     // Converter para HTML e adicionar instituição padrão
