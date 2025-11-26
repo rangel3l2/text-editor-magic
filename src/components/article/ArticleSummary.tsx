@@ -13,7 +13,10 @@ const ArticleSummary = ({ theoreticalTopicsCount }: ArticleSummaryProps) => {
   const [open, setOpen] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
+    console.log('🔍 Procurando seção:', sectionId);
     const element = document.getElementById(sectionId);
+    console.log('📍 Elemento encontrado:', element);
+    
     if (element) {
       const headerOffset = 100;
       const elementPosition = element.getBoundingClientRect().top;
@@ -25,6 +28,11 @@ const ArticleSummary = ({ theoreticalTopicsCount }: ArticleSummaryProps) => {
       });
       
       setOpen(false);
+    } else {
+      console.error('❌ Elemento não encontrado no DOM:', sectionId);
+      // Tentar encontrar todos os elementos com ID no DOM
+      const allIds = Array.from(document.querySelectorAll('[id]')).map(el => el.id);
+      console.log('📋 Todos os IDs disponíveis:', allIds);
     }
   };
 
