@@ -325,7 +325,7 @@ export const useArticleContent = () => {
         loadControllerRef.current = null;
       }
     };
-  }, [id, user]); // Removido navigate e toast das dependências
+  }, [id, user, navigate, toast]);
 
   return {
     content,
