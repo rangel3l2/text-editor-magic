@@ -28,6 +28,13 @@ const AcademicAdvisor = ({ currentSection, articleContent }: AcademicAdvisorProp
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { aiEnabled, isLoading: isLoadingSettings } = useAISettings();
 
+  // Mantém a ordem dos hooks consistente em todas as renderizações
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   // Don't render if AI is disabled
   if (isLoadingSettings) {
     return null;
@@ -37,11 +44,6 @@ const AcademicAdvisor = ({ currentSection, articleContent }: AcademicAdvisorProp
     return null;
   }
 
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-    }
-  }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
