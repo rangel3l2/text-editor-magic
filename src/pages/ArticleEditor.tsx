@@ -291,7 +291,13 @@ const ArticleEditor = () => {
           setSummaryOpen(true);
         }}
         showSummaryButton={true}
-        importButton={<WorkImporter workType="article" onWorkParsed={handleArticleParsed} />}
+        importButton={
+          <WorkImporter 
+            workType="article" 
+            onWorkParsed={handleArticleParsed}
+            hasExistingContent={!!(content.title || content.abstract || content.introduction)}
+          />
+        }
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />

@@ -2,6 +2,10 @@ import { ArticleContent } from "@/hooks/useArticleContent";
 import { cleanLatexCommands } from "@/utils/latexProcessor";
 import { sanitizeHtml } from "@/utils/sanitize";
 import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { List, ChevronRight } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ArticlePreviewPaginatedProps {
   content: ArticleContent;
@@ -191,8 +195,51 @@ const buildBlocks = (content: ArticleContent) => {
 const ArticlePreviewPaginated = ({ content }: ArticlePreviewPaginatedProps) => {
   const [pages, setPages] = useState<string[]>([]);
   const [introEndsAtPage, setIntroEndsAtPage] = useState<number>(-1);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   const blocks = useMemo(() => buildBlocks(content), [content]);
+
+  // Encontra em qual página cada seção está localizada
+  const sectionPageMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    pages.forEach((pageHtml, pageIndex) => {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = pageHtml;
+      
+      // Procura por IDs de seção nesta página
+      const ids = ['article-title', 'article-authors', 'article-abstract', 
+                   'article-introduction', 'article-methodology', 'article-results', 
+                   'article-conclusion', 'article-references'];
+      
+      ids.forEach(id => {
+        const element = tempDiv.querySelector(`#${id}`);
+        if (element && !map[id]) {
+          map[id] = pageIndex;
+        }
+      });
+      
+      // Procura por seções teóricas
+      const theoreticalSections = tempDiv.querySelectorAll('[id^="article-theoretical-"]');
+      theoreticalSections.forEach(el => {
+        const id = el.id;
+        if (!map[id]) {
+          map[id] = pageIndex;
+        }
+      });
+    });
+    return map;
+  }, [pages]);
+
+  const scrollToSection = (sectionId: string) => {
+    const pageIndex = sectionPageMap[sectionId];
+    if (pageIndex !== undefined) {
+      const pageElement = document.querySelector(`.academic-preview-container .academic-page:nth-child(${pageIndex + 1})`);
+      if (pageElement) {
+        pageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setSummaryOpen(false);
+      }
+    }
+  };
 
   useEffect(() => {
     // Construir páginas medindo altura real, sem overflow hidden
@@ -261,18 +308,141 @@ const ArticlePreviewPaginated = ({ content }: ArticlePreviewPaginatedProps) => {
   }, [blocks]);
 
   return (
-    <div className="academic-preview-container academic-preview">
-      {/* Primeira página (capa) e segunda (abstract) já estão nos primeiros blocos, mas a paginação acima trata tudo */}
-      {pages.map((html, i) => {
-        const showNumber = introEndsAtPage >= 0 && i > introEndsAtPage;
-        const pageNumber = showNumber ? i - introEndsAtPage : null;
-        return (
-          <div key={i} className="academic-page content-page">
-            {showNumber && <div className="page-number">{pageNumber}</div>}
-            <div dangerouslySetInnerHTML={{ __html: html }} />
-          </div>
-        );
-      })}
+    <div className="relative">
+      {/* Botão flutuante do sumário no preview */}
+      <div className="fixed top-20 right-4 z-50">
+        <Sheet open={summaryOpen} onOpenChange={setSummaryOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="default"
+              size="sm"
+              className="gap-2 shadow-lg hover:shadow-xl transition-shadow"
+            >
+              <List className="h-4 w-4" />
+              <span className="hidden sm:inline">Sumário</span>
+            </Button>
+          </SheetTrigger>
+
+          <SheetContent side="left" className="w-80">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <List className="h-5 w-5" />
+                Navegação do Preview
+              </SheetTitle>
+            </SheetHeader>
+
+            <ScrollArea className="h-full mt-6 pb-20">
+              <div className="space-y-1">
+                {/* Elementos Pré-textuais */}
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    Pré-textuais
+                  </p>
+                  <button
+                    onClick={() => scrollToSection('article-title')}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
+                  >
+                    <span>Título</span>
+                    <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                  <button
+                    onClick={() => scrollToSection('article-authors')}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
+                  >
+                    <span>Autores</span>
+                    <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                  <button
+                    onClick={() => scrollToSection('article-abstract')}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
+                  >
+                    <span>Resumo</span>
+                    <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                </div>
+
+                {/* Elementos Textuais */}
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    Elementos Textuais
+                  </p>
+                  <button
+                    onClick={() => scrollToSection('article-introduction')}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
+                  >
+                    <span>1. Introdução</span>
+                    <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+
+                  {/* Referencial Teórico */}
+                  {content.theoreticalTopics.map((topic, index) => (
+                    <button
+                      key={`theoretical-${index}`}
+                      onClick={() => scrollToSection(`article-theoretical-${index}`)}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group pl-6"
+                    >
+                      <span>2.{index + 1} {topic.title}</span>
+                      <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => scrollToSection('article-methodology')}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
+                  >
+                    <span>{2 + content.theoreticalTopics.length}. Metodologia</span>
+                    <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+
+                  <button
+                    onClick={() => scrollToSection('article-results')}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
+                  >
+                    <span>{2 + content.theoreticalTopics.length + 1}. Resultados e Discussão</span>
+                    <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+
+                  <button
+                    onClick={() => scrollToSection('article-conclusion')}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
+                  >
+                    <span>3. Conclusão</span>
+                    <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                </div>
+
+                {/* Elementos Pós-textuais */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    Pós-textuais
+                  </p>
+                  <button
+                    onClick={() => scrollToSection('article-references')}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
+                  >
+                    <span>Referências</span>
+                    <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                </div>
+              </div>
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      <div className="academic-preview-container academic-preview">
+        {/* Primeira página (capa) e segunda (abstract) já estão nos primeiros blocos, mas a paginação acima trata tudo */}
+        {pages.map((html, i) => {
+          const showNumber = introEndsAtPage >= 0 && i > introEndsAtPage;
+          const pageNumber = showNumber ? i - introEndsAtPage : null;
+          return (
+            <div key={i} className="academic-page content-page">
+              {showNumber && <div className="page-number">{pageNumber}</div>}
+              <div dangerouslySetInnerHTML={{ __html: html }} />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
