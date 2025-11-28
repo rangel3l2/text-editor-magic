@@ -54,7 +54,7 @@ export const WorkImporter = ({ workType, onWorkParsed, hasExistingContent = fals
   const handleImportClick = () => {
     if (!file) return;
     
-    // Se já existe conteúdo, mostra confirmação
+    // Se já existe conteúdo, mostra confirmação SEM fechar o Dialog principal
     if (hasExistingContent) {
       setShowConfirmDialog(true);
     } else {
@@ -62,10 +62,19 @@ export const WorkImporter = ({ workType, onWorkParsed, hasExistingContent = fals
     }
   };
 
+  const handleConfirmReplace = () => {
+    console.log('🔄 Usuário confirmou substituição, iniciando importação...');
+    setShowConfirmDialog(false);
+    // Aguarda um frame para garantir que o Dialog principal está visível
+    requestAnimationFrame(() => {
+      console.log('✅ Dialog principal ativo, iniciando parseWorkContent');
+      parseWorkContent();
+    });
+  };
+
   const parseWorkContent = async () => {
     if (!file) return;
 
-    setShowConfirmDialog(false);
     setLoading(true);
     setProgress(0);
     setStatus("Preparando arquivo...");
@@ -185,7 +194,8 @@ export const WorkImporter = ({ workType, onWorkParsed, hasExistingContent = fals
       </Button>
 
       <Dialog open={open} onOpenChange={(isOpen) => {
-        if (!loading) {
+        // Impede fechar o Dialog se estiver carregando ou se o AlertDialog de confirmação estiver aberto
+        if (!loading && !showConfirmDialog) {
           setOpen(isOpen);
           if (!isOpen) {
             setFile(null);
@@ -288,8 +298,10 @@ export const WorkImporter = ({ workType, onWorkParsed, hasExistingContent = fals
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Não, cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={parseWorkContent}>
+            <AlertDialogCancel onClick={() => setShowConfirmDialog(false)}>
+              Não, cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmReplace}>
               Sim, substituir
             </AlertDialogAction>
           </AlertDialogFooter>
