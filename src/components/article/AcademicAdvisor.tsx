@@ -31,6 +31,12 @@ const AcademicAdvisor = ({ currentSection, articleContent, hasContent = false }:
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { aiEnabled, isLoading: isLoadingSettings } = useAISettings();
 
+  // Atualizar estado quando hasContent mudar (ex: após importação)
+  useEffect(() => {
+    setShowMethodology(!hasContent);
+    setIsCollapsed(hasContent);
+  }, [hasContent]);
+
   // Mantém a ordem dos hooks consistente em todas as renderizações
   useEffect(() => {
     if (scrollAreaRef.current) {

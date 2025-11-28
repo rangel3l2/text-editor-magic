@@ -163,9 +163,9 @@ export const WorkImporter = ({ workType, onWorkParsed }: WorkImporterProps) => {
       <Button
         onClick={() => setOpen(true)}
         variant="outline"
-        className="gap-2"
+        className="w-full justify-start gap-3"
       >
-        <Upload className="h-4 w-4" />
+        <Upload className="h-5 w-5" />
         Importar Trabalho
       </Button>
 

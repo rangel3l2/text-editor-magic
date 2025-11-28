@@ -21,6 +21,7 @@ import ArticleAttachmentsManager from "@/components/article/ArticleAttachmentsMa
 import ArticleSummary from "@/components/article/ArticleSummary";
 import EditorSidebar from "@/components/editor/EditorSidebar";
 import GuidelinesViewer from "@/components/editor/GuidelinesViewer";
+import { ManualValidationProvider } from "@/contexts/ManualValidationContext";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
@@ -194,7 +195,8 @@ const ArticleEditor = () => {
   }
 
   return (
-    <MainLayout>
+    <ManualValidationProvider>
+      <MainLayout>
       {/* Sidebar */}
       <EditorSidebar
         onOverleaf={handleOverleaf}
@@ -618,6 +620,7 @@ const ArticleEditor = () => {
         </div>
       </div>
     </MainLayout>
+    </ManualValidationProvider>
   );
 };
 
