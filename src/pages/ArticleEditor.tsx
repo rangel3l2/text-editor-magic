@@ -333,6 +333,7 @@ const ArticleEditor = () => {
           <AcademicAdvisor 
             currentSection="artigo científico"
             articleContent={content}
+            hasContent={!!(content.title || content.abstract || content.introduction)}
           />
         </div>
 

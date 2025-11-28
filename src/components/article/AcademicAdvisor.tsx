@@ -19,14 +19,15 @@ interface Message {
 interface AcademicAdvisorProps {
   currentSection?: string;
   articleContent?: any;
+  hasContent?: boolean;
 }
 
-const AcademicAdvisor = ({ currentSection, articleContent }: AcademicAdvisorProps) => {
+const AcademicAdvisor = ({ currentSection, articleContent, hasContent = false }: AcademicAdvisorProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showMethodology, setShowMethodology] = useState(true);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showMethodology, setShowMethodology] = useState(!hasContent);
+  const [isCollapsed, setIsCollapsed] = useState(hasContent);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { aiEnabled, isLoading: isLoadingSettings } = useAISettings();
 
