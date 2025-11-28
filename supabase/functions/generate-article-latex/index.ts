@@ -70,6 +70,9 @@ let latex = `\\documentclass[12pt,a4paper]{article}
 \\titleformat{\\section}{\\normalfont\\fontsize{12}{15}\\bfseries\\MakeUppercase}{\\thesection}{1em}{}
 \\titleformat{\\subsection}{\\normalfont\\fontsize{12}{15}\\bfseries}{\\thesubsection}{1em}{}
 
+% Toda seção numerada começa em nova página (padrão IFMS)
+\\newcommand{\\sectionbreak}{\\clearpage}
+
 % Ambiente para citações longas (>3 linhas) - ABNT
 \\newenvironment{citacao}{%
   \\vspace{0.5cm}%
@@ -84,40 +87,48 @@ let latex = `\\documentclass[12pt,a4paper]{article}
 
 \\begin{document}
 
-% Capa
+% Capa (Página 1 - inclui título, autores e resumo)
 \\begin{center}
 \\MakeUppercase{\\textbf{${cleanLatex(content.institution || 'INSTITUTO FEDERAL')}}}
 
-\\vspace{3cm}
+\\vspace{1.5cm}
 
 \\MakeUppercase{\\textbf{${cleanLatex(content.title)}}}
 
-${content.subtitle ? `\\vspace{0.5cm}\n\n${cleanLatex(content.subtitle)}` : ''}
+${content.subtitle ? `\\vspace{0.3cm}\n\n${cleanLatex(content.subtitle)}` : ''}
 
-\\vfill
+\\vspace{1cm}
 
 ${cleanLatex(content.authors || '')}
 
-\\vfill
+\\vspace{0.5cm}
 
 ${new Date().getFullYear()}
 \\end{center}
 
-\\clearpage
+\\vspace{1cm}
 
-% Resumo
-\\section*{RESUMO}
+% Resumo (ainda na página 1, sem section*)
+\\noindent \\textbf{RESUMO}
+
+\\vspace{0.5cm}
 
 \\noindent ${cleanLatex(content.abstract)}
 
+\\vspace{0.5cm}
+
 \\noindent \\textbf{Palavras-chave:} ${cleanLatex(content.keywords)}
 
-\\vspace{1cm}
+\\clearpage
 
-% Abstract
-\\section*{ABSTRACT}
+% Abstract (Página 2)
+\\noindent \\textbf{ABSTRACT}
+
+\\vspace{0.5cm}
 
 \\noindent ${cleanLatex(content.englishAbstract)}
+
+\\vspace{0.5cm}
 
 \\noindent \\textbf{Keywords:} ${cleanLatex(content.englishKeywords)}
 
