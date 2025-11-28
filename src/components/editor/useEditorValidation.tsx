@@ -68,16 +68,33 @@ export const useEditorValidation = (sectionName: string, isValidationEnabled: bo
     // Check cache first
     const cachedResult = getValidationCache(sectionName, cleanedContent);
     if (cachedResult) {
-      console.log(`✅ Usando cache para "${sectionName}":`, cachedResult);
-      console.log(`📦 Estrutura do cache:`, {
-        hasFeedbacks: !!cachedResult?.feedbacks,
-        feedbacksIsArray: Array.isArray(cachedResult?.feedbacks),
-        feedbacksLength: cachedResult?.feedbacks?.length,
-        cacheKeys: Object.keys(cachedResult || {})
-      });
-      setValidationResult(cachedResult);
-      setErrorMessage(null);
-      return;
+      // Se o cache contém apenas um erro genérico de validação, ignore e force nova chamada
+      const hasGenericErrorFeedback = Array.isArray(cachedResult?.feedbacks) &&
+        cachedResult.feedbacks.some((f: any) =>
+          typeof f?.title === 'string' && f.title.includes('Erro na validação')
+        );
+
+      if (hasGenericErrorFeedback) {
+        console.log(`♻️ Ignorando cache com erro genérico para "${sectionName}"`);
+        // Limpa apenas este cache para permitir nova validação com o backend atualizado
+        try {
+          const { clearValidationCache } = await import('@/utils/validationCache');
+          clearValidationCache(sectionName);
+        } catch (e) {
+          console.warn('Não foi possível limpar o cache de validação:', e);
+        }
+      } else {
+        console.log(`✅ Usando cache para "${sectionName}":`, cachedResult);
+        console.log(`📦 Estrutura do cache:`, {
+          hasFeedbacks: !!cachedResult?.feedbacks,
+          feedbacksIsArray: Array.isArray(cachedResult?.feedbacks),
+          feedbacksLength: cachedResult?.feedbacks?.length,
+          cacheKeys: Object.keys(cachedResult || {})
+        });
+        setValidationResult(cachedResult);
+        setErrorMessage(null);
+        return;
+      }
     }
 
     const now = Date.now();
