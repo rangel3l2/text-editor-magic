@@ -19,12 +19,16 @@ import { supabase } from "@/integrations/supabase/client";
 import ValidationToggleButton from "@/components/editor/ValidationToggleButton";
 import ArticleAttachmentsManager from "@/components/article/ArticleAttachmentsManager";
 import ArticleSummary from "@/components/article/ArticleSummary";
+import EditorSidebar from "@/components/editor/EditorSidebar";
+import IFMSGuidelinesViewer from "@/components/editor/IFMSGuidelinesViewer";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
   const { content, isLoading, loadError, handleChange, updateMultipleFields, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"pre-textual" | "textual" | "post-textual">("pre-textual");
+  const [guidelinesOpen, setGuidelinesOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleArticleParsed = (parsedContent: Partial<ArticleContent>) => {
     // Atualizar todos os campos de uma só vez para evitar múltiplos re-renders
@@ -190,19 +194,36 @@ const ArticleEditor = () => {
 
   return (
     <MainLayout>
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <EditorHeader
-            title={content.title || "Novo Artigo Científico"}
-            onOverleaf={handleOverleaf}
-            onDownload={handleDownload}
-            onShare={handleShare}
-            onPreview={() => setPreviewOpen(true)}
-            onClear={handleClear}
-            adminButton={<WorkImporter workType="article" onWorkParsed={handleArticleParsed} />}
-          />
-          <ValidationToggleButton />
-        </div>
+      {/* Sidebar */}
+      <EditorSidebar
+        onOverleaf={handleOverleaf}
+        onDownload={handleDownload}
+        onShare={handleShare}
+        onPreview={() => setPreviewOpen(true)}
+        onShowGuidelines={() => setGuidelinesOpen(true)}
+        importButton={<WorkImporter workType="article" onWorkParsed={handleArticleParsed} />}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
+
+      {/* Diálogo de Regras IFMS */}
+      <IFMSGuidelinesViewer
+        open={guidelinesOpen}
+        onOpenChange={setGuidelinesOpen}
+        workType="article"
+      />
+
+      <div 
+        className="transition-all duration-300" 
+        style={{ marginLeft: sidebarCollapsed ? '4rem' : '16rem' }}
+      >
+        <div className="container mx-auto p-6 space-y-6">
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold">
+              {content.title || "Novo Artigo Científico"}
+            </h1>
+            <ValidationToggleButton />
+          </div>
 
         {/* Sumário de navegação */}
         <ArticleSummary 
@@ -513,6 +534,7 @@ const ArticleEditor = () => {
 
         {/* Gerenciador de Anexos */}
         <ArticleAttachmentsManager />
+      </div>
       </div>
     </MainLayout>
   );

@@ -6,9 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BannerLayout from "./banner/BannerLayout";
-import BannerHeader from "./banner/BannerHeader";
 import BannerContent from "./banner/BannerContent";
-import BannerActions from "./banner/BannerActions";
 import { useBannerContent } from "./banner/useBannerContent";
 import { useBannerActions } from "./banner/useBannerActions";
 import LoginRequiredModal from "./banner/LoginRequiredModal";
@@ -26,6 +24,9 @@ import { Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
+import EditorSidebar from "@/components/editor/EditorSidebar";
+import IFMSGuidelinesViewer from "@/components/editor/IFMSGuidelinesViewer";
+import MainLayout from "@/components/layout/MainLayout";
 
 const BannerEditor = () => {
   const { user } = useAuth();
@@ -36,6 +37,8 @@ const BannerEditor = () => {
   const [hasEditedFirstField, setHasEditedFirstField] = useState(false);
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [guidelinesOpen, setGuidelinesOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const {
     content,
@@ -198,6 +201,115 @@ const BannerEditor = () => {
 
   return (
     <>
+      <MainLayout>
+        {/* Sidebar */}
+        <EditorSidebar
+          onOverleaf={handleGeneratePDF}
+          onDownload={handleGenerateLatex}
+          onShare={() => {
+            if (!user) {
+              setShowLoginModal(true);
+              return;
+            }
+            if (!currentWorkId) {
+              toast({
+                title: 'Aguarde',
+                description: 'Salve o trabalho primeiro antes de compartilhar',
+                variant: 'destructive',
+              });
+              return;
+            }
+            if (userPermission === 'owner') {
+              setShareDialogOpen(true);
+            } else {
+              handleShare();
+            }
+          }}
+          onPreview={() => setPreviewOpen(true)}
+          onShowGuidelines={() => setGuidelinesOpen(true)}
+          importButton={<WorkImporter workType="banner" onWorkParsed={handleBannerParsed} />}
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
+
+        {/* Diálogo de Regras IFMS */}
+        <IFMSGuidelinesViewer
+          open={guidelinesOpen}
+          onOpenChange={setGuidelinesOpen}
+          workType="banner"
+        />
+
+        <div 
+          className="transition-all duration-300" 
+          style={{ marginLeft: sidebarCollapsed ? '4rem' : '16rem' }}
+        >
+          <div className="container mx-auto p-6 space-y-6">
+            <h1 className="text-2xl font-bold">
+              {content.title || "Novo Banner"}
+            </h1>
+            {/* Indicador de permissão */}
+            {userPermission && userPermission !== 'owner' && (
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  <div>
+                    <p className="font-medium">Trabalho compartilhado</p>
+                    <p className="text-sm text-muted-foreground">
+                      {userPermission === 'viewer' && 'Você tem permissão apenas para visualizar'}
+                      {userPermission === 'editor' && 'Você pode editar este trabalho'}
+                      {userPermission === 'commenter' && 'Você pode comentar nas seções'}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant={
+                  userPermission === 'viewer' ? 'secondary' :
+                  userPermission === 'editor' ? 'default' :
+                  'outline'
+                }>
+                  {userPermission === 'viewer' && 'Visualizador'}
+                  {userPermission === 'editor' && 'Editor'}
+                  {userPermission === 'commenter' && 'Comentador'}
+                </Badge>
+              </div>
+            )}
+            
+            <BannerTemplateSelector
+              onSelectTemplate={handleSelectTemplate}
+              currentTemplateId={content.templateId}
+            />
+            
+            <BannerContent
+              content={content}
+              handleChange={handleFieldChange}
+              selectedImage={selectedImage}
+              onImageConfigChange={onImageConfigChange}
+              onImageUploadFromEditor={handleImageUploadFromEditor}
+              pendingImageFile={pendingImageFile}
+              onImageProcessed={handleImageProcessed}
+            />
+          </div>
+        </div>
+
+        {/* Preview Dialog */}
+        <BannerLayout
+          previewOpen={previewOpen}
+          setPreviewOpen={setPreviewOpen}
+          content={content}
+          onImageConfigChange={onImageConfigChange}
+          onLogoConfigChange={handleLogoConfigChange}
+          onContentUpdate={handleFieldChange}
+          onGeneratePDF={handleGeneratePDF}
+          onGenerateLatex={handleGenerateLatex}
+        >
+          <div />
+        </BannerLayout>
+
+        <BannerAttachmentsManager 
+          pendingImageFile={pendingImageFile}
+          onImageProcessed={handleImageProcessed}
+        />
+      </MainLayout>
+
       <OnboardingTutorial />
       <LoginRequiredModal 
         isOpen={showLoginModal} 
@@ -214,121 +326,6 @@ const BannerEditor = () => {
         onShareWork={shareWork}
         onUpdateShare={updateShare}
         onRemoveShare={removeShare}
-      />
-
-      <BannerLayout
-        previewOpen={previewOpen}
-        setPreviewOpen={setPreviewOpen}
-        content={content}
-        onImageConfigChange={onImageConfigChange}
-        onLogoConfigChange={handleLogoConfigChange}
-        onContentUpdate={handleFieldChange}
-        onGeneratePDF={handleGeneratePDF}
-        onGenerateLatex={handleGenerateLatex}
-      >
-        <div className="space-y-8">
-          {/* Indicador de permissão */}
-          {userPermission && userPermission !== 'owner' && (
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                <div>
-                  <p className="font-medium">Trabalho compartilhado</p>
-                  <p className="text-sm text-muted-foreground">
-                    {userPermission === 'viewer' && 'Você tem permissão apenas para visualizar'}
-                    {userPermission === 'editor' && 'Você pode editar este trabalho'}
-                    {userPermission === 'commenter' && 'Você pode comentar nas seções'}
-                  </p>
-                </div>
-              </div>
-              <Badge variant={
-                userPermission === 'viewer' ? 'secondary' :
-                userPermission === 'editor' ? 'default' :
-                'outline'
-              }>
-                {userPermission === 'viewer' && 'Visualizador'}
-                {userPermission === 'editor' && 'Editor'}
-                {userPermission === 'commenter' && 'Comentador'}
-              </Badge>
-            </div>
-          )}
-
-          <BannerHeader 
-            title={content.title || "Novo Banner"}
-            previewHtml={content.previewHtml}
-            onGeneratePDF={handleGeneratePDF}
-            onGenerateLatex={handleGenerateLatex}
-            onShare={() => {
-              if (!user) {
-                setShowLoginModal(true);
-                return;
-              }
-              if (!currentWorkId) {
-                toast({
-                  title: 'Aguarde',
-                  description: 'Salve o trabalho primeiro antes de compartilhar',
-                  variant: 'destructive',
-                });
-                return;
-              }
-              if (userPermission === 'owner') {
-                setShareDialogOpen(true);
-              } else {
-                handleShare();
-              }
-            }}
-            onOpenPreview={() => setPreviewOpen(true)}
-            onClearFields={handleClearFields}
-            importButton={<WorkImporter workType="banner" onWorkParsed={handleBannerParsed} />}
-          />
-          
-          <BannerTemplateSelector
-            onSelectTemplate={handleSelectTemplate}
-            currentTemplateId={content.templateId}
-          />
-          
-          <BannerContent
-            content={content}
-            handleChange={handleFieldChange}
-            selectedImage={selectedImage}
-            onImageConfigChange={onImageConfigChange}
-            onImageUploadFromEditor={handleImageUploadFromEditor}
-            pendingImageFile={pendingImageFile}
-            onImageProcessed={handleImageProcessed}
-          />
-          <BannerActions
-            onGeneratePDF={handleGeneratePDF}
-            onGenerateLatex={handleGenerateLatex}
-            onShare={() => {
-              if (!user) {
-                setShowLoginModal(true);
-                return;
-              }
-              if (!currentWorkId) {
-                toast({
-                  title: 'Aguarde',
-                  description: 'Salve o trabalho primeiro antes de compartilhar',
-                  variant: 'destructive',
-                });
-                return;
-              }
-              if (userPermission === 'owner') {
-                setShareDialogOpen(true);
-              } else {
-                handleShare();
-              }
-            }}
-            onLoadSavedContent={() => {}}
-            onClearFields={handleClearFields}
-            onOpenPreview={() => setPreviewOpen(true)}
-            onSave={() => {}}
-            isAuthenticated={!!user}
-          />
-        </div>
-      </BannerLayout>
-      <BannerAttachmentsManager 
-        pendingImageFile={pendingImageFile}
-        onImageProcessed={handleImageProcessed}
       />
     </>
   );
