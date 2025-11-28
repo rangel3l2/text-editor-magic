@@ -290,7 +290,7 @@ class ContentValidator {
           ]
         }
         `;
-      } else if (sectionName.toLowerCase().includes("introdução completa")) {
+      } else if (sectionName.toLowerCase().includes("introdução")) {
         prompt = `
         Você é a Orienta.IA, Orientadora Virtual do IFMS usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
@@ -298,23 +298,41 @@ class ContentValidator {
 
         Introdução: "${content.substring(0, 5000)}"
 
-        Analise a introdução completa e:
-        1. INICIE o explanation com "Usando a Teoria do Andaime..."
-        2. Reconheça os elementos presentes
-        3. Faça PERGUNTAS orientadoras para melhorar
+        CONTEXTO IFMS: A Introdução deve apresentar o tema, justificar sua relevância, 
+        apresentar o problema de pesquisa e os objetivos. É o primeiro contato do leitor com o trabalho.
 
-        Retorne no formato JSON com feedbacks usando perguntas orientadoras e sempre mencionando a metodologia.
+        Analise a introdução e:
+        1. INICIE o explanation com "Usando a Teoria do Andaime..."
+        2. Reconheça especificamente o que o aluno já escreveu
+        3. Faça PERGUNTAS orientadoras para aprofundar cada elemento
+
+        Perguntas orientadoras sugeridas:
+        - "Você apresentou o tema da pesquisa? Como você contextualiza esse tema?"
+        - "Por que esse tema é importante ou relevante hoje?"
+        - "Qual é o problema específico que você quer investigar?"
+        - "Quais são seus objetivos com essa pesquisa?"
+
+        Retorne no formato JSON com feedbacks usando perguntas orientadoras e sempre mencionando a metodologia:
         {
           "isValid": boolean,
           "feedbacks": [
             {
               "type": "success" | "tip" | "warning" | "excellent",
-              "title": "Título com emoji",
-              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
-              "suggestion": "Pergunta orientadora"
+              "title": "Título com emoji (💭 / 🤔 / ✅ / ✨)",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...' e depois reconheça o que foi escrito",
+              "suggestion": "Faça uma PERGUNTA orientadora específica (não dê resposta pronta)"
             }
           ]
         }
+
+        EXEMPLOS de feedback com andaime para Introdução:
+        - ❌ ERRADO: "A introdução precisa ter mais contextualização"
+        - ✅ CORRETO: "Usando a Teoria do Andaime, vejo que você apresentou o tema. Agora me conte: por que esse tema é importante no contexto atual? O que motivou você a estudá-lo?"
+        
+        - ❌ ERRADO: "Falta apresentar o problema de pesquisa"
+        - ✅ CORRETO: "Usando a Teoria do Andaime para orientar: você descreveu o contexto. Agora vamos delimitar: qual problema específico dentro desse contexto você quer investigar?"
+
+        Gere 1-3 feedbacks focados e específicos usando perguntas orientadoras.
         `;
       } else if (sectionName.toLowerCase() === "tema") {
         prompt = `
