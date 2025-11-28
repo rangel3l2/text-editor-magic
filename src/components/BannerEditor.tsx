@@ -27,6 +27,7 @@ import { useToast } from "@/components/ui/use-toast";
 import EditorSidebar from "@/components/editor/EditorSidebar";
 import IFMSGuidelinesViewer from "@/components/editor/IFMSGuidelinesViewer";
 import MainLayout from "@/components/layout/MainLayout";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const BannerEditor = () => {
   const { user } = useAuth();
@@ -39,6 +40,7 @@ const BannerEditor = () => {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [guidelinesOpen, setGuidelinesOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
 
   const {
     content,
@@ -95,6 +97,14 @@ const BannerEditor = () => {
       setShowLoginModal(true);
     }
   }, [searchParams, user]);
+
+  // Abrir seletor de templates automaticamente para banners novos
+  useEffect(() => {
+    const isNewBanner = !id && !content.title && !content.introduction;
+    if (isNewBanner && !templatesOpen) {
+      setTemplatesOpen(true);
+    }
+  }, [id, content.title, content.introduction]);
 
   const {
     handleGeneratePDF,
@@ -227,6 +237,8 @@ const BannerEditor = () => {
           }}
           onPreview={() => setPreviewOpen(true)}
           onShowGuidelines={() => setGuidelinesOpen(true)}
+          onShowTemplates={() => setTemplatesOpen(true)}
+          showTemplatesButton={true}
           importButton={<WorkImporter workType="banner" onWorkParsed={handleBannerParsed} />}
           isCollapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -238,6 +250,29 @@ const BannerEditor = () => {
           onOpenChange={setGuidelinesOpen}
           workType="banner"
         />
+
+        {/* Diálogo de Templates */}
+        <Dialog open={templatesOpen} onOpenChange={setTemplatesOpen}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Escolha um Template para seu Banner</DialogTitle>
+              <DialogDescription>
+                Selecione um estilo de layout para começar. Você pode mudar depois clicando em "Templates" no menu lateral.
+              </DialogDescription>
+            </DialogHeader>
+            <BannerTemplateSelector
+              onSelectTemplate={(template) => {
+                handleSelectTemplate(template);
+                setTemplatesOpen(false);
+                toast({
+                  title: "Template aplicado!",
+                  description: "Você pode alterá-lo a qualquer momento pelo menu lateral.",
+                });
+              }}
+              currentTemplateId={content.templateId}
+            />
+          </DialogContent>
+        </Dialog>
 
         <div 
           className="transition-all duration-300" 
@@ -272,11 +307,6 @@ const BannerEditor = () => {
                 </Badge>
               </div>
             )}
-            
-            <BannerTemplateSelector
-              onSelectTemplate={handleSelectTemplate}
-              currentTemplateId={content.templateId}
-            />
             
             <BannerContent
               content={content}
