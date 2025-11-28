@@ -3,12 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, Send, Loader2, Info, BookOpen, GraduationCap } from 'lucide-react';
+import { MessageCircle, Send, Loader2, Info, BookOpen, GraduationCap, ChevronDown, ChevronUp, Minimize2, Maximize2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { useAISettings } from '@/hooks/useAISettings';
+import { cn } from '@/lib/utils';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -25,6 +26,7 @@ const AcademicAdvisor = ({ currentSection, articleContent }: AcademicAdvisorProp
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showMethodology, setShowMethodology] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { aiEnabled, isLoading: isLoadingSettings } = useAISettings();
 
@@ -110,23 +112,37 @@ const AcademicAdvisor = ({ currentSection, articleContent }: AcademicAdvisorProp
 
   if (showMethodology) {
     return (
-      <Card className="w-full">
+      <Card className="w-full mb-6">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-primary" />
-            <CardTitle>Orientação Acadêmica com IA</CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-6 w-6 text-primary" />
+              <CardTitle>Orienta.IA - Assistente para Começar</CardTitle>
+            </div>
           </div>
           <CardDescription>
-            Método de Orientação baseado na Teoria do Andaime (Scaffolding)
+            Para quem não sabe por onde começar ou está procrastinando
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <AlertDescription>
+              <strong className="text-blue-900 dark:text-blue-100">🎯 Para quem é essa orientação?</strong>
+              <p className="mt-2 text-blue-800 dark:text-blue-200">
+                Esta IA é um <strong>assistente/psicólogo acadêmico</strong> especialmente desenvolvido para 
+                ajudar estudantes que estão <strong>travados</strong>, <strong>procrastinando</strong> ou 
+                <strong> sem saber por onde começar</strong> seu artigo científico.
+              </p>
+            </AlertDescription>
+          </Alert>
+
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
               <strong>Como funciona a orientação?</strong>
               <p className="mt-2">
-                A orientação acadêmica utiliza a <strong>Teoria do Andaime (Scaffolding)</strong>, 
+                Utiliza a <strong>Teoria do Andaime (Scaffolding)</strong>, 
                 uma metodologia pedagógica desenvolvida por teóricos como Vygotsky e Bruner.
               </p>
             </AlertDescription>
@@ -134,12 +150,12 @@ const AcademicAdvisor = ({ currentSection, articleContent }: AcademicAdvisorProp
 
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <Badge variant="outline" className="mt-1">1</Badge>
+              <Badge variant="outline" className="mt-1 bg-red-50 border-red-300 text-red-700">⚠️</Badge>
               <div>
-                <h4 className="font-semibold mb-1">Não escrevo por você</h4>
+                <h4 className="font-semibold mb-1 text-red-900 dark:text-red-100">Eu NÃO escrevo por você</h4>
                 <p className="text-sm text-muted-foreground">
-                  A IA não fornece respostas prontas ou escreve seu TCC. Ela oferece o suporte 
-                  necessário para que você construa seu próprio conhecimento.
+                  Esta IA <strong>não fornece respostas prontas</strong> e <strong>não escreve seu trabalho</strong>. 
+                  Ela oferece direção, estrutura e perguntas orientadoras para você construir seu próprio conhecimento.
                 </p>
               </div>
             </div>
@@ -192,45 +208,90 @@ const AcademicAdvisor = ({ currentSection, articleContent }: AcademicAdvisorProp
           <Alert className="bg-primary/5 border-primary/20">
             <BookOpen className="h-4 w-4" />
             <AlertDescription>
-              <strong>Exemplo prático:</strong>
+              <strong>💬 Exemplo prático de como funciona:</strong>
               <p className="mt-2 text-sm">
-                Se você pedir "faça minha introdução", a IA vai responder: 
+                <strong>Você:</strong> "Faça minha introdução"
+              </p>
+              <p className="mt-2 text-sm">
+                <strong>Orienta.IA:</strong>
                 <em className="block mt-1 text-muted-foreground">
                   "Vamos construir sua Introdução juntos! A estrutura básica inclui: 
                   (1) Contextualização, (2) Problema de Pesquisa, (3) Objetivos e (4) Justificativa. 
-                  Para começar, me diga: qual é o principal problema que seu TCC pretende resolver?"
+                  Para começar, me diga: qual é o principal problema que seu trabalho pretende resolver? 
+                  O que te motivou a escolher esse tema?"
                 </em>
               </p>
             </AlertDescription>
           </Alert>
 
-          <Button 
-            onClick={startOrientation} 
-            className="w-full"
-            size="lg"
-          >
-            <MessageCircle className="mr-2 h-5 w-5" />
-            Iniciar Orientação
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={startOrientation} 
+              className="flex-1"
+              size="lg"
+            >
+              <MessageCircle className="mr-2 h-5 w-5" />
+              Iniciar Orientação
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
+  // Card colapsado - mostra apenas um botão para expandir
+  if (isCollapsed) {
+    return (
+      <Card className="w-full mb-6">
+        <CardHeader className="py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              <CardTitle className="text-base">Orienta.IA - IFMS</CardTitle>
+              {currentSection && (
+                <Badge variant="secondary" className="text-xs">Seção: {currentSection}</Badge>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(false)}
+              className="gap-2"
+            >
+              <Maximize2 className="h-4 w-4" />
+              <span className="text-sm">Expandir</span>
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="w-full h-[600px] flex flex-col">
+    <Card className={cn("w-full flex flex-col mb-6", "h-[600px]")}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <GraduationCap className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Orienta.IA - IFMS</CardTitle>
           </div>
-          {currentSection && (
-            <Badge variant="secondary">Seção: {currentSection}</Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {currentSection && (
+              <Badge variant="secondary">Seção: {currentSection}</Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(true)}
+              className="gap-2"
+            >
+              <Minimize2 className="h-4 w-4" />
+              <span className="hidden sm:inline text-sm">Minimizar</span>
+            </Button>
+          </div>
         </div>
         <CardDescription>
-          Orientação baseada na Teoria do Andaime
+          Assistente que orienta (não escreve por você) • Teoria do Andaime
         </CardDescription>
       </CardHeader>
       
