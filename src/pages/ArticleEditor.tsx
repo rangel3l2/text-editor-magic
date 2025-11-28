@@ -385,26 +385,6 @@ const ArticleEditor = () => {
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
           <DialogContent className="max-w-7xl h-[90vh] p-0">
             <div className="relative h-full overflow-y-auto" id="preview-scroll-container">
-              {/* Sumário também disponível no preview */}
-              <div className="absolute top-4 left-4 z-50">
-                <ArticleSummary
-                  theoreticalTopicsCount={content.theoreticalTopics.length}
-                  onNavigate={(sectionId) => {
-                    const container = document.getElementById('preview-scroll-container');
-                    const element = document.getElementById(sectionId);
-                    console.log('🔍 Procurando no preview:', sectionId, element, 'Container:', container);
-                    if (element && container) {
-                      const elementTop = element.offsetTop;
-                      container.scrollTo({
-                        top: elementTop - 100,
-                        behavior: "smooth",
-                      });
-                    } else {
-                      console.warn('❌ Elemento ou container não encontrado no preview:', sectionId);
-                    }
-                  }}
-                />
-              </div>
               <ArticlePreviewPaginated content={content} />
             </div>
           </DialogContent>
