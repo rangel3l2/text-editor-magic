@@ -280,7 +280,7 @@ const BannerEditor = () => {
         >
           <div className="container mx-auto p-6 space-y-6">
             <h1 className="text-2xl font-bold">
-              {content.title || "Novo Banner"}
+              {content.title ? content.title.replace(/<[^>]*>/g, '').trim() : "Novo Banner"}
             </h1>
             {/* Indicador de permissão */}
             {userPermission && userPermission !== 'owner' && (
