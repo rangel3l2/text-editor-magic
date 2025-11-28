@@ -262,6 +262,7 @@ const ArticleEditor = () => {
         theoreticalTopicsCount={content.theoreticalTopics.length}
         open={summaryOpen}
         onOpenChange={setSummaryOpen}
+        showTrigger={false}
         onNavigate={(sectionId) => {
           let targetTab: "pre-textual" | "textual" | "post-textual" = "pre-textual";
 

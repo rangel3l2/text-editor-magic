@@ -10,9 +10,10 @@ interface ArticleSummaryProps {
   onNavigate: (sectionId: string) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
 }
 
-const ArticleSummary = ({ theoreticalTopicsCount, onNavigate, open: controlledOpen, onOpenChange }: ArticleSummaryProps) => {
+const ArticleSummary = ({ theoreticalTopicsCount, onNavigate, open: controlledOpen, onOpenChange, showTrigger = true }: ArticleSummaryProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
   
   // Se open e onOpenChange forem fornecidos, usa estado controlado; caso contrário, usa estado interno
@@ -21,16 +22,18 @@ const ArticleSummary = ({ theoreticalTopicsCount, onNavigate, open: controlledOp
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm bg-background/95 border-2"
-        >
-          <List className="h-4 w-4" />
-          <span className="hidden sm:inline">Sumário</span>
-        </Button>
-      </SheetTrigger>
+      {showTrigger && (
+        <SheetTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm bg-background/95 border-2"
+          >
+            <List className="h-4 w-4" />
+            <span className="hidden sm:inline">Sumário</span>
+          </Button>
+        </SheetTrigger>
+      )}
 
       <SheetContent side="left" className="w-80">
         <SheetHeader>
