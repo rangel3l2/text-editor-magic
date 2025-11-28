@@ -290,19 +290,19 @@ const RichTextEditor = ({
           onClick={handleManualValidation}
           variant="outline"
           size="lg"
-          className="w-full gap-3 border-2 border-primary/30 hover:border-primary hover:bg-primary/5 transition-all duration-300 group relative overflow-hidden"
+          className="w-full gap-2 sm:gap-3 py-4 sm:py-6 border-2 border-primary/30 hover:border-primary hover:bg-primary/5 transition-all duration-300 group relative overflow-hidden"
           disabled={isValidating}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <div className="relative flex items-center gap-3">
-            <div className="p-2 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300">
-              <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+          <div className="relative flex items-center gap-2 sm:gap-3 pointer-events-none">
+            <div className="p-1.5 sm:p-2 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary animate-pulse" />
             </div>
             <div className="flex flex-col items-start text-left">
-              <span className="font-semibold text-sm">
+              <span className="font-semibold text-xs sm:text-sm">
                 {isValidating ? 'Orientando...' : 'Precisa de orientação?'}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
                 Clique para receber feedback sobre este campo
               </span>
             </div>

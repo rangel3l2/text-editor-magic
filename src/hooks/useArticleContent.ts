@@ -116,6 +116,14 @@ export const useArticleContent = () => {
 
   // Nova função para atualizar múltiplos campos de uma vez (usado no import)
   const updateMultipleFields = (updates: Partial<ArticleContent>) => {
+    console.log('📝 [updateMultipleFields] Iniciando atualização:', {
+      hasUser: !!user,
+      hasId: !!id,
+      isMounted: mountedRef.current,
+      updatesKeys: Object.keys(updates),
+      currentTitle: content.title
+    });
+
     const newContent = {
       ...content,
       ...updates
@@ -127,6 +135,12 @@ export const useArticleContent = () => {
     if (user && id && mountedRef.current) {
       const saveContent = async () => {
         try {
+          console.log('💾 [updateMultipleFields] Salvando no Supabase...', {
+            workId: id,
+            userId: user.id,
+            contentTitle: newContent.title
+          });
+
           const { error } = await supabase
             .from('work_in_progress')
             .update({ 
@@ -136,9 +150,18 @@ export const useArticleContent = () => {
             .eq('id', id)
             .eq('user_id', user.id);
 
-          if (error) throw error;
+          if (error) {
+            console.error('❌ [updateMultipleFields] Erro ao salvar:', error);
+            throw error;
+          }
           
-          console.log('✅ Conteúdo importado salvo com sucesso');
+          console.log('✅ Conteúdo importado salvo com sucesso no banco de dados');
+          
+          toast({
+            title: "✅ Trabalho salvo!",
+            description: "O conteúdo importado foi salvo permanentemente.",
+            duration: 3000,
+          });
         } catch (error) {
           console.error('Error saving article content:', error);
           if (mountedRef.current) {
@@ -152,6 +175,12 @@ export const useArticleContent = () => {
       };
 
       saveContent();
+    } else {
+      console.warn('⚠️ [updateMultipleFields] Salvamento ignorado:', {
+        hasUser: !!user,
+        hasId: !!id,
+        isMounted: mountedRef.current
+      });
     }
   };
 
