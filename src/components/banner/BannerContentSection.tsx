@@ -228,27 +228,6 @@ const BannerContentSection = ({ content, handleChange, onImageUploadFromEditor }
 
   return (
     <div className="space-y-6">
-      <div className="bg-muted/30 p-4 rounded-lg mb-6">
-        <h3 className="text-lg font-semibold mb-2">📐 Estrutura do Banner Científico</h3>
-        <p className="text-sm text-muted-foreground">
-          Seu banner será organizado em 3 colunas profissionais:
-        </p>
-        <div className="grid grid-cols-3 gap-4 mt-3 text-xs">
-          <div className="bg-background p-3 rounded border">
-            <p className="font-semibold">Coluna 1</p>
-            <p className="text-muted-foreground">Introdução • Objetivos • Referências</p>
-          </div>
-          <div className="bg-background p-3 rounded border">
-            <p className="font-semibold">Coluna 2</p>
-            <p className="text-muted-foreground">Metodologia • Resultados (início)</p>
-          </div>
-          <div className="bg-background p-3 rounded border">
-            <p className="font-semibold">Coluna 3</p>
-            <p className="text-muted-foreground">Resultados • Discussão • Conclusão • Agradecimentos</p>
-          </div>
-        </div>
-      </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Introdução</CardTitle>
