@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import EditorSidebar from "@/components/editor/EditorSidebar";
-import IFMSGuidelinesViewer from "@/components/editor/IFMSGuidelinesViewer";
+import GuidelinesViewer from "@/components/editor/GuidelinesViewer";
 import MainLayout from "@/components/layout/MainLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
@@ -245,10 +245,11 @@ const BannerEditor = () => {
         />
 
         {/* Diálogo de Regras IFMS */}
-        <IFMSGuidelinesViewer
+        <GuidelinesViewer
           open={guidelinesOpen}
           onOpenChange={setGuidelinesOpen}
           workType="banner"
+          universityId="ifms"
         />
 
         {/* Diálogo de Templates */}
