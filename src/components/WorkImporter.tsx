@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Upload, FileText, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
@@ -8,14 +9,16 @@ import { Progress } from "@/components/ui/progress";
 interface WorkImporterProps {
   workType: "article" | "banner";
   onWorkParsed: (content: any) => void;
+  hasExistingContent?: boolean;
 }
 
-export const WorkImporter = ({ workType, onWorkParsed }: WorkImporterProps) => {
+export const WorkImporter = ({ workType, onWorkParsed, hasExistingContent = false }: WorkImporterProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>("");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -48,9 +51,21 @@ export const WorkImporter = ({ workType, onWorkParsed }: WorkImporterProps) => {
     }
   };
 
+  const handleImportClick = () => {
+    if (!file) return;
+    
+    // Se já existe conteúdo, mostra confirmação
+    if (hasExistingContent) {
+      setShowConfirmDialog(true);
+    } else {
+      parseWorkContent();
+    }
+  };
+
   const parseWorkContent = async () => {
     if (!file) return;
 
+    setShowConfirmDialog(false);
     setLoading(true);
     setProgress(0);
     setStatus("Preparando arquivo...");
@@ -222,7 +237,7 @@ export const WorkImporter = ({ workType, onWorkParsed }: WorkImporterProps) => {
 
                 {file && (
                   <Button
-                    onClick={parseWorkContent}
+                    onClick={handleImportClick}
                     disabled={loading}
                     className="w-full"
                   >
@@ -262,6 +277,24 @@ export const WorkImporter = ({ workType, onWorkParsed }: WorkImporterProps) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Substituir trabalho atual?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se você continuar esse processo, o seu trabalho atual será substituído pelo conteúdo importado. 
+              Esta ação não pode ser desfeita. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não, cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={parseWorkContent}>
+              Sim, substituir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
