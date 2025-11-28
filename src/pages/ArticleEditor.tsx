@@ -20,7 +20,7 @@ import ValidationToggleButton from "@/components/editor/ValidationToggleButton";
 import ArticleAttachmentsManager from "@/components/article/ArticleAttachmentsManager";
 import ArticleSummary from "@/components/article/ArticleSummary";
 import EditorSidebar from "@/components/editor/EditorSidebar";
-import IFMSGuidelinesViewer from "@/components/editor/IFMSGuidelinesViewer";
+import GuidelinesViewer from "@/components/editor/GuidelinesViewer";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
@@ -207,10 +207,11 @@ const ArticleEditor = () => {
       />
 
       {/* Diálogo de Regras IFMS */}
-      <IFMSGuidelinesViewer
+      <GuidelinesViewer
         open={guidelinesOpen}
         onOpenChange={setGuidelinesOpen}
         workType="article"
+        universityId="ifms"
       />
 
       <div 
