@@ -343,8 +343,6 @@ const ArticleEditor = () => {
               <div className="absolute top-4 left-4 z-50">
                 <ArticleSummary
                   theoreticalTopicsCount={content.theoreticalTopics.length}
-                  open={false}
-                  onOpenChange={() => {}}
                   onNavigate={(sectionId) => {
                     const container = document.getElementById('preview-scroll-container');
                     const element = document.getElementById(sectionId);
