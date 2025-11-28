@@ -17,7 +17,9 @@ const generateArticleLatex = (content: any): string => {
       .replace(/<\/p>/gi, '\n\n')
       .replace(/<br\s*\/?>/gi, '\n')
       .replace(/<strong>(.*?)<\/strong>/gi, '\\textbf{$1}')
+      .replace(/<b>(.*?)<\/b>/gi, '\\textbf{$1}')
       .replace(/<em>(.*?)<\/em>/gi, '\\textit{$1}')
+      .replace(/<i>(.*?)<\/i>/gi, '\\textit{$1}')
       .replace(/<ul>/gi, '\\begin{itemize}\n')
       .replace(/<\/ul>/gi, '\\end{itemize}\n')
       .replace(/<ol>/gi, '\\begin{enumerate}\n')
@@ -34,6 +36,29 @@ const generateArticleLatex = (content: any): string => {
       // Remove quebras de linha múltiplas (mais de 2)
       .replace(/\n\s*\n\s*\n+/g, '\n\n')
       .trim();
+  };
+  
+  // Função específica para formatar referências ABNT
+  const formatReferences = (text: string) => {
+    if (!text) return '';
+    
+    // Primeiro aplica cleanLatex para converter tags básicas
+    let formatted = cleanLatex(text);
+    
+    // Processa cada linha de referência individualmente
+    const lines = formatted.split('\n\n');
+    const formattedLines = lines.map(line => {
+      if (!line.trim()) return '';
+      
+      // Remove quebras de linha internas, mantendo tudo em uma linha
+      line = line.replace(/\n/g, ' ').trim();
+      
+      // Adiciona espaço entre referências
+      return line;
+    }).filter(Boolean);
+    
+    // Junta com espaçamento simples entre referências
+    return formattedLines.join('\n\n');
   };
 
 let latex = `\\documentclass[12pt,a4paper]{article}
@@ -164,7 +189,7 @@ ${cleanLatex(content.introduction)}
 
 \\begin{singlespacing}
 \\raggedright
-${cleanLatex(content.references)}
+${formatReferences(content.references)}
 \\end{singlespacing}
 
 \\end{document}`;

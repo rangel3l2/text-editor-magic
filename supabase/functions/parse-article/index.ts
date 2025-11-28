@@ -297,6 +297,21 @@ ${text}`;
       references: cleanHtml(stripLeadingHeading(aiResult.references || '', REFERENCES_HEADING_PATTERNS)),
       institution: 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul',
     };
+    
+    console.log('📊 Seções extraídas com sucesso:');
+    console.log('- Title:', result.title ? 'OK' : 'VAZIO');
+    console.log('- Authors:', result.authors ? 'OK' : 'VAZIO');
+    console.log('- Introduction:', result.introduction ? `OK (${result.introduction.length} chars)` : '❌ VAZIO');
+    console.log('- Methodology:', result.methodology ? 'OK' : 'VAZIO');
+    console.log('- Results:', result.results ? 'OK' : 'VAZIO');
+    console.log('- Conclusion:', result.conclusion ? 'OK' : 'VAZIO');
+    console.log('- References:', result.references ? 'OK' : 'VAZIO');
+    
+    if (!result.introduction) {
+      console.log('⚠️ Introdução vazia - verificando dados brutos da IA:');
+      console.log('aiResult.introduction (primeiros 200 chars):', (aiResult.introduction || '').substring(0, 200));
+      console.log('aiResult.introduction (length):', (aiResult.introduction || '').length);
+    }
 
     // Processar tópicos teóricos se existirem
     if (aiResult.theoreticalTopics && Array.isArray(aiResult.theoreticalTopics)) {
