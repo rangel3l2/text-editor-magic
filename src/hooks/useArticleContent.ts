@@ -116,16 +116,17 @@ export const useArticleContent = () => {
 
   // Nova função para atualizar múltiplos campos de uma vez (usado no import)
   const updateMultipleFields = (updates: Partial<ArticleContent>) => {
-    setContent(prev => ({
-      ...prev,
+    const newContent = {
+      ...content,
       ...updates
-    }));
+    };
+    
+    setContent(newContent);
 
     // Só salvar se temos user, id e o componente está montado
     if (user && id && mountedRef.current) {
       const saveContent = async () => {
         try {
-          const newContent = { ...content, ...updates };
           const { error } = await supabase
             .from('work_in_progress')
             .update({ 
@@ -136,12 +137,14 @@ export const useArticleContent = () => {
             .eq('user_id', user.id);
 
           if (error) throw error;
+          
+          console.log('✅ Conteúdo importado salvo com sucesso');
         } catch (error) {
           console.error('Error saving article content:', error);
           if (mountedRef.current) {
             toast({
-              title: "Erro ao salvar",
-              description: "Não foi possível salvar as alterações. Tente novamente.",
+              title: "Erro ao salvar importação",
+              description: "Não foi possível salvar o conteúdo importado. Tente novamente.",
               variant: "destructive",
             });
           }
