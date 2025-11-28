@@ -275,11 +275,11 @@ const BannerEditor = () => {
         </Dialog>
 
         <div 
-          className="transition-all duration-300" 
-          style={{ marginLeft: sidebarCollapsed ? '4rem' : '16rem' }}
+          className="transition-all duration-300 pb-20 md:pb-0" 
+          style={{ marginLeft: sidebarCollapsed ? '0' : '0' }}
         >
-          <div className="container mx-auto p-6 space-y-6">
-            <h1 className="text-2xl font-bold">
+          <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6" style={{ marginLeft: window.innerWidth >= 768 ? (sidebarCollapsed ? '4rem' : '16rem') : '0' }}>
+            <h1 className="text-xl md:text-2xl font-bold">
               {content.title ? content.title.replace(/<[^>]*>/g, '').trim() : "Novo Banner"}
             </h1>
             {/* Indicador de permissão */}

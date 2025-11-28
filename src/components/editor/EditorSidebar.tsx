@@ -87,9 +87,10 @@ const EditorSidebar = ({
 
   return (
     <TooltipProvider>
+      {/* Desktop Sidebar */}
       <div
         className={cn(
-          "fixed left-0 top-14 h-[calc(100vh-3.5rem)] bg-background border-r border-border transition-all duration-300 z-40 flex flex-col",
+          "hidden md:flex fixed left-0 top-14 h-[calc(100vh-3.5rem)] bg-background border-r border-border transition-all duration-300 z-40 flex-col",
           collapsed ? "w-16" : "w-64"
         )}
       >
@@ -176,6 +177,44 @@ const EditorSidebar = ({
             <p>Use o botão "Visualizar" para ver seu trabalho formatado em A4.</p>
           </div>
         )}
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 safe-area-bottom">
+        <div className="grid grid-cols-4 gap-1 p-2">
+          <Button
+            variant="ghost"
+            onClick={onPreview}
+            className="flex flex-col items-center gap-1 h-auto py-2 bg-primary/10 text-primary"
+          >
+            <Eye className="h-5 w-5" />
+            <span className="text-xs">Ver</span>
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={onOverleaf}
+            className="flex flex-col items-center gap-1 h-auto py-2"
+          >
+            <FileDown className="h-5 w-5" />
+            <span className="text-xs">PDF</span>
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={onShare}
+            className="flex flex-col items-center gap-1 h-auto py-2"
+          >
+            <Share2 className="h-5 w-5" />
+            <span className="text-xs">Compartilhar</span>
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={onShowGuidelines}
+            className="flex flex-col items-center gap-1 h-auto py-2"
+          >
+            <BookOpen className="h-5 w-5" />
+            <span className="text-xs">Regras</span>
+          </Button>
+        </div>
       </div>
     </TooltipProvider>
   );

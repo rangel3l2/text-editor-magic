@@ -78,8 +78,8 @@ const ValidationFeedback = ({
       errorMessage.includes('Edge Function');
     
     return (
-      <Alert variant="destructive" className="bg-red-50">
-        <div className="flex items-start gap-3">
+      <Alert variant="destructive" className="bg-red-50 text-sm">
+        <div className="flex items-start gap-2 md:gap-3">
           <div className="flex-shrink-0 mt-0.5">
             {isCorsOrConnectionError ? (
               <WifiOff className="h-4 w-4 text-red-600" />
@@ -87,16 +87,16 @@ const ValidationFeedback = ({
               <AlertCircle className="h-4 w-4 text-red-600" />
             )}
           </div>
-          <div className="flex-1">
-            <AlertTitle>
+          <div className="flex-1 min-w-0">
+            <AlertTitle className="text-sm md:text-base">
               {isCorsOrConnectionError 
-                ? "Erro de conexão com o orientador virtual" 
+                ? "Erro de conexão" 
                 : "Erro na validação"}
             </AlertTitle>
-            <AlertDescription className="space-y-3">
-              <p>
+            <AlertDescription className="space-y-2 md:space-y-3">
+              <p className="text-xs md:text-sm">
                 {isCorsOrConnectionError 
-                  ? "Não foi possível conectar ao orientador virtual. Você pode continuar trabalhando normalmente enquanto resolvemos o problema." 
+                  ? "Não foi possível conectar. Você pode continuar trabalhando." 
                   : errorMessage}
               </p>
               {onRetry && (
@@ -104,7 +104,7 @@ const ValidationFeedback = ({
                   onClick={onRetry}
                   variant="outline" 
                   size="sm"
-                  className="gap-2 bg-white hover:bg-red-50"
+                  className="gap-2 bg-white hover:bg-red-50 text-xs h-8"
                 >
                   <RefreshCcw className="h-3 w-3" />
                   Tentar Novamente
