@@ -202,34 +202,62 @@ const ArticleEditor = () => {
         onShare={handleShare}
         onPreview={() => setPreviewOpen(true)}
         onShowGuidelines={() => setGuidelinesOpen(true)}
-        onShowSummary={() => setSummaryOpen(true)}
+        onShowSummary={() => {
+          // Função de navegação do sumário
+          const handleSummaryNavigate = (sectionId: string) => {
+            let targetTab: "pre-textual" | "textual" | "post-textual" = "pre-textual";
+
+            if (
+              sectionId === "article-introduction" ||
+              sectionId.startsWith("article-theoretical-") ||
+              sectionId === "article-methodology" ||
+              sectionId === "article-results" ||
+              sectionId === "article-conclusion"
+            ) {
+              targetTab = "textual";
+            } else if (
+              sectionId === "article-references" ||
+              sectionId === "article-appendices" ||
+              sectionId === "article-attachments"
+            ) {
+              targetTab = "post-textual";
+            } else {
+              targetTab = "pre-textual";
+            }
+
+            const scrollTo = () => {
+              const element = document.getElementById(sectionId);
+              console.log('🔍 Procurando elemento:', sectionId, element);
+              if (element) {
+                const headerOffset = 100;
+                const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+                window.scrollTo({
+                  top: elementPosition - headerOffset,
+                  behavior: "smooth",
+                });
+              } else {
+                console.warn('❌ Elemento não encontrado:', sectionId);
+              }
+            };
+
+            if (activeTab !== targetTab) {
+              setActiveTab(targetTab);
+              setTimeout(scrollTo, 300);
+            } else {
+              scrollTo();
+            }
+          };
+
+          // Criar um componente de sumário temporário para ser usado no sheet
+          setSummaryOpen(true);
+        }}
         showSummaryButton={true}
         importButton={<WorkImporter workType="article" onWorkParsed={handleArticleParsed} />}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      {/* Diálogo de Regras IFMS */}
-      <GuidelinesViewer
-        open={guidelinesOpen}
-        onOpenChange={setGuidelinesOpen}
-        workType="article"
-        universityId="ifms"
-      />
-
-      <div 
-        className="transition-all duration-300 pb-20 md:pb-0" 
-        style={{ marginLeft: sidebarCollapsed ? '0' : '0' }}
-      >
-        <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6" style={{ marginLeft: window.innerWidth >= 768 ? (sidebarCollapsed ? '4rem' : '16rem') : '0' }}>
-          <h1 className="text-xl md:text-2xl font-bold">
-            {content.title ? content.title.replace(/<[^>]*>/g, '').trim() : "Novo Artigo Científico"}
-          </h1>
-          <div className="flex items-center justify-end gap-2 md:gap-4">
-            <ValidationToggleButton />
-          </div>
-
-      {/* Sumário de navegação - Controlado pelo sidebar */}
+      {/* Sumário controlado pelo sidebar */}
       <ArticleSummary
         theoreticalTopicsCount={content.theoreticalTopics.length}
         open={summaryOpen}
@@ -257,6 +285,7 @@ const ArticleEditor = () => {
 
           const scrollTo = () => {
             const element = document.getElementById(sectionId);
+            console.log('🔍 Procurando elemento no editor:', sectionId, element);
             if (element) {
               const headerOffset = 100;
               const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
@@ -264,17 +293,39 @@ const ArticleEditor = () => {
                 top: elementPosition - headerOffset,
                 behavior: "smooth",
               });
+            } else {
+              console.warn('❌ Elemento não encontrado no editor:', sectionId);
             }
           };
 
           if (activeTab !== targetTab) {
             setActiveTab(targetTab);
-            setTimeout(scrollTo, 100);
+            setTimeout(scrollTo, 300);
           } else {
             scrollTo();
           }
         }}
       />
+
+      {/* Diálogo de Regras IFMS */}
+      <GuidelinesViewer
+        open={guidelinesOpen}
+        onOpenChange={setGuidelinesOpen}
+        workType="article"
+        universityId="ifms"
+      />
+
+      <div 
+        className="transition-all duration-300 pb-20 md:pb-0" 
+        style={{ marginLeft: sidebarCollapsed ? '0' : '0' }}
+      >
+        <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6" style={{ marginLeft: window.innerWidth >= 768 ? (sidebarCollapsed ? '4rem' : '16rem') : '0' }}>
+          <h1 className="text-xl md:text-2xl font-bold">
+            {content.title ? content.title.replace(/<[^>]*>/g, '').trim() : "Novo Artigo Científico"}
+          </h1>
+          <div className="flex items-center justify-end gap-2 md:gap-4">
+            <ValidationToggleButton />
+          </div>
 
         {/* Orientação Acadêmica */}
         <div className="mb-6">
@@ -285,8 +336,8 @@ const ArticleEditor = () => {
         </div>
 
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-          <DialogContent className="max-w-7xl h-[90vh] overflow-y-auto p-0">
-            <div className="relative h-full">
+          <DialogContent className="max-w-7xl h-[90vh] p-0">
+            <div className="relative h-full overflow-y-auto" id="preview-scroll-container">
               {/* Sumário também disponível no preview */}
               <div className="absolute top-4 left-4 z-50">
                 <ArticleSummary
@@ -294,9 +345,17 @@ const ArticleEditor = () => {
                   open={false}
                   onOpenChange={() => {}}
                   onNavigate={(sectionId) => {
+                    const container = document.getElementById('preview-scroll-container');
                     const element = document.getElementById(sectionId);
-                    if (element) {
-                      element.scrollIntoView({ behavior: "smooth", block: "start" });
+                    console.log('🔍 Procurando no preview:', sectionId, element, 'Container:', container);
+                    if (element && container) {
+                      const elementTop = element.offsetTop;
+                      container.scrollTo({
+                        top: elementTop - 100,
+                        behavior: "smooth",
+                      });
+                    } else {
+                      console.warn('❌ Elemento ou container não encontrado no preview:', sectionId);
                     }
                   }}
                 />
