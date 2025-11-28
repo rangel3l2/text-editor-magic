@@ -280,6 +280,13 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
     };
   }, [formatTimeout]);
 
+  // Função para tentar novamente após erro
+  const handleRetryValidation = () => {
+    if (content.title) {
+      validateTitle(content.title);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <LogoUpload 
@@ -315,6 +322,7 @@ const BannerHeaderSection = ({ content, handleChange }: BannerHeaderSectionProps
             validationResult={titleValidation}
             isValidating={isValidatingTitle}
             errorMessage={lastValidationError}
+            onRetry={handleRetryValidation}
           />
         </CardContent>
       </Card>

@@ -1,17 +1,20 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2, RefreshCcw, WifiOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface TitleValidationFeedbackProps {
   validationResult: any;
   isValidating: boolean;
   errorMessage?: string | null;
+  onRetry?: () => void;
 }
 
 const TitleValidationFeedback = ({ 
   validationResult, 
   isValidating,
-  errorMessage
+  errorMessage,
+  onRetry
 }: TitleValidationFeedbackProps) => {
   // Verifica se está no processo de validação
   if (isValidating) {
@@ -37,21 +40,40 @@ const TitleValidationFeedback = ({
     
     return (
       <Alert variant="destructive" className="bg-red-50">
-        {isCorsOrConnectionError ? (
-          <WifiOff className="h-4 w-4 text-red-600" />
-        ) : (
-          <AlertCircle className="h-4 w-4 text-red-600" />
-        )}
-        <AlertTitle>
-          {isCorsOrConnectionError 
-            ? "Erro de conexão com o orientador virtual" 
-            : "Erro na validação"}
-        </AlertTitle>
-        <AlertDescription>
-          {isCorsOrConnectionError 
-            ? "Não foi possível conectar ao orientador virtual. Você pode continuar trabalhando normalmente enquanto nossa equipe resolve o problema." 
-            : errorMessage}
-        </AlertDescription>
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 mt-0.5">
+            {isCorsOrConnectionError ? (
+              <WifiOff className="h-4 w-4 text-red-600" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-red-600" />
+            )}
+          </div>
+          <div className="flex-1">
+            <AlertTitle>
+              {isCorsOrConnectionError 
+                ? "Erro de conexão com o orientador virtual" 
+                : "Erro na validação"}
+            </AlertTitle>
+            <AlertDescription className="space-y-3">
+              <p>
+                {isCorsOrConnectionError 
+                  ? "Não foi possível conectar ao orientador virtual. Você pode continuar trabalhando normalmente enquanto nossa equipe resolve o problema." 
+                  : errorMessage}
+              </p>
+              {onRetry && (
+                <Button 
+                  onClick={onRetry}
+                  variant="outline" 
+                  size="sm"
+                  className="gap-2 bg-white hover:bg-red-50"
+                >
+                  <RefreshCcw className="h-3 w-3" />
+                  Tentar Novamente
+                </Button>
+              )}
+            </AlertDescription>
+          </div>
+        </div>
       </Alert>
     );
   }
