@@ -8,10 +8,16 @@ import { Badge } from '@/components/ui/badge';
 interface ArticleSummaryProps {
   theoreticalTopicsCount: number;
   onNavigate: (sectionId: string) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryProps) => {
-  const [open, setOpen] = useState(false);
+const ArticleSummary = ({ theoreticalTopicsCount, onNavigate, open: controlledOpen, onOpenChange }: ArticleSummaryProps) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Se open e onOpenChange forem fornecidos, usa estado controlado; caso contrário, usa estado interno
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -19,7 +25,7 @@ const ArticleSummary = ({ theoreticalTopicsCount, onNavigate }: ArticleSummaryPr
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 fixed right-6 top-20 z-30 shadow-lg hover:shadow-xl transition-shadow md:right-8 md:top-24 backdrop-blur-sm bg-background/95 border-2"
+          className="gap-2 shadow-lg hover:shadow-xl transition-shadow backdrop-blur-sm bg-background/95 border-2"
         >
           <List className="h-4 w-4" />
           <span className="hidden sm:inline">Sumário</span>
