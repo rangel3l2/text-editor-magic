@@ -291,6 +291,7 @@ export const useEditorValidation = (sectionName: string, isValidationEnabled: bo
     errorMessage,
     validateContent,
     scheduleValidation,
-    currentSection
+    currentSection,
+    retryValidation: validateContent // Adiciona função para retry
   };
 };

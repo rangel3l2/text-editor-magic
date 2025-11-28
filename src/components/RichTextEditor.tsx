@@ -55,7 +55,8 @@ const RichTextEditor = ({
     errorMessage,
     validateContent,
     scheduleValidation,
-    currentSection
+    currentSection,
+    retryValidation
   } = useEditorValidation(sectionName, isValidationVisible);
 
   const {
@@ -316,6 +317,7 @@ const RichTextEditor = ({
           isValidating={isValidating}
           errorMessage={errorMessage}
           currentSection={currentSection}
+          onRetry={() => retryValidation(contentToValidate)}
         />
       )}
     </div>
