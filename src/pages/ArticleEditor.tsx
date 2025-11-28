@@ -22,22 +22,53 @@ import ArticleSummary from "@/components/article/ArticleSummary";
 import EditorSidebar from "@/components/editor/EditorSidebar";
 import GuidelinesViewer from "@/components/editor/GuidelinesViewer";
 import { ManualValidationProvider } from "@/contexts/ManualValidationContext";
+import { useNavigate } from "react-router-dom";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
-  const { content, isLoading, loadError, handleChange, updateMultipleFields, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic } = useArticleContent();
+  const navigate = useNavigate();
+  const { content, isLoading, loadError, handleChange, updateMultipleFields, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic, workId } = useArticleContent();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"pre-textual" | "textual" | "post-textual">("pre-textual");
   const [guidelinesOpen, setGuidelinesOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
-  const handleArticleParsed = (parsedContent: Partial<ArticleContent>) => {
+  const handleArticleParsed = async (parsedContent: Partial<ArticleContent>) => {
     console.log('📥 [ArticleEditor] Artigo parseado recebido:', {
       hasTitle: !!parsedContent.title,
       hasAbstract: !!parsedContent.abstract,
-      fieldsCount: Object.keys(parsedContent).length
+      fieldsCount: Object.keys(parsedContent).length,
+      hasWorkId: !!workId,
     });
+
+    // Se ainda não existe um trabalho em progresso, criar um novo registro
+    if (!workId && user) {
+      try {
+        const plainTitle = (parsedContent.title || '').toString().replace(/<[^>]*>/g, '').trim() || 'Artigo importado';
+
+        const { data, error } = await supabase
+          .from('work_in_progress')
+          .insert({
+            user_id: user.id,
+            work_type: 'article',
+            title: plainTitle,
+            content: parsedContent as any,
+          })
+          .select('id')
+          .maybeSingle();
+
+        if (error || !data?.id) {
+          console.error('❌ Erro ao criar work_in_progress para artigo importado:', error);
+        } else {
+          console.log('✅ Trabalho criado para artigo importado:', data.id);
+          // Atualiza a URL para usar o ID, garantindo que o reload recarregue o trabalho salvo
+          navigate(`/article/${data.id}`, { replace: true });
+        }
+      } catch (err) {
+        console.error('❌ Exceção ao criar trabalho importado:', err);
+      }
+    }
 
     // Atualizar todos os campos de uma só vez para evitar múltiplos re-renders
     updateMultipleFields(parsedContent);
