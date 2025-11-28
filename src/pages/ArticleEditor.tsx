@@ -33,6 +33,12 @@ const ArticleEditor = () => {
   const [summaryOpen, setSummaryOpen] = useState(false);
 
   const handleArticleParsed = (parsedContent: Partial<ArticleContent>) => {
+    console.log('📥 [ArticleEditor] Artigo parseado recebido:', {
+      hasTitle: !!parsedContent.title,
+      hasAbstract: !!parsedContent.abstract,
+      fieldsCount: Object.keys(parsedContent).length
+    });
+
     // Atualizar todos os campos de uma só vez para evitar múltiplos re-renders
     updateMultipleFields(parsedContent);
 
