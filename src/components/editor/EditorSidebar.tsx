@@ -10,6 +10,7 @@ import {
   Upload,
   ChevronLeft,
   ChevronRight,
+  Palette,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -20,9 +21,11 @@ interface EditorSidebarProps {
   onShare: () => void;
   onPreview: () => void;
   onShowGuidelines: () => void;
+  onShowTemplates?: () => void;
   importButton?: React.ReactNode;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  showTemplatesButton?: boolean;
 }
 
 const EditorSidebar = ({
@@ -31,9 +34,11 @@ const EditorSidebar = ({
   onShare,
   onPreview,
   onShowGuidelines,
+  onShowTemplates,
   importButton,
   isCollapsed = false,
   onToggleCollapse,
+  showTemplatesButton = false,
 }: EditorSidebarProps) => {
   const [localCollapsed, setLocalCollapsed] = useState(isCollapsed);
 
@@ -48,6 +53,12 @@ const EditorSidebar = ({
       variant: "default" as const,
       highlighted: true,
     },
+    ...(showTemplatesButton ? [{
+      icon: Palette,
+      label: "Templates",
+      onClick: onShowTemplates || (() => {}),
+      variant: "outline" as const,
+    }] : []),
     {
       icon: FileDown,
       label: "Abrir no Overleaf",
