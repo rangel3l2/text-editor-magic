@@ -81,54 +81,7 @@ const RichTextEditor = ({
     }
   };
 
-  // Load cached validation only on mount if there's content
-  useEffect(() => {
-    if (!isValidationVisible) return;
-    
-    const cleaned = cleanHtmlTags(value || '').trim();
-    const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
-    const minLen = isTitle ? 5 : 20;
-    console.log(`🔵 RichTextEditor mount for "${sectionName}":`, {
-      hasValue: !!value,
-      cleanedLength: cleaned.length,
-      willValidate: cleaned.length > minLen,
-      isTitle,
-    });
-    
-    if (cleaned.length > minLen) {
-      validateContent(value);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  
-  // Validar automaticamente quando as validações voltarem a ser mostradas
-  useEffect(() => {
-    if (isValidationVisible && value) {
-      const cleaned = cleanHtmlTags(value || '').trim();
-      const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
-      const minLen = isTitle ? 5 : 20;
-      
-      if (cleaned.length > minLen) {
-        validateContent(value);
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isValidationVisible]);
-
-  // Validar conteúdo com debounce (usando Teoria do Andaime - aguarda o aluno terminar)
-  useEffect(() => {
-    if (!isValidationVisible) return; // Não validar se as validações estão escondidas
-    
-    if (shouldValidate && contentToValidate) {
-      const timeout = setTimeout(() => {
-        validateContent(contentToValidate);
-        setShouldValidate(false);
-        setContentToValidate('');
-      }, 5000); // 5 segundos para garantir que o usuário terminou de digitar
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [shouldValidate, contentToValidate, validateContent, isValidationVisible]);
+  // NÃO validar automaticamente no mount - apenas validação manual
 
   const { handleImageUpload } = ImageUploadHandler({
     onSuccess: (imageUrl) => {
@@ -155,25 +108,9 @@ const RichTextEditor = ({
   };
 
   const handleEditorChange = (data: string) => {
-    handleContentChange(data); // Remove verificação de limite - apenas calcula progresso
-    const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
-    const minLen = isTitle ? 5 : 20;
-    
-    console.log(`📝 [${sectionName}] Editor change:`, {
-      contentLength: data.trim().length,
-      minLen,
-      willScheduleValidation: data.trim().length > minLen
-    });
-    
-    // Sempre permite a mudança, sem bloquear
+    handleContentChange(data);
     onChange(data);
-    
-    // Agendar validação com debounce
-    if (data.trim().length > minLen) {
-      console.log(`⏰ [${sectionName}] Agendando validação...`);
-      setContentToValidate(data);
-      setShouldValidate(true);
-    }
+    // Não agenda mais validação automática durante a digitação
   };
 
   // Validar automaticamente apenas o primeiro campo quando o usuário sai dele
@@ -347,16 +284,29 @@ const RichTextEditor = ({
         </div>
       )}
 
-      {/* Botão para validar manualmente */}
-      {shouldShowButton && isValidationVisible && !isValidated && (
+      {/* Botão para validar manualmente com design atrativo */}
+      {shouldShowButton && isValidationVisible && !isValidated && value?.trim() && (
         <Button
           onClick={handleManualValidation}
           variant="outline"
-          className="w-full gap-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5"
-          disabled={isValidating || !value?.trim()}
+          size="lg"
+          className="w-full gap-3 border-2 border-primary/30 hover:border-primary hover:bg-primary/5 transition-all duration-300 group relative overflow-hidden"
+          disabled={isValidating}
         >
-          <Sparkles className="h-4 w-4" />
-          {isValidating ? 'Validando...' : 'Deseja validar?'}
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="relative flex items-center gap-3">
+            <div className="p-2 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300">
+              <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+            </div>
+            <div className="flex flex-col items-start text-left">
+              <span className="font-semibold text-sm">
+                {isValidating ? 'Orientando...' : 'Precisa de orientação?'}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Clique para receber feedback sobre este campo
+              </span>
+            </div>
+          </div>
         </Button>
       )}
 
