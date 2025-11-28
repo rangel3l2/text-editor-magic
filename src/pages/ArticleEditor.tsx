@@ -220,7 +220,7 @@ const ArticleEditor = () => {
         <div className="container mx-auto p-6 space-y-6">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-2xl font-bold">
-              {content.title || "Novo Artigo Científico"}
+              {content.title ? content.title.replace(/<[^>]*>/g, '').trim() : "Novo Artigo Científico"}
             </h1>
             <ValidationToggleButton />
           </div>
