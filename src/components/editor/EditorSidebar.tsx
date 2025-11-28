@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Palette,
+  List,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -22,10 +23,12 @@ interface EditorSidebarProps {
   onPreview: () => void;
   onShowGuidelines: () => void;
   onShowTemplates?: () => void;
+  onShowSummary?: () => void;
   importButton?: React.ReactNode;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
   showTemplatesButton?: boolean;
+  showSummaryButton?: boolean;
 }
 
 const EditorSidebar = ({
@@ -35,10 +38,12 @@ const EditorSidebar = ({
   onPreview,
   onShowGuidelines,
   onShowTemplates,
+  onShowSummary,
   importButton,
   isCollapsed = false,
   onToggleCollapse,
   showTemplatesButton = false,
+  showSummaryButton = false,
 }: EditorSidebarProps) => {
   const [localCollapsed, setLocalCollapsed] = useState(isCollapsed);
 
@@ -53,6 +58,13 @@ const EditorSidebar = ({
       variant: "default" as const,
       highlighted: true,
     },
+    ...(showSummaryButton ? [{
+      icon: List,
+      label: "Sumário",
+      onClick: onShowSummary || (() => {}),
+      variant: "secondary" as const,
+      priority: true,
+    }] : []),
     ...(showTemplatesButton ? [{
       icon: Palette,
       label: "Templates",
@@ -125,7 +137,8 @@ const EditorSidebar = ({
                 className={cn(
                   "w-full justify-start gap-3 transition-all",
                   collapsed ? "px-0 justify-center" : "",
-                  item.highlighted && "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
+                  item.highlighted && "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg",
+                  (item as any).priority && "bg-secondary text-secondary-foreground hover:bg-secondary/90 font-semibold"
                 )}
               >
                 <Icon className={cn("h-5 w-5", item.highlighted && "animate-pulse")} />
@@ -181,7 +194,7 @@ const EditorSidebar = ({
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 safe-area-bottom">
-        <div className="grid grid-cols-4 gap-1 p-2">
+        <div className={cn("grid gap-1 p-2", showSummaryButton ? "grid-cols-5" : "grid-cols-4")}>
           <Button
             variant="ghost"
             onClick={onPreview}
@@ -190,6 +203,16 @@ const EditorSidebar = ({
             <Eye className="h-5 w-5" />
             <span className="text-xs">Ver</span>
           </Button>
+          {showSummaryButton && (
+            <Button
+              variant="ghost"
+              onClick={onShowSummary || (() => {})}
+              className="flex flex-col items-center gap-1 h-auto py-2 bg-secondary/10 text-secondary-foreground"
+            >
+              <List className="h-5 w-5" />
+              <span className="text-xs">Sumário</span>
+            </Button>
+          )}
           <Button
             variant="ghost"
             onClick={onOverleaf}
