@@ -369,5 +369,6 @@ export const useArticleContent = () => {
     updateTheoreticalTopic,
     removeTheoreticalTopic,
     reorderTheoreticalTopics,
+    workId: id || null,
   };
 };
