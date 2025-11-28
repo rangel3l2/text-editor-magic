@@ -8,6 +8,9 @@ import { useEditorValidation } from './editor/useEditorValidation';
 import { useEditorProgress } from './editor/useEditorProgress';
 import { cleanHtmlTags } from '@/utils/latexProcessor';
 import { useValidationContext } from '@/contexts/ValidationContext';
+import { useManualValidationContext } from '@/contexts/ManualValidationContext';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, Sparkles } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -17,6 +20,7 @@ import {
   ContextMenuLabel,
 } from '@/components/ui/context-menu';
 import { FileImage, BarChart3, Table2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface RichTextEditorProps {
   value: string;
@@ -48,6 +52,7 @@ const RichTextEditor = ({
   const [shouldValidate, setShouldValidate] = useState(false);
   const [contentToValidate, setContentToValidate] = useState('');
   const { isValidationVisible } = useValidationContext();
+  const manualValidation = useManualValidationContext();
 
   const {
     validationResult,
@@ -64,6 +69,17 @@ const RichTextEditor = ({
     currentLines,
     handleContentChange
   } = useEditorProgress(maxLines, minLines);
+
+  const isValidated = sectionName ? manualValidation.isValidated(sectionName) : false;
+  const shouldShowButton = sectionName ? manualValidation.shouldShowValidationButton(sectionName) : false;
+
+  // Função para validar manualmente
+  const handleManualValidation = async () => {
+    if (value && sectionName) {
+      await validateContent(value);
+      manualValidation.markFieldValidated(sectionName);
+    }
+  };
 
   // Load cached validation only on mount if there's content
   useEffect(() => {
@@ -160,15 +176,27 @@ const RichTextEditor = ({
     }
   };
 
-  // Validar quando o usuário sai do campo (blur)
+  // Validar automaticamente apenas o primeiro campo quando o usuário sai dele
   const handleBlur = () => {
     setIsFocused(false);
-    if (!isValidationVisible) return; // Não validar se as validações estão escondidas
+    if (!isValidationVisible || !sectionName) return;
     
-    const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
-    const minLen = isTitle ? 5 : 50;
-    if (value && value.trim().length > minLen) {
-      validateContent(value);
+    // Se é o primeiro campo e deve auto-validar
+    if (manualValidation.shouldAutoValidate(sectionName)) {
+      const isTitle = (sectionName || '').toLowerCase().includes('título') || (sectionName || '').toLowerCase().includes('titulo');
+      const minLen = isTitle ? 5 : 50;
+      if (value && value.trim().length > minLen) {
+        validateContent(value);
+        manualValidation.markFieldValidated(sectionName);
+      }
+    }
+  };
+
+  // Marcar campo como focado
+  const handleFocus = () => {
+    setIsFocused(true);
+    if (sectionName) {
+      manualValidation.markFieldFocused(sectionName);
     }
   };
 
@@ -190,7 +218,7 @@ const RichTextEditor = ({
         onError={(error) => {
           console.error('CKEditor error:', error);
         }}
-        onFocus={() => setIsFocused(true)}
+        onFocus={handleFocus}
         onBlur={handleBlur}
         config={editorConfig}
           />
@@ -309,6 +337,27 @@ const RichTextEditor = ({
           maxLines={maxLines}
           minLines={minLines}
         />
+      )}
+
+      {/* Indicador de campo validado */}
+      {isValidated && isValidationVisible && (
+        <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-md border border-green-200 dark:border-green-800">
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Campo validado</span>
+        </div>
+      )}
+
+      {/* Botão para validar manualmente */}
+      {shouldShowButton && isValidationVisible && !isValidated && (
+        <Button
+          onClick={handleManualValidation}
+          variant="outline"
+          className="w-full gap-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+          disabled={isValidating || !value?.trim()}
+        >
+          <Sparkles className="h-4 w-4" />
+          {isValidating ? 'Validando...' : 'Deseja validar?'}
+        </Button>
       )}
 
       {isValidationVisible && (
