@@ -101,8 +101,21 @@ const buildBlocks = (content: ArticleContent) => {
   const introHtml = ensureParagraphs(content.introduction);
   const introTemp = document.createElement('div');
   introTemp.innerHTML = sanitize(introHtml);
-  introTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => {
-    blocks.push({ html: (el as HTMLElement).outerHTML });
+  
+  const introTitleVariations = ['1 INTRODUÇÃO', 'INTRODUÇÃO', '1 Introdução', 'Introdução'];
+  
+  introTemp.querySelectorAll('p, ul, ol, table, blockquote, div, h1, h2, h3, h4, h5, h6').forEach(el => {
+    const element = el as HTMLElement;
+    const textContent = element.textContent?.trim() || '';
+    
+    // Não adiciona se o elemento contém apenas o título
+    const isDuplicateTitle = introTitleVariations.some(variant => 
+      textContent === variant || textContent === variant.trim()
+    );
+    
+    if (!isDuplicateTitle) {
+      blocks.push({ html: element.outerHTML });
+    }
   });
   blocks.push({ html: '<!-- INTRO_END -->', mark: 'INTRO_END' });
 
@@ -111,8 +124,27 @@ const buildBlocks = (content: ArticleContent) => {
     blocks.push({ html: `<h2 id="article-theoretical-${index}" class="section-title">${topic.order} ${topic.title.toUpperCase()}</h2>` });
     const topicTemp = document.createElement('div');
     topicTemp.innerHTML = sanitize(ensureParagraphs(topic.content));
-    topicTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => {
-      blocks.push({ html: (el as HTMLElement).outerHTML });
+    
+    // Remove títulos duplicados do conteúdo
+    const titleVariations = [
+      `${topic.order} ${topic.title.toUpperCase()}`,
+      `${topic.order} ${topic.title}`,
+      topic.title.toUpperCase(),
+      topic.title
+    ];
+    
+    topicTemp.querySelectorAll('p, ul, ol, table, blockquote, div, h1, h2, h3, h4, h5, h6').forEach(el => {
+      const element = el as HTMLElement;
+      const textContent = element.textContent?.trim() || '';
+      
+      // Não adiciona se o elemento contém apenas o título
+      const isDuplicateTitle = titleVariations.some(variant => 
+        textContent === variant || textContent === variant.trim()
+      );
+      
+      if (!isDuplicateTitle) {
+        blocks.push({ html: element.outerHTML });
+      }
     });
   });
 
@@ -120,7 +152,26 @@ const buildBlocks = (content: ArticleContent) => {
   blocks.push({ html: `<h2 id="article-methodology" class="section-title">${2 + content.theoreticalTopics.length} METODOLOGIA</h2>` });
   const methTemp = document.createElement('div');
   methTemp.innerHTML = sanitize(ensureParagraphs(content.methodology));
-  methTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => blocks.push({ html: (el as HTMLElement).outerHTML }));
+  
+  const methTitleVariations = [
+    `${2 + content.theoreticalTopics.length} METODOLOGIA`,
+    'METODOLOGIA',
+    `${2 + content.theoreticalTopics.length} Metodologia`,
+    'Metodologia'
+  ];
+  
+  methTemp.querySelectorAll('p, ul, ol, table, blockquote, div, h1, h2, h3, h4, h5, h6').forEach(el => {
+    const element = el as HTMLElement;
+    const textContent = element.textContent?.trim() || '';
+    
+    const isDuplicateTitle = methTitleVariations.some(variant => 
+      textContent === variant || textContent === variant.trim()
+    );
+    
+    if (!isDuplicateTitle) {
+      blocks.push({ html: element.outerHTML });
+    }
+  });
 
   // Imagens da metodologia (se existirem)
   if (content.images && content.images.length > 0) {
@@ -140,7 +191,28 @@ const buildBlocks = (content: ArticleContent) => {
   blocks.push({ html: `<h2 id="article-results" class="section-title">${2 + content.theoreticalTopics.length + 1} RESULTADOS E DISCUSSÃO</h2>` });
   const resTemp = document.createElement('div');
   resTemp.innerHTML = sanitize(ensureParagraphs(content.results));
-  resTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => blocks.push({ html: (el as HTMLElement).outerHTML }));
+  
+  const resTitleVariations = [
+    `${2 + content.theoreticalTopics.length + 1} RESULTADOS E DISCUSSÃO`,
+    'RESULTADOS E DISCUSSÃO',
+    `${2 + content.theoreticalTopics.length + 1} Resultados e Discussão`,
+    'Resultados e Discussão',
+    'RESULTADOS',
+    'Resultados'
+  ];
+  
+  resTemp.querySelectorAll('p, ul, ol, table, blockquote, div, h1, h2, h3, h4, h5, h6').forEach(el => {
+    const element = el as HTMLElement;
+    const textContent = element.textContent?.trim() || '';
+    
+    const isDuplicateTitle = resTitleVariations.some(variant => 
+      textContent === variant || textContent === variant.trim()
+    );
+    
+    if (!isDuplicateTitle) {
+      blocks.push({ html: element.outerHTML });
+    }
+  });
 
   // Imagens dos resultados (se existirem)
   if (content.images && content.images.length > 0) {
@@ -160,7 +232,21 @@ const buildBlocks = (content: ArticleContent) => {
   blocks.push({ html: `<h2 id="article-conclusion" class="section-title">CONCLUSÃO</h2>` });
   const conclTemp = document.createElement('div');
   conclTemp.innerHTML = sanitize(ensureParagraphs(content.conclusion));
-  conclTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => blocks.push({ html: (el as HTMLElement).outerHTML }));
+  
+  const conclTitleVariations = ['CONCLUSÃO', 'Conclusão', 'CONCLUSÕES', 'Conclusões'];
+  
+  conclTemp.querySelectorAll('p, ul, ol, table, blockquote, div, h1, h2, h3, h4, h5, h6').forEach(el => {
+    const element = el as HTMLElement;
+    const textContent = element.textContent?.trim() || '';
+    
+    const isDuplicateTitle = conclTitleVariations.some(variant => 
+      textContent === variant || textContent === variant.trim()
+    );
+    
+    if (!isDuplicateTitle) {
+      blocks.push({ html: element.outerHTML });
+    }
+  });
 
   // Imagens da conclusão (se existirem)
   if (content.images && content.images.length > 0) {
@@ -183,10 +269,21 @@ const buildBlocks = (content: ArticleContent) => {
   blocks.push({ html: `<div id="article-references" class="references"><h2 class="section-title unnumbered-section">REFERÊNCIAS</h2></div>` });
   const refTemp = document.createElement('div');
   refTemp.innerHTML = sanitize(ensureParagraphs(content.references));
-  refTemp.querySelectorAll('p, ul, ol, table, blockquote, div').forEach(el => {
+  
+  const refTitleVariations = ['REFERÊNCIAS', 'Referências', 'REFERÊNCIA', 'Referência'];
+  
+  refTemp.querySelectorAll('p, ul, ol, table, blockquote, div, h1, h2, h3, h4, h5, h6').forEach(el => {
     const element = el as HTMLElement;
-    element.classList.add('reference-item');
-    blocks.push({ html: element.outerHTML });
+    const textContent = element.textContent?.trim() || '';
+    
+    const isDuplicateTitle = refTitleVariations.some(variant => 
+      textContent === variant || textContent === variant.trim()
+    );
+    
+    if (!isDuplicateTitle) {
+      element.classList.add('reference-item');
+      blocks.push({ html: element.outerHTML });
+    }
   });
 
   return blocks;
