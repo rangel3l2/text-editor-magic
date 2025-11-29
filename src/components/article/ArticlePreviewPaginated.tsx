@@ -195,6 +195,7 @@ const buildBlocks = (content: ArticleContent) => {
       .forEach((img, index) => {
         blocks.push({
           html: `<figure class="mb-4 text-center">
+            <img src="${img.url}" alt="${sanitize(img.caption || '')}" class="max-w-full mx-auto mb-2" style="max-height: 400px; object-fit: contain;" />
             <div class="text-justify hyphens-auto"><strong>${(img.type || 'Figura').toUpperCase()} ${index + 1}:</strong> ${sanitize(img.caption || '')}</div>
             <div class="text-[10pt] italic text-justify hyphens-auto">${sanitize(img.source || '')}</div>
           </figure>`
@@ -237,6 +238,7 @@ const buildBlocks = (content: ArticleContent) => {
       .forEach((img, index) => {
         blocks.push({
           html: `<figure class="mb-4 text-center">
+            <img src="${img.url}" alt="${sanitize(img.caption || '')}" class="max-w-full mx-auto mb-2" style="max-height: 400px; object-fit: contain;" />
             <div class="text-justify hyphens-auto"><strong>${(img.type || 'Figura').toUpperCase()} ${index + 1}:</strong> ${sanitize(img.caption || '')}</div>
             <div class="text-[10pt] italic text-justify hyphens-auto">${sanitize(img.source || '')}</div>
           </figure>`
@@ -271,6 +273,7 @@ const buildBlocks = (content: ArticleContent) => {
       .forEach((img, index) => {
         blocks.push({
           html: `<figure class="mb-4 text-center">
+            <img src="${img.url}" alt="${sanitize(img.caption || '')}" class="max-w-full mx-auto mb-2" style="max-height: 400px; object-fit: contain;" />
             <div class="text-justify hyphens-auto"><strong>${(img.type || 'Figura').toUpperCase()} ${index + 1}:</strong> ${sanitize(img.caption || '')}</div>
             <div class="text-[10pt] italic text-justify hyphens-auto">${sanitize(img.source || '')}</div>
           </figure>`

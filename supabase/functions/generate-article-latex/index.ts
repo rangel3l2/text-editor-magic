@@ -72,6 +72,8 @@ let latex = `\\documentclass[12pt,a4paper]{article}
 \\usepackage{setspace}
 \\usepackage{titlesec}
 \\usepackage{enumitem}
+\\usepackage{graphicx}
+\\usepackage{float}
 
 % Configurações ABNT
 \\geometry{
@@ -175,12 +177,27 @@ ${cleanLatex(content.introduction)}
   // Metodologia
   const methSection = 2 + (content.theoreticalTopics?.length || 0);
   latex += `\\section{METODOLOGIA}\n${cleanLatex(content.methodology)}\n\n`;
+  
+  // Imagens da metodologia
+  if (content.images && content.images.length > 0) {
+    latex += generateImageLatex(content.images, 'methodology');
+  }
 
   // Resultados
   latex += `\\section{RESULTADOS E DISCUSSÃO}\n${cleanLatex(content.results)}\n\n`;
+  
+  // Imagens dos resultados
+  if (content.images && content.images.length > 0) {
+    latex += generateImageLatex(content.images, 'results');
+  }
 
   // Conclusão
   latex += `\\section{CONCLUSÃO}\n${cleanLatex(content.conclusion)}\n\n`;
+  
+  // Imagens da conclusão
+  if (content.images && content.images.length > 0) {
+    latex += generateImageLatex(content.images, 'conclusion');
+  }
 
   // Referências
   latex += `\\clearpage
@@ -195,6 +212,28 @@ ${formatReferences(content.references)}
 \\end{document}`;
 
   return latex;
+};
+
+// Função para gerar LaTeX de imagens formatadas ABNT
+const generateImageLatex = (images: any[], section: string): string => {
+  const sectionImages = images.filter(img => img.section === section);
+  if (sectionImages.length === 0) return '';
+  
+  return sectionImages.map((img, idx) => {
+    const figureType = (img.type || 'figura').toUpperCase();
+    const caption = img.caption || `${figureType} ${idx + 1}`;
+    const source = img.source || 'Fonte: Documento original';
+    
+    return `
+\\begin{figure}[H]
+  \\centering
+  \\includegraphics[width=0.8\\textwidth]{${img.url}}
+  \\caption{${caption}}
+  \\label{fig:${section}-${idx + 1}}
+  \\textit{${source}}
+\\end{figure}
+`;
+  }).join('\n');
 };
 
 serve(async (req) => {
