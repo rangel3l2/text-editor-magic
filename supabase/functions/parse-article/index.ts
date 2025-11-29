@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as pdfjsLib from "npm:pdfjs-dist@4.0.379";
 import mammoth from "npm:mammoth@1.8.0";
+import JSZip from "npm:jszip@3.10.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -125,21 +126,67 @@ async function parsePDF(buffer: ArrayBuffer): Promise<string> {
 async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string; images: ExtractedImage[] }> {
   const extractedImages: ExtractedImage[] = [];
   
-  console.log('🔍 Iniciando conversão do DOCX com mammoth...');
+  console.log('🔍 Iniciando extração DOCX como ZIP...');
   console.log(`📦 Tamanho do buffer: ${buffer.byteLength} bytes`);
   
-  const uint8Array = new Uint8Array(buffer);
+  // 1. Carregar DOCX como ZIP usando JSZip
+  const zip = await JSZip.loadAsync(buffer);
+  console.log('✅ DOCX carregado como ZIP');
   
-  console.log('🔄 Chamando mammoth.convertToHtml...');
-  const result = await mammoth.convertToHtml({ buffer: uint8Array });
-  console.log(`✅ Conversão mammoth concluída. HTML gerado: ${result.value.length} caracteres`);
+  // 2. Extrair imagens de word/media/
+  const mediaFiles = Object.keys(zip.files).filter(path => path.startsWith('word/media/'));
+  console.log(`📸 Encontrados ${mediaFiles.length} arquivos em word/media/`);
   
-  if (result.messages && result.messages.length > 0) {
-    console.log('⚠️ Mensagens do mammoth:');
-    result.messages.forEach((msg: any) => {
-      console.log(`   - ${msg.type}: ${msg.message}`);
-    });
+  for (let i = 0; i < mediaFiles.length; i++) {
+    const filePath = mediaFiles[i];
+    const file = zip.files[filePath];
+    
+    if (file.dir) continue; // Pular diretórios
+    
+    console.log(`📷 Processando imagem ${i + 1}/${mediaFiles.length}: ${filePath}`);
+    
+    try {
+      // Extrair como ArrayBuffer (mantém bytes originais)
+      const imageBuffer = await file.async('arraybuffer');
+      
+      // Detectar extensão e tipo MIME
+      const fileName = filePath.split('/').pop() || '';
+      const ext = fileName.split('.').pop()?.toLowerCase() || 'png';
+      const mimeTypes: Record<string, string> = {
+        'png': 'image/png',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'gif': 'image/gif',
+        'bmp': 'image/bmp',
+        'webp': 'image/webp'
+      };
+      const mimeType = mimeTypes[ext] || 'image/png';
+      
+      // Converter para base64 SEM modificar bytes
+      const uint8 = new Uint8Array(imageBuffer);
+      const base64 = btoa(String.fromCharCode(...uint8));
+      
+      console.log(`   ✅ Imagem extraída: ${fileName} (${imageBuffer.byteLength} bytes, ${mimeType})`);
+      console.log(`   📏 Base64 length: ${base64.length} caracteres`);
+      
+      extractedImages.push({
+        id: fileName.replace(/\.[^.]+$/, ''), // Remove extensão
+        base64: base64,
+        mimeType: mimeType,
+        position: i,
+        contextText: `Imagem ${i + 1} do documento`
+      });
+    } catch (error) {
+      console.error(`❌ Erro ao processar ${filePath}:`, error);
+    }
   }
+  
+  console.log(`📊 Total de ${extractedImages.length} imagens extraídas com sucesso`);
+  
+  // 3. Extrair texto usando mammoth
+  console.log('📄 Extraindo texto com mammoth...');
+  const uint8Array = new Uint8Array(buffer);
+  const result = await mammoth.convertToHtml({ buffer: uint8Array });
   
   // Converter HTML para texto simples
   const textOnly = result.value
@@ -147,7 +194,7 @@ async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string;
     .replace(/\s+/g, ' ')
     .trim();
   
-  console.log('📸 Total de imagens extraídas do DOCX:', extractedImages.length);
+  console.log(`✅ Texto extraído: ${textOnly.length} caracteres`);
   
   return { text: textOnly, images: extractedImages };
 }
@@ -182,11 +229,16 @@ async function uploadToImgBB(base64: string, filename: string): Promise<string |
     const data = await response.json();
     console.log('📦 Dados retornados do ImgBB:', JSON.stringify(data).substring(0, 200));
     
-    if (data.success && data.data && data.data.image && data.data.image.url) {
-      console.log('✅ Upload bem-sucedido! URL da imagem:', data.data.image.url);
-      return data.data.image.url;
+    // Conforme documentação: data.data.url OU data.image.url
+    if (data.success && data.data && data.data.url) {
+      console.log('✅ Upload bem-sucedido! URL da imagem:', data.data.url);
+      return data.data.url;
+    } else if (data.image && data.image.url) {
+      console.log('✅ Upload bem-sucedido! URL da imagem:', data.image.url);
+      return data.image.url;
     } else {
       console.error('❌ ImgBB retornou sucesso=false ou sem URL da imagem');
+      console.error('Estrutura completa:', JSON.stringify(data));
       return null;
     }
     
