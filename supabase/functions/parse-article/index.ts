@@ -216,11 +216,11 @@ async function uploadToImgBB(base64: string, filename: string): Promise<string |
     const data = await response.json();
     console.log('📦 Dados retornados do ImgBB:', JSON.stringify(data).substring(0, 200));
     
-    if (data.success && data.data && data.data.url) {
-      console.log('✅ Upload bem-sucedido! URL:', data.data.url);
-      return data.data.url;
+    if (data.success && data.data && data.data.image && data.data.image.url) {
+      console.log('✅ Upload bem-sucedido! URL da imagem:', data.data.image.url);
+      return data.data.image.url;
     } else {
-      console.error('❌ ImgBB retornou sucesso=false ou sem URL');
+      console.error('❌ ImgBB retornou sucesso=false ou sem URL da imagem');
       return null;
     }
     
