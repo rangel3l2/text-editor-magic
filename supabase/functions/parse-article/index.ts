@@ -450,10 +450,35 @@ function extractStandardIFMSSections(text: string) {
     return extracted;
   };
 
-  // Extrair título (em MAIÚSCULAS no início)
-  const titleMatch = cleanText.match(/(?:Campus\s+[^\n]+\s+)?([A-ZÀÂÃÉÊÍÓÔÕÚÇ\s]{15,150}?)(?:\s+[A-Z][a-z]|\s+RESUMO)/);
-  const title = titleMatch ? titleMatch[1].trim() : '';
-  console.log('📌 Título extraído:', title ? `"${title.substring(0, 50)}..."` : 'VAZIO');
+  // Extrair título e subtítulo seguindo padrão ABNT
+  // Padrão ABNT: "TÍTULO PRINCIPAL: subtítulo complementar"
+  // Título principal: em CAIXA ALTA
+  // Subtítulo: após dois pontos, pode estar em caixa mista
+  console.log('\n📖 Extraindo TÍTULO e SUBTÍTULO (padrão ABNT)...');
+  
+  // Buscar título completo (pode ter ou não subtítulo)
+  const fullTitleMatch = cleanText.match(/(?:Campus\s+[^\n]+\s+)?([A-ZÀÂÃÉÊÍÓÔÕÚÇ\s:]{15,200}?)(?:\s+[A-Z][a-z]|\s+RESUMO)/);
+  const fullTitle = fullTitleMatch ? fullTitleMatch[1].trim() : '';
+  
+  let title = '';
+  let subtitle = '';
+  
+  if (fullTitle) {
+    // Verificar se há dois pontos separando título e subtítulo
+    if (fullTitle.includes(':')) {
+      const parts = fullTitle.split(':');
+      title = parts[0].trim();
+      subtitle = parts.slice(1).join(':').trim(); // Caso tenha mais de um ":"
+      console.log('📌 Título principal extraído:', `"${title}"`);
+      console.log('📌 Subtítulo extraído:', `"${subtitle}"`);
+    } else {
+      // Sem subtítulo, apenas título
+      title = fullTitle;
+      console.log('📌 Título extraído (sem subtítulo):', `"${title.substring(0, 50)}..."`);
+    }
+  } else {
+    console.log('⚠️ Título não encontrado');
+  }
 
   // Extrair autores (nomes com ¹ ou ²)
   const authorsMatch = cleanText.match(/([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²]?)(?:\s*,?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+[¹²]?)*/);
@@ -553,6 +578,7 @@ function extractStandardIFMSSections(text: string) {
 
   return {
     title: cleanHtml(title),
+    subtitle: cleanHtml(subtitle),
     authors: cleanHtml(authors),
     advisors: cleanHtml(advisors),
     abstract: cleanHtml(abstract),
@@ -640,8 +666,20 @@ function extractArticleSections(text: string) {
     return afterStart.slice(0, endMatch).replace(start, '').trim();
   };
 
-  const titleMatch = cleanText.match(/(?:Campus\s+[^\n]+\s+)([A-ZÀÂÃÉÊÍÓÔÕÚÇ\s]{20,150}?)(?:\s+[A-Z][a-z]|\s+RESUMO)/);
-  const title = titleMatch ? titleMatch[1].trim() : '';
+  // Extrair título e subtítulo seguindo padrão ABNT
+  const fullTitleMatch = cleanText.match(/(?:Campus\s+[^\n]+\s+)?([A-ZÀÂÃÉÊÍÓÔÕÚÇ\s:]{15,200}?)(?:\s+[A-Z][a-z]|\s+RESUMO)/);
+  const fullTitle = fullTitleMatch ? fullTitleMatch[1].trim() : '';
+  
+  let title = '';
+  let subtitle = '';
+  
+  if (fullTitle && fullTitle.includes(':')) {
+    const parts = fullTitle.split(':');
+    title = parts[0].trim();
+    subtitle = parts.slice(1).join(':').trim();
+  } else {
+    title = fullTitle;
+  }
 
   const authorsMatch = cleanText.match(/([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*¹?)(?:\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+²?)?/);
   const authors = authorsMatch ? authorsMatch[0].trim() : '';
@@ -672,6 +710,7 @@ function extractArticleSections(text: string) {
 
   return {
     title: cleanHtml(title),
+    subtitle: cleanHtml(subtitle),
     authors: cleanHtml(authors),
     advisors: cleanHtml(advisors),
     abstract: cleanHtml(abstract),
