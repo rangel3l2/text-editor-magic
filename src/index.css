@@ -282,7 +282,7 @@
   text-align: justify !important;
   word-spacing: normal !important;
   hyphens: auto !important;
-  margin-bottom: 1em !important;
+  margin-bottom: 0 !important;
   text-indent: 1.25cm !important;
   page-break-inside: avoid;
 }

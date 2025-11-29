@@ -33,8 +33,8 @@ const generateArticleLatex = (content: any): string => {
       .replace(/[%$#_{}]/g, (match) => `\\${match}`)
       .replace(/~/g, '\\textasciitilde{}')
       .replace(/\^/g, '\\textasciicircum{}')
-      // Remove quebras de linha múltiplas (mais de 2)
-      .replace(/\n\s*\n\s*\n+/g, '\n\n')
+      // Normalizar quebras de linha: max 2 consecutivas (ABNT não usa espaços extras)
+      .replace(/\n{3,}/g, '\n\n')
       .trim();
   };
   

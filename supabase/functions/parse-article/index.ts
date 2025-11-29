@@ -547,16 +547,27 @@ function extractArticleSections(text: string) {
 
 function cleanHtml(text: string): string {
   if (!text) return '';
-  return text
-    .replace(/\n/g, '<br>')
-    .replace(/\r/g, '')
-    .replace(/\t/g, ' ')
-    .replace(/  +/g, ' ')
-    .trim()
-    .split('<br>')
-    .filter(line => line.trim())
-    .map(line => `<p>${line.trim()}</p>`)
-    .join('');
+  
+  // Normalizar quebras de linha
+  let normalized = text
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\t/g, ' ');
+  
+  // Dividir em parágrafos usando quebras duplas
+  const paragraphs = normalized
+    .split(/\n\n+/)  // Quebras duplas ou mais = novos parágrafos
+    .map(para => {
+      // Dentro de cada parágrafo, substituir quebras simples por espaços
+      return para
+        .replace(/\n/g, ' ')  // Quebra simples vira espaço
+        .replace(/\s+/g, ' ')  // Múltiplos espaços viram um
+        .trim();
+    })
+    .filter(para => para.length > 0);  // Remove parágrafos vazios
+  
+  // Converter para HTML com tags <p>
+  return paragraphs.map(para => `<p>${para}</p>`).join('');
 }
 
 const INTRO_HEADING_PATTERNS = [
