@@ -245,6 +245,7 @@ async function uploadToImgBB(base64: string, filename: string): Promise<string |
   }
 }
 
+// Extração híbrida: código para seções padrão, IA para tópicos teóricos variáveis
 async function extractArticleSectionsWithAI(text: string, images?: ExtractedImage[]) {
   if (!GEMINI_API_KEY) {
     console.error('GEMINI_API_KEY não configurada, usando extração regex');
@@ -252,6 +253,41 @@ async function extractArticleSectionsWithAI(text: string, images?: ExtractedImag
   }
 
   try {
+    console.log('🔍 ESTÁGIO 1: Extraindo seções padrão IFMS com código...');
+    
+    // ESTÁGIO 1: Extrair seções padrão com regex (rápido e preciso)
+    const standardSections = extractStandardIFMSSections(text);
+    
+    console.log('✅ Seções padrão extraídas:', {
+      title: standardSections.title ? 'OK' : 'VAZIO',
+      authors: standardSections.authors ? 'OK' : 'VAZIO',
+      abstract: standardSections.abstract ? 'OK' : 'VAZIO',
+      keywords: standardSections.keywords ? 'OK' : 'VAZIO',
+      introduction: standardSections.introduction ? 'OK' : 'VAZIO',
+      methodology: standardSections.methodology ? 'OK' : 'VAZIO',
+      results: standardSections.results ? 'OK' : 'VAZIO',
+      conclusion: standardSections.conclusion ? 'OK' : 'VAZIO',
+      references: standardSections.references ? 'OK' : 'VAZIO',
+    });
+
+    console.log('🤖 ESTÁGIO 2: Identificando tópicos teóricos para IA...');
+    
+    // ESTÁGIO 2: Identificar apenas os tópicos teóricos (seções entre Introdução e Metodologia)
+    const theoreticalSectionsText = extractTheoreticalSectionsText(text);
+    
+    if (!theoreticalSectionsText) {
+      console.log('⚠️ Nenhum tópico teórico encontrado entre Introdução e Metodologia');
+      return {
+        ...standardSections,
+        theoreticalTopics: [],
+        images: [],
+        institution: 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul',
+      };
+    }
+
+    console.log('📝 Texto dos tópicos teóricos (primeiros 200 chars):', theoreticalSectionsText.substring(0, 200));
+
+    // Preparar prompt de imagens se necessário
     let imagePromptPart = '';
     if (images && images.length > 0) {
       const imagesWithUrl = images.filter(img => img.url);
@@ -267,59 +303,29 @@ IMPORTANTE: Para cada imagem, identifique a seção onde deve aparecer (introduc
       }
     }
 
-    const prompt = `Analise este artigo científico brasileiro padrão IFMS e EXTRAIA os campos solicitados em JSON **VÁLIDO**.${imagePromptPart}
+    // Prompt focado apenas nos tópicos teóricos
+    const prompt = `Analise APENAS os tópicos teóricos deste artigo IFMS e extraia em JSON.${imagePromptPart}
 
-REGRAS CRÍTICAS - ESTRUTURA IFMS:
-- title: Título completo em MAIÚSCULAS no INÍCIO do documento
-- authors: Nomes APÓS o título com ¹ ou ² (ex: "Nome¹, Outro Nome²") - SEM instituições/e-mails
-- advisors: Das notas de rodapé, extraia APENAS o nome de quem tem "Professor"
-- abstract: Texto completo após "RESUMO" - PARE quando encontrar "Palavras-chave:"
-- keywords: SOMENTE as palavras listadas após "Palavras-chave:" até o fim da linha ou até "ABSTRACT" - NÃO inclua texto de outras seções
-- englishAbstract: Texto completo após "ABSTRACT" - PARE quando encontrar "Keywords:"
-- englishKeywords: SOMENTE as palavras listadas após "Keywords:" até o fim da linha ou até "1 INTRODUÇÃO" - NÃO inclua texto de outras seções
-- introduction: SOMENTE o conteúdo da seção numerada "1 INTRODUÇÃO" - PARE quando encontrar a próxima seção numerada (ex: "2 ")
-- theoreticalTopics: ATENÇÃO! No padrão IFMS, NÃO existe uma seção chamada "Referencial Teórico".
-  Os tópicos teóricos são TODAS as seções numeradas que aparecem ENTRE "Introdução" e "Metodologia".
-  Por exemplo: se há "1 INTRODUÇÃO", depois "2 TECNOLOGIAS ASSISTIVAS", "3 ACESSIBILIDADE DIGITAL", e depois "4 METODOLOGIA",
-  então theoreticalTopics deve conter os tópicos 2 e 3 com seus títulos REAIS e conteúdo completo.
-  Cada tópico teórico PARA quando encontrar a próxima seção numerada.
-  Identifique pelo número da seção e título real, não invente "Referencial Teórico".
-- methodology: SOMENTE o conteúdo da seção "METODOLOGIA" - PARE quando encontrar a próxima seção numerada (ex: "RESULTADOS")
-- results: SOMENTE o conteúdo da seção "RESULTADOS E DISCUSSÕES" - PARE quando encontrar a próxima seção (ex: "CONCLUSÃO")
-- conclusion: SOMENTE o conteúdo da seção "CONCLUSÃO" ou "CONSIDERAÇÕES FINAIS" - PARE quando encontrar "REFERÊNCIAS"
-- references: SOMENTE a lista após "REFERÊNCIAS" até o fim do documento
-- images: Array com url, type, caption, source e section de cada imagem
+TÓPICOS TEÓRICOS (seções numeradas entre Introdução e Metodologia):
+${theoreticalSectionsText}
 
-REGRAS CRÍTICAS PARA SEPARAÇÃO DE CONTEÚDO:
-- Cada campo deve conter APENAS o conteúdo da sua própria seção
-- NUNCA misture conteúdo de diferentes seções
-- Quando encontrar o início da próxima seção, PARE de extrair para o campo atual
-- Keywords e englishKeywords devem conter APENAS a lista de palavras-chave, NÃO o texto de outras seções
+TAREFA:
+Identifique TODAS as seções numeradas neste texto e extraia:
+- O título de cada seção (sem o número)
+- O conteúdo completo de cada seção (até a próxima seção numerada)
 
-REGRAS CRÍTICAS DE JSON (MUITO IMPORTANTE):
-- NUNCA use blocos markdown na resposta
-- NUNCA coloque texto fora do JSON, responda SOMENTE o objeto JSON
-- NUNCA use aspas duplas dentro do conteúdo dos campos (por exemplo em citações). Use aspas simples em vez disso dentro dos textos
-- Garanta que todas as quebras de linha internas sejam representadas como \\n dentro das strings
+REGRAS:
+- NUNCA use blocos markdown
+- Responda APENAS com JSON válido
+- Use aspas simples dentro dos textos, não aspas duplas
+- Cada tópico teórico PARA quando encontrar a próxima seção numerada
 
-FORMATO DE RESPOSTA (MUITO IMPORTANTE):
-Responda **EXCLUSIVAMENTE** com um JSON VÁLIDO seguindo exatamente este modelo, SEM texto extra antes ou depois:
+FORMATO DE RESPOSTA:
 {
-  "title": "...",
-  "authors": "...",
-  "advisors": "...",
-  "abstract": "...",
-  "keywords": "...",
-  "englishAbstract": "...",
-  "englishKeywords": "...",
-  "introduction": "...",
   "theoreticalTopics": [
-    { "title": "...", "content": "..." }
+    { "title": "título da seção 1", "content": "conteúdo completo da seção 1" },
+    { "title": "título da seção 2", "content": "conteúdo completo da seção 2" }
   ],
-  "methodology": "...",
-  "results": "...",
-  "conclusion": "...",
-  "references": "...",
   "images": [
     {
       "url": "...",
@@ -329,12 +335,9 @@ Responda **EXCLUSIVAMENTE** com um JSON VÁLIDO seguindo exatamente este modelo,
       "section": "introduction" | "methodology" | "results" | "conclusion"
     }
   ]
-}
+}`;
 
-TEXTO DO ARTIGO:
-${text}`;
-
-    console.log('🔎 Chamando Gemini diretamente para extração estruturada...');
+    console.log('🔎 Chamando Gemini apenas para tópicos teóricos...');
     const client = createGeminiClient();
     const aiResponse = await client.generateContent(prompt);
     let rawText = aiResponse.response.text();
@@ -378,26 +381,15 @@ ${text}`;
       return extractArticleSections(text);
     }
 
-    console.log('📋 Seções extraídas pelo Gemini (chaves):', Object.keys(aiResult));
+    console.log('📋 Tópicos teóricos extraídos pela IA (chaves):', Object.keys(aiResult));
 
-    // Converter para HTML e aplicar tratamento de headings
+    // ESTÁGIO 3: Combinar seções padrão (código) + tópicos teóricos (IA)
     const result: any = {
-      title: cleanHtml(aiResult.title || ''),
-      authors: cleanHtml(aiResult.authors || ''),
-      advisors: cleanHtml(aiResult.advisors || ''),
-      abstract: cleanHtml(aiResult.abstract || ''),
-      keywords: cleanHtml(aiResult.keywords || ''),
-      englishAbstract: cleanHtml(aiResult.englishAbstract || ''),
-      englishKeywords: cleanHtml(aiResult.englishKeywords || ''),
-      introduction: cleanHtml(stripLeadingHeading(aiResult.introduction || '', INTRO_HEADING_PATTERNS)),
-      methodology: cleanHtml(stripLeadingHeading(aiResult.methodology || '', METHODOLOGY_HEADING_PATTERNS)),
-      results: cleanHtml(stripLeadingHeading(aiResult.results || '', RESULTS_HEADING_PATTERNS)),
-      conclusion: cleanHtml(stripLeadingHeading(aiResult.conclusion || '', CONCLUSION_HEADING_PATTERNS)),
-      references: cleanHtml(stripLeadingHeading(aiResult.references || '', REFERENCES_HEADING_PATTERNS)),
+      ...standardSections, // Seções extraídas por código (mais precisas)
       institution: 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul',
     };
 
-    // Processar tópicos teóricos
+    // Processar tópicos teóricos da IA
     if (aiResult.theoreticalTopics && Array.isArray(aiResult.theoreticalTopics)) {
       result.theoreticalTopics = aiResult.theoreticalTopics.map((topic: any, index: number) => ({
         id: `topic-${index + 1}`,
@@ -405,6 +397,8 @@ ${text}`;
         title: topic.title || `Tópico ${index + 1}`,
         content: cleanHtml(topic.content || ''),
       }));
+    } else {
+      result.theoreticalTopics = [];
     }
 
     // Processar imagens (usar URLs do ImgBB)
@@ -416,17 +410,160 @@ ${text}`;
         source: img.source || 'Fonte: Documento original',
         section: img.section || 'results',
       }));
+    } else {
+      result.images = [];
     }
 
-    console.log('📊 Seções extraídas (com imagens):');
+    console.log('📊 Extração híbrida completa:');
     console.log('- Título:', result.title ? 'OK' : 'VAZIO');
+    console.log('- Tópicos teóricos:', result.theoreticalTopics?.length || 0);
     console.log('- Imagens:', result.images?.length || 0);
 
     return result;
-  } catch (error) {
-    console.error('Erro ao usar Gemini para extração estruturada:', error);
-    return extractArticleSections(text);
   }
+}
+
+// ESTÁGIO 1: Extração de seções padrão IFMS usando código (rápido e preciso)
+function extractStandardIFMSSections(text: string) {
+  const cleanText = text.replace(/\s+/g, ' ').trim();
+
+  const extractBetween = (start: RegExp, end: RegExp): string => {
+    const startMatch = cleanText.search(start);
+    if (startMatch === -1) return '';
+    
+    const afterStart = cleanText.slice(startMatch);
+    const endMatch = afterStart.search(end);
+    
+    if (endMatch === -1) return afterStart.replace(start, '').trim();
+    
+    return afterStart.slice(0, endMatch).replace(start, '').trim();
+  };
+
+  // Extrair título (em MAIÚSCULAS no início)
+  const titleMatch = cleanText.match(/(?:Campus\s+[^\n]+\s+)?([A-ZÀÂÃÉÊÍÓÔÕÚÇ\s]{15,150}?)(?:\s+[A-Z][a-z]|\s+RESUMO)/);
+  const title = titleMatch ? titleMatch[1].trim() : '';
+
+  // Extrair autores (nomes com ¹ ou ²)
+  const authorsMatch = cleanText.match(/([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²]?)(?:\s*,?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+[¹²]?)*/);
+  const authors = authorsMatch ? authorsMatch[0].trim() : '';
+
+  // Extrair orientadores (notas de rodapé com "Professor")
+  const advisorMatch = cleanText.match(/(?:Professor|Orientador|Mestre|Doutor)[^.]+\.(?:\s+Professor[^.]+\.)?/i);
+  const advisors = advisorMatch ? advisorMatch[0].trim() : '';
+
+  // Extrair RESUMO (até "Palavras-chave:")
+  const abstract = extractBetween(/RESUMO\s*/i, /Palavras-chave:/i);
+
+  // Extrair Palavras-chave (linha após "Palavras-chave:" até próxima seção)
+  const keywordsMatch = cleanText.match(/Palavras-chave:\s*([^.]+(?:\.[^.]+){0,10}?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+  const keywords = keywordsMatch ? keywordsMatch[1].trim() : '';
+
+  // Extrair ABSTRACT (até "Keywords:")
+  const englishAbstract = extractBetween(/ABSTRACT\s*/i, /Keywords:/i);
+
+  // Extrair Keywords (linha após "Keywords:" até próxima seção)
+  const englishKeywordsMatch = cleanText.match(/Keywords:\s*([^.]+(?:\.[^.]+){0,10}?)(?=\s*(?:1\s+INTRODUÇÃO|$))/i);
+  const englishKeywords = englishKeywordsMatch ? englishKeywordsMatch[1].trim() : '';
+
+  // Extrair INTRODUÇÃO (seção 1 até seção 2)
+  const introduction = extractBetween(/1\.?\s*INTRODUÇÃO/i, /2\.?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]/);
+
+  // Extrair METODOLOGIA (seção com METODOLOGIA até próxima seção)
+  const methodologyMatch = cleanText.match(/(\d+)\.?\s*METODOLOGIA/i);
+  if (methodologyMatch) {
+    const methodologyNumber = parseInt(methodologyMatch[1]);
+    const nextNumber = methodologyNumber + 1;
+    const methodology = extractBetween(
+      new RegExp(`${methodologyNumber}\\.?\\s*METODOLOGIA`, 'i'),
+      new RegExp(`${nextNumber}\\.?\\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]`)
+    );
+    
+    // Extrair RESULTADOS
+    const resultsNumber = nextNumber;
+    const conclusionNumber = resultsNumber + 1;
+    const results = extractBetween(
+      new RegExp(`${resultsNumber}\\.?\\s*RESULTADOS?\\s*(?:E\\s*DISCUSS[ÕÃ]ES?)?`, 'i'),
+      new RegExp(`${conclusionNumber}\\.?\\s*(?:CONCLUS|CONSIDER)`, 'i')
+    );
+    
+    // Extrair CONCLUSÃO
+    const conclusion = extractBetween(
+      new RegExp(`${conclusionNumber}\\.?\\s*(?:CONCLUS[ÕÃ]ES?|CONSIDERA[ÇC][ÕÃ]ES\\s+FINAIS)`, 'i'),
+      /REFERÊNCIAS/i
+    );
+    
+    // Extrair REFERÊNCIAS
+    const references = cleanText.split(/REFERÊNCIAS\s*BIBLIOGRÁFICAS|REFERÊNCIAS/i)[1]?.trim() || '';
+
+    return {
+      title: cleanHtml(title),
+      authors: cleanHtml(authors),
+      advisors: cleanHtml(advisors),
+      abstract: cleanHtml(abstract),
+      keywords: cleanHtml(keywords),
+      englishAbstract: cleanHtml(englishAbstract),
+      englishKeywords: cleanHtml(englishKeywords),
+      introduction: cleanHtml(stripLeadingHeading(introduction, INTRO_HEADING_PATTERNS)),
+      methodology: cleanHtml(stripLeadingHeading(methodology, METHODOLOGY_HEADING_PATTERNS)),
+      results: cleanHtml(stripLeadingHeading(results, RESULTS_HEADING_PATTERNS)),
+      conclusion: cleanHtml(stripLeadingHeading(conclusion, CONCLUSION_HEADING_PATTERNS)),
+      references: cleanHtml(stripLeadingHeading(references, REFERENCES_HEADING_PATTERNS)),
+    };
+  }
+
+  // Fallback se não encontrar metodologia
+  return {
+    title: cleanHtml(title),
+    authors: cleanHtml(authors),
+    advisors: cleanHtml(advisors),
+    abstract: cleanHtml(abstract),
+    keywords: cleanHtml(keywords),
+    englishAbstract: cleanHtml(englishAbstract),
+    englishKeywords: cleanHtml(englishKeywords),
+    introduction: cleanHtml(stripLeadingHeading(introduction, INTRO_HEADING_PATTERNS)),
+    methodology: '',
+    results: '',
+    conclusion: '',
+    references: '',
+  };
+}
+
+// ESTÁGIO 2: Identificar texto dos tópicos teóricos (entre Introdução e Metodologia)
+function extractTheoreticalSectionsText(text: string): string {
+  const cleanText = text.replace(/\s+/g, ' ').trim();
+
+  // Encontrar posição da Introdução (seção 1)
+  const introMatch = cleanText.match(/1\.?\s*INTRODUÇÃO/i);
+  if (!introMatch) {
+    console.log('⚠️ Seção INTRODUÇÃO não encontrada');
+    return '';
+  }
+  const introIndex = cleanText.indexOf(introMatch[0]) + introMatch[0].length;
+
+  // Encontrar posição da Metodologia
+  const methodologyMatch = cleanText.match(/(\d+)\.?\s*METODOLOGIA/i);
+  if (!methodologyMatch) {
+    console.log('⚠️ Seção METODOLOGIA não encontrada');
+    return '';
+  }
+  const methodologyIndex = cleanText.indexOf(methodologyMatch[0]);
+
+  // Extrair texto entre Introdução e Metodologia
+  if (methodologyIndex <= introIndex) {
+    console.log('⚠️ Metodologia aparece antes da Introdução (estrutura inválida)');
+    return '';
+  }
+
+  const theoreticalText = cleanText.slice(introIndex, methodologyIndex).trim();
+  
+  // Verificar se há seções numeradas (2, 3, etc.) neste trecho
+  const hasSections = /\d+\.?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]{3,}/.test(theoreticalText);
+  if (!hasSections) {
+    console.log('⚠️ Nenhuma seção numerada encontrada entre Introdução e Metodologia');
+    return '';
+  }
+
+  return theoreticalText;
 }
 
 function extractArticleSections(text: string) {
