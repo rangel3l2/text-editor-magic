@@ -512,23 +512,9 @@ function extractStandardIFMSSections(text: string) {
       conclusion: cleanHtml(stripLeadingHeading(conclusion, CONCLUSION_HEADING_PATTERNS)),
       references: cleanHtml(stripLeadingHeading(references, REFERENCES_HEADING_PATTERNS)),
     };
-  }
-
-  // Fallback se não encontrar metodologia
-  return {
-    title: cleanHtml(title),
-    authors: cleanHtml(authors),
-    advisors: cleanHtml(advisors),
-    abstract: cleanHtml(abstract),
-    keywords: cleanHtml(keywords),
-    englishAbstract: cleanHtml(englishAbstract),
-    englishKeywords: cleanHtml(englishKeywords),
-    introduction: cleanHtml(stripLeadingHeading(introduction, INTRO_HEADING_PATTERNS)),
-    methodology: '',
-    results: '',
-    conclusion: '',
-    references: '',
-  };
+  // Fallback se não encontrar metodologia com o padrão mais rígido
+  // Nesses casos usamos o extrator genérico, que é mais permissivo com o nome das seções
+  return extractArticleSections(text);
 }
 
 // ESTÁGIO 2: Identificar texto dos tópicos teóricos (entre Introdução e Metodologia)
