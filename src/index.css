@@ -256,6 +256,28 @@
   line-height: 1.15;
 }
 
+/* Subseções (nível 2) */
+.academic-preview h3.subsection-title {
+  font-size: 12pt;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.2em;
+  margin-bottom: 0.8em;
+  line-height: 1.15;
+  margin-left: 0;
+}
+
+/* Sub-subseções (nível 3) */
+.academic-preview h4.subsubsection-title {
+  font-size: 12pt;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1em;
+  margin-bottom: 0.6em;
+  line-height: 1.15;
+  margin-left: 0;
+}
+
 .academic-preview p {
   text-align: justify !important;
   word-spacing: normal !important;
@@ -269,9 +291,13 @@
   word-spacing: normal !important;
 }
 
-/* Sem recuo no primeiro parágrafo após título de seção */
+/* Sem recuo no primeiro parágrafo após título de seção/subseção */
 .academic-preview h2 + p,
-.academic-preview h2.section-title + p {
+.academic-preview h2.section-title + p,
+.academic-preview h3 + p,
+.academic-preview h3.subsection-title + p,
+.academic-preview h4 + p,
+.academic-preview h4.subsubsection-title + p {
   text-indent: 0 !important;
 }
 

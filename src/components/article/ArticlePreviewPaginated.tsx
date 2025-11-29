@@ -1,6 +1,7 @@
 import { ArticleContent } from "@/hooks/useArticleContent";
 import { cleanLatexCommands } from "@/utils/latexProcessor";
 import { sanitizeHtml } from "@/utils/sanitize";
+import { applyIntelligentNumbering, getMethodologyNumber, getResultsNumber } from "@/utils/sectionHierarchy";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -119,9 +120,22 @@ const buildBlocks = (content: ArticleContent) => {
   });
   blocks.push({ html: '<!-- INTRO_END -->', mark: 'INTRO_END' });
 
-  // Referencial teórico
-  content.theoreticalTopics.forEach((topic, index) => {
-    blocks.push({ html: `<h2 id="article-theoretical-${index}" class="section-title">${topic.order} ${topic.title.toUpperCase()}</h2>` });
+  // Referencial teórico com numeração inteligente
+  const numberedTopics = applyIntelligentNumbering(content.theoreticalTopics);
+  
+  numberedTopics.forEach((topic, index) => {
+    const level = topic.level || 1;
+    const headingTag = level === 1 ? 'h2' : level === 2 ? 'h3' : 'h4';
+    const headingClass = level === 1 
+      ? 'section-title' 
+      : level === 2 
+        ? 'subsection-title' 
+        : 'subsubsection-title';
+    
+    blocks.push({ 
+      html: `<${headingTag} id="article-theoretical-${index}" class="${headingClass}">${topic.order} ${topic.title.toUpperCase()}</${headingTag}>` 
+    });
+    
     const topicTemp = document.createElement('div');
     topicTemp.innerHTML = sanitize(ensureParagraphs(topic.content));
     
@@ -148,15 +162,16 @@ const buildBlocks = (content: ArticleContent) => {
     });
   });
 
-  // Metodologia
-  blocks.push({ html: `<h2 id="article-methodology" class="section-title">${2 + content.theoreticalTopics.length} METODOLOGIA</h2>` });
+  // Metodologia com número correto baseado na hierarquia
+  const methodologyNumber = getMethodologyNumber(numberedTopics.filter(t => t.level === 1).length);
+  blocks.push({ html: `<h2 id="article-methodology" class="section-title">${methodologyNumber} METODOLOGIA</h2>` });
   const methTemp = document.createElement('div');
   methTemp.innerHTML = sanitize(ensureParagraphs(content.methodology));
   
   const methTitleVariations = [
-    `${2 + content.theoreticalTopics.length} METODOLOGIA`,
+    `${methodologyNumber} METODOLOGIA`,
     'METODOLOGIA',
-    `${2 + content.theoreticalTopics.length} Metodologia`,
+    `${methodologyNumber} Metodologia`,
     'Metodologia'
   ];
   
@@ -187,15 +202,16 @@ const buildBlocks = (content: ArticleContent) => {
       });
   }
 
-  // Resultados
-  blocks.push({ html: `<h2 id="article-results" class="section-title">${2 + content.theoreticalTopics.length + 1} RESULTADOS E DISCUSSÃO</h2>` });
+  // Resultados com número correto baseado na hierarquia
+  const resultsNumber = getResultsNumber(numberedTopics.filter(t => t.level === 1).length);
+  blocks.push({ html: `<h2 id="article-results" class="section-title">${resultsNumber} RESULTADOS E DISCUSSÃO</h2>` });
   const resTemp = document.createElement('div');
   resTemp.innerHTML = sanitize(ensureParagraphs(content.results));
   
   const resTitleVariations = [
-    `${2 + content.theoreticalTopics.length + 1} RESULTADOS E DISCUSSÃO`,
+    `${resultsNumber} RESULTADOS E DISCUSSÃO`,
     'RESULTADOS E DISCUSSÃO',
-    `${2 + content.theoreticalTopics.length + 1} Resultados e Discussão`,
+    `${resultsNumber} Resultados e Discussão`,
     'Resultados e Discussão',
     'RESULTADOS',
     'Resultados'
@@ -293,6 +309,12 @@ const ArticlePreviewPaginated = ({ content }: ArticlePreviewPaginatedProps) => {
   const [pages, setPages] = useState<string[]>([]);
   const [introEndsAtPage, setIntroEndsAtPage] = useState<number>(-1);
   const [summaryOpen, setSummaryOpen] = useState(false);
+
+  // Aplica numeração inteligente aos tópicos teóricos
+  const numberedTopics = useMemo(() => 
+    applyIntelligentNumbering(content.theoreticalTopics),
+    [content.theoreticalTopics]
+  );
 
   const blocks = useMemo(() => buildBlocks(content), [content]);
 
@@ -471,23 +493,30 @@ const ArticlePreviewPaginated = ({ content }: ArticlePreviewPaginatedProps) => {
                     <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
 
-                  {/* Referencial Teórico */}
-                  {content.theoreticalTopics.map((topic, index) => (
-                    <button
-                      key={`theoretical-${index}`}
-                      onClick={() => scrollToSection(`article-theoretical-${index}`)}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group pl-6"
-                    >
-                      <span>2.{index + 1} {topic.title}</span>
-                      <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
-                  ))}
+                  {/* Referencial Teórico com hierarquia */}
+                  {numberedTopics.map((topic, index) => {
+                    const indentLevel = topic.level || 1;
+                    const paddingLeft = indentLevel === 1 ? 'pl-3' : indentLevel === 2 ? 'pl-6' : 'pl-9';
+                    
+                    return (
+                      <button
+                        key={`theoretical-${index}`}
+                        onClick={() => scrollToSection(`article-theoretical-${index}`)}
+                        className={`w-full text-left ${paddingLeft} py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group`}
+                      >
+                        <span className={indentLevel > 1 ? 'text-muted-foreground' : ''}>
+                          {topic.order} {topic.title}
+                        </span>
+                        <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    );
+                  })}
 
                   <button
                     onClick={() => scrollToSection('article-methodology')}
                     className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
                   >
-                    <span>{2 + content.theoreticalTopics.length}. Metodologia</span>
+                    <span>{getMethodologyNumber(numberedTopics.filter(t => t.level === 1).length)}. Metodologia</span>
                     <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
 
@@ -495,7 +524,7 @@ const ArticlePreviewPaginated = ({ content }: ArticlePreviewPaginatedProps) => {
                     onClick={() => scrollToSection('article-results')}
                     className="w-full text-left px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors flex items-center justify-between group"
                   >
-                    <span>{2 + content.theoreticalTopics.length + 1}. Resultados e Discussão</span>
+                    <span>{getResultsNumber(numberedTopics.filter(t => t.level === 1).length)}. Resultados e Discussão</span>
                     <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
 
