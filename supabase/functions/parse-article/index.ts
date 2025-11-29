@@ -432,89 +432,139 @@ function extractStandardIFMSSections(text: string) {
 
   const extractBetween = (start: RegExp, end: RegExp): string => {
     const startMatch = cleanText.search(start);
+    console.log(`🔎 Buscando padrão ${start}: posição = ${startMatch}`);
     if (startMatch === -1) return '';
     
     const afterStart = cleanText.slice(startMatch);
     const endMatch = afterStart.search(end);
+    console.log(`🔎 Buscando fim ${end}: posição = ${endMatch}`);
     
-    if (endMatch === -1) return afterStart.replace(start, '').trim();
+    if (endMatch === -1) {
+      const extracted = afterStart.replace(start, '').trim();
+      console.log(`✂️ Extraído até o fim (${extracted.length} chars): ${extracted.substring(0, 100)}...`);
+      return extracted;
+    }
     
-    return afterStart.slice(0, endMatch).replace(start, '').trim();
+    const extracted = afterStart.slice(0, endMatch).replace(start, '').trim();
+    console.log(`✂️ Extraído (${extracted.length} chars): ${extracted.substring(0, 100)}...`);
+    return extracted;
   };
 
   // Extrair título (em MAIÚSCULAS no início)
   const titleMatch = cleanText.match(/(?:Campus\s+[^\n]+\s+)?([A-ZÀÂÃÉÊÍÓÔÕÚÇ\s]{15,150}?)(?:\s+[A-Z][a-z]|\s+RESUMO)/);
   const title = titleMatch ? titleMatch[1].trim() : '';
+  console.log('📌 Título extraído:', title ? `"${title.substring(0, 50)}..."` : 'VAZIO');
 
   // Extrair autores (nomes com ¹ ou ²)
   const authorsMatch = cleanText.match(/([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²]?)(?:\s*,?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+[¹²]?)*/);
   const authors = authorsMatch ? authorsMatch[0].trim() : '';
+  console.log('📌 Autores extraídos:', authors ? `"${authors}"` : 'VAZIO');
 
   // Extrair orientadores (notas de rodapé com "Professor")
   const advisorMatch = cleanText.match(/(?:Professor|Orientador|Mestre|Doutor)[^.]+\.(?:\s+Professor[^.]+\.)?/i);
   const advisors = advisorMatch ? advisorMatch[0].trim() : '';
+  console.log('📌 Orientadores extraídos:', advisors ? `"${advisors.substring(0, 50)}..."` : 'VAZIO');
 
   // Extrair RESUMO (até "Palavras-chave:")
+  console.log('\n📖 Extraindo RESUMO...');
   const abstract = extractBetween(/RESUMO\s*/i, /Palavras-chave:/i);
 
   // Extrair Palavras-chave (linha após "Palavras-chave:" até próxima seção)
   const keywordsMatch = cleanText.match(/Palavras-chave:\s*([^.]+(?:\.[^.]+){0,10}?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
   const keywords = keywordsMatch ? keywordsMatch[1].trim() : '';
+  console.log('📌 Palavras-chave extraídas:', keywords ? `"${keywords.substring(0, 50)}..."` : 'VAZIO');
 
   // Extrair ABSTRACT (até "Keywords:")
+  console.log('\n📖 Extraindo ABSTRACT...');
   const englishAbstract = extractBetween(/ABSTRACT\s*/i, /Keywords:/i);
 
   // Extrair Keywords (linha após "Keywords:" até próxima seção)
   const englishKeywordsMatch = cleanText.match(/Keywords:\s*([^.]+(?:\.[^.]+){0,10}?)(?=\s*(?:1\s+INTRODUÇÃO|$))/i);
   const englishKeywords = englishKeywordsMatch ? englishKeywordsMatch[1].trim() : '';
+  console.log('📌 Keywords extraídas:', englishKeywords ? `"${englishKeywords.substring(0, 50)}..."` : 'VAZIO');
 
   // Extrair INTRODUÇÃO (seção 1 até seção 2)
+  console.log('\n📖 Extraindo INTRODUÇÃO...');
   const introduction = extractBetween(/1\.?\s*INTRODUÇÃO/i, /2\.?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]/);
 
-  // Extrair METODOLOGIA (seção com METODOLOGIA até próxima seção)
-  const methodologyMatch = cleanText.match(/(\d+)\.?\s*METODOLOGIA/i);
-  if (methodologyMatch) {
-    const methodologyNumber = parseInt(methodologyMatch[1]);
-    const nextNumber = methodologyNumber + 1;
-    const methodology = extractBetween(
+  // Buscar METODOLOGIA com múltiplos padrões (incluindo subseções e nomes alternativos)
+  console.log('\n📖 Buscando METODOLOGIA (múltiplos padrões)...');
+  let methodology = '';
+  let methodologyEndPattern: RegExp | null = null;
+  
+  // Padrão 1: Seção numerada "X METODOLOGIA"
+  const methodologyMatch1 = cleanText.match(/(\d+)\.?\s*METODOLOGIA/i);
+  // Padrão 2: Subseção "X.Y METODOLOGIA" ou "X.Y MATERIAIS E MÉTODOS"
+  const methodologyMatch2 = cleanText.match(/(\d+)\.(\d+)\s*(?:METODOLOGIA|MATERIAIS?\s+E\s+MÉTODOS|MATERIAIS?\s+DE\s+DESENVOLVIMENTO)/i);
+  // Padrão 3: Seção sem número "METODOLOGIA"
+  const methodologyMatch3 = cleanText.match(/(?:^|\n)\s*(?:METODOLOGIA|MATERIAIS?\s+E\s+MÉTODOS|MÉTODO)\s*(?:\n|$)/i);
+  
+  if (methodologyMatch1) {
+    console.log('✅ Encontrou METODOLOGIA como seção principal:', methodologyMatch1[0]);
+    const methodologyNumber = parseInt(methodologyMatch1[1]);
+    methodology = extractBetween(
       new RegExp(`${methodologyNumber}\\.?\\s*METODOLOGIA`, 'i'),
-      new RegExp(`${nextNumber}\\.?\\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]`)
+      /(?:RESULTADOS?|DISCUSS[ÃO]|ANÁLISE|CONCLUS|CONSIDER|REFERÊNCIAS)/i
     );
-    
-    // Extrair RESULTADOS
-    const resultsNumber = nextNumber;
-    const conclusionNumber = resultsNumber + 1;
-    const results = extractBetween(
-      new RegExp(`${resultsNumber}\\.?\\s*RESULTADOS?\\s*(?:E\\s*DISCUSS[ÕÃ]ES?)?`, 'i'),
-      new RegExp(`${conclusionNumber}\\.?\\s*(?:CONCLUS|CONSIDER)`, 'i')
+  } else if (methodologyMatch2) {
+    console.log('✅ Encontrou METODOLOGIA como subseção:', methodologyMatch2[0]);
+    methodology = extractBetween(
+      new RegExp(`${methodologyMatch2[1]}\\.${methodologyMatch2[2]}\\s*(?:METODOLOGIA|MATERIAIS?\\s+E\\s+MÉTODOS|MATERIAIS?\\s+DE\\s+DESENVOLVIMENTO)`, 'i'),
+      /(?:RESULTADOS?|DISCUSS[ÃO]|ANÁLISE|CONCLUS|CONSIDER|REFERÊNCIAS)/i
     );
-    
-    // Extrair CONCLUSÃO
-    const conclusion = extractBetween(
-      new RegExp(`${conclusionNumber}\\.?\\s*(?:CONCLUS[ÕÃ]ES?|CONSIDERA[ÇC][ÕÃ]ES\\s+FINAIS)`, 'i'),
-      /REFERÊNCIAS/i
+  } else if (methodologyMatch3) {
+    console.log('✅ Encontrou METODOLOGIA sem número:', methodologyMatch3[0]);
+    methodology = extractBetween(
+      /(?:METODOLOGIA|MATERIAIS?\s+E\s+MÉTODOS|MÉTODO)\s*/i,
+      /(?:RESULTADOS?|DISCUSS[ÃO]|ANÁLISE|CONCLUS|CONSIDER|REFERÊNCIAS)/i
     );
-    
-    // Extrair REFERÊNCIAS
-    const references = cleanText.split(/REFERÊNCIAS\s*BIBLIOGRÁFICAS|REFERÊNCIAS/i)[1]?.trim() || '';
+  } else {
+    console.log('⚠️ METODOLOGIA não encontrada com nenhum padrão');
+  }
 
-    return {
-      title: cleanHtml(title),
-      authors: cleanHtml(authors),
-      advisors: cleanHtml(advisors),
-      abstract: cleanHtml(abstract),
-      keywords: cleanHtml(keywords),
-      englishAbstract: cleanHtml(englishAbstract),
-      englishKeywords: cleanHtml(englishKeywords),
-      introduction: cleanHtml(stripLeadingHeading(introduction, INTRO_HEADING_PATTERNS)),
-      methodology: cleanHtml(stripLeadingHeading(methodology, METHODOLOGY_HEADING_PATTERNS)),
-      results: cleanHtml(stripLeadingHeading(results, RESULTS_HEADING_PATTERNS)),
-      conclusion: cleanHtml(stripLeadingHeading(conclusion, CONCLUSION_HEADING_PATTERNS)),
-      references: cleanHtml(stripLeadingHeading(references, REFERENCES_HEADING_PATTERNS)),
-    };
-  // Fallback se não encontrar metodologia com o padrão mais rígido
-  // Nesses casos usamos o extrator genérico, que é mais permissivo com o nome das seções
-  return extractArticleSections(text);
+  // Buscar RESULTADOS (com ou sem número)
+  console.log('\n📖 Buscando RESULTADOS...');
+  const results = extractBetween(
+    /(?:\d+\.?\s*)?(?:RESULTADOS?|DISCUSS[ÕÃ]ES?)\s*(?:E\s*DISCUSS[ÕÃ]ES?)?/i,
+    /(?:CONCLUS|CONSIDERA[ÇC][ÕÃ]ES|REFERÊNCIAS)/i
+  );
+
+  // Buscar CONCLUSÃO (com ou sem número)
+  console.log('\n📖 Buscando CONCLUSÃO...');
+  const conclusion = extractBetween(
+    /(?:\d+\.?\s*)?(?:CONCLUS[ÕÃ]ES?|CONSIDERA[ÇC][ÕÃ]ES\s+FINAIS)/i,
+    /REFERÊNCIAS/i
+  );
+
+  // Extrair REFERÊNCIAS
+  console.log('\n📖 Extraindo REFERÊNCIAS...');
+  const references = cleanText.split(/REFERÊNCIAS\s*BIBLIOGRÁFICAS|REFERÊNCIAS/i)[1]?.trim() || '';
+  console.log('📌 Referências:', references ? `${references.length} chars` : 'VAZIO');
+
+  console.log('\n📊 Resumo da extração:');
+  console.log('- Título:', title ? 'OK' : 'VAZIO');
+  console.log('- Autores:', authors ? 'OK' : 'VAZIO');
+  console.log('- Resumo:', abstract ? 'OK' : 'VAZIO');
+  console.log('- Introdução:', introduction ? 'OK' : 'VAZIO');
+  console.log('- Metodologia:', methodology ? 'OK' : 'VAZIO');
+  console.log('- Resultados:', results ? 'OK' : 'VAZIO');
+  console.log('- Conclusão:', conclusion ? 'OK' : 'VAZIO');
+  console.log('- Referências:', references ? 'OK' : 'VAZIO');
+
+  return {
+    title: cleanHtml(title),
+    authors: cleanHtml(authors),
+    advisors: cleanHtml(advisors),
+    abstract: cleanHtml(abstract),
+    keywords: cleanHtml(keywords),
+    englishAbstract: cleanHtml(englishAbstract),
+    englishKeywords: cleanHtml(englishKeywords),
+    introduction: cleanHtml(stripLeadingHeading(introduction, INTRO_HEADING_PATTERNS)),
+    methodology: cleanHtml(stripLeadingHeading(methodology, METHODOLOGY_HEADING_PATTERNS)),
+    results: cleanHtml(stripLeadingHeading(results, RESULTS_HEADING_PATTERNS)),
+    conclusion: cleanHtml(stripLeadingHeading(conclusion, CONCLUSION_HEADING_PATTERNS)),
+    references: cleanHtml(stripLeadingHeading(references, REFERENCES_HEADING_PATTERNS)),
+  };
 }
 
 // ESTÁGIO 2: Identificar texto dos tópicos teóricos (entre Introdução e Metodologia)
@@ -529,13 +579,31 @@ function extractTheoreticalSectionsText(text: string): string {
   }
   const introIndex = cleanText.indexOf(introMatch[0]) + introMatch[0].length;
 
-  // Encontrar posição da Metodologia
-  const methodologyMatch = cleanText.match(/(\d+)\.?\s*METODOLOGIA/i);
-  if (!methodologyMatch) {
-    console.log('⚠️ Seção METODOLOGIA não encontrada');
+  // Buscar Metodologia com múltiplos padrões (incluindo subseções e nomes alternativos)
+  console.log('🔍 Buscando METODOLOGIA para delimitar tópicos teóricos...');
+  
+  // Padrão 1: Seção numerada "X METODOLOGIA"
+  const methodologyMatch1 = cleanText.match(/(\d+)\.?\s*METODOLOGIA/i);
+  // Padrão 2: Subseção "X.Y METODOLOGIA" ou "X.Y MATERIAIS E MÉTODOS"
+  const methodologyMatch2 = cleanText.match(/(\d+)\.(\d+)\s*(?:METODOLOGIA|MATERIAIS?\s+E\s+MÉTODOS|MATERIAIS?\s+DE\s+DESENVOLVIMENTO)/i);
+  // Padrão 3: Seção sem número "METODOLOGIA"
+  const methodologyMatch3 = cleanText.match(/(?:METODOLOGIA|MATERIAIS?\s+E\s+MÉTODOS|MÉTODO)/i);
+  
+  let methodologyIndex = -1;
+  
+  if (methodologyMatch1) {
+    methodologyIndex = cleanText.indexOf(methodologyMatch1[0]);
+    console.log('✅ Metodologia encontrada como seção principal:', methodologyMatch1[0], 'na posição', methodologyIndex);
+  } else if (methodologyMatch2) {
+    methodologyIndex = cleanText.indexOf(methodologyMatch2[0]);
+    console.log('✅ Metodologia encontrada como subseção:', methodologyMatch2[0], 'na posição', methodologyIndex);
+  } else if (methodologyMatch3) {
+    methodologyIndex = cleanText.indexOf(methodologyMatch3[0]);
+    console.log('✅ Metodologia encontrada sem número:', methodologyMatch3[0], 'na posição', methodologyIndex);
+  } else {
+    console.log('⚠️ METODOLOGIA não encontrada com nenhum padrão');
     return '';
   }
-  const methodologyIndex = cleanText.indexOf(methodologyMatch[0]);
 
   // Extrair texto entre Introdução e Metodologia
   if (methodologyIndex <= introIndex) {
@@ -544,6 +612,7 @@ function extractTheoreticalSectionsText(text: string): string {
   }
 
   const theoreticalText = cleanText.slice(introIndex, methodologyIndex).trim();
+  console.log(`📏 Texto teórico extraído: ${theoreticalText.length} caracteres`);
   
   // Verificar se há seções numeradas (2, 3, etc.) neste trecho
   const hasSections = /\d+\.?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]{3,}/.test(theoreticalText);
@@ -552,6 +621,7 @@ function extractTheoreticalSectionsText(text: string): string {
     return '';
   }
 
+  console.log('✅ Tópicos teóricos identificados com sucesso');
   return theoreticalText;
 }
 
@@ -588,9 +658,16 @@ function extractArticleSections(text: string) {
   const englishKeywords = englishKeywordsMatch ? englishKeywordsMatch[1].trim() : '';
 
   const introduction = extractBetween(/1\.?\s*INTRODUÇÃO/i, /2\.?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]/);
-  const methodology = extractBetween(/(?:3|4)\.?\s*(?:METODOLOGIA|MATERIAIS?\s+E\s+MÉTODOS|MÉTODO)/i, /(?:4|5)\.?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]/);
-  const results = extractBetween(/(?:4|5)\.?\s*(?:RESULTADOS?|DISCUSSÃO|ANÁLISE)/i, /(?:5|6)\.?\s*(?:CONCLUS|CONSIDER)/i);
-  const conclusion = extractBetween(/(?:5|6)\.?\s*(?:CONCLUS|CONSIDER)/i, /REFERÊNCIAS/i);
+  
+  // Metodologia com múltiplos padrões (incluindo subseções e sem número)
+  let methodology = extractBetween(/(?:\d+\.?\s*)?(?:METODOLOGIA|MATERIAIS?\s+E\s+MÉTODOS|MÉTODO)/i, /(?:RESULTADOS?|DISCUSS|ANÁLISE|CONCLUS|CONSIDER|REFERÊNCIAS)/i);
+  
+  // Resultados com ou sem número
+  const results = extractBetween(/(?:\d+\.?\s*)?(?:RESULTADOS?|DISCUSS[ÕÃ]ES?)\s*(?:E\s*DISCUSS[ÕÃ]ES?)?/i, /(?:CONCLUS|CONSIDERA[ÇC][ÕÃ]ES|REFERÊNCIAS)/i);
+  
+  // Conclusão com ou sem número
+  const conclusion = extractBetween(/(?:\d+\.?\s*)?(?:CONCLUS[ÕÃ]ES?|CONSIDERA[ÇC][ÕÃ]ES\s+FINAIS)/i, /REFERÊNCIAS/i);
+  
   const references = cleanText.split(/REFERÊNCIAS\s*BIBLIOGRÁFICAS|REFERÊNCIAS/i)[1]?.trim() || '';
 
   return {
@@ -644,26 +721,32 @@ const INTRO_HEADING_PATTERNS = [
 ];
 
 const METHODOLOGY_HEADING_PATTERNS = [
-  /^(?:3|4)\.?\s*METODOLOGIA\s*/i,
+  /^(?:\d+\.?|\d+\.\d+)\s*METODOLOGIA\s*/i,
   /^METODOLOGIA\s*/i,
-  /^(?:3|4)\.?\s*Metodologia\s*/i,
+  /^(?:\d+\.?|\d+\.\d+)\s*Metodologia\s*/i,
   /^Metodologia\s*/i,
-  /^(?:3|4)\.?\s*MATERIAIS?\s+E\s+MÉTODOS\s*/i,
-  /^MATERIAIS?\s+E\s+MÉTODOS\s*/i
+  /^(?:\d+\.?|\d+\.\d+)\s*MATERIAIS?\s+E\s+MÉTODOS\s*/i,
+  /^MATERIAIS?\s+E\s+MÉTODOS\s*/i,
+  /^(?:\d+\.?|\d+\.\d+)\s*MATERIAIS?\s+DE\s+DESENVOLVIMENTO\s*/i,
+  /^MATERIAIS?\s+DE\s+DESENVOLVIMENTO\s*/i,
+  /^(?:\d+\.?|\d+\.\d+)\s*MÉTODO\s*/i,
+  /^MÉTODO\s*/i
 ];
 
 const RESULTS_HEADING_PATTERNS = [
-  /^(?:4|5)\.?\s*RESULTADOS?\s*(E\s*DISCUSS[ÃA]O)?\s*/i,
-  /^RESULTADOS?\s*(E\s*DISCUSS[ÃA]O)?\s*/i,
-  /^(?:4|5)\.?\s*Resultados?\s*(e\s*Discussão)?\s*/i,
-  /^Resultados?\s*(e\s*Discussão)?\s*/i
+  /^(?:\d+\.?)?\s*RESULTADOS?\s*(?:E\s*DISCUSS[ÃÕA]O|E\s*DISCUSS[ÃÕA]ES)?\s*/i,
+  /^RESULTADOS?\s*(?:E\s*DISCUSS[ÃÕA]O|E\s*DISCUSS[ÃÕA]ES)?\s*/i,
+  /^(?:\d+\.?)?\s*Resultados?\s*(?:e\s*Discussão|e\s*Discussões)?\s*/i,
+  /^Resultados?\s*(?:e\s*Discussão|e\s*Discussões)?\s*/i
 ];
 
 const CONCLUSION_HEADING_PATTERNS = [
-  /^(?:5|6)\.?\s*CONCLUS[ÕO]ES?\s*/i,
+  /^(?:\d+\.?)?\s*CONCLUS[ÕO]ES?\s*/i,
   /^CONCLUS[ÕO]ES?\s*/i,
-  /^(?:5|6)\.?\s*CONSIDERA[ÇC][ÕO]ES\s+FINAIS\s*/i,
-  /^CONSIDERA[ÇC][ÕO]ES\s+FINAIS\s*/i
+  /^(?:\d+\.?)?\s*CONSIDERA[ÇC][ÕO]ES\s+FINAIS\s*/i,
+  /^CONSIDERA[ÇC][ÕO]ES\s+FINAIS\s*/i,
+  /^(?:\d+\.?)?\s*Conclusão\s*/i,
+  /^Conclusão\s*/i
 ];
 
 const REFERENCES_HEADING_PATTERNS = [
