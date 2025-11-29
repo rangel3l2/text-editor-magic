@@ -420,6 +420,9 @@ FORMATO DE RESPOSTA:
     console.log('- Imagens:', result.images?.length || 0);
 
     return result;
+  } catch (error) {
+    console.error('Erro ao usar Gemini para extração estruturada:', error);
+    return extractArticleSections(text);
   }
 }
 
