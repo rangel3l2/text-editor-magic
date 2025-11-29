@@ -123,16 +123,13 @@ async function parsePDF(buffer: ArrayBuffer): Promise<string> {
 }
 
 async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string; images: ExtractedImage[] }> {
-  const uint8Array = new Uint8Array(buffer);
   const extractedImages: ExtractedImage[] = [];
   let imageIndex = 0;
   
   console.log('🔍 Iniciando conversão do DOCX com mammoth...');
   console.log(`📦 Tamanho do buffer: ${buffer.byteLength} bytes`);
   
-  const options = {
-    // mammoth espera a propriedade arrayBuffer, não buffer
-    arrayBuffer: buffer,
+  const mammothOptions = {
     // Configuração para extrair TODOS os tipos de imagens
     convertImage: mammoth.images.imgElement(async function(image: any) {
       console.log(`🖼️ Imagem detectada pelo mammoth! Index: ${imageIndex}`);
@@ -179,7 +176,7 @@ async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string;
   };
   
   console.log('🔄 Chamando mammoth.convertToHtml...');
-  const result = await mammoth.convertToHtml(options);
+  const result = await mammoth.convertToHtml({ arrayBuffer: buffer }, mammothOptions);
   console.log(`✅ Conversão mammoth concluída. HTML gerado: ${result.value.length} caracteres`);
   console.log(`📊 Total de imagens capturadas: ${extractedImages.length}`);
   
