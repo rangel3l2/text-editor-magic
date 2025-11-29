@@ -484,20 +484,23 @@ function extractStandardIFMSSections(text: string) {
   // Padrão IFMS: Nome completo com marcador sobrescrito (¹, ²) + nota de rodapé detalhada
   console.log('\n📖 Extraindo AUTORES (padrão IFMS)...');
   
-  // Buscar autores: nomes próprios (não CAIXA ALTA completa) com marcadores ¹²³⁴
-  // O padrão garante que há pelo menos uma letra minúscula (excluindo subtítulos em CAIXA ALTA)
-  const authorsPattern = /(?:[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?(?:\s+[a-zàâãéêíóôõúç]+\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴](?:\s+)?)+/;
-  const authorsMatch = cleanText.match(authorsPattern);
+  // Buscar autores: Primeiro nome + nomes intermediários/iniciais + sobrenome + marcadores
+  // Exemplo: "Rangel Alves Silva¹" ou "Rangel A. Silva¹"
+  const authorsPattern = /[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+(?:[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?|[a-zàâãéêíóôõúç]+))*\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+[¹²³⁴⁵⁶⁷⁸⁹⁰]+/g;
+  const authorsMatches = cleanText.match(authorsPattern);
   
   let authors = '';
   let authorsWithFootnotes = '';
   
-  if (authorsMatch) {
-    authors = authorsMatch[0].trim();
+  if (authorsMatches && authorsMatches.length > 0) {
+    // Juntar todos os autores encontrados com vírgula
+    authors = authorsMatches.join(', ');
     console.log('📌 Nomes dos autores extraídos:', `"${authors}"`);
     
     // Delimitar a seção entre os autores e o RESUMO
-    const authorsEndIndex = cleanText.indexOf(authors) + authors.length;
+    const lastAuthorMatch = authorsMatches[authorsMatches.length - 1];
+    const lastAuthorIndex = cleanText.indexOf(lastAuthorMatch);
+    const authorsEndIndex = lastAuthorIndex + lastAuthorMatch.length;
     const resumoStartIndex = cleanText.indexOf('RESUMO', authorsEndIndex);
     const footnotesSection = resumoStartIndex !== -1 
       ? cleanText.substring(authorsEndIndex, resumoStartIndex).trim()
