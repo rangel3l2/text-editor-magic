@@ -42,10 +42,15 @@ const ArticleEditor = () => {
       hasWorkId: !!workId,
     });
 
-    // Se ainda não existe um trabalho em progresso, criar um novo registro
+    // Se ainda não existe um trabalho em progresso, criar um novo registro COM o conteúdo
     if (!workId && user) {
       try {
         const plainTitle = (parsedContent.title || '').toString().replace(/<[^>]*>/g, '').trim() || 'Artigo importado';
+
+        console.log('🆕 Criando novo trabalho com conteúdo importado:', {
+          title: plainTitle,
+          hasContent: !!parsedContent
+        });
 
         const { data, error } = await supabase
           .from('work_in_progress')
@@ -60,23 +65,75 @@ const ArticleEditor = () => {
 
         if (error || !data?.id) {
           console.error('❌ Erro ao criar work_in_progress para artigo importado:', error);
-        } else {
-          console.log('✅ Trabalho criado para artigo importado:', data.id);
-          // Atualiza a URL para usar o ID, garantindo que o reload recarregue o trabalho salvo
-          navigate(`/article/${data.id}`, { replace: true });
+          toast({
+            title: "Erro ao salvar artigo",
+            description: "Não foi possível salvar o artigo importado. Tente novamente.",
+            variant: "destructive"
+          });
+          return;
         }
+        
+        console.log('✅ Trabalho criado com sucesso:', data.id);
+        
+        toast({
+          title: "Artigo importado e salvo!",
+          description: "Todos os campos foram preenchidos e salvos permanentemente.",
+        });
+        
+        // Atualiza a URL para usar o ID, garantindo que o reload recarregue o trabalho salvo
+        navigate(`/article/${data.id}`, { replace: true });
+        
+        // Após navigate, o componente vai remontar e carregar do banco automaticamente
+        return;
+        
       } catch (err) {
         console.error('❌ Exceção ao criar trabalho importado:', err);
+        toast({
+          title: "Erro ao processar artigo",
+          description: "Ocorreu um erro ao salvar o artigo importado.",
+          variant: "destructive"
+        });
+        return;
       }
     }
 
-    // Atualizar todos os campos de uma só vez para evitar múltiplos re-renders
-    updateMultipleFields(parsedContent);
+    // Se já existe um workId, apenas atualizar o conteúdo
+    if (workId && user) {
+      try {
+        console.log('📝 Atualizando trabalho existente:', workId);
+        
+        const { error } = await supabase
+          .from('work_in_progress')
+          .update({ 
+            content: parsedContent as any,
+            last_modified: new Date().toISOString()
+          })
+          .eq('id', workId)
+          .eq('user_id', user.id);
 
-    toast({
-      title: "Artigo importado!",
-      description: "Todos os campos foram preenchidos automaticamente. Revise o conteúdo.",
-    });
+        if (error) {
+          console.error('❌ Erro ao atualizar trabalho:', error);
+          throw error;
+        }
+        
+        console.log('✅ Trabalho atualizado com sucesso');
+        
+        // Atualizar o estado local após salvar
+        updateMultipleFields(parsedContent);
+
+        toast({
+          title: "Artigo reimportado!",
+          description: "O conteúdo foi atualizado e salvo.",
+        });
+      } catch (err) {
+        console.error('❌ Erro ao atualizar trabalho importado:', err);
+        toast({
+          title: "Erro ao atualizar artigo",
+          description: "Não foi possível salvar as alterações.",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const handleOverleaf = async () => {
