@@ -262,198 +262,121 @@ Imagem ${i + 1}:
 - Contexto onde aparece: "${img.contextText}"
 `).join('')}
 
-IMPORTANTE: Para cada imagem encontrada, identifique:
-1. A seção onde deve aparecer (introduction, methodology, results, conclusion)
-2. O tipo: "figura", "grafico" ou "tabela"
-3. A legenda (procure por "Figura X:", "Gráfico X:", "Tabela X:" próximo à imagem no contexto)
-4. A fonte (procure por "Fonte:" logo abaixo da legenda)
-
-Adicione ao JSON um campo "images" com array de objetos:
-{
-  "images": [
-    {
-      "url": "https://i.ibb.co/...",
-      "type": "figura",
-      "caption": "Figura 1: Descrição da imagem",
-      "source": "Fonte: Autores (2024)",
-      "section": "results"
-    }
-  ]
-}`;
+IMPORTANTE: Para cada imagem, identifique a seção onde deve aparecer (introduction, methodology, results, conclusion), o tipo ("figura", "grafico" ou "tabela"), a legenda e a fonte.`;
       }
     }
     
     const prompt = `Analise este artigo científico brasileiro e extraia TODAS as seções com PRECISÃO ABSOLUTA.${imagePromptPart}
 
-EXEMPLO REAL DO DOCUMENTO QUE VOCÊ VAI PROCESSAR:
-- Título: "APLICAÇÃO DA INTELIGÊNCIA ARTIFICIAL NO PROCESSO DE ORIENTAÇÃO ACADÊMICA: UM ESTUDO SOBRE TCCS"
-- Autores (após título, ANTES do resumo): "Rangel Gomes Soares da Silva¹" E "Alex F. de Araujo²"
-- Notas de rodapé:
-  * ¹ Tecnólogo em Análise e Desenvolvimento de Sistemas. Instituto Federal de Mato Grosso do Sul...
-  * ² Mestre em Ciências da Computação... Professor no Instituto Federal de Mato Grosso do Sul...
-- Palavras-chave (após resumo): "Tecnologia Educacional, Teoria do Andaime, Escrita Científica, Pesquisa-Ação, Inteligência Artificial."
-- Keywords (após abstract): "Educational Technology, Scaffolding Theory, Scientific Writing, Action Research, Artificial Intelligence"
-
-REGRAS ABSOLUTAS DE EXTRAÇÃO:
-
-**title**: 
-  - Título completo em MAIÚSCULAS que aparece no INÍCIO do documento
-  - Exemplo correto: "APLICAÇÃO DA INTELIGÊNCIA ARTIFICIAL NO PROCESSO DE ORIENTAÇÃO ACADÊMICA: UM ESTUDO SOBRE TCCS"
-
-**authors**: 
-  - Nomes que aparecem IMEDIATAMENTE APÓS o título e ANTES de "RESUMO"
-  - Com superscript ¹ ou ²
-  - Formato: "Nome Completo¹, Outro Nome²" (separados por vírgula ou quebra de linha)
-  - EXEMPLO: "Rangel Gomes Soares da Silva¹, Alex F. de Araujo²"
-  - NÃO INCLUA: instituições, e-mails, cargos
-
-**advisors**: 
-  - PROCURE nas notas de rodapé (¹, ²) por quem tem "Professor" ou "Mestre" ou "Doutor"
-  - EXTRAIA APENAS O NOME da pessoa (primeira parte antes das qualificações)
-  - Se a nota diz "² Mestre em... Professor no Instituto...", extraia apenas "Alex F. de Araujo"
-  - Se houver 2 autores (¹ e ²), geralmente o ² é o orientador
-  - Formato esperado: "Nome Completo" (sem cargos, sem instituição)
-
-**abstract**: 
-  - Todo o parágrafo após "RESUMO" até a linha "Palavras-chave:"
-  - NÃO INCLUA a linha "Palavras-chave:" nem o que vem depois
-
-**keywords**: 
-  - SOMENTE as palavras que vêm IMEDIATAMENTE após "Palavras-chave:"
-  - Pare ANTES de qualquer nota de rodapé (¹, ²)
-  - EXEMPLO CORRETO: "Tecnologia Educacional, Teoria do Andaime, Escrita Científica, Pesquisa-Ação, Inteligência Artificial"
-  - NÃO INCLUA: "¹ Tecnólogo..." ou e-mails ou datas
-
-**englishAbstract**: 
-  - Todo o texto após "ABSTRACT" até a linha "Keywords:"
-  - NÃO INCLUA "Keywords:" nem o que vem depois
-
-**englishKeywords**: 
-  - SOMENTE as palavras após "Keywords:"
-  - Pare ANTES de "Data de aprovação:" ou qualquer outra informação
-  - EXEMPLO CORRETO: "Educational Technology, Scaffolding Theory, Scientific Writing, Action Research, Artificial Intelligence"
-
-**introduction**: TODA a seção 1 INTRODUÇÃO completa, do início até o final da seção (antes da seção 2)
-
-**theoreticalTopics**: Identifique TODOS os subtópicos da seção 2 (Referencial Teórico/Fundamentação). Cada subtópico numerado (2.1, 2.2, etc.) deve ser extraído como:
-  - title: título do subtópico SEM o número
-  - content: conteúdo completo do subtópico até o próximo subtópico
-
-**methodology**: Conteúdo COMPLETO da seção de metodologia (pode ser "METODOLOGIA", "MATERIAIS E MÉTODOS", "PROCEDIMENTOS METODOLÓGICOS", "MÉTODO", ou similar, geralmente seção 3 ou 4). Procure pela seção numerada (3. ou 4.) e extraia TODO o conteúdo até a próxima seção.
-
-**results**: Conteúdo COMPLETO da seção de resultados. ATENÇÃO: Esta seção pode ter títulos variados:
-  - "RESULTADOS"
-  - "RESULTADOS E DISCUSSÃO" 
-  - "RESULTADOS E DISCUSSÕES"
-  - "ANÁLISE DOS RESULTADOS"
-  - "DISCUSSÃO"
-  - "ANÁLISE E DISCUSSÃO DOS RESULTADOS"
-  Geralmente é a penúltima ou antepenúltima seção (antes da conclusão). Extraia TODO o conteúdo desta seção até a próxima seção principal.
-
-**conclusion**: Conteúdo COMPLETO da conclusão. ATENÇÃO: Esta seção pode ter títulos variados:
-  - "CONCLUSÃO"
-  - "CONCLUSÕES"
-  - "CONSIDERAÇÕES FINAIS"
-  - "CONCLUSÕES E CONSIDERAÇÕES FINAIS"
-  Geralmente é a última seção antes das referências. Extraia TODO o conteúdo até "REFERÊNCIAS".
-
-**references**: TODAS as referências bibliográficas completas. Procure por:
-  - "REFERÊNCIAS"
-  - "REFERÊNCIAS BIBLIOGRÁFICAS"
-  - Seção após a conclusão com lista de citações formatadas
-  Extraia TODO o conteúdo desta seção até o final do documento.
-
-**images** (SE HOUVER): Array com informações de cada imagem:
-  - url: URL do ImgBB fornecida acima
-  - type: "figura" | "grafico" | "tabela"
-  - caption: legenda completa (ex: "Figura 1: Esquema do processo")
-  - source: fonte da imagem (ex: "Fonte: Autores (2024)")
-  - section: seção onde aparece ("introduction" | "methodology" | "results" | "conclusion")
-
-Retorne APENAS JSON válido (sem markdown):
-{
-  "title": "...",
-  "authors": "...",
-  "advisors": "...",
-  "abstract": "...",
-  "keywords": "...",
-  "englishAbstract": "...",
-  "englishKeywords": "...",
-  "introduction": "...",
-  "theoreticalTopics": [{"title": "...", "content": "..."}, ...],
-  "methodology": "...",
-  "results": "...",
-  "conclusion": "...",
-  "references": "...",
-  "images": [{"url": "https://i.ibb.co/...", "type": "figura", "caption": "...", "source": "...", "section": "results"}, ...]
-}
-
-IMPORTANTE - REGRAS DE EXTRAÇÃO: 
-- Procure pelas seções em TODO o texto, não apenas no início
-- Resultados e Conclusão costumam estar no FINAL do documento
-- Referências sempre está no FINAL, após a conclusão
-- Se uma seção tiver um título diferente mas o conteúdo corresponder, inclua-a
-- NÃO deixe seções vazias se houver conteúdo relevante no documento
-
-VERIFICAÇÃO FINAL - VOCÊ DEVE:
-1. Verificar se "authors" contém APENAS nomes com ¹ ou ² (ex: "Rangel Gomes Soares da Silva¹, Alex F. de Araujo²")
-2. Verificar se "advisors" contém APENAS o nome extraído da nota de rodapé que menciona "Professor" (ex: "Alex F. de Araujo")
-3. Verificar se "keywords" NÃO contém notas de rodapé, e-mails ou qualquer texto que não seja palavra-chave
-4. Verificar se "englishKeywords" NÃO contém "Data de aprovação" ou qualquer texto adicional
-5. Se algum campo estiver com informações extras, LIMPE e deixe APENAS o conteúdo correto
+REGRAS CRÍTICAS:
+- **title**: Título completo em MAIÚSCULAS no INÍCIO do documento
+- **authors**: Nomes APÓS o título com ¹ ou ² (ex: "Nome¹, Outro Nome²") - SEM instituições/e-mails
+- **advisors**: Das notas de rodapé, extraia APENAS o nome de quem tem "Professor"
+- **keywords**: Apenas palavras após "Palavras-chave:" - PARE antes de notas de rodapé
+- **englishKeywords**: Apenas palavras após "Keywords:" - PARE antes de outras informações
+- **theoreticalTopics**: Array com title e content de cada subtópico 2.1, 2.2, etc.
+- **images**: Array com url, type, caption, source e section de cada imagem
 
 TEXTO DO ARTIGO:
 ${text}`;
 
+    // Usar Lovable AI com schema estruturado para garantir JSON válido
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Você é um extrator de dados de artigos científicos brasileiros. Seja EXTREMAMENTE PRECISO. REGRAS ABSOLUTAS: 1) "authors": APENAS nomes após o título com ¹ ou ², NUNCA inclua notas de rodapé. 2) "advisors": Das notas de rodapé, extraia APENAS o nome completo de quem tem "Professor" (ex: de "² Mestre... Professor no IFMS" extraia só "Alex F. de Araujo"). 3) "keywords": APENAS palavras após "Palavras-chave:", PARE antes de qualquer ¹. 4) "englishKeywords": APENAS keywords, PARE antes de "Data de aprovação". 5) Retorne JSON puro sem markdown.\n\n${prompt}`
-            }]
-          }]
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            {
+              role: 'system',
+              content: 'Você é um extrator preciso de dados de artigos científicos brasileiros. Retorne APENAS JSON válido seguindo exatamente o schema fornecido.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          tools: [
+            {
+              type: 'function',
+              function: {
+                name: 'extract_article_sections',
+                description: 'Extrai todas as seções de um artigo científico brasileiro',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string', description: 'Título completo do artigo' },
+                    authors: { type: 'string', description: 'Nomes dos autores com ¹ ou ²' },
+                    advisors: { type: 'string', description: 'Nome do orientador' },
+                    abstract: { type: 'string', description: 'Resumo em português' },
+                    keywords: { type: 'string', description: 'Palavras-chave em português' },
+                    englishAbstract: { type: 'string', description: 'Abstract em inglês' },
+                    englishKeywords: { type: 'string', description: 'Keywords em inglês' },
+                    introduction: { type: 'string', description: 'Seção de introdução completa' },
+                    theoreticalTopics: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          title: { type: 'string' },
+                          content: { type: 'string' }
+                        },
+                        required: ['title', 'content']
+                      }
+                    },
+                    methodology: { type: 'string', description: 'Seção de metodologia completa' },
+                    results: { type: 'string', description: 'Seção de resultados completa' },
+                    conclusion: { type: 'string', description: 'Seção de conclusão completa' },
+                    references: { type: 'string', description: 'Referências bibliográficas completas' },
+                    images: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          url: { type: 'string' },
+                          type: { type: 'string' },
+                          caption: { type: 'string' },
+                          source: { type: 'string' },
+                          section: { type: 'string' }
+                        },
+                        required: ['url', 'type', 'caption', 'source', 'section']
+                      }
+                    }
+                  },
+                  required: ['title', 'authors', 'advisors', 'abstract', 'keywords', 'englishAbstract', 'englishKeywords', 'introduction', 'theoreticalTopics', 'methodology', 'results', 'conclusion', 'references']
+                }
+              }
+            }
+          ],
+          tool_choice: { type: 'function', function: { name: 'extract_article_sections' } }
         })
       }
     );
 
     if (!response.ok) {
-      console.error('Erro na API Gemini:', response.status);
+      console.error('Erro na API Lovable AI:', response.status);
       const errorText = await response.text();
       console.error('Resposta de erro:', errorText);
       return extractArticleSections(text);
     }
 
     const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    console.log('📊 Resposta Lovable AI recebida');
     
-    console.log('Resposta do Gemini (primeiros 500 chars):', content.substring(0, 500));
-    
-    // Encontrar o JSON válido entre { e }
-    const firstBrace = content.indexOf('{');
-    const lastBrace = content.lastIndexOf('}');
-    
-    if (firstBrace === -1 || lastBrace === -1) {
-      console.error('JSON não encontrado na resposta da IA');
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall || !toolCall.function?.arguments) {
+      console.error('❌ Nenhum tool call retornado pela IA');
       return extractArticleSections(text);
     }
     
-    let jsonStr = content.substring(firstBrace, lastBrace + 1);
-    jsonStr = jsonStr.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-    
-    let aiResult;
-    try {
-      aiResult = JSON.parse(jsonStr);
-      console.log('✅ JSON parseado com sucesso');
-    } catch (parseError) {
-      console.error('❌ Erro ao fazer parse do JSON:', parseError);
-      return extractArticleSections(text);
-    }
+    const aiResult = JSON.parse(toolCall.function.arguments);
+    console.log('✅ JSON parseado com sucesso via structured output');
+    console.log('📋 Seções extraídas:', Object.keys(aiResult));
 
     // Converter para HTML
     const result: any = {
