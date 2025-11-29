@@ -273,19 +273,28 @@ REGRAS CRÍTICAS - ESTRUTURA IFMS:
 - title: Título completo em MAIÚSCULAS no INÍCIO do documento
 - authors: Nomes APÓS o título com ¹ ou ² (ex: "Nome¹, Outro Nome²") - SEM instituições/e-mails
 - advisors: Das notas de rodapé, extraia APENAS o nome de quem tem "Professor"
-- keywords: Apenas palavras após "Palavras-chave:" - PARE antes de notas de rodapé
-- englishKeywords: Apenas palavras após "Keywords:" - PARE antes de outras informações
-- introduction: Seção numerada "1 INTRODUÇÃO" ou "INTRODUÇÃO"
+- abstract: Texto completo após "RESUMO" - PARE quando encontrar "Palavras-chave:"
+- keywords: SOMENTE as palavras listadas após "Palavras-chave:" até o fim da linha ou até "ABSTRACT" - NÃO inclua texto de outras seções
+- englishAbstract: Texto completo após "ABSTRACT" - PARE quando encontrar "Keywords:"
+- englishKeywords: SOMENTE as palavras listadas após "Keywords:" até o fim da linha ou até "1 INTRODUÇÃO" - NÃO inclua texto de outras seções
+- introduction: SOMENTE o conteúdo da seção numerada "1 INTRODUÇÃO" - PARE quando encontrar a próxima seção numerada (ex: "2 ")
 - theoreticalTopics: ATENÇÃO! No padrão IFMS, NÃO existe uma seção chamada "Referencial Teórico".
   Os tópicos teóricos são TODAS as seções numeradas que aparecem ENTRE "Introdução" e "Metodologia".
   Por exemplo: se há "1 INTRODUÇÃO", depois "2 TECNOLOGIAS ASSISTIVAS", "3 ACESSIBILIDADE DIGITAL", e depois "4 METODOLOGIA",
   então theoreticalTopics deve conter os tópicos 2 e 3 com seus títulos REAIS e conteúdo completo.
+  Cada tópico teórico PARA quando encontrar a próxima seção numerada.
   Identifique pelo número da seção e título real, não invente "Referencial Teórico".
-- methodology: Seção com título "METODOLOGIA" ou número+METODOLOGIA
-- results: Seção "RESULTADOS E DISCUSSÕES" ou variações como "RESULTADOS", "DISCUSSÕES"
-- conclusion: Seção "CONCLUSÃO" ou "CONSIDERAÇÕES FINAIS"
-- references: Lista após "REFERÊNCIAS"
+- methodology: SOMENTE o conteúdo da seção "METODOLOGIA" - PARE quando encontrar a próxima seção numerada (ex: "RESULTADOS")
+- results: SOMENTE o conteúdo da seção "RESULTADOS E DISCUSSÕES" - PARE quando encontrar a próxima seção (ex: "CONCLUSÃO")
+- conclusion: SOMENTE o conteúdo da seção "CONCLUSÃO" ou "CONSIDERAÇÕES FINAIS" - PARE quando encontrar "REFERÊNCIAS"
+- references: SOMENTE a lista após "REFERÊNCIAS" até o fim do documento
 - images: Array com url, type, caption, source e section de cada imagem
+
+REGRAS CRÍTICAS PARA SEPARAÇÃO DE CONTEÚDO:
+- Cada campo deve conter APENAS o conteúdo da sua própria seção
+- NUNCA misture conteúdo de diferentes seções
+- Quando encontrar o início da próxima seção, PARE de extrair para o campo atual
+- Keywords e englishKeywords devem conter APENAS a lista de palavras-chave, NÃO o texto de outras seções
 
 REGRAS CRÍTICAS DE JSON (MUITO IMPORTANTE):
 - NUNCA use blocos markdown na resposta
