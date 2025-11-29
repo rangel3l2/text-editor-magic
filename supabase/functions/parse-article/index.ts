@@ -322,14 +322,19 @@ ${text}`;
     console.log('🔎 Chamando Gemini diretamente para extração estruturada...');
     const client = createGeminiClient();
     const aiResponse = await client.generateContent(prompt);
-    const rawText = aiResponse.response.text();
+    let rawText = aiResponse.response.text();
 
     console.log('📥 Resposta bruta do Gemini (primeiros 400 chars):', rawText.substring(0, 400));
+
+    // Limpar blocos markdown (```json ... ```)
+    rawText = rawText.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+    console.log('🧹 Texto limpo (primeiros 400 chars):', rawText.substring(0, 400));
 
     let aiResult: any;
 
     try {
       aiResult = JSON.parse(rawText);
+      console.log('✅ JSON parseado com sucesso diretamente');
     } catch (parseError) {
       console.error('❌ Falha ao fazer JSON.parse direto da resposta do Gemini:', parseError);
 
@@ -344,6 +349,7 @@ ${text}`;
           console.log('✅ JSON parseado com sucesso a partir de slice da resposta do Gemini');
         } catch (sliceError) {
           console.error('❌ Também falhou ao parsear slice JSON da resposta do Gemini:', sliceError);
+          console.error('❌ Conteúdo do slice que falhou:', jsonSlice.substring(0, 500));
           return extractArticleSections(text);
         }
       } else {
