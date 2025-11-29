@@ -480,10 +480,60 @@ function extractStandardIFMSSections(text: string) {
     console.log('⚠️ Título não encontrado');
   }
 
-  // Extrair autores (nomes com ¹ ou ²)
-  const authorsMatch = cleanText.match(/([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²]?)(?:\s*,?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+[¹²]?)*/);
-  const authors = authorsMatch ? authorsMatch[0].trim() : '';
-  console.log('📌 Autores extraídos:', authors ? `"${authors}"` : 'VAZIO');
+  // Extrair autores seguindo padrão IFMS
+  // Padrão IFMS: Nome completo com marcador sobrescrito (¹, ²) + nota de rodapé detalhada
+  console.log('\n📖 Extraindo AUTORES (padrão IFMS)...');
+  
+  // Buscar autores: nomes entre título e RESUMO, com marcadores ¹ ²
+  const authorsSectionMatch = cleanText.match(/([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴])(?:\s+([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴]))*(?=\s+RESUMO)/i);
+  
+  let authors = '';
+  let authorsWithFootnotes = '';
+  
+  if (authorsSectionMatch) {
+    authors = authorsSectionMatch[0].trim();
+    console.log('📌 Nomes dos autores extraídos:', `"${authors}"`);
+    
+    // Extrair notas de rodapé correspondentes aos marcadores
+    // Padrão de nota: ¹ Formação. Instituição - E-mail: email@exemplo.com
+    const footnotes: string[] = [];
+    
+    // Buscar nota ¹
+    const footnote1Match = cleanText.match(/¹\s+([^²³⁴]+?)(?=\s*²|$)/);
+    if (footnote1Match) {
+      footnotes.push(`¹ ${footnote1Match[1].trim()}`);
+    }
+    
+    // Buscar nota ²
+    const footnote2Match = cleanText.match(/²\s+([^¹³⁴]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    if (footnote2Match) {
+      footnotes.push(`² ${footnote2Match[1].trim()}`);
+    }
+    
+    // Buscar nota ³ (se existir)
+    const footnote3Match = cleanText.match(/³\s+([^¹²⁴]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    if (footnote3Match) {
+      footnotes.push(`³ ${footnote3Match[1].trim()}`);
+    }
+    
+    // Buscar nota ⁴ (se existir)
+    const footnote4Match = cleanText.match(/⁴\s+([^¹²³]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    if (footnote4Match) {
+      footnotes.push(`⁴ ${footnote4Match[1].trim()}`);
+    }
+    
+    if (footnotes.length > 0) {
+      authorsWithFootnotes = `${authors}\n\n${footnotes.join('\n\n')}`;
+      console.log('📌 Notas de rodapé extraídas:', footnotes.length);
+    } else {
+      authorsWithFootnotes = authors;
+      console.log('⚠️ Nenhuma nota de rodapé encontrada');
+    }
+  } else {
+    console.log('⚠️ Autores não encontrados no padrão IFMS');
+  }
+  
+  console.log('✅ Autores completos:', authorsWithFootnotes ? `"${authorsWithFootnotes.substring(0, 100)}..."` : 'VAZIO');
 
   // Extrair orientadores (notas de rodapé com "Professor")
   const advisorMatch = cleanText.match(/(?:Professor|Orientador|Mestre|Doutor)[^.]+\.(?:\s+Professor[^.]+\.)?/i);
@@ -579,7 +629,7 @@ function extractStandardIFMSSections(text: string) {
   return {
     title: cleanHtml(title),
     subtitle: cleanHtml(subtitle),
-    authors: cleanHtml(authors),
+    authors: cleanHtml(authorsWithFootnotes),
     advisors: cleanHtml(advisors),
     abstract: cleanHtml(abstract),
     keywords: cleanHtml(keywords),
@@ -681,8 +731,29 @@ function extractArticleSections(text: string) {
     title = fullTitle;
   }
 
-  const authorsMatch = cleanText.match(/([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*¹?)(?:\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+²?)?/);
-  const authors = authorsMatch ? authorsMatch[0].trim() : '';
+  // Extrair autores seguindo padrão IFMS (mesma lógica da função principal)
+  const authorsSectionMatch = cleanText.match(/([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴])(?:\s+([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴]))*(?=\s+RESUMO)/i);
+  
+  let authorsWithFootnotes = '';
+  
+  if (authorsSectionMatch) {
+    const authors = authorsSectionMatch[0].trim();
+    const footnotes: string[] = [];
+    
+    const footnote1Match = cleanText.match(/¹\s+([^²³⁴]+?)(?=\s*²|$)/);
+    if (footnote1Match) footnotes.push(`¹ ${footnote1Match[1].trim()}`);
+    
+    const footnote2Match = cleanText.match(/²\s+([^¹³⁴]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    if (footnote2Match) footnotes.push(`² ${footnote2Match[1].trim()}`);
+    
+    const footnote3Match = cleanText.match(/³\s+([^¹²⁴]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    if (footnote3Match) footnotes.push(`³ ${footnote3Match[1].trim()}`);
+    
+    const footnote4Match = cleanText.match(/⁴\s+([^¹²³]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    if (footnote4Match) footnotes.push(`⁴ ${footnote4Match[1].trim()}`);
+    
+    authorsWithFootnotes = footnotes.length > 0 ? `${authors}\n\n${footnotes.join('\n\n')}` : authors;
+  }
 
   const advisorMatch = cleanText.match(/(?:Professor|Orientador|Mestre|Doutor)[^.]+\.(?:\s+Professor[^.]+\.)?/i);
   const advisors = advisorMatch ? advisorMatch[0].trim() : '';
@@ -711,7 +782,7 @@ function extractArticleSections(text: string) {
   return {
     title: cleanHtml(title),
     subtitle: cleanHtml(subtitle),
-    authors: cleanHtml(authors),
+    authors: cleanHtml(authorsWithFootnotes),
     advisors: cleanHtml(advisors),
     abstract: cleanHtml(abstract),
     keywords: cleanHtml(keywords),
