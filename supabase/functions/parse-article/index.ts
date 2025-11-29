@@ -482,23 +482,43 @@ function extractStandardIFMSSections(text: string) {
 
   // Extrair autores seguindo padrão IFMS
   // Padrão IFMS: Nome completo com marcador sobrescrito (¹, ²) + nota de rodapé detalhada
+  // REGRA: Primeiro nome = DISCENTE (aluno), Segundo nome = DOCENTE (orientador)
   console.log('\n📖 Extraindo AUTORES (padrão IFMS)...');
   
   // Buscar a linha completa que contém os autores com marcadores sobrescritos (¹, ², ³, ⁴)
-  // Isso evita cortar o primeiro nome mesmo que o usuário escreva em minúsculas ou com variações
-  const authorsLineMatch = cleanText.match(/^[^\n]*[¹²³⁴][^\n]*$/m);
+  const authorsLineMatch = cleanText.match(/^[^\n]*[¹²³⁴⁵⁶⁷⁸⁹⁰]+[^\n]*$/m);
   
   let authors = '';
   let authorsWithFootnotes = '';
+  let studentName = '';
+  let advisorName = '';
   
   if (authorsLineMatch) {
-    authors = authorsLineMatch[0].trim();
-    console.log('📌 Nomes dos autores extraídos (linha completa):', `"${authors}"`);
+    const authorsLine = authorsLineMatch[0].trim();
+    console.log('📌 Linha de autores completa:', `"${authorsLine}"`);
     
-    // Delimitar a seção entre os autores e o RESUMO
-    const lastAuthorMatch = authorsMatches[authorsMatches.length - 1];
-    const lastAuthorIndex = cleanText.indexOf(lastAuthorMatch);
-    const authorsEndIndex = lastAuthorIndex + lastAuthorMatch.length;
+    // Dividir nomes usando os marcadores sobrescritos como separadores
+    // Exemplo: "Rangel Gomes Soares da Silva¹ João Santos²" → ["Rangel Gomes Soares da Silva¹", "João Santos²"]
+    const authorsList = authorsLine.split(/(?=[¹²³⁴⁵⁶⁷⁸⁹⁰])/).filter(name => name.trim());
+    
+    if (authorsList.length > 0) {
+      // Primeiro nome = DISCENTE (remover marcador sobrescrito)
+      studentName = authorsList[0].replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰]+/g, '').trim();
+      console.log('📌 Nome do DISCENTE:', `"${studentName}"`);
+    }
+    
+    if (authorsList.length > 1) {
+      // Segundo nome = DOCENTE (remover marcador sobrescrito)
+      advisorName = authorsList[1].replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰]+/g, '').trim();
+      console.log('📌 Nome do DOCENTE:', `"${advisorName}"`);
+    }
+    
+    // Manter linha completa para extração de footnotes
+    authors = authorsLine;
+    
+    // Delimitar a seção entre os autores e o RESUMO para extrair notas de rodapé
+    const authorsIndex = cleanText.indexOf(authorsLine);
+    const authorsEndIndex = authorsIndex + authorsLine.length;
     const resumoStartIndex = cleanText.indexOf('RESUMO', authorsEndIndex);
     const footnotesSection = resumoStartIndex !== -1 
       ? cleanText.substring(authorsEndIndex, resumoStartIndex).trim()
@@ -640,8 +660,8 @@ function extractStandardIFMSSections(text: string) {
   return {
     title: cleanHtml(title).toUpperCase(), // Padrão IFMS: título em CAIXA ALTA
     subtitle: cleanHtml(subtitle).toUpperCase(), // Padrão IFMS: subtítulo em CAIXA ALTA
-    authors: cleanHtml(authorsWithFootnotes),
-    advisors: cleanHtml(advisors),
+    authors: cleanHtml(studentName), // DISCENTE: primeiro nome da linha de autores
+    advisors: cleanHtml(advisorName), // DOCENTE: segundo nome da linha de autores
     abstract: cleanHtml(abstract),
     keywords: cleanHtml(keywords),
     englishAbstract: cleanHtml(englishAbstract),
@@ -742,42 +762,35 @@ function extractArticleSections(text: string) {
     title = fullTitle;
   }
 
-  // Extrair autores seguindo padrão IFMS (mesma lógica da função principal)
-  const authorsPattern = /(?:[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?(?:\s+[a-zàâãéêíóôõúç]+\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴](?:\s+)?)+/;
-  const authorsMatch = cleanText.match(authorsPattern);
+  // Extrair autores seguindo padrão IFMS
+  // REGRA: Primeiro nome = DISCENTE (aluno), Segundo nome = DOCENTE (orientador)
+  console.log('\n📖 Extraindo AUTORES (padrão IFMS - função fallback)...');
   
-  let authorsWithFootnotes = '';
+  // Buscar a linha completa que contém os autores com marcadores sobrescritos (¹, ², ³, ⁴)
+  const authorsLineMatch = cleanText.match(/^[^\n]*[¹²³⁴⁵⁶⁷⁸⁹⁰]+[^\n]*$/m);
   
-  if (authorsMatch) {
-    const authors = authorsMatch[0].trim();
+  let studentName = '';
+  let advisorName = '';
+  
+  if (authorsLineMatch) {
+    const authorsLine = authorsLineMatch[0].trim();
+    console.log('📌 Linha de autores completa (fallback):', `"${authorsLine}"`);
     
-    // Delimitar a seção entre os autores e o RESUMO
-    const authorsEndIndex = cleanText.indexOf(authors) + authors.length;
-    const resumoStartIndex = cleanText.indexOf('RESUMO', authorsEndIndex);
-    const footnotesSection = resumoStartIndex !== -1 
-      ? cleanText.substring(authorsEndIndex, resumoStartIndex).trim()
-      : '';
+    // Dividir nomes usando os marcadores sobrescritos como separadores
+    const authorsList = authorsLine.split(/(?=[¹²³⁴⁵⁶⁷⁸⁹⁰])/).filter(name => name.trim());
     
-    // Extrair notas de rodapé APENAS dentro da seção delimitada
-    const footnotes: string[] = [];
+    if (authorsList.length > 0) {
+      // Primeiro nome = DISCENTE (remover marcador sobrescrito)
+      studentName = authorsList[0].replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰]+/g, '').trim();
+      console.log('📌 Nome do DISCENTE (fallback):', `"${studentName}"`);
+    }
     
-    const footnote1Match = footnotesSection.match(/¹\s+([^\n]+)/);
-    if (footnote1Match) footnotes.push(`¹ ${footnote1Match[1].trim()}`);
-    
-    const footnote2Match = footnotesSection.match(/²\s+([^\n]+)/);
-    if (footnote2Match) footnotes.push(`² ${footnote2Match[1].trim()}`);
-    
-    const footnote3Match = footnotesSection.match(/³\s+([^\n]+)/);
-    if (footnote3Match) footnotes.push(`³ ${footnote3Match[1].trim()}`);
-    
-    const footnote4Match = footnotesSection.match(/⁴\s+([^\n]+)/);
-    if (footnote4Match) footnotes.push(`⁴ ${footnote4Match[1].trim()}`);
-    
-    authorsWithFootnotes = footnotes.length > 0 ? `${authors}\n\n${footnotes.join('\n\n')}` : authors;
+    if (authorsList.length > 1) {
+      // Segundo nome = DOCENTE (remover marcador sobrescrito)
+      advisorName = authorsList[1].replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰]+/g, '').trim();
+      console.log('📌 Nome do DOCENTE (fallback):', `"${advisorName}"`);
+    }
   }
-
-  const advisorMatch = cleanText.match(/(?:Professor|Orientador|Mestre|Doutor)[^.]+\.(?:\s+Professor[^.]+\.)?/i);
-  const advisors = advisorMatch ? advisorMatch[0].trim() : '';
 
   const abstract = extractBetween(/RESUMO\s*/i, /Palavras-chave:/i);
   const keywordsMatch = cleanText.match(/Palavras-chave:\s*([^.]+(?:\.[^.]+){2,}\.)/i);
@@ -803,8 +816,8 @@ function extractArticleSections(text: string) {
   return {
     title: cleanHtml(title).toUpperCase(), // Padrão IFMS: título em CAIXA ALTA
     subtitle: cleanHtml(subtitle).toUpperCase(), // Padrão IFMS: subtítulo em CAIXA ALTA
-    authors: cleanHtml(authorsWithFootnotes),
-    advisors: cleanHtml(advisors),
+    authors: cleanHtml(studentName), // DISCENTE: primeiro nome da linha de autores
+    advisors: cleanHtml(advisorName), // DOCENTE: segundo nome da linha de autores
     abstract: cleanHtml(abstract),
     keywords: cleanHtml(keywords),
     englishAbstract: cleanHtml(englishAbstract),
