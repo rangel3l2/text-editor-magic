@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { toUpperCasePreservingHTML } from '@/utils/textFormatting';
 
 import type { LogoConfig } from './header/LogoUpload';
 
@@ -70,9 +71,15 @@ export const useBannerContent = () => {
   const [bannerContent, setBannerContent] = useState<BannerContent>(initialBannerContent);
 
   const handleChange = (field: string, value: any) => {
+    // Aplicar conversão para CAIXA ALTA em título (padrão IFMS)
+    let processedValue = value;
+    if (field === 'title' && typeof value === 'string') {
+      processedValue = toUpperCasePreservingHTML(value);
+    }
+    
     setBannerContent(prev => ({
       ...prev,
-      [field]: value
+      [field]: processedValue
     }));
   };
 

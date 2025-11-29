@@ -637,8 +637,8 @@ function extractStandardIFMSSections(text: string) {
   console.log('- Referências:', references ? 'OK' : 'VAZIO');
 
   return {
-    title: cleanHtml(title),
-    subtitle: cleanHtml(subtitle),
+    title: cleanHtml(title).toUpperCase(), // Padrão IFMS: título em CAIXA ALTA
+    subtitle: cleanHtml(subtitle).toUpperCase(), // Padrão IFMS: subtítulo em CAIXA ALTA
     authors: cleanHtml(authorsWithFootnotes),
     advisors: cleanHtml(advisors),
     abstract: cleanHtml(abstract),
@@ -800,8 +800,8 @@ function extractArticleSections(text: string) {
   const references = cleanText.split(/REFERÊNCIAS\s*BIBLIOGRÁFICAS|REFERÊNCIAS/i)[1]?.trim() || '';
 
   return {
-    title: cleanHtml(title),
-    subtitle: cleanHtml(subtitle),
+    title: cleanHtml(title).toUpperCase(), // Padrão IFMS: título em CAIXA ALTA
+    subtitle: cleanHtml(subtitle).toUpperCase(), // Padrão IFMS: subtítulo em CAIXA ALTA
     authors: cleanHtml(authorsWithFootnotes),
     advisors: cleanHtml(advisors),
     abstract: cleanHtml(abstract),

@@ -200,9 +200,9 @@ ${text}`;
     const jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const aiResult = JSON.parse(jsonStr);
 
-    // Converter para HTML
+    // Converter para HTML e aplicar padrão IFMS (título em CAIXA ALTA)
     const result: any = {
-      title: cleanHtml(aiResult.title || ''),
+      title: cleanHtml(aiResult.title || '').toUpperCase(), // Padrão IFMS: título em CAIXA ALTA
       authors: cleanHtml(aiResult.authors || ''),
       institution: cleanHtml(aiResult.institution || 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul'),
       section1: cleanHtml(aiResult.introduction || ''),
@@ -273,7 +273,7 @@ function extractBannerSections(text: string) {
   const section6 = referencesStart !== -1 ? cleanText.slice(referencesStart).replace(/REFER[ÊE]NCIAS\s*/i, '').trim() : '';
 
   return {
-    title: cleanHtml(title),
+    title: cleanHtml(title).toUpperCase(), // Padrão IFMS: título em CAIXA ALTA
     authors: cleanHtml(authors),
     institution: cleanHtml(institution),
     section1: cleanHtml(section1),

@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { toUpperCasePreservingHTML } from '@/utils/textFormatting';
 
 export interface TheoreticalTopic {
   id: string;
@@ -62,9 +63,15 @@ export const useMonographyContent = () => {
   const [content, setContent] = useState<MonographyContent>(initialMonographyContent);
 
   const handleChange = (field: keyof MonographyContent, value: string | TheoreticalTopic[]) => {
+    // Aplicar conversão para CAIXA ALTA em título e subtítulo (padrão IFMS)
+    let processedValue = value;
+    if ((field === 'title' || field === 'subtitle') && typeof value === 'string') {
+      processedValue = toUpperCasePreservingHTML(value);
+    }
+    
     setContent(prev => ({
       ...prev,
-      [field]: value
+      [field]: processedValue
     }));
 
     if (user && id) {
@@ -73,7 +80,7 @@ export const useMonographyContent = () => {
           const { error } = await supabase
             .from('work_in_progress')
             .update({ 
-              content: { ...content, [field]: value } as any,
+              content: { ...content, [field]: processedValue } as any,
               last_modified: new Date().toISOString()
             })
             .eq('id', id)
