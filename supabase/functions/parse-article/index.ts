@@ -494,30 +494,38 @@ function extractStandardIFMSSections(text: string) {
     authors = authorsSectionMatch[0].trim();
     console.log('📌 Nomes dos autores extraídos:', `"${authors}"`);
     
-    // Extrair notas de rodapé correspondentes aos marcadores
-    // Padrão de nota: ¹ Formação. Instituição - E-mail: email@exemplo.com
+    // Delimitar a seção entre os autores e o RESUMO
+    const authorsEndIndex = cleanText.indexOf(authors) + authors.length;
+    const resumoStartIndex = cleanText.indexOf('RESUMO', authorsEndIndex);
+    const footnotesSection = resumoStartIndex !== -1 
+      ? cleanText.substring(authorsEndIndex, resumoStartIndex).trim()
+      : '';
+    
+    console.log('📌 Seção de notas de rodapé isolada (primeiros 100 chars):', footnotesSection.substring(0, 100));
+    
+    // Extrair notas de rodapé APENAS dentro da seção delimitada
     const footnotes: string[] = [];
     
-    // Buscar nota ¹ (até encontrar ² ou RESUMO)
-    const footnote1Match = cleanText.match(/¹\s+([^²³⁴]+?)(?=\s*[²³⁴]|\s*RESUMO)/i);
+    // Buscar nota ¹ (linha completa após o marcador)
+    const footnote1Match = footnotesSection.match(/¹\s+([^\n]+)/);
     if (footnote1Match) {
       footnotes.push(`¹ ${footnote1Match[1].trim()}`);
     }
     
-    // Buscar nota ² (até encontrar ¹³⁴ ou RESUMO)
-    const footnote2Match = cleanText.match(/²\s+([^¹³⁴]+?)(?=\s*[¹³⁴]|\s*RESUMO)/i);
+    // Buscar nota ²
+    const footnote2Match = footnotesSection.match(/²\s+([^\n]+)/);
     if (footnote2Match) {
       footnotes.push(`² ${footnote2Match[1].trim()}`);
     }
     
-    // Buscar nota ³ (até encontrar ¹²⁴ ou RESUMO)
-    const footnote3Match = cleanText.match(/³\s+([^¹²⁴]+?)(?=\s*[¹²⁴]|\s*RESUMO)/i);
+    // Buscar nota ³
+    const footnote3Match = footnotesSection.match(/³\s+([^\n]+)/);
     if (footnote3Match) {
       footnotes.push(`³ ${footnote3Match[1].trim()}`);
     }
     
-    // Buscar nota ⁴ (até encontrar ¹²³ ou RESUMO)
-    const footnote4Match = cleanText.match(/⁴\s+([^¹²³]+?)(?=\s*[¹²³]|\s*RESUMO)/i);
+    // Buscar nota ⁴
+    const footnote4Match = footnotesSection.match(/⁴\s+([^\n]+)/);
     if (footnote4Match) {
       footnotes.push(`⁴ ${footnote4Match[1].trim()}`);
     }
@@ -738,18 +746,27 @@ function extractArticleSections(text: string) {
   
   if (authorsSectionMatch) {
     const authors = authorsSectionMatch[0].trim();
+    
+    // Delimitar a seção entre os autores e o RESUMO
+    const authorsEndIndex = cleanText.indexOf(authors) + authors.length;
+    const resumoStartIndex = cleanText.indexOf('RESUMO', authorsEndIndex);
+    const footnotesSection = resumoStartIndex !== -1 
+      ? cleanText.substring(authorsEndIndex, resumoStartIndex).trim()
+      : '';
+    
+    // Extrair notas de rodapé APENAS dentro da seção delimitada
     const footnotes: string[] = [];
     
-    const footnote1Match = cleanText.match(/¹\s+([^²³⁴]+?)(?=\s*[²³⁴]|\s*RESUMO)/i);
+    const footnote1Match = footnotesSection.match(/¹\s+([^\n]+)/);
     if (footnote1Match) footnotes.push(`¹ ${footnote1Match[1].trim()}`);
     
-    const footnote2Match = cleanText.match(/²\s+([^¹³⁴]+?)(?=\s*[¹³⁴]|\s*RESUMO)/i);
+    const footnote2Match = footnotesSection.match(/²\s+([^\n]+)/);
     if (footnote2Match) footnotes.push(`² ${footnote2Match[1].trim()}`);
     
-    const footnote3Match = cleanText.match(/³\s+([^¹²⁴]+?)(?=\s*[¹²⁴]|\s*RESUMO)/i);
+    const footnote3Match = footnotesSection.match(/³\s+([^\n]+)/);
     if (footnote3Match) footnotes.push(`³ ${footnote3Match[1].trim()}`);
     
-    const footnote4Match = cleanText.match(/⁴\s+([^¹²³]+?)(?=\s*[¹²³]|\s*RESUMO)/i);
+    const footnote4Match = footnotesSection.match(/⁴\s+([^\n]+)/);
     if (footnote4Match) footnotes.push(`⁴ ${footnote4Match[1].trim()}`);
     
     authorsWithFootnotes = footnotes.length > 0 ? `${authors}\n\n${footnotes.join('\n\n')}` : authors;
