@@ -131,7 +131,8 @@ async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string;
   console.log(`📦 Tamanho do buffer: ${buffer.byteLength} bytes`);
   
   const options = {
-    buffer: uint8Array,
+    // mammoth espera a propriedade arrayBuffer, não buffer
+    arrayBuffer: buffer,
     // Configuração para extrair TODOS os tipos de imagens
     convertImage: mammoth.images.imgElement(async function(image: any) {
       console.log(`🖼️ Imagem detectada pelo mammoth! Index: ${imageIndex}`);
