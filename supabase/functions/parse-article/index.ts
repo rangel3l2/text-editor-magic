@@ -7,7 +7,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const IMGBB_API_KEY = Deno.env.get("IMGBB_API_KEY");
 
 interface ExtractedImage {
@@ -267,8 +267,8 @@ async function uploadToImgBB(base64: string, filename: string): Promise<string |
 }
 
 async function extractArticleSectionsWithAI(text: string, images?: ExtractedImage[]) {
-  if (!LOVABLE_API_KEY) {
-    console.error('LOVABLE_API_KEY não configurada, usando extração regex');
+  if (!GEMINI_API_KEY) {
+    console.error('GEMINI_API_KEY não configurada, usando extração regex');
     return extractArticleSections(text);
   }
 
@@ -427,32 +427,34 @@ VERIFICAÇÃO FINAL - VOCÊ DEVE:
 TEXTO DO ARTIGO:
 ${text}`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: 'Você é um extrator de dados de artigos científicos brasileiros. Seja EXTREMAMENTE PRECISO. REGRAS ABSOLUTAS: 1) "authors": APENAS nomes após o título com ¹ ou ², NUNCA inclua notas de rodapé. 2) "advisors": Das notas de rodapé, extraia APENAS o nome completo de quem tem "Professor" (ex: de "² Mestre... Professor no IFMS" extraia só "Alex F. de Araujo"). 3) "keywords": APENAS palavras após "Palavras-chave:", PARE antes de qualquer ¹. 4) "englishKeywords": APENAS keywords, PARE antes de "Data de aprovação". 5) Retorne JSON puro sem markdown.' },
-          { role: 'user', content: prompt }
-        ],
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Você é um extrator de dados de artigos científicos brasileiros. Seja EXTREMAMENTE PRECISO. REGRAS ABSOLUTAS: 1) "authors": APENAS nomes após o título com ¹ ou ², NUNCA inclua notas de rodapé. 2) "advisors": Das notas de rodapé, extraia APENAS o nome completo de quem tem "Professor" (ex: de "² Mestre... Professor no IFMS" extraia só "Alex F. de Araujo"). 3) "keywords": APENAS palavras após "Palavras-chave:", PARE antes de qualquer ¹. 4) "englishKeywords": APENAS keywords, PARE antes de "Data de aprovação". 5) Retorne JSON puro sem markdown.\n\n${prompt}`
+            }]
+          }]
+        })
+      }
+    );
 
     if (!response.ok) {
-      console.error('Erro na API de IA:', response.status);
+      console.error('Erro na API Gemini:', response.status);
       const errorText = await response.text();
       console.error('Resposta de erro:', errorText);
       return extractArticleSections(text);
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     
-    console.log('Resposta da IA (primeiros 500 chars):', content.substring(0, 500));
+    console.log('Resposta do Gemini (primeiros 500 chars):', content.substring(0, 500));
     
     // Encontrar o JSON válido entre { e }
     const firstBrace = content.indexOf('{');
