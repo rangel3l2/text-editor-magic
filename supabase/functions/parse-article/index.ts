@@ -124,59 +124,16 @@ async function parsePDF(buffer: ArrayBuffer): Promise<string> {
 
 async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string; images: ExtractedImage[] }> {
   const extractedImages: ExtractedImage[] = [];
-  let imageIndex = 0;
   
   console.log('🔍 Iniciando conversão do DOCX com mammoth...');
   console.log(`📦 Tamanho do buffer: ${buffer.byteLength} bytes`);
   
-  const mammothOptions = {
-    // Configuração para extrair TODOS os tipos de imagens
-    convertImage: mammoth.images.imgElement(async function(image: any) {
-      console.log(`🖼️ Imagem detectada pelo mammoth! Index: ${imageIndex}`);
-      console.log(`   - ContentType: ${image.contentType}`);
-      console.log(`   - Image object keys: ${Object.keys(image).join(', ')}`);
-      
-      try {
-        const imageBuffer = await image.read();
-        console.log(`   - Buffer lido: ${imageBuffer.byteLength} bytes`);
-        
-        const bytes = new Uint8Array(imageBuffer);
-        let binary = '';
-        for (let i = 0; i < bytes.length; i++) {
-          binary += String.fromCharCode(bytes[i]);
-        }
-        const base64 = btoa(binary);
-        const mimeType = image.contentType || 'image/png';
-        
-        console.log(`   - Base64 gerado: ${base64.length} caracteres`);
-        console.log(`   - MIME type: ${mimeType}`);
-        
-        extractedImages.push({
-          id: `img-${imageIndex}`,
-          base64: base64,
-          mimeType: mimeType,
-          position: imageIndex,
-          contextText: ''
-        });
-        
-        console.log(`✅ Imagem ${imageIndex} extraída com sucesso`);
-        
-        // Marcador para identificar posição no HTML
-        const placeholder = `[[IMAGE_PLACEHOLDER_${imageIndex++}]]`;
-        return { src: placeholder };
-      } catch (err) {
-        console.error(`❌ Erro ao processar imagem ${imageIndex}:`, err);
-        imageIndex++;
-        return { src: '' };
-      }
-    }),
-    // Adicionar opções para incluir imagens embedadas e shapes
-    includeEmbeddedStyleMap: true,
-    includeDefaultStyleMap: true
+  const options = {
+    arrayBuffer: buffer,
   };
   
   console.log('🔄 Chamando mammoth.convertToHtml...');
-  const result = await mammoth.convertToHtml({ arrayBuffer: buffer }, mammothOptions);
+  const result = await mammoth.convertToHtml(options);
   console.log(`✅ Conversão mammoth concluída. HTML gerado: ${result.value.length} caracteres`);
   console.log(`📊 Total de imagens capturadas: ${extractedImages.length}`);
   
@@ -187,30 +144,11 @@ async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string;
     });
   }
   
-  // Extrair contexto de cada imagem (texto ao redor)
   const htmlContent = result.value;
   console.log(`🔍 Procurando contexto para ${extractedImages.length} imagens no HTML...`);
   
-  extractedImages.forEach((img, idx) => {
-    const marker = `[[IMAGE_PLACEHOLDER_${idx}]]`;
-    const markerPos = htmlContent.indexOf(marker);
-    if (markerPos !== -1) {
-      console.log(`   ✅ Marcador ${idx} encontrado na posição ${markerPos}`);
-      // Pegar 200 chars antes e depois como contexto
-      const start = Math.max(0, markerPos - 200);
-      const end = Math.min(htmlContent.length, markerPos + 200);
-      img.contextText = htmlContent.substring(start, end)
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      console.log(`      Contexto: "${img.contextText.substring(0, 50)}..."`);
-    } else {
-      console.log(`   ⚠️ Marcador ${idx} NÃO encontrado no HTML`);
-    }
-  });
-  
   // Converter HTML para texto simples
-  const textOnly = result.value
+  const textOnly = htmlContent
     .replace(/<[^>]+>/g, '\n')
     .replace(/\[\[IMAGE_PLACEHOLDER_\d+\]\]/g, '[IMAGEM]')
     .replace(/\s+/g, ' ')
