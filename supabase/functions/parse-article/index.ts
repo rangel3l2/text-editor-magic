@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as pdfjsLib from "npm:pdfjs-dist@4.0.379";
 import mammoth from "npm:mammoth@1.8.0";
 import JSZip from "npm:jszip@3.10.1";
+import { createGeminiClient } from "../_shared/geminiClient.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -265,120 +266,91 @@ Imagem ${i + 1}:
 IMPORTANTE: Para cada imagem, identifique a seção onde deve aparecer (introduction, methodology, results, conclusion), o tipo ("figura", "grafico" ou "tabela"), a legenda e a fonte.`;
       }
     }
-    
-    const prompt = `Analise este artigo científico brasileiro e extraia TODAS as seções com PRECISÃO ABSOLUTA.${imagePromptPart}
+
+    const prompt = `Analise este artigo científico brasileiro e EXTRAIA os campos solicitados em JSON **VÁLIDO**.${imagePromptPart}
 
 REGRAS CRÍTICAS:
-- **title**: Título completo em MAIÚSCULAS no INÍCIO do documento
-- **authors**: Nomes APÓS o título com ¹ ou ² (ex: "Nome¹, Outro Nome²") - SEM instituições/e-mails
-- **advisors**: Das notas de rodapé, extraia APENAS o nome de quem tem "Professor"
-- **keywords**: Apenas palavras após "Palavras-chave:" - PARE antes de notas de rodapé
-- **englishKeywords**: Apenas palavras após "Keywords:" - PARE antes de outras informações
-- **theoreticalTopics**: Array com title e content de cada subtópico 2.1, 2.2, etc.
-- **images**: Array com url, type, caption, source e section de cada imagem
+- title: Título completo em MAIÚSCULAS no INÍCIO do documento
+- authors: Nomes APÓS o título com ¹ ou ² (ex: "Nome¹, Outro Nome²") - SEM instituições/e-mails
+- advisors: Das notas de rodapé, extraia APENAS o nome de quem tem "Professor"
+- keywords: Apenas palavras após "Palavras-chave:" - PARE antes de notas de rodapé
+- englishKeywords: Apenas palavras após "Keywords:" - PARE antes de outras informações
+- theoreticalTopics: Array com title e content de cada subtópico 2.1, 2.2, etc.
+- images: Array com url, type, caption, source e section de cada imagem
+
+FORMATO DE RESPOSTA (MUITO IMPORTANTE):
+Responda **EXCLUSIVAMENTE** com um JSON VÁLIDO seguindo exatamente este modelo, SEM texto extra antes ou depois:
+{
+  "title": "...",
+  "authors": "...",
+  "advisors": "...",
+  "abstract": "...",
+  "keywords": "...",
+  "englishAbstract": "...",
+  "englishKeywords": "...",
+  "introduction": "...",
+  "theoreticalTopics": [
+    { "title": "...", "content": "..." }
+  ],
+  "methodology": "...",
+  "results": "...",
+  "conclusion": "...",
+  "references": "...",
+  "images": [
+    {
+      "url": "...",
+      "type": "figura" | "grafico" | "tabela",
+      "caption": "...",
+      "source": "...",
+      "section": "introduction" | "methodology" | "results" | "conclusion"
+    }
+  ]
+}
 
 TEXTO DO ARTIGO:
 ${text}`;
 
-    // Usar Lovable AI com schema estruturado para garantir JSON válido
-    const response = await fetch(
-      'https://ai.gateway.lovable.dev/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [
-            {
-              role: 'system',
-              content: 'Você é um extrator preciso de dados de artigos científicos brasileiros. Retorne APENAS JSON válido seguindo exatamente o schema fornecido.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          tools: [
-            {
-              type: 'function',
-              function: {
-                name: 'extract_article_sections',
-                description: 'Extrai todas as seções de um artigo científico brasileiro',
-                parameters: {
-                  type: 'object',
-                  properties: {
-                    title: { type: 'string', description: 'Título completo do artigo' },
-                    authors: { type: 'string', description: 'Nomes dos autores com ¹ ou ²' },
-                    advisors: { type: 'string', description: 'Nome do orientador' },
-                    abstract: { type: 'string', description: 'Resumo em português' },
-                    keywords: { type: 'string', description: 'Palavras-chave em português' },
-                    englishAbstract: { type: 'string', description: 'Abstract em inglês' },
-                    englishKeywords: { type: 'string', description: 'Keywords em inglês' },
-                    introduction: { type: 'string', description: 'Seção de introdução completa' },
-                    theoreticalTopics: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          title: { type: 'string' },
-                          content: { type: 'string' }
-                        },
-                        required: ['title', 'content']
-                      }
-                    },
-                    methodology: { type: 'string', description: 'Seção de metodologia completa' },
-                    results: { type: 'string', description: 'Seção de resultados completa' },
-                    conclusion: { type: 'string', description: 'Seção de conclusão completa' },
-                    references: { type: 'string', description: 'Referências bibliográficas completas' },
-                    images: {
-                      type: 'array',
-                      items: {
-                        type: 'object',
-                        properties: {
-                          url: { type: 'string' },
-                          type: { type: 'string' },
-                          caption: { type: 'string' },
-                          source: { type: 'string' },
-                          section: { type: 'string' }
-                        },
-                        required: ['url', 'type', 'caption', 'source', 'section']
-                      }
-                    }
-                  },
-                  required: ['title', 'authors', 'advisors', 'abstract', 'keywords', 'englishAbstract', 'englishKeywords', 'introduction', 'theoreticalTopics', 'methodology', 'results', 'conclusion', 'references']
-                }
-              }
-            }
-          ],
-          tool_choice: { type: 'function', function: { name: 'extract_article_sections' } }
-        })
+    console.log('🔎 Chamando Gemini diretamente para extração estruturada...');
+    const client = createGeminiClient();
+    const aiResponse = await client.generateContent(prompt);
+    const rawText = aiResponse.response.text();
+
+    console.log('📥 Resposta bruta do Gemini (primeiros 400 chars):', rawText.substring(0, 400));
+
+    let aiResult: any;
+
+    try {
+      aiResult = JSON.parse(rawText);
+    } catch (parseError) {
+      console.error('❌ Falha ao fazer JSON.parse direto da resposta do Gemini:', parseError);
+
+      // Tentar recuperar apenas o trecho entre o primeiro "{" e o último "}" caso o modelo tenha colocado texto extra
+      const firstBrace = rawText.indexOf('{');
+      const lastBrace = rawText.lastIndexOf('}');
+
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        const jsonSlice = rawText.slice(firstBrace, lastBrace + 1);
+        try {
+          aiResult = JSON.parse(jsonSlice);
+          console.log('✅ JSON parseado com sucesso a partir de slice da resposta do Gemini');
+        } catch (sliceError) {
+          console.error('❌ Também falhou ao parsear slice JSON da resposta do Gemini:', sliceError);
+          return extractArticleSections(text);
+        }
+      } else {
+        console.error('❌ Resposta do Gemini não contém bloco JSON claro, voltando para regex');
+        return extractArticleSections(text);
       }
-    );
+    }
 
-    if (!response.ok) {
-      console.error('Erro na API Lovable AI:', response.status);
-      const errorText = await response.text();
-      console.error('Resposta de erro:', errorText);
+    if (!aiResult || typeof aiResult !== 'object') {
+      console.error('❌ Resultado do Gemini não é um objeto esperado, voltando para regex');
       return extractArticleSections(text);
     }
 
-    const data = await response.json();
-    console.log('📊 Resposta Lovable AI recebida');
-    
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall || !toolCall.function?.arguments) {
-      console.error('❌ Nenhum tool call retornado pela IA');
-      return extractArticleSections(text);
-    }
-    
-    const aiResult = JSON.parse(toolCall.function.arguments);
-    console.log('✅ JSON parseado com sucesso via structured output');
-    console.log('📋 Seções extraídas:', Object.keys(aiResult));
+    console.log('📋 Seções extraídas pelo Gemini (chaves):', Object.keys(aiResult));
 
-    // Converter para HTML
+    // Converter para HTML e aplicar tratamento de headings
     const result: any = {
       title: cleanHtml(aiResult.title || ''),
       authors: cleanHtml(aiResult.authors || ''),
@@ -401,7 +373,7 @@ ${text}`;
         id: `topic-${index + 1}`,
         order: index + 1,
         title: topic.title || `Tópico ${index + 1}`,
-        content: cleanHtml(topic.content || '')
+        content: cleanHtml(topic.content || ''),
       }));
     }
 
@@ -412,17 +384,17 @@ ${text}`;
         type: img.type || 'figura',
         caption: img.caption || '',
         source: img.source || 'Fonte: Documento original',
-        section: img.section || 'results'
+        section: img.section || 'results',
       }));
     }
 
-    console.log('📊 Seções extraídas:');
-    console.log('- Images:', result.images?.length || 0);
-    
-    return result;
+    console.log('📊 Seções extraídas (com imagens):');
+    console.log('- Título:', result.title ? 'OK' : 'VAZIO');
+    console.log('- Imagens:', result.images?.length || 0);
 
+    return result;
   } catch (error) {
-    console.error('Erro ao usar IA para extração:', error);
+    console.error('Erro ao usar Gemini para extração estruturada:', error);
     return extractArticleSections(text);
   }
 }
