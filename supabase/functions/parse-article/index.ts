@@ -128,14 +128,11 @@ async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string;
   console.log('🔍 Iniciando conversão do DOCX com mammoth...');
   console.log(`📦 Tamanho do buffer: ${buffer.byteLength} bytes`);
   
-  const options = {
-    arrayBuffer: buffer,
-  };
+  const uint8Array = new Uint8Array(buffer);
   
   console.log('🔄 Chamando mammoth.convertToHtml...');
-  const result = await mammoth.convertToHtml(options);
+  const result = await mammoth.convertToHtml({ buffer: uint8Array });
   console.log(`✅ Conversão mammoth concluída. HTML gerado: ${result.value.length} caracteres`);
-  console.log(`📊 Total de imagens capturadas: ${extractedImages.length}`);
   
   if (result.messages && result.messages.length > 0) {
     console.log('⚠️ Mensagens do mammoth:');
@@ -144,15 +141,13 @@ async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string;
     });
   }
   
-  const htmlContent = result.value;
-  console.log(`🔍 Procurando contexto para ${extractedImages.length} imagens no HTML...`);
-  
   // Converter HTML para texto simples
-  const textOnly = htmlContent
+  const textOnly = result.value
     .replace(/<[^>]+>/g, '\n')
-    .replace(/\[\[IMAGE_PLACEHOLDER_\d+\]\]/g, '[IMAGEM]')
     .replace(/\s+/g, ' ')
     .trim();
+  
+  console.log('📸 Total de imagens extraídas do DOCX:', extractedImages.length);
   
   return { text: textOnly, images: extractedImages };
 }
