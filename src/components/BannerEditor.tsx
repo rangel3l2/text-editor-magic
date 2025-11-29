@@ -28,6 +28,7 @@ import EditorSidebar from "@/components/editor/EditorSidebar";
 import GuidelinesViewer from "@/components/editor/GuidelinesViewer";
 import MainLayout from "@/components/layout/MainLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ManualValidationProvider } from "@/contexts/ManualValidationContext";
 
 const BannerEditor = () => {
   const { user } = useAuth();
@@ -211,7 +212,8 @@ const BannerEditor = () => {
 
   return (
     <>
-      <MainLayout>
+      <ManualValidationProvider>
+        <MainLayout>
         {/* Sidebar */}
         <EditorSidebar
           onOverleaf={handleGeneratePDF}
@@ -340,6 +342,7 @@ const BannerEditor = () => {
           onImageProcessed={handleImageProcessed}
         />
       </MainLayout>
+      </ManualValidationProvider>
 
       <OnboardingTutorial />
       <LoginRequiredModal 

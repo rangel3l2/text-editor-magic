@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TheoreticalFramework from "@/components/article/TheoreticalFramework";
 import IntroductionEditor from "@/components/academic/IntroductionEditor";
+import { ManualValidationProvider } from "@/contexts/ManualValidationContext";
 
 const MonographyEditor = () => {
   const { 
@@ -52,7 +53,8 @@ const MonographyEditor = () => {
   };
 
   return (
-    <MainLayout>
+    <ManualValidationProvider>
+      <MainLayout>
       <div className="container mx-auto p-6 space-y-6">
         <EditorHeader
           title="Nova Monografia"
@@ -278,6 +280,7 @@ const MonographyEditor = () => {
         </Tabs>
       </div>
     </MainLayout>
+    </ManualValidationProvider>
   );
 };
 
