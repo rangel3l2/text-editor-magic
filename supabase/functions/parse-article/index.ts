@@ -498,26 +498,26 @@ function extractStandardIFMSSections(text: string) {
     // Padrão de nota: ¹ Formação. Instituição - E-mail: email@exemplo.com
     const footnotes: string[] = [];
     
-    // Buscar nota ¹
-    const footnote1Match = cleanText.match(/¹\s+([^²³⁴]+?)(?=\s*²|$)/);
+    // Buscar nota ¹ (até encontrar ² ou RESUMO)
+    const footnote1Match = cleanText.match(/¹\s+([^²³⁴]+?)(?=\s*[²³⁴]|\s*RESUMO)/i);
     if (footnote1Match) {
       footnotes.push(`¹ ${footnote1Match[1].trim()}`);
     }
     
-    // Buscar nota ²
-    const footnote2Match = cleanText.match(/²\s+([^¹³⁴]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    // Buscar nota ² (até encontrar ¹³⁴ ou RESUMO)
+    const footnote2Match = cleanText.match(/²\s+([^¹³⁴]+?)(?=\s*[¹³⁴]|\s*RESUMO)/i);
     if (footnote2Match) {
       footnotes.push(`² ${footnote2Match[1].trim()}`);
     }
     
-    // Buscar nota ³ (se existir)
-    const footnote3Match = cleanText.match(/³\s+([^¹²⁴]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    // Buscar nota ³ (até encontrar ¹²⁴ ou RESUMO)
+    const footnote3Match = cleanText.match(/³\s+([^¹²⁴]+?)(?=\s*[¹²⁴]|\s*RESUMO)/i);
     if (footnote3Match) {
       footnotes.push(`³ ${footnote3Match[1].trim()}`);
     }
     
-    // Buscar nota ⁴ (se existir)
-    const footnote4Match = cleanText.match(/⁴\s+([^¹²³]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    // Buscar nota ⁴ (até encontrar ¹²³ ou RESUMO)
+    const footnote4Match = cleanText.match(/⁴\s+([^¹²³]+?)(?=\s*[¹²³]|\s*RESUMO)/i);
     if (footnote4Match) {
       footnotes.push(`⁴ ${footnote4Match[1].trim()}`);
     }
@@ -533,7 +533,7 @@ function extractStandardIFMSSections(text: string) {
     console.log('⚠️ Autores não encontrados no padrão IFMS');
   }
   
-  console.log('✅ Autores completos:', authorsWithFootnotes ? `"${authorsWithFootnotes.substring(0, 100)}..."` : 'VAZIO');
+  console.log('✅ Autores completos (primeiros 150 chars):', authorsWithFootnotes ? `"${authorsWithFootnotes.substring(0, 150)}..."` : 'VAZIO');
 
   // Extrair orientadores (notas de rodapé com "Professor")
   const advisorMatch = cleanText.match(/(?:Professor|Orientador|Mestre|Doutor)[^.]+\.(?:\s+Professor[^.]+\.)?/i);
@@ -740,16 +740,16 @@ function extractArticleSections(text: string) {
     const authors = authorsSectionMatch[0].trim();
     const footnotes: string[] = [];
     
-    const footnote1Match = cleanText.match(/¹\s+([^²³⁴]+?)(?=\s*²|$)/);
+    const footnote1Match = cleanText.match(/¹\s+([^²³⁴]+?)(?=\s*[²³⁴]|\s*RESUMO)/i);
     if (footnote1Match) footnotes.push(`¹ ${footnote1Match[1].trim()}`);
     
-    const footnote2Match = cleanText.match(/²\s+([^¹³⁴]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    const footnote2Match = cleanText.match(/²\s+([^¹³⁴]+?)(?=\s*[¹³⁴]|\s*RESUMO)/i);
     if (footnote2Match) footnotes.push(`² ${footnote2Match[1].trim()}`);
     
-    const footnote3Match = cleanText.match(/³\s+([^¹²⁴]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    const footnote3Match = cleanText.match(/³\s+([^¹²⁴]+?)(?=\s*[¹²⁴]|\s*RESUMO)/i);
     if (footnote3Match) footnotes.push(`³ ${footnote3Match[1].trim()}`);
     
-    const footnote4Match = cleanText.match(/⁴\s+([^¹²³]+?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    const footnote4Match = cleanText.match(/⁴\s+([^¹²³]+?)(?=\s*[¹²³]|\s*RESUMO)/i);
     if (footnote4Match) footnotes.push(`⁴ ${footnote4Match[1].trim()}`);
     
     authorsWithFootnotes = footnotes.length > 0 ? `${authors}\n\n${footnotes.join('\n\n')}` : authors;
