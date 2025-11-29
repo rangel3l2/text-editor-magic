@@ -287,6 +287,12 @@ REGRAS CRÍTICAS - ESTRUTURA IFMS:
 - references: Lista após "REFERÊNCIAS"
 - images: Array com url, type, caption, source e section de cada imagem
 
+REGRAS CRÍTICAS DE JSON (MUITO IMPORTANTE):
+- NUNCA use blocos markdown como ```json ou ``` na resposta
+- NUNCA coloque texto fora do JSON, responda SOMENTE o objeto JSON
+- NUNCA use aspas duplas dentro do conteúdo dos campos (por exemplo em citações). Use aspas simples em vez disso dentro dos textos
+- Garanta que todas as quebras de linha internas sejam representadas como \n dentro das strings
+
 FORMATO DE RESPOSTA (MUITO IMPORTANTE):
 Responda **EXCLUSIVAMENTE** com um JSON VÁLIDO seguindo exatamente este modelo, SEM texto extra antes ou depois:
 {
