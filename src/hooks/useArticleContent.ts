@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { toUpperCasePreservingHTML } from '@/utils/textFormatting';
 
 export interface TheoreticalTopic {
   id: string;
@@ -79,19 +80,25 @@ export const useArticleContent = () => {
   const navigate = useNavigate();
 
   const handleChange = (field: keyof ArticleContent, value: string | TheoreticalTopic[]) => {
+    // Aplicar conversão para CAIXA ALTA em título e subtítulo (padrão IFMS)
+    let processedValue = value;
+    if ((field === 'title' || field === 'subtitle') && typeof value === 'string') {
+      processedValue = toUpperCasePreservingHTML(value);
+    }
+    
     setContent(prev => ({
       ...prev,
-      [field]: value
+      [field]: processedValue
     }));
 
     // Só salvar se temos user, id e o componente está montado
     if (user && id && mountedRef.current) {
       const saveContent = async () => {
         try {
-          const { error } = await supabase
+            const { error } = await supabase
             .from('work_in_progress')
             .update({ 
-              content: { ...content, [field]: value } as any,
+              content: { ...content, [field]: processedValue } as any,
               last_modified: new Date().toISOString()
             })
             .eq('id', id)
@@ -125,9 +132,18 @@ export const useArticleContent = () => {
       currentTitle: content.title
     });
 
+    // Aplicar conversão para CAIXA ALTA em título e subtítulo (padrão IFMS)
+    const processedUpdates = { ...updates };
+    if (processedUpdates.title) {
+      processedUpdates.title = toUpperCasePreservingHTML(processedUpdates.title);
+    }
+    if (processedUpdates.subtitle) {
+      processedUpdates.subtitle = toUpperCasePreservingHTML(processedUpdates.subtitle);
+    }
+
     const newContent = {
       ...content,
-      ...updates
+      ...processedUpdates
     };
     
     setContent(newContent);
