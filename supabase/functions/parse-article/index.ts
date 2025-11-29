@@ -571,13 +571,29 @@ function extractStandardIFMSSections(text: string) {
 function extractTheoreticalSectionsText(text: string): string {
   const cleanText = text.replace(/\s+/g, ' ').trim();
 
-  // Encontrar posição da Introdução (seção 1)
-  const introMatch = cleanText.match(/1\.?\s*INTRODUÇÃO/i);
+  // Encontrar posição do fim da Introdução (até a próxima seção principal)
+  const introMatch = cleanText.match(/1\.\?\s*INTRODUÇÃO/i);
   if (!introMatch) {
     console.log('⚠️ Seção INTRODUÇÃO não encontrada');
     return '';
   }
-  const introIndex = cleanText.indexOf(introMatch[0]) + introMatch[0].length;
+
+  const introHeadingIndex = cleanText.indexOf(introMatch[0]);
+  const introHeadingEnd = introHeadingIndex + introMatch[0].length;
+
+  // Tentar encontrar o início da seção 2 (ex.: 2 FUNDAMENTAÇÃO TEÓRICA) para marcar o fim real da Introdução
+  const section2Match = cleanText.match(/2\.\?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]{3,}/i);
+  let introEndIndex = introHeadingEnd;
+
+  if (section2Match) {
+    const section2Index = cleanText.indexOf(section2Match[0]);
+    if (section2Index > introHeadingEnd) {
+      introEndIndex = section2Index;
+      console.log('✅ Fim da INTRODUÇÃO identificado na seção 2 em', introEndIndex);
+    }
+  }
+
+  console.log('📏 Início do texto teórico (após INTRODUÇÃO) na posição', introEndIndex);
 
   // Buscar Metodologia com múltiplos padrões (incluindo subseções e nomes alternativos)
   console.log('🔍 Buscando METODOLOGIA para delimitar tópicos teóricos...');
@@ -605,15 +621,15 @@ function extractTheoreticalSectionsText(text: string): string {
     return '';
   }
 
-  // Extrair texto entre Introdução e Metodologia
-  if (methodologyIndex <= introIndex) {
-    console.log('⚠️ Metodologia aparece antes da Introdução (estrutura inválida)');
+  // Extrair texto entre fim da Introdução e início da Metodologia
+  if (methodologyIndex <= introEndIndex) {
+    console.log('⚠️ Metodologia aparece antes do fim da Introdução (estrutura inválida)');
     return '';
   }
 
-  const theoreticalText = cleanText.slice(introIndex, methodologyIndex).trim();
+  const theoreticalText = cleanText.slice(introEndIndex, methodologyIndex).trim();
   console.log(`📏 Texto teórico extraído: ${theoreticalText.length} caracteres`);
-  
+
   // Verificar se há seções numeradas (2, 3, etc.) neste trecho
   const hasSections = /\d+\.?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]{3,}/.test(theoreticalText);
   if (!hasSections) {
