@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as pdfjsLib from "npm:pdfjs-dist@4.0.379";
 import mammoth from "npm:mammoth@1.8.0";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -124,36 +125,31 @@ async function parsePDF(buffer: ArrayBuffer): Promise<string> {
 async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string; images: ExtractedImage[] }> {
   const extractedImages: ExtractedImage[] = [];
   
-  console.log('🔍 Iniciando conversão do DOCX...');
+  console.log('🔍 Iniciando conversão do DOCX com mammoth...');
   console.log(`📦 Tamanho do buffer: ${buffer.byteLength} bytes`);
   
-  try {
-    console.log('🔄 Chamando mammoth.convertToHtml...');
-    const result = await mammoth.convertToHtml({ arrayBuffer: buffer });
-    
-    console.log(`✅ Conversão concluída. HTML: ${result.value.length} caracteres`);
-    
-    if (result.messages && result.messages.length > 0) {
-      console.log('⚠️ Mensagens:');
-      result.messages.forEach((msg: any) => {
-        console.log(`   - ${msg.type}: ${msg.message}`);
-      });
-    }
-    
-    // Converter HTML para texto limpo
-    const textOnly = result.value
-      .replace(/<[^>]+>/g, '\n')
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    console.log('📸 Imagens extraídas:', extractedImages.length);
-    
-    return { text: textOnly, images: extractedImages };
-    
-  } catch (error) {
-    console.error('❌ Erro no mammoth:', error);
-    throw new Error(`Falha ao processar DOCX: ${error instanceof Error ? error.message : 'erro desconhecido'}`);
+  const uint8Array = new Uint8Array(buffer);
+  
+  console.log('🔄 Chamando mammoth.convertToHtml...');
+  const result = await mammoth.convertToHtml({ buffer: uint8Array });
+  console.log(`✅ Conversão mammoth concluída. HTML gerado: ${result.value.length} caracteres`);
+  
+  if (result.messages && result.messages.length > 0) {
+    console.log('⚠️ Mensagens do mammoth:');
+    result.messages.forEach((msg: any) => {
+      console.log(`   - ${msg.type}: ${msg.message}`);
+    });
   }
+  
+  // Converter HTML para texto simples
+  const textOnly = result.value
+    .replace(/<[^>]+>/g, '\n')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  console.log('📸 Total de imagens extraídas do DOCX:', extractedImages.length);
+  
+  return { text: textOnly, images: extractedImages };
 }
 
 async function uploadToImgBB(base64: string, filename: string): Promise<string | null> {

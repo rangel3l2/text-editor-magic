@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Gerar documento LaTeX para artigo científico ABNT/IFMS
+// Gerar documento LaTeX para artigo científico ABNT
 const generateArticleLatex = (content: any): string => {
   const cleanLatex = (text: string) => {
     if (!text) return '';
@@ -33,7 +33,7 @@ const generateArticleLatex = (content: any): string => {
       .replace(/[%$#_{}]/g, (match) => `\\${match}`)
       .replace(/~/g, '\\textasciitilde{}')
       .replace(/\^/g, '\\textasciicircum{}')
-      // Normalizar quebras de linha: max 2 consecutivas
+      // Normalizar quebras de linha: max 2 consecutivas (ABNT não usa espaços extras)
       .replace(/\n{3,}/g, '\n\n')
       .trim();
   };
@@ -42,41 +42,40 @@ const generateArticleLatex = (content: any): string => {
   const formatReferences = (text: string) => {
     if (!text) return '';
     
+    // Primeiro aplica cleanLatex para converter tags básicas
     let formatted = cleanLatex(text);
+    
+    // Processa cada linha de referência individualmente
     const lines = formatted.split('\n\n');
     const formattedLines = lines.map(line => {
       if (!line.trim()) return '';
+      
+      // Remove quebras de linha internas, mantendo tudo em uma linha
       line = line.replace(/\n/g, ' ').trim();
+      
+      // Adiciona espaço entre referências
       return line;
     }).filter(Boolean);
     
+    // Junta com espaçamento simples entre referências
     return formattedLines.join('\n\n');
   };
 
-const latex = `%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Modelo de Artigo Científico - Padrão IFMS / ABNT
-% Gerado automaticamente pelo sistema de orientação virtual
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\\documentclass[12pt,a4paper]{article}
-
-% --- Pacotes Fundamentais ---
+let latex = `\\documentclass[12pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage[portuguese]{babel}
 \\usepackage[T1]{fontenc}
-\\usepackage{mathptmx}      % Fonte Times New Roman (Padrão ABNT)
+\\usepackage{mathptmx}
 \\usepackage{url}
-\\usepackage{indentfirst}   % Indenta o primeiro parágrafo de cada seção
-\\usepackage{geometry}      % Configuração de margens
-\\usepackage{setspace}      % Espaçamento entre linhas
-\\usepackage{titlesec}      % Formatação de títulos de seções
-\\usepackage{enumitem}      % Listas personalizadas
-\\usepackage{graphicx}      % Inclusão de imagens
-\\usepackage{float}         % Para posicionar figuras com [H]
-\\usepackage{caption}       % Formatação das legendas
-\\usepackage{microtype}     % Melhoria na justificação do texto
+\\usepackage{indentfirst}
+\\usepackage{geometry}
+\\usepackage{setspace}
+\\usepackage{titlesec}
+\\usepackage{enumitem}
+\\usepackage{graphicx}
+\\usepackage{float}
 
-% --- Configurações de Layout (ABNT) ---
+% Configurações ABNT
 \\geometry{
   a4paper,
   left=3cm,
@@ -85,138 +84,129 @@ const latex = `%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   bottom=2cm
 }
 
-% Espaçamento 1.5 no corpo do texto
+% Espaçamento 1.5
 \\onehalfspacing
 
-% Recuo de parágrafo 1.25cm
+% Recuo de parágrafo 1.25cm (ABNT)
 \\setlength{\\parindent}{1.25cm}
 
-% Espaçamento entre parágrafos (0pt, pois já usa recuo)
+% Espaçamento entre parágrafos (ABNT - sem espaço adicional)
 \\setlength{\\parskip}{0pt}
 
-% --- Formatação de Títulos (Seções) ---
-% Seção Primária: CAIXA ALTA, NEGRITO, tam 12
-\\titleformat{\\section}
-  {\\normalfont\\fontsize{12}{15}\\bfseries\\MakeUppercase}
-  {\\thesection}{1em}{}
+% Formatação de seções (ABNT)
+\\titleformat{\\section}{\\normalfont\\fontsize{12}{15}\\bfseries\\MakeUppercase}{\\thesection}{1em}{}
+\\titleformat{\\subsection}{\\normalfont\\fontsize{12}{15}\\bfseries}{\\thesubsection}{1em}{}
 
-% Seção Secundária: Negrito, tam 12
-\\titleformat{\\subsection}
-  {\\normalfont\\fontsize{12}{15}\\bfseries}
-  {\\thesubsection}{1em}{}
+% Toda seção numerada começa em nova página (padrão IFMS)
+\\newcommand{\\sectionbreak}{\\clearpage}
 
-% Espaçamento antes e depois dos títulos
-\\titlespacing*{\\section}{0pt}{1.5cm}{1.5cm}
-\\titlespacing*{\\subsection}{0pt}{1.0cm}{1.0cm}
-
-% --- Comando para "Fonte" em figuras/quadros ---
-\\newcommand{\\fonte}[1]{
-    \\vspace{-5pt}
-    \\begin{center}
-        \\small Fonte: #1
-    \\end{center}
+% Ambiente para citações longas (>3 linhas) - ABNT
+\\newenvironment{citacao}{%
+  \\vspace{0.5cm}%
+  \\begin{singlespacing}%
+  \\footnotesize%
+  \\setlength{\\leftskip}{4cm}%
+  \\setlength{\\parindent}{0cm}%
+}{%
+  \\end{singlespacing}%
+  \\vspace{0.5cm}%
 }
 
-% --- Ambiente para Citações Longas (> 3 linhas) ---
-\\newenvironment{citacao}{
-  \\vspace{0.5cm}
-  \\begin{singlespacing}
-  \\small
-  \\setlength{\\leftskip}{4cm} % Recuo de 4cm
-  \\noindent
-}{
-  \\end{singlespacing}
-  \\vspace{0.5cm}
-}
-
-% --- Início do Documento ---
 \\begin{document}
 
-% --- Cabeçalho / Capa Simplificada para Artigo ---
+% Capa (Página 1 - inclui título, autores e resumo)
 \\begin{center}
-    % Cabeçalho Institucional
-    \\textbf{\\MakeUppercase{${cleanLatex(content.institution || 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul')}}}
-    \\vspace{1.5cm}
+\\MakeUppercase{\\textbf{${cleanLatex(content.institution || 'INSTITUTO FEDERAL')}}}
 
-    % Título do Artigo
-    \\textbf{\\MakeUppercase{${cleanLatex(content.title)}}}
-    
-    \\vspace{1cm}
+\\vspace{1.5cm}
 
-    % Autores
-    ${cleanLatex(content.authors || 'Autor\\footnote{Informações do autor}')}
-    
-    \\vspace{0.5cm}
-    
-    Três Lagoas - MS, ${new Date().getFullYear()}
+\\MakeUppercase{\\textbf{${cleanLatex(content.title)}}}
+
+${content.subtitle ? `\\vspace{0.3cm}\n\n${cleanLatex(content.subtitle)}` : ''}
+
+\\vspace{1cm}
+
+${cleanLatex(content.authors || '')}
+
+\\vspace{0.5cm}
+
+${new Date().getFullYear()}
 \\end{center}
 
 \\vspace{1cm}
 
-% --- Resumo ---
+% Resumo (ainda na página 1, sem section*)
 \\noindent \\textbf{RESUMO}
+
 \\vspace{0.5cm}
 
-\\begin{singlespacing}
 \\noindent ${cleanLatex(content.abstract)}
 
 \\vspace{0.5cm}
+
 \\noindent \\textbf{Palavras-chave:} ${cleanLatex(content.keywords)}
-\\end{singlespacing}
 
-\\vspace{1cm}
+\\clearpage
 
-% --- Abstract ---
+% Abstract (Página 2)
 \\noindent \\textbf{ABSTRACT}
+
 \\vspace{0.5cm}
 
-\\begin{singlespacing}
 \\noindent ${cleanLatex(content.englishAbstract)}
 
 \\vspace{0.5cm}
+
 \\noindent \\textbf{Keywords:} ${cleanLatex(content.englishKeywords)}
-\\end{singlespacing}
 
 \\clearpage
 
-% --- Corpo do Texto ---
-
-\\section{Introdução}
+% Introdução
+\\section{INTRODUÇÃO}
 ${cleanLatex(content.introduction)}
 
-${
-  content.theoreticalTopics && content.theoreticalTopics.length > 0
-    ? content.theoreticalTopics.map((topic: any) => 
-        `\\section{${cleanLatex(topic.title)}}\n${cleanLatex(topic.content)}\n`
-      ).join('\n')
-    : ''
-}
+`;
 
-\\section{Metodologia}
-${cleanLatex(content.methodology)}
+  // Referencial teórico
+  if (content.theoreticalTopics && content.theoreticalTopics.length > 0) {
+    content.theoreticalTopics.forEach((topic: any) => {
+      latex += `\\section{${cleanLatex(topic.title).toUpperCase()}}\n${cleanLatex(topic.content)}\n\n`;
+    });
+  }
 
-${content.images && content.images.length > 0 ? generateImageLatex(content.images, 'methodology') : ''}
+  // Metodologia
+  const methSection = 2 + (content.theoreticalTopics?.length || 0);
+  latex += `\\section{METODOLOGIA}\n${cleanLatex(content.methodology)}\n\n`;
+  
+  // Imagens da metodologia
+  if (content.images && content.images.length > 0) {
+    latex += generateImageLatex(content.images, 'methodology');
+  }
 
-\\section{Resultados e Discussão}
-${cleanLatex(content.results)}
+  // Resultados
+  latex += `\\section{RESULTADOS E DISCUSSÃO}\n${cleanLatex(content.results)}\n\n`;
+  
+  // Imagens dos resultados
+  if (content.images && content.images.length > 0) {
+    latex += generateImageLatex(content.images, 'results');
+  }
 
-${content.images && content.images.length > 0 ? generateImageLatex(content.images, 'results') : ''}
+  // Conclusão
+  latex += `\\section{CONCLUSÃO}\n${cleanLatex(content.conclusion)}\n\n`;
+  
+  // Imagens da conclusão
+  if (content.images && content.images.length > 0) {
+    latex += generateImageLatex(content.images, 'conclusion');
+  }
 
-\\section{Conclusão}
-${cleanLatex(content.conclusion)}
+  // Referências
+  latex += `\\clearpage
 
-${content.images && content.images.length > 0 ? generateImageLatex(content.images, 'conclusion') : ''}
-
-\\clearpage
-
-% --- Referências ---
 \\section*{REFERÊNCIAS}
+
 \\begin{singlespacing}
-\\setlength{\\parskip}{1em}
-\\noindent
-
+\\raggedright
 ${formatReferences(content.references)}
-
 \\end{singlespacing}
 
 \\end{document}`;
@@ -230,49 +220,20 @@ const generateImageLatex = (images: any[], section: string): string => {
   if (sectionImages.length === 0) return '';
   
   return sectionImages.map((img, idx) => {
-    const figureType = (img.type || 'figura');
-    const caption = img.caption || `${figureType.charAt(0).toUpperCase() + figureType.slice(1)} ${idx + 1}`;
-    const source = img.source || 'Elaborado pelo autor';
+    const figureType = (img.type || 'figura').toUpperCase();
+    const caption = img.caption || `${figureType} ${idx + 1}`;
+    const source = img.source || 'Fonte: Documento original';
     
     return `
 \\begin{figure}[H]
-    \\centering
-    \\caption{${cleanLatex(caption)}}
-    \\includegraphics[width=0.8\\textwidth]{${img.url}}
-    \\fonte{${cleanLatex(source)}}
-    \\label{fig:${section}-${idx + 1}}
+  \\centering
+  \\includegraphics[width=0.8\\textwidth]{${img.url}}
+  \\caption{${caption}}
+  \\label{fig:${section}-${idx + 1}}
+  \\textit{${source}}
 \\end{figure}
 `;
   }).join('\n');
-};
-
-const cleanLatex = (text: string) => {
-  if (!text) return '';
-  
-  return text
-    .replace(/<\/p>\s*<p>/gi, '\n\n')
-    .replace(/<p>/gi, '')
-    .replace(/<\/p>/gi, '\n\n')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<strong>(.*?)<\/strong>/gi, '\\textbf{$1}')
-    .replace(/<b>(.*?)<\/b>/gi, '\\textbf{$1}')
-    .replace(/<em>(.*?)<\/em>/gi, '\\textit{$1}')
-    .replace(/<i>(.*?)<\/i>/gi, '\\textit{$1}')
-    .replace(/<ul>/gi, '\\begin{itemize}\n')
-    .replace(/<\/ul>/gi, '\\end{itemize}\n')
-    .replace(/<ol>/gi, '\\begin{enumerate}\n')
-    .replace(/<\/ol>/gi, '\\end{enumerate}\n')
-    .replace(/<li>(.*?)<\/li>/gi, '\\item $1\n')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '\\&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/<[^>]+>/g, '')
-    .replace(/[%$#_{}]/g, (match) => `\\${match}`)
-    .replace(/~/g, '\\textasciitilde{}')
-    .replace(/\^/g, '\\textasciicircum{}')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
 };
 
 serve(async (req) => {
@@ -296,6 +257,7 @@ serve(async (req) => {
     
     console.log('LaTeX gerado, tamanho:', latexSource.length);
 
+    // Retornar LaTeX gerado (em produção, compilaria para PDF)
     return new Response(
       JSON.stringify({ 
         latex: latexSource,
