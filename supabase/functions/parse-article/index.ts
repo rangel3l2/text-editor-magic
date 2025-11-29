@@ -146,8 +146,8 @@ async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string;
     console.log(`📷 Processando imagem ${i + 1}/${mediaFiles.length}: ${filePath}`);
     
     try {
-      // Extrair como ArrayBuffer (mantém bytes originais)
-      const imageBuffer = await file.async('arraybuffer');
+      // Extrair como base64 diretamente do JSZip (método mais eficiente)
+      const base64 = await file.async('base64');
       
       // Detectar extensão e tipo MIME
       const fileName = filePath.split('/').pop() || '';
@@ -162,12 +162,7 @@ async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string;
       };
       const mimeType = mimeTypes[ext] || 'image/png';
       
-      // Converter para base64 SEM modificar bytes
-      const uint8 = new Uint8Array(imageBuffer);
-      const base64 = btoa(String.fromCharCode(...uint8));
-      
-      console.log(`   ✅ Imagem extraída: ${fileName} (${imageBuffer.byteLength} bytes, ${mimeType})`);
-      console.log(`   📏 Base64 length: ${base64.length} caracteres`);
+      console.log(`   ✅ Imagem extraída: ${fileName} (${base64.length} chars base64, ${mimeType})`);
       
       extractedImages.push({
         id: fileName.replace(/\.[^.]+$/, ''), // Remove extensão
