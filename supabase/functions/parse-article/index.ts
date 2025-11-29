@@ -125,31 +125,37 @@ async function parsePDF(buffer: ArrayBuffer): Promise<string> {
 async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string; images: ExtractedImage[] }> {
   const extractedImages: ExtractedImage[] = [];
   
-  console.log('🔍 Iniciando conversão do DOCX com mammoth...');
+  console.log('🔍 Iniciando conversão do DOCX...');
   console.log(`📦 Tamanho do buffer: ${buffer.byteLength} bytes`);
   
-  const uint8Array = new Uint8Array(buffer);
-  
-  console.log('🔄 Chamando mammoth.convertToHtml...');
-  const result = await mammoth.convertToHtml({ buffer: uint8Array });
-  console.log(`✅ Conversão mammoth concluída. HTML gerado: ${result.value.length} caracteres`);
-  
-  if (result.messages && result.messages.length > 0) {
-    console.log('⚠️ Mensagens do mammoth:');
-    result.messages.forEach((msg: any) => {
-      console.log(`   - ${msg.type}: ${msg.message}`);
-    });
+  try {
+    // mammoth no npm/Deno aceita diretamente um objeto com arrayBuffer
+    console.log('🔄 Chamando mammoth.convertToHtml...');
+    const result = await mammoth.convertToHtml({ arrayBuffer: buffer });
+    
+    console.log(`✅ Conversão concluída. HTML: ${result.value.length} caracteres`);
+    
+    if (result.messages && result.messages.length > 0) {
+      console.log('⚠️ Mensagens:');
+      result.messages.forEach((msg: any) => {
+        console.log(`   - ${msg.type}: ${msg.message}`);
+      });
+    }
+    
+    // Converter HTML para texto limpo
+    const textOnly = result.value
+      .replace(/<[^>]+>/g, '\n')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    console.log('📸 Imagens extraídas:', extractedImages.length);
+    
+    return { text: textOnly, images: extractedImages };
+    
+  } catch (error) {
+    console.error('❌ Erro no mammoth:', error);
+    throw new Error(`Falha ao processar DOCX: ${error instanceof Error ? error.message : 'erro desconhecido'}`);
   }
-  
-  // Converter HTML para texto simples
-  const textOnly = result.value
-    .replace(/<[^>]+>/g, '\n')
-    .replace(/\s+/g, ' ')
-    .trim();
-  
-  console.log('📸 Total de imagens extraídas do DOCX:', extractedImages.length);
-  
-  return { text: textOnly, images: extractedImages };
 }
 
 async function uploadToImgBB(base64: string, filename: string): Promise<string | null> {
