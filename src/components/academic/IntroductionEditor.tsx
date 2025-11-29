@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import ValidationFeedback from "@/components/editor/ValidationFeedback";
 import { useEditorValidation } from "@/components/editor/useEditorValidation";
+import { supabase } from "@/integrations/supabase/client";
 
 interface IntroductionEditorProps {
   value: string;
@@ -162,11 +163,46 @@ const IntroductionEditor = ({
     }
   };
 
-  // Função para extrair partes do texto completo
-  const extractPartsFromIntroduction = () => {
+  // Função para extrair partes do texto completo usando IA
+  const extractPartsFromIntroduction = async () => {
     try {
       setIsProcessing(true);
-      // Tentativa simples de dividir o texto em 3 partes
+      
+      toast({
+        title: "Segmentando introdução",
+        description: "A IA está analisando e dividindo sua introdução em partes...",
+      });
+
+      const { data, error } = await supabase.functions.invoke("segment-introduction", {
+        body: { introduction: value }
+      });
+
+      if (error) {
+        console.error("Erro ao segmentar introdução:", error);
+        throw error;
+      }
+
+      if (data) {
+        setThemePart(data.theme || "");
+        setProblemPart(data.problem || "");
+        setObjectivesPart(data.objectives || "");
+        
+        toast({
+          title: "Introdução segmentada",
+          description: "O texto foi dividido inteligentemente em tema, problema e objetivos",
+        });
+        
+        setActiveTab("guided");
+      }
+    } catch (error) {
+      console.error("Erro ao extrair partes:", error);
+      toast({
+        title: "Erro ao segmentar",
+        description: "Não foi possível segmentar automaticamente. Tente dividir manualmente.",
+        variant: "destructive",
+      });
+      
+      // Fallback simples se a IA falhar
       const paragraphs = value.split(/\n\s*\n/);
       
       if (paragraphs.length >= 3) {
@@ -181,21 +217,7 @@ const IntroductionEditor = ({
         setThemePart(paragraphs[0]);
         setProblemPart("");
         setObjectivesPart("");
-      } else {
-        setThemePart("");
-        setProblemPart("");
-        setObjectivesPart("");
       }
-      
-      // Não mostrar toast ao dividir automaticamente
-      if (activeTab === "guided") {
-        toast({
-          title: "Introdução dividida",
-          description: "O texto foi dividido em partes para edição",
-        });
-      }
-    } catch (error) {
-      console.error("Erro ao extrair partes:", error);
     } finally {
       setIsProcessing(false);
     }
