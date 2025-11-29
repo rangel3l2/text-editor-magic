@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as pdfjsLib from "npm:pdfjs-dist@4.0.379";
 import mammoth from "npm:mammoth@1.8.0";
-
+import { Buffer } from "node:buffer";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -129,9 +129,12 @@ async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string;
   console.log(`📦 Tamanho do buffer: ${buffer.byteLength} bytes`);
   
   try {
-    // mammoth no npm/Deno aceita diretamente um objeto com arrayBuffer
-    console.log('🔄 Chamando mammoth.convertToHtml...');
-    const result = await mammoth.convertToHtml({ arrayBuffer: buffer });
+    console.log('🔄 Convertendo ArrayBuffer para Buffer do Node...');
+    const uint8Array = new Uint8Array(buffer);
+    const nodeBuffer = Buffer.from(uint8Array);
+
+    console.log('🔄 Chamando mammoth.convertToHtml com { buffer }...');
+    const result = await mammoth.convertToHtml({ buffer: nodeBuffer });
     
     console.log(`✅ Conversão concluída. HTML: ${result.value.length} caracteres`);
     
