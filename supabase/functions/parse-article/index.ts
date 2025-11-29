@@ -572,22 +572,144 @@ function extractStandardIFMSSections(text: string) {
   console.log('📌 Orientadores extraídos:', advisors ? `"${advisors.substring(0, 50)}..."` : 'VAZIO');
 
   // Extrair RESUMO (até "Palavras-chave:")
-  console.log('\n📖 Extraindo RESUMO...');
-  const abstract = extractBetween(/RESUMO\s*/i, /Palavras-chave:/i);
+  console.log('\n📖 Extraindo ELEMENTOS PRÉ-TEXTUAIS com IA...');
+  
+  // Delimitar seção pré-textual: entre fim dos autores (incluindo footnotes) e introdução
+  const authorsStartIndex = cleanText.indexOf(authors);
+  const resumoStartIndex = cleanText.indexOf('RESUMO', authorsStartIndex);
+  const introductionStartIndex = cleanText.search(/1\.?\s*INTRODUÇÃO/i);
+  
+  // Seção pré-textual = do RESUMO até antes da INTRODUÇÃO
+  const preTextualSection = (resumoStartIndex !== -1 && introductionStartIndex !== -1)
+    ? cleanText.substring(resumoStartIndex, introductionStartIndex).trim()
+    : '';
+  
+  console.log('📌 Seção pré-textual isolada (primeiros 300 chars):', preTextualSection.substring(0, 300));
+  
+  // Usar IA para classificar elementos pré-textuais
+  let abstract = '';
+  let keywords = '';
+  let englishAbstract = '';
+  let englishKeywords = '';
+  
+  if (preTextualSection && GEMINI_API_KEY) {
+    try {
+      console.log('🤖 Enviando elementos pré-textuais para Gemini classificar...');
+      
+      const classificationResponse = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': GEMINI_API_KEY,
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Você é um especialista em estruturação de artigos científicos seguindo o padrão IFMS (Instituto Federal de Mato Grosso do Sul).
 
-  // Extrair Palavras-chave (linha após "Palavras-chave:" até próxima seção)
-  const keywordsMatch = cleanText.match(/Palavras-chave:\s*([^.]+(?:\.[^.]+){0,10}?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
-  const keywords = keywordsMatch ? keywordsMatch[1].trim() : '';
-  console.log('📌 Palavras-chave extraídas:', keywords ? `"${keywords.substring(0, 50)}..."` : 'VAZIO');
+Analise o texto abaixo, que contém elementos pré-textuais de um artigo científico, e identifique onde cada parte deve ser colocada seguindo o padrão IFMS:
 
-  // Extrair ABSTRACT (até "Keywords:")
-  console.log('\n📖 Extraindo ABSTRACT...');
-  const englishAbstract = extractBetween(/ABSTRACT\s*/i, /Keywords:/i);
+TEXTO PRÉ-TEXTUAL:
+${preTextualSection}
 
-  // Extrair Keywords (linha após "Keywords:" até próxima seção)
-  const englishKeywordsMatch = cleanText.match(/Keywords:\s*([^.]+(?:\.[^.]+){0,10}?)(?=\s*(?:1\s+INTRODUÇÃO|$))/i);
-  const englishKeywords = englishKeywordsMatch ? englishKeywordsMatch[1].trim() : '';
-  console.log('📌 Keywords extraídas:', englishKeywords ? `"${englishKeywords.substring(0, 50)}..."` : 'VAZIO');
+CAMPOS DISPONÍVEIS (padrão IFMS):
+1. "resumo" - Resumo em português (texto corrido, sem marcadores)
+2. "palavrasChave" - Palavras-chave em português (separadas por ponto)
+3. "abstract" - Abstract em inglês (texto corrido, sem marcadores)
+4. "keywords" - Keywords em inglês (separadas por ponto)
+
+REGRAS:
+- Identifique cada bloco de texto e classifique-o no campo correto
+- Se um campo não for encontrado, deixe vazio
+- O resumo e abstract são textos corridos (parágrafos)
+- Palavras-chave e keywords são listas separadas por ponto
+- Remova títulos das seções (como "RESUMO:", "Palavras-chave:", "ABSTRACT:", "Keywords:")
+- Retorne APENAS o conteúdo, sem os títulos das seções`
+              }]
+            }],
+            tools: [{
+              functionDeclarations: [{
+                name: 'classify_pretextual_elements',
+                description: 'Classifica elementos pré-textuais do artigo em seus campos corretos',
+                parameters: {
+                  type: 'object',
+                  properties: {
+                    resumo: { 
+                      type: 'string',
+                      description: 'Resumo em português (texto corrido, sem título "RESUMO")'
+                    },
+                    palavrasChave: { 
+                      type: 'string',
+                      description: 'Palavras-chave em português separadas por ponto (sem título "Palavras-chave:")'
+                    },
+                    abstract: { 
+                      type: 'string',
+                      description: 'Abstract em inglês (texto corrido, sem título "ABSTRACT")'
+                    },
+                    keywords: { 
+                      type: 'string',
+                      description: 'Keywords em inglês separadas por ponto (sem título "Keywords:")'
+                    }
+                  },
+                  required: ['resumo', 'palavrasChave', 'abstract', 'keywords']
+                }
+              }]
+            }],
+            toolConfig: {
+              functionCallingConfig: {
+                mode: 'ANY',
+                allowedFunctionNames: ['classify_pretextual_elements']
+              }
+            }
+          }),
+        }
+      );
+      
+      if (!classificationResponse.ok) {
+        const errorText = await classificationResponse.text();
+        console.error('❌ Erro na classificação Gemini:', classificationResponse.status, errorText);
+      } else {
+        const classificationData = await classificationResponse.json();
+        console.log('✅ Resposta Gemini recebida');
+        
+        const functionCall = classificationData.candidates?.[0]?.content?.parts?.[0]?.functionCall;
+        
+        if (functionCall?.name === 'classify_pretextual_elements' && functionCall.args) {
+          abstract = functionCall.args.resumo || '';
+          keywords = functionCall.args.palavrasChave || '';
+          englishAbstract = functionCall.args.abstract || '';
+          englishKeywords = functionCall.args.keywords || '';
+          
+          console.log('📌 Resumo classificado:', abstract ? `${abstract.substring(0, 50)}...` : 'VAZIO');
+          console.log('📌 Palavras-chave classificadas:', keywords ? `${keywords.substring(0, 50)}...` : 'VAZIO');
+          console.log('📌 Abstract classificado:', englishAbstract ? `${englishAbstract.substring(0, 50)}...` : 'VAZIO');
+          console.log('📌 Keywords classificadas:', englishKeywords ? `${englishKeywords.substring(0, 50)}...` : 'VAZIO');
+        } else {
+          console.error('❌ Resposta Gemini não contém function call esperado');
+        }
+      }
+    } catch (aiError) {
+      console.error('❌ Erro ao classificar elementos pré-textuais com IA:', aiError);
+      // Fallback para extração regex se IA falhar
+      abstract = extractBetween(/RESUMO\s*/i, /Palavras-chave:/i);
+      const keywordsMatch = cleanText.match(/Palavras-chave:\s*([^.]+(?:\.[^.]+){0,10}?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+      keywords = keywordsMatch ? keywordsMatch[1].trim() : '';
+      englishAbstract = extractBetween(/ABSTRACT\s*/i, /Keywords:/i);
+      const englishKeywordsMatch = cleanText.match(/Keywords:\s*([^.]+(?:\.[^.]+){0,10}?)(?=\s*(?:1\s+INTRODUÇÃO|$))/i);
+      englishKeywords = englishKeywordsMatch ? englishKeywordsMatch[1].trim() : '';
+    }
+  } else {
+    // Fallback: extração regex tradicional se não houver API key ou seção pré-textual
+    console.log('⚠️ Usando extração regex (fallback)');
+    abstract = extractBetween(/RESUMO\s*/i, /Palavras-chave:/i);
+    const keywordsMatch = cleanText.match(/Palavras-chave:\s*([^.]+(?:\.[^.]+){0,10}?)(?=\s*(?:ABSTRACT|1\s+INTRODUÇÃO|$))/i);
+    keywords = keywordsMatch ? keywordsMatch[1].trim() : '';
+    englishAbstract = extractBetween(/ABSTRACT\s*/i, /Keywords:/i);
+    const englishKeywordsMatch = cleanText.match(/Keywords:\s*([^.]+(?:\.[^.]+){0,10}?)(?=\s*(?:1\s+INTRODUÇÃO|$))/i);
+    englishKeywords = englishKeywordsMatch ? englishKeywordsMatch[1].trim() : '';
+  }
 
   // Extrair INTRODUÇÃO (seção 1 até seção 2)
   console.log('\n📖 Extraindo INTRODUÇÃO...');
