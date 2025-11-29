@@ -484,18 +484,16 @@ function extractStandardIFMSSections(text: string) {
   // Padrão IFMS: Nome completo com marcador sobrescrito (¹, ²) + nota de rodapé detalhada
   console.log('\n📖 Extraindo AUTORES (padrão IFMS)...');
   
-  // Buscar autores: Primeiro nome + nomes intermediários/iniciais + sobrenome + marcadores
-  // Exemplo: "Rangel Alves Silva¹" ou "Rangel A. Silva¹"
-  const authorsPattern = /[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+(?:[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?|[a-zàâãéêíóôõúç]+))*\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+[¹²³⁴⁵⁶⁷⁸⁹⁰]+/g;
-  const authorsMatches = cleanText.match(authorsPattern);
+  // Buscar a linha completa que contém os autores com marcadores sobrescritos (¹, ², ³, ⁴)
+  // Isso evita cortar o primeiro nome mesmo que o usuário escreva em minúsculas ou com variações
+  const authorsLineMatch = cleanText.match(/^[^\n]*[¹²³⁴][^\n]*$/m);
   
   let authors = '';
   let authorsWithFootnotes = '';
   
-  if (authorsMatches && authorsMatches.length > 0) {
-    // Juntar todos os autores encontrados com vírgula
-    authors = authorsMatches.join(', ');
-    console.log('📌 Nomes dos autores extraídos:', `"${authors}"`);
+  if (authorsLineMatch) {
+    authors = authorsLineMatch[0].trim();
+    console.log('📌 Nomes dos autores extraídos (linha completa):', `"${authors}"`);
     
     // Delimitar a seção entre os autores e o RESUMO
     const lastAuthorMatch = authorsMatches[authorsMatches.length - 1];
