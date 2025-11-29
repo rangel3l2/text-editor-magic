@@ -344,7 +344,7 @@ FORMATO DE RESPOSTA:
 
     console.log('📥 Resposta bruta do Gemini (primeiros 400 chars):', rawText.substring(0, 400));
 
-    // Limpar blocos markdown (```json ... ```)
+    // Limpar blocos markdown
     rawText = rawText.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
     console.log('🧹 Texto limpo (primeiros 400 chars):', rawText.substring(0, 400));
 
@@ -356,7 +356,7 @@ FORMATO DE RESPOSTA:
     } catch (parseError) {
       console.error('❌ Falha ao fazer JSON.parse direto da resposta do Gemini:', parseError);
 
-      // Tentar recuperar apenas o trecho entre o primeiro "{" e o último "}" caso o modelo tenha colocado texto extra
+      // Tentar recuperar apenas o trecho entre o primeiro "{" e o último "}"
       const firstBrace = rawText.indexOf('{');
       const lastBrace = rawText.lastIndexOf('}');
 
@@ -385,7 +385,7 @@ FORMATO DE RESPOSTA:
 
     // ESTÁGIO 3: Combinar seções padrão (código) + tópicos teóricos (IA)
     const result: any = {
-      ...standardSections, // Seções extraídas por código (mais precisas)
+      ...standardSections,
       institution: 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul',
     };
 
@@ -401,7 +401,7 @@ FORMATO DE RESPOSTA:
       result.theoreticalTopics = [];
     }
 
-    // Processar imagens (usar URLs do ImgBB)
+    // Processar imagens
     if (aiResult.images && Array.isArray(aiResult.images)) {
       result.images = aiResult.images.map((img: any) => ({
         url: img.url || '',
