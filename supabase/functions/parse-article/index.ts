@@ -45,21 +45,38 @@ serve(async (req) => {
       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       file.type === 'application/msword'
     ) {
+      console.log('🔍 Iniciando extração de DOCX com imagens...');
       const result = await parseDOCXWithImages(fileBuffer);
       fullText = result.text;
       extractedImages = result.images;
       
-      console.log(`📸 ${extractedImages.length} imagens extraídas do DOCX`);
+      console.log(`📸 Total de imagens extraídas do DOCX: ${extractedImages.length}`);
       
-      // Upload das imagens para ImgBB
-      for (const img of extractedImages) {
-        const url = await uploadToImgBB(img.base64, `article-${Date.now()}-${img.id}`);
-        if (url) {
-          img.url = url;
-          console.log(`✅ Imagem ${img.id} uploadada: ${url}`);
-        } else {
-          console.error(`❌ Falha ao fazer upload da imagem ${img.id}`);
+      if (extractedImages.length > 0) {
+        console.log('🔄 Iniciando upload das imagens para ImgBB...');
+        console.log(`IMGBB_API_KEY configurada: ${IMGBB_API_KEY ? 'SIM' : 'NÃO'}`);
+        
+        // Upload das imagens para ImgBB
+        for (let i = 0; i < extractedImages.length; i++) {
+          const img = extractedImages[i];
+          console.log(`📤 Tentando upload da imagem ${i + 1}/${extractedImages.length} (${img.id})...`);
+          console.log(`   - Tamanho base64: ${img.base64.length} caracteres`);
+          console.log(`   - Tipo MIME: ${img.mimeType}`);
+          console.log(`   - Contexto: ${img.contextText.substring(0, 50)}...`);
+          
+          const url = await uploadToImgBB(img.base64, `article-${Date.now()}-${img.id}`);
+          if (url) {
+            img.url = url;
+            console.log(`✅ Imagem ${img.id} uploadada com sucesso: ${url}`);
+          } else {
+            console.error(`❌ Falha ao fazer upload da imagem ${img.id}`);
+          }
         }
+        
+        const uploadedCount = extractedImages.filter(img => img.url).length;
+        console.log(`📊 Resultado final: ${uploadedCount}/${extractedImages.length} imagens uploadadas`);
+      } else {
+        console.log('⚠️ Nenhuma imagem encontrada no DOCX');
       }
     } else {
       throw new Error('Formato de arquivo não suportado. Use PDF ou DOCX.');
@@ -176,6 +193,8 @@ async function uploadToImgBB(base64: string, filename: string): Promise<string |
   }
   
   try {
+    console.log(`🌐 Fazendo upload para ImgBB (filename: ${filename})...`);
+    
     const formData = new FormData();
     formData.append('image', base64);
     formData.append('name', filename);
@@ -185,23 +204,29 @@ async function uploadToImgBB(base64: string, filename: string): Promise<string |
       body: formData
     });
     
+    console.log(`📡 Resposta ImgBB: ${response.status} ${response.statusText}`);
+    
     if (!response.ok) {
       console.error('❌ Erro ImgBB:', response.status);
       const errorText = await response.text();
-      console.error('Resposta:', errorText);
+      console.error('Resposta de erro completa:', errorText);
       return null;
     }
     
     const data = await response.json();
+    console.log('📦 Dados retornados do ImgBB:', JSON.stringify(data).substring(0, 200));
     
-    if (data.success) {
-      console.log('✅ Imagem uploaded para ImgBB:', data.data.url);
+    if (data.success && data.data && data.data.url) {
+      console.log('✅ Upload bem-sucedido! URL:', data.data.url);
       return data.data.url;
+    } else {
+      console.error('❌ ImgBB retornou sucesso=false ou sem URL');
+      return null;
     }
     
-    return null;
   } catch (error) {
-    console.error('❌ Erro ao fazer upload para ImgBB:', error);
+    console.error('❌ Exceção ao fazer upload para ImgBB:', error);
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
     return null;
   }
 }
