@@ -267,15 +267,24 @@ IMPORTANTE: Para cada imagem, identifique a seção onde deve aparecer (introduc
       }
     }
 
-    const prompt = `Analise este artigo científico brasileiro e EXTRAIA os campos solicitados em JSON **VÁLIDO**.${imagePromptPart}
+    const prompt = `Analise este artigo científico brasileiro padrão IFMS e EXTRAIA os campos solicitados em JSON **VÁLIDO**.${imagePromptPart}
 
-REGRAS CRÍTICAS:
+REGRAS CRÍTICAS - ESTRUTURA IFMS:
 - title: Título completo em MAIÚSCULAS no INÍCIO do documento
 - authors: Nomes APÓS o título com ¹ ou ² (ex: "Nome¹, Outro Nome²") - SEM instituições/e-mails
 - advisors: Das notas de rodapé, extraia APENAS o nome de quem tem "Professor"
 - keywords: Apenas palavras após "Palavras-chave:" - PARE antes de notas de rodapé
 - englishKeywords: Apenas palavras após "Keywords:" - PARE antes de outras informações
-- theoreticalTopics: Array com title e content de cada subtópico 2.1, 2.2, etc.
+- introduction: Seção numerada "1 INTRODUÇÃO" ou "INTRODUÇÃO"
+- theoreticalTopics: ATENÇÃO! No padrão IFMS, NÃO existe uma seção chamada "Referencial Teórico".
+  Os tópicos teóricos são TODAS as seções numeradas que aparecem ENTRE "Introdução" e "Metodologia".
+  Por exemplo: se há "1 INTRODUÇÃO", depois "2 TECNOLOGIAS ASSISTIVAS", "3 ACESSIBILIDADE DIGITAL", e depois "4 METODOLOGIA",
+  então theoreticalTopics deve conter os tópicos 2 e 3 com seus títulos REAIS e conteúdo completo.
+  Identifique pelo número da seção e título real, não invente "Referencial Teórico".
+- methodology: Seção com título "METODOLOGIA" ou número+METODOLOGIA
+- results: Seção "RESULTADOS E DISCUSSÕES" ou variações como "RESULTADOS", "DISCUSSÕES"
+- conclusion: Seção "CONCLUSÃO" ou "CONSIDERAÇÕES FINAIS"
+- references: Lista após "REFERÊNCIAS"
 - images: Array com url, type, caption, source e section de cada imagem
 
 FORMATO DE RESPOSTA (MUITO IMPORTANTE):
