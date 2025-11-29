@@ -6,6 +6,7 @@ import RichTextEditor from "@/components/RichTextEditor";
 import { useState } from "react";
 import EditorHeader from "@/components/editor/EditorHeader";
 import { toast } from "@/components/ui/use-toast";
+import { ManualValidationProvider } from "@/contexts/ManualValidationContext";
 
 const InterventionProjectEditor = () => {
   const [content, setContent] = useState({
@@ -64,7 +65,8 @@ const InterventionProjectEditor = () => {
   };
 
   return (
-    <MainLayout showWorks={false}>
+    <ManualValidationProvider>
+      <MainLayout showWorks={false}>
       <div className="container mx-auto p-6">
         <EditorHeader
           title="Novo Projeto de Intervenção"
@@ -295,6 +297,7 @@ const InterventionProjectEditor = () => {
         </Tabs>
       </div>
     </MainLayout>
+    </ManualValidationProvider>
   );
 };
 

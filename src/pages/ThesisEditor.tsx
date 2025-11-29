@@ -2,10 +2,12 @@
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cleanHtmlTags } from "@/utils/latexProcessor";
+import { ManualValidationProvider } from "@/contexts/ManualValidationContext";
 
 const ThesisEditor = () => {
   return (
-    <MainLayout>
+    <ManualValidationProvider>
+      <MainLayout>
       <div className="container mx-auto p-6">
         <Card>
           <CardHeader>
@@ -22,6 +24,7 @@ const ThesisEditor = () => {
         </Card>
       </div>
     </MainLayout>
+    </ManualValidationProvider>
   );
 };
 
