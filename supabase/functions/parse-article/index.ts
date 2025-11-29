@@ -575,13 +575,13 @@ function extractStandardIFMSSections(text: string) {
   console.log('\n📖 Extraindo ELEMENTOS PRÉ-TEXTUAIS com IA...');
   
   // Delimitar seção pré-textual: entre fim dos autores (incluindo footnotes) e introdução
-  const authorsStartIndex = cleanText.indexOf(authors);
-  const resumoStartIndex = cleanText.indexOf('RESUMO', authorsStartIndex);
-  const introductionStartIndex = cleanText.search(/1\.?\s*INTRODUÇÃO/i);
+  const preTextAuthorsIndex = cleanText.indexOf(authors);
+  const preTextResumoIndex = cleanText.indexOf('RESUMO', preTextAuthorsIndex);
+  const preTextIntroIndex = cleanText.search(/1\.?\s*INTRODUÇÃO/i);
   
   // Seção pré-textual = do RESUMO até antes da INTRODUÇÃO
-  const preTextualSection = (resumoStartIndex !== -1 && introductionStartIndex !== -1)
-    ? cleanText.substring(resumoStartIndex, introductionStartIndex).trim()
+  const preTextualSection = (preTextResumoIndex !== -1 && preTextIntroIndex !== -1)
+    ? cleanText.substring(preTextResumoIndex, preTextIntroIndex).trim()
     : '';
   
   console.log('📌 Seção pré-textual isolada (primeiros 300 chars):', preTextualSection.substring(0, 300));
