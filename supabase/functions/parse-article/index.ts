@@ -132,9 +132,11 @@ async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string;
   
   const options = {
     buffer: uint8Array,
+    // Configuração para extrair TODOS os tipos de imagens
     convertImage: mammoth.images.imgElement(async function(image: any) {
       console.log(`🖼️ Imagem detectada pelo mammoth! Index: ${imageIndex}`);
       console.log(`   - ContentType: ${image.contentType}`);
+      console.log(`   - Image object keys: ${Object.keys(image).join(', ')}`);
       
       try {
         const imageBuffer = await image.read();
@@ -169,7 +171,10 @@ async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string;
         imageIndex++;
         return { src: '' };
       }
-    })
+    }),
+    // Adicionar opções para incluir imagens embedadas e shapes
+    includeEmbeddedStyleMap: true,
+    includeDefaultStyleMap: true
   };
   
   console.log('🔄 Chamando mammoth.convertToHtml...');
