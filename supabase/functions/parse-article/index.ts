@@ -8,6 +8,16 @@ const corsHeaders = {
 };
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const IMGBB_API_KEY = Deno.env.get("IMGBB_API_KEY");
+
+interface ExtractedImage {
+  id: string;
+  base64: string;
+  mimeType: string;
+  position: number;
+  contextText: string;
+  url?: string;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -26,6 +36,7 @@ serve(async (req) => {
 
     const fileBuffer = await file.arrayBuffer();
     let fullText = '';
+    let extractedImages: ExtractedImage[] = [];
 
     // Processar baseado no tipo de arquivo
     if (file.type === 'application/pdf') {
@@ -34,7 +45,22 @@ serve(async (req) => {
       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
       file.type === 'application/msword'
     ) {
-      fullText = await parseDOCX(fileBuffer);
+      const result = await parseDOCXWithImages(fileBuffer);
+      fullText = result.text;
+      extractedImages = result.images;
+      
+      console.log(`📸 ${extractedImages.length} imagens extraídas do DOCX`);
+      
+      // Upload das imagens para ImgBB
+      for (const img of extractedImages) {
+        const url = await uploadToImgBB(img.base64, `article-${Date.now()}-${img.id}`);
+        if (url) {
+          img.url = url;
+          console.log(`✅ Imagem ${img.id} uploadada: ${url}`);
+        } else {
+          console.error(`❌ Falha ao fazer upload da imagem ${img.id}`);
+        }
+      }
     } else {
       throw new Error('Formato de arquivo não suportado. Use PDF ou DOCX.');
     }
@@ -42,7 +68,7 @@ serve(async (req) => {
     console.log('Texto extraído (primeiros 500 chars):', fullText.substring(0, 500));
 
     // Extrair seções do artigo usando IA
-    const parsedContent = await extractArticleSectionsWithAI(fullText);
+    const parsedContent = await extractArticleSectionsWithAI(fullText, extractedImages);
 
     console.log('Seções extraídas:', Object.keys(parsedContent));
 
@@ -79,14 +105,108 @@ async function parsePDF(buffer: ArrayBuffer): Promise<string> {
   return fullText;
 }
 
-async function parseDOCX(buffer: ArrayBuffer): Promise<string> {
-  // Converter ArrayBuffer para Buffer
+async function parseDOCXWithImages(buffer: ArrayBuffer): Promise<{ text: string; images: ExtractedImage[] }> {
   const uint8Array = new Uint8Array(buffer);
-  const result = await mammoth.extractRawText({ buffer: uint8Array });
-  return result.value;
+  const extractedImages: ExtractedImage[] = [];
+  let imageIndex = 0;
+  
+  const options = {
+    buffer: uint8Array,
+    convertImage: mammoth.images.imgElement(async function(image: any) {
+      try {
+        const imageBuffer = await image.read();
+        const bytes = new Uint8Array(imageBuffer);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+        const mimeType = image.contentType || 'image/png';
+        
+        extractedImages.push({
+          id: `img-${imageIndex}`,
+          base64: base64,
+          mimeType: mimeType,
+          position: imageIndex,
+          contextText: ''
+        });
+        
+        // Marcador para identificar posição no HTML
+        const placeholder = `[[IMAGE_PLACEHOLDER_${imageIndex++}]]`;
+        return { src: placeholder };
+      } catch (err) {
+        console.error('Erro ao processar imagem:', err);
+        return { src: '' };
+      }
+    })
+  };
+  
+  const result = await mammoth.convertToHtml(options);
+  
+  // Extrair contexto de cada imagem (texto ao redor)
+  const htmlContent = result.value;
+  extractedImages.forEach((img, idx) => {
+    const marker = `[[IMAGE_PLACEHOLDER_${idx}]]`;
+    const markerPos = htmlContent.indexOf(marker);
+    if (markerPos !== -1) {
+      // Pegar 200 chars antes e depois como contexto
+      const start = Math.max(0, markerPos - 200);
+      const end = Math.min(htmlContent.length, markerPos + 200);
+      img.contextText = htmlContent.substring(start, end)
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+  });
+  
+  // Converter HTML para texto simples
+  const textOnly = result.value
+    .replace(/<[^>]+>/g, '\n')
+    .replace(/\[\[IMAGE_PLACEHOLDER_\d+\]\]/g, '[IMAGEM]')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  return { text: textOnly, images: extractedImages };
 }
 
-async function extractArticleSectionsWithAI(text: string, images?: Array<{url: string, caption?: string}>) {
+async function uploadToImgBB(base64: string, filename: string): Promise<string | null> {
+  if (!IMGBB_API_KEY) {
+    console.error('❌ IMGBB_API_KEY não configurada');
+    return null;
+  }
+  
+  try {
+    const formData = new FormData();
+    formData.append('image', base64);
+    formData.append('name', filename);
+    
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      console.error('❌ Erro ImgBB:', response.status);
+      const errorText = await response.text();
+      console.error('Resposta:', errorText);
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log('✅ Imagem uploaded para ImgBB:', data.data.url);
+      return data.data.url;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('❌ Erro ao fazer upload para ImgBB:', error);
+    return null;
+  }
+}
+
+async function extractArticleSectionsWithAI(text: string, images?: ExtractedImage[]) {
   if (!LOVABLE_API_KEY) {
     console.error('LOVABLE_API_KEY não configurada, usando extração regex');
     return extractArticleSections(text);
@@ -95,16 +215,34 @@ async function extractArticleSectionsWithAI(text: string, images?: Array<{url: s
   try {
     let imagePromptPart = '';
     if (images && images.length > 0) {
-      imagePromptPart = `\n\nIMAGENS ENCONTRADAS NO DOCUMENTO (${images.length} no total):
-      ${images.map((img, i) => `\nImagem ${i + 1}: ${img.caption || 'Sem legenda'}`).join('')}
-      
-      IMPORTANTE: Para cada imagem encontrada, identifique:
-      - O tipo (Figura, Gráfico ou Tabela)
-      - A legenda completa (ex: "Figura 1: Descrição...")
-      - A fonte (ex: "Fonte: Autores (2024)" ou "Fonte: Silva (2020)")
-      - A seção onde deve ser inserida
-      
-      Adicione ao JSON um campo "images" com array de objetos contendo: type, caption, source, section`;
+      const imagesWithUrl = images.filter(img => img.url);
+      if (imagesWithUrl.length > 0) {
+        imagePromptPart = `\n\nIMAGENS EXTRAÍDAS DO DOCUMENTO (${imagesWithUrl.length} total):
+${imagesWithUrl.map((img, i) => `
+Imagem ${i + 1}:
+- URL: ${img.url}
+- Contexto onde aparece: "${img.contextText}"
+`).join('')}
+
+IMPORTANTE: Para cada imagem encontrada, identifique:
+1. A seção onde deve aparecer (introduction, methodology, results, conclusion)
+2. O tipo: "figura", "grafico" ou "tabela"
+3. A legenda (procure por "Figura X:", "Gráfico X:", "Tabela X:" próximo à imagem no contexto)
+4. A fonte (procure por "Fonte:" logo abaixo da legenda)
+
+Adicione ao JSON um campo "images" com array de objetos:
+{
+  "images": [
+    {
+      "url": "https://i.ibb.co/...",
+      "type": "figura",
+      "caption": "Figura 1: Descrição da imagem",
+      "source": "Fonte: Autores (2024)",
+      "section": "results"
+    }
+  ]
+}`;
+      }
     }
     
     const prompt = `Analise este artigo científico brasileiro e extraia TODAS as seções com PRECISÃO ABSOLUTA.${imagePromptPart}
@@ -188,6 +326,7 @@ REGRAS ABSOLUTAS DE EXTRAÇÃO:
   Extraia TODO o conteúdo desta seção até o final do documento.
 
 **images** (SE HOUVER): Array com informações de cada imagem:
+  - url: URL do ImgBB fornecida acima
   - type: "figura" | "grafico" | "tabela"
   - caption: legenda completa (ex: "Figura 1: Esquema do processo")
   - source: fonte da imagem (ex: "Fonte: Autores (2024)")
@@ -208,7 +347,7 @@ Retorne APENAS JSON válido (sem markdown):
   "results": "...",
   "conclusion": "...",
   "references": "...",
-  "images": [{"type": "figura", "caption": "...", "source": "...", "section": "results"}, ...]
+  "images": [{"url": "https://i.ibb.co/...", "type": "figura", "caption": "...", "source": "...", "section": "results"}, ...]
 }
 
 IMPORTANTE - REGRAS DE EXTRAÇÃO: 
@@ -254,7 +393,6 @@ ${text}`;
     const content = data.choices[0].message.content;
     
     console.log('Resposta da IA (primeiros 500 chars):', content.substring(0, 500));
-    console.log('Resposta da IA (últimos 500 chars):', content.substring(content.length - 500));
     
     // Encontrar o JSON válido entre { e }
     const firstBrace = content.indexOf('{');
@@ -266,8 +404,6 @@ ${text}`;
     }
     
     let jsonStr = content.substring(firstBrace, lastBrace + 1);
-    
-    // Remover caracteres de controle problemáticos mas preservar \n válidos
     jsonStr = jsonStr.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
     
     let aiResult;
@@ -276,11 +412,10 @@ ${text}`;
       console.log('✅ JSON parseado com sucesso');
     } catch (parseError) {
       console.error('❌ Erro ao fazer parse do JSON:', parseError);
-      console.error('JSON problemático (primeiros 500 chars):', jsonStr.substring(0, 500));
       return extractArticleSections(text);
     }
 
-    // Converter para HTML e adicionar instituição padrão
+    // Converter para HTML
     const result: any = {
       title: cleanHtml(aiResult.title || ''),
       authors: cleanHtml(aiResult.authors || ''),
@@ -293,27 +428,11 @@ ${text}`;
       methodology: cleanHtml(stripLeadingHeading(aiResult.methodology || '', METHODOLOGY_HEADING_PATTERNS)),
       results: cleanHtml(stripLeadingHeading(aiResult.results || '', RESULTS_HEADING_PATTERNS)),
       conclusion: cleanHtml(stripLeadingHeading(aiResult.conclusion || '', CONCLUSION_HEADING_PATTERNS)),
-      // Remove possíveis cabeçalhos duplicados como "REFERÊNCIAS" do início do conteúdo
       references: cleanHtml(stripLeadingHeading(aiResult.references || '', REFERENCES_HEADING_PATTERNS)),
       institution: 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul',
     };
-    
-    console.log('📊 Seções extraídas com sucesso:');
-    console.log('- Title:', result.title ? 'OK' : 'VAZIO');
-    console.log('- Authors:', result.authors ? 'OK' : 'VAZIO');
-    console.log('- Introduction:', result.introduction ? `OK (${result.introduction.length} chars)` : '❌ VAZIO');
-    console.log('- Methodology:', result.methodology ? 'OK' : 'VAZIO');
-    console.log('- Results:', result.results ? 'OK' : 'VAZIO');
-    console.log('- Conclusion:', result.conclusion ? 'OK' : 'VAZIO');
-    console.log('- References:', result.references ? 'OK' : 'VAZIO');
-    
-    if (!result.introduction) {
-      console.log('⚠️ Introdução vazia - verificando dados brutos da IA:');
-      console.log('aiResult.introduction (primeiros 200 chars):', (aiResult.introduction || '').substring(0, 200));
-      console.log('aiResult.introduction (length):', (aiResult.introduction || '').length);
-    }
 
-    // Processar tópicos teóricos se existirem
+    // Processar tópicos teóricos
     if (aiResult.theoreticalTopics && Array.isArray(aiResult.theoreticalTopics)) {
       result.theoreticalTopics = aiResult.theoreticalTopics.map((topic: any, index: number) => ({
         id: `topic-${index + 1}`,
@@ -323,9 +442,10 @@ ${text}`;
       }));
     }
 
-    // Processar imagens se existirem
+    // Processar imagens (usar URLs do ImgBB)
     if (aiResult.images && Array.isArray(aiResult.images)) {
       result.images = aiResult.images.map((img: any) => ({
+        url: img.url || '',
         type: img.type || 'figura',
         caption: img.caption || '',
         source: img.source || 'Fonte: Documento original',
@@ -333,14 +453,7 @@ ${text}`;
       }));
     }
 
-    console.log('Seções extraídas com sucesso:');
-    console.log('- Title:', result.title ? 'OK' : 'VAZIO');
-    console.log('- Introduction:', result.introduction ? 'OK' : 'VAZIO');
-    console.log('- Methodology:', result.methodology ? 'OK' : 'VAZIO');
-    console.log('- Results:', result.results ? 'OK' : 'VAZIO');
-    console.log('- Conclusion:', result.conclusion ? 'OK' : 'VAZIO');
-    console.log('- References:', result.references ? 'OK' : 'VAZIO');
-    console.log('- Theoretical Topics:', result.theoreticalTopics?.length || 0);
+    console.log('📊 Seções extraídas:');
     console.log('- Images:', result.images?.length || 0);
     
     return result;
@@ -352,10 +465,8 @@ ${text}`;
 }
 
 function extractArticleSections(text: string) {
-  // Limpar texto
   const cleanText = text.replace(/\s+/g, ' ').trim();
 
-  // Função auxiliar para extrair entre dois padrões
   const extractBetween = (start: RegExp, end: RegExp): string => {
     const startMatch = cleanText.search(start);
     if (startMatch === -1) return '';
@@ -368,47 +479,28 @@ function extractArticleSections(text: string) {
     return afterStart.slice(0, endMatch).replace(start, '').trim();
   };
 
-  // Extrair título (geralmente em MAIÚSCULAS no início, após cabeçalho)
   const titleMatch = cleanText.match(/(?:Campus\s+[^\n]+\s+)([A-ZÀÂÃÉÊÍÓÔÕÚÇ\s]{20,150}?)(?:\s+[A-Z][a-z]|\s+RESUMO)/);
   const title = titleMatch ? titleMatch[1].trim() : '';
 
-  // Extrair autores (geralmente antes do RESUMO e após o título)
   const authorsMatch = cleanText.match(/([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*¹?)(?:\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+²?)?/);
   const authors = authorsMatch ? authorsMatch[0].trim() : '';
 
-  // Extrair orientadores (geralmente nas notas de rodapé)
   const advisorMatch = cleanText.match(/(?:Professor|Orientador|Mestre|Doutor)[^.]+\.(?:\s+Professor[^.]+\.)?/i);
   const advisors = advisorMatch ? advisorMatch[0].trim() : '';
 
-  // Extrair resumo
   const abstract = extractBetween(/RESUMO\s*/i, /Palavras-chave:/i);
-
-  // Extrair palavras-chave
   const keywordsMatch = cleanText.match(/Palavras-chave:\s*([^.]+(?:\.[^.]+){2,}\.)/i);
   const keywords = keywordsMatch ? keywordsMatch[1].trim() : '';
 
-  // Extrair abstract
   const englishAbstract = extractBetween(/ABSTRACT\s*/i, /Keywords:/i);
-
-  // Extrair keywords
-  const englishKeywordsMatch = cleanText.match(/Keywords:\s*([^.]+\.)/i);
+  const englishKeywordsMatch = cleanText.match(/Keywords:\s*([^.]+(?:\.[^.]+){2,}\.)/i);
   const englishKeywords = englishKeywordsMatch ? englishKeywordsMatch[1].trim() : '';
 
-  // Extrair introdução
-  const introduction = extractBetween(/1\s+INTRODU[ÇC][ÃA]O/i, /2\s+(?:REFERENCIAL|FUNDAMENTA[ÇC][ÃA]O|DESENVOLVIMENTO)/i);
-
-  // Extrair metodologia
-  const methodology = extractBetween(/METODOLOGIA/i, /RESULTADOS/i);
-
-  // Extrair resultados
-  const results = extractBetween(/RESULTADOS/i, /CONCLUS[ÃA]O/i);
-
-  // Extrair conclusão
-  const conclusion = extractBetween(/CONCLUS[ÃA]O/i, /REFER[ÊE]NCIAS/i);
-
-  // Extrair referências
-  const referencesStart = cleanText.search(/REFER[ÊE]NCIAS/i);
-  const references = referencesStart !== -1 ? cleanText.slice(referencesStart).replace(/REFER[ÊE]NCIAS\s*/i, '').trim() : '';
+  const introduction = extractBetween(/1\.?\s*INTRODUÇÃO/i, /2\.?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]/);
+  const methodology = extractBetween(/(?:3|4)\.?\s*(?:METODOLOGIA|MATERIAIS?\s+E\s+MÉTODOS|MÉTODO)/i, /(?:4|5)\.?\s*[A-ZÀÂÃÉÊÍÓÔÕÚÇ]/);
+  const results = extractBetween(/(?:4|5)\.?\s*(?:RESULTADOS?|DISCUSSÃO|ANÁLISE)/i, /(?:5|6)\.?\s*(?:CONCLUS|CONSIDER)/i);
+  const conclusion = extractBetween(/(?:5|6)\.?\s*(?:CONCLUS|CONSIDER)/i, /REFERÊNCIAS/i);
+  const references = cleanText.split(/REFERÊNCIAS\s*BIBLIOGRÁFICAS|REFERÊNCIAS/i)[1]?.trim() || '';
 
   return {
     title: cleanHtml(title),
@@ -418,74 +510,71 @@ function extractArticleSections(text: string) {
     keywords: cleanHtml(keywords),
     englishAbstract: cleanHtml(englishAbstract),
     englishKeywords: cleanHtml(englishKeywords),
-    introduction: cleanHtml(stripLeadingHeading(introduction, INTRO_HEADING_PATTERNS)),
-    methodology: cleanHtml(stripLeadingHeading(methodology, METHODOLOGY_HEADING_PATTERNS)),
-    results: cleanHtml(stripLeadingHeading(results, RESULTS_HEADING_PATTERNS)),
-    conclusion: cleanHtml(stripLeadingHeading(conclusion, CONCLUSION_HEADING_PATTERNS)),
-    references: cleanHtml(stripLeadingHeading(references, REFERENCES_HEADING_PATTERNS)),
+    introduction: cleanHtml(introduction),
+    theoreticalTopics: [],
+    methodology: cleanHtml(methodology),
+    results: cleanHtml(results),
+    conclusion: cleanHtml(conclusion),
+    references: cleanHtml(references),
     institution: 'Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul',
   };
 }
 
 function cleanHtml(text: string): string {
   if (!text) return '';
-  
-  // Preservar quebras de linha convertendo para <br> primeiro
-  let processed = text.replace(/\n/g, '<br>');
-  
-  // Converter duplas quebras em parágrafos
-  const paragraphs = processed
-    .split(/<br><br>/)
-    .map(p => p.trim())
-    .filter(p => p.length > 0)
-    .map(p => {
-      // Se já tem tags HTML, retorna como está
-      if (/<[a-z][\s\S]*>/i.test(p)) return p;
-      // Senão, envolve em <p>
-      return `<p>${p}</p>`;
-    })
+  return text
+    .replace(/\n/g, '<br>')
+    .replace(/\r/g, '')
+    .replace(/\t/g, ' ')
+    .replace(/  +/g, ' ')
+    .trim()
+    .split('<br>')
+    .filter(line => line.trim())
+    .map(line => `<p>${line.trim()}</p>`)
     .join('');
-  
-  return paragraphs || `<p>${text}</p>`;
 }
 
-// Padrões para remover cabeçalhos duplicados no início das seções
 const INTRO_HEADING_PATTERNS = [
-  /^(\s*\d+(\.\d+)*\s+)?INTRODU[ÇC][ÃA]O[:\s-]*/i,
+  /^1\.?\s*INTRODUÇÃO\s*/i,
+  /^INTRODUÇÃO\s*/i,
+  /^1\.?\s*Introdução\s*/i,
+  /^Introdução\s*/i
 ];
 
 const METHODOLOGY_HEADING_PATTERNS = [
-  /^(\s*\d+(\.\d+)*\s+)?(METODOLOGIA|MATERIAIS E M[ÉE]TODOS|PROCEDIMENTOS METODOL[ÓO]GICOS|M[ÉE]TODO)[:\s-]*/i,
+  /^(?:3|4)\.?\s*METODOLOGIA\s*/i,
+  /^METODOLOGIA\s*/i,
+  /^(?:3|4)\.?\s*Metodologia\s*/i,
+  /^Metodologia\s*/i,
+  /^(?:3|4)\.?\s*MATERIAIS?\s+E\s+MÉTODOS\s*/i,
+  /^MATERIAIS?\s+E\s+MÉTODOS\s*/i
 ];
 
 const RESULTS_HEADING_PATTERNS = [
-  /^(\s*\d+(\.\d+)*\s+)?(RESULTADOS(?:\s+E\s+DISCUSS[ÃA]O(?:ES)?)?|AN[ÁA]LISE\s+DOS\s+RESULTADOS|DISCUSS[ÃA]O|AN[ÁA]LISE\s+E\s+DISCUSS[ÃA]O\s+DOS\s+RESULTADOS)[:\s-]*/i,
+  /^(?:4|5)\.?\s*RESULTADOS?\s*(E\s*DISCUSS[ÃA]O)?\s*/i,
+  /^RESULTADOS?\s*(E\s*DISCUSS[ÃA]O)?\s*/i,
+  /^(?:4|5)\.?\s*Resultados?\s*(e\s*Discussão)?\s*/i,
+  /^Resultados?\s*(e\s*Discussão)?\s*/i
 ];
 
 const CONCLUSION_HEADING_PATTERNS = [
-  /^(\s*\d+(\.\d+)*\s+)?(CONCLUS[ÃA]O(?:ES)?|CONSIDERA[ÇC][ÕO]ES\s+FINAIS|CONCLUS[ÕO]ES\s+E\s+CONSIDERA[ÇC][ÕO]ES\s+FINAIS)[:\s-]*/i,
+  /^(?:5|6)\.?\s*CONCLUS[ÕO]ES?\s*/i,
+  /^CONCLUS[ÕO]ES?\s*/i,
+  /^(?:5|6)\.?\s*CONSIDERA[ÇC][ÕO]ES\s+FINAIS\s*/i,
+  /^CONSIDERA[ÇC][ÕO]ES\s+FINAIS\s*/i
 ];
 
 const REFERENCES_HEADING_PATTERNS = [
-  /^REFER[ÊE]NCIAS?(?:\s+BIBLIOGR[ÁA]FICAS?)?[:\s-]*/i,
+  /^REFERÊNCIAS\s*BIBLIOGRÁFICAS\s*/i,
+  /^REFERÊNCIAS\s*/i,
+  /^Referências\s*Bibliográficas\s*/i,
+  /^Referências\s*/i
 ];
 
-const TOPIC_HEADING_PATTERNS = [
-  /^\s*\d+(\.\d+)+\s+[^\n:]+[:\s-]*/i,
-];
-
-// Remove cabeçalhos duplicados no início de seções (ex: "REFERÊNCIAS")
 function stripLeadingHeading(text: string, patterns: RegExp[]): string {
   if (!text) return '';
-  let cleaned = text.trimStart();
-
   for (const pattern of patterns) {
-    const match = cleaned.match(pattern);
-    if (match && match.index === 0) {
-      cleaned = cleaned.slice(match[0].length).trimStart();
-      break;
-    }
+    text = text.replace(pattern, '');
   }
-
-  return cleaned;
+  return text.trim();
 }

@@ -12,6 +12,7 @@ export interface TheoreticalTopic {
 }
 
 export interface ArticleImage {
+  url: string; // URL da imagem no ImgBB
   type: string; // "figura" | "grafico" | "tabela" | outros
   caption: string;
   source: string;
