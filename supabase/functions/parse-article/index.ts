@@ -484,14 +484,16 @@ function extractStandardIFMSSections(text: string) {
   // Padrão IFMS: Nome completo com marcador sobrescrito (¹, ²) + nota de rodapé detalhada
   console.log('\n📖 Extraindo AUTORES (padrão IFMS)...');
   
-  // Buscar autores: nomes entre título e RESUMO, com marcadores ¹ ²
-  const authorsSectionMatch = cleanText.match(/([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴])(?:\s+([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴]))*(?=\s+RESUMO)/i);
+  // Buscar autores: nomes próprios (não CAIXA ALTA completa) com marcadores ¹²³⁴
+  // O padrão garante que há pelo menos uma letra minúscula (excluindo subtítulos em CAIXA ALTA)
+  const authorsPattern = /(?:[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?(?:\s+[a-zàâãéêíóôõúç]+\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴](?:\s+)?)+/;
+  const authorsMatch = cleanText.match(authorsPattern);
   
   let authors = '';
   let authorsWithFootnotes = '';
   
-  if (authorsSectionMatch) {
-    authors = authorsSectionMatch[0].trim();
+  if (authorsMatch) {
+    authors = authorsMatch[0].trim();
     console.log('📌 Nomes dos autores extraídos:', `"${authors}"`);
     
     // Delimitar a seção entre os autores e o RESUMO
@@ -501,7 +503,7 @@ function extractStandardIFMSSections(text: string) {
       ? cleanText.substring(authorsEndIndex, resumoStartIndex).trim()
       : '';
     
-    console.log('📌 Seção de notas de rodapé isolada (primeiros 100 chars):', footnotesSection.substring(0, 100));
+    console.log('📌 Seção de notas de rodapé isolada (primeiros 200 chars):', footnotesSection.substring(0, 200));
     
     // Extrair notas de rodapé APENAS dentro da seção delimitada
     const footnotes: string[] = [];
@@ -535,7 +537,7 @@ function extractStandardIFMSSections(text: string) {
       console.log('📌 Notas de rodapé extraídas:', footnotes.length);
     } else {
       authorsWithFootnotes = authors;
-      console.log('⚠️ Nenhuma nota de rodapé encontrada');
+      console.log('⚠️ Nenhuma nota de rodapé encontrada na seção delimitada');
     }
   } else {
     console.log('⚠️ Autores não encontrados no padrão IFMS');
@@ -740,12 +742,13 @@ function extractArticleSections(text: string) {
   }
 
   // Extrair autores seguindo padrão IFMS (mesma lógica da função principal)
-  const authorsSectionMatch = cleanText.match(/([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴])(?:\s+([A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴]))*(?=\s+RESUMO)/i);
+  const authorsPattern = /(?:[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ]\.?\s*)?(?:\s+[a-zàâãéêíóôõúç]+\s+)?[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+(?:\s+[A-ZÀÂÃÉÊÍÓÔÕÚÇ][a-zàâãéêíóôõúç]+)*[¹²³⁴](?:\s+)?)+/;
+  const authorsMatch = cleanText.match(authorsPattern);
   
   let authorsWithFootnotes = '';
   
-  if (authorsSectionMatch) {
-    const authors = authorsSectionMatch[0].trim();
+  if (authorsMatch) {
+    const authors = authorsMatch[0].trim();
     
     // Delimitar a seção entre os autores e o RESUMO
     const authorsEndIndex = cleanText.indexOf(authors) + authors.length;
