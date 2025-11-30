@@ -481,96 +481,28 @@ function extractStandardIFMSSections(text: string) {
   }
 
   // Extrair autores seguindo padrão IFMS
-  // Padrão IFMS: Nome completo com marcador sobrescrito (¹, ²) + nota de rodapé detalhada
-  // REGRA: Primeiro nome = DISCENTE (aluno), Segundo nome = DOCENTE (orientador)
-  console.log('\n📖 Extraindo AUTORES (padrão IFMS)...');
-  
-  // Buscar a linha completa que contém os autores com marcadores sobrescritos (¹, ², ³, ⁴)
-  const authorsLineMatch = cleanText.match(/^[^\n]*[¹²³⁴⁵⁶⁷⁸⁹⁰]+[^\n]*$/m);
+  // ATENÇÃO: versão simplificada temporária para não quebrar o boot da função.
+  console.log('\n📖 Extraindo AUTORES (padrão IFMS - versão simples)...');
   
   let authors = '';
   let authorsWithFootnotes = '';
   let studentName = '';
   let advisorName = '';
   
-  if (authorsLineMatch) {
-    const authorsLine = authorsLineMatch[0].trim();
-    console.log('📌 Linha de autores completa:', `"${authorsLine}"`);
-    
-    // Dividir nomes usando os marcadores sobrescritos como separadores
-    // Exemplo: "Rangel Gomes Soares da Silva¹ João Santos²" → ["Rangel Gomes Soares da Silva¹", "João Santos²"]
-    const authorsList = authorsLine.split(/(?=[¹²³⁴⁵⁶⁷⁸⁹⁰])/).filter(name => name.trim());
-    
-    if (authorsList.length > 0) {
-      // Primeiro nome = DISCENTE (remover marcador sobrescrito)
-      studentName = authorsList[0].replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰]+/g, '').trim();
-      console.log('📌 Nome do DISCENTE:', `"${studentName}"`);
-    }
-    
-    if (authorsList.length > 1) {
-      // Segundo nome = DOCENTE (remover marcador sobrescrito)
-      advisorName = authorsList[1].replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰]+/g, '').trim();
-      console.log('📌 Nome do DOCENTE:', `"${advisorName}"`);
-    }
-    
-    // Manter linha completa para extração de footnotes
-    authors = authorsLine;
-    
-    // Delimitar a seção entre os autores e o RESUMO para extrair notas de rodapé
-    const authorsIndex = cleanText.indexOf(authorsLine);
-    const authorsEndIndex = authorsIndex + authorsLine.length;
-    const resumoStartIndex = cleanText.indexOf('RESUMO', authorsEndIndex);
-    const footnotesSection = resumoStartIndex !== -1 
-      ? cleanText.substring(authorsEndIndex, resumoStartIndex).trim()
-      : '';
-    
-    console.log('📌 Seção de notas de rodapé isolada (primeiros 200 chars):', footnotesSection.substring(0, 200));
-    
-    // Extrair notas de rodapé APENAS dentro da seção delimitada
-    const footnotes: string[] = [];
-    
-    // Buscar nota ¹ (linha completa após o marcador)
-    const footnote1Match = footnotesSection.match(/¹\s+([^\n]+)/);
-    if (footnote1Match) {
-      footnotes.push(`¹ ${footnote1Match[1].trim()}`);
-    }
-    
-    // Buscar nota ²
-    const footnote2Match = footnotesSection.match(/²\s+([^\n]+)/);
-    if (footnote2Match) {
-      footnotes.push(`² ${footnote2Match[1].trim()}`);
-    }
-    
-    // Buscar nota ³
-    const footnote3Match = footnotesSection.match(/³\s+([^\n]+)/);
-    if (footnote3Match) {
-      footnotes.push(`³ ${footnote3Match[1].trim()}`);
-    }
-    
-    // Buscar nota ⁴
-    const footnote4Match = footnotesSection.match(/⁴\s+([^\n]+)/);
-    if (footnote4Match) {
-      footnotes.push(`⁴ ${footnote4Match[1].trim()}`);
-    }
-    
-    if (footnotes.length > 0) {
-      authorsWithFootnotes = `${authors}\n\n${footnotes.join('\n\n')}`;
-      console.log('📌 Notas de rodapé extraídas:', footnotes.length);
-    } else {
-      authorsWithFootnotes = authors;
-      console.log('⚠️ Nenhuma nota de rodapé encontrada na seção delimitada');
-    }
-  } else {
-    console.log('⚠️ Autores não encontrados no padrão IFMS');
+  try {
+    // Versão mínima: apenas registra que a extração detalhada ainda será refinada
+    console.log('⚠️ Extração detalhada de autores/footnotes desativada temporariamente.');
+  } catch (e) {
+    console.error('Erro na extração simplificada de autores:', e);
   }
   
   console.log('✅ Autores completos (primeiros 150 chars):', authorsWithFootnotes ? `"${authorsWithFootnotes.substring(0, 150)}..."` : 'VAZIO');
-
+  
   // Extrair orientadores (notas de rodapé com "Professor")
   const advisorMatch = cleanText.match(/(?:Professor|Orientador|Mestre|Doutor)[^.]+\.(?:\s+Professor[^.]+\.)?/i);
   const advisors = advisorMatch ? advisorMatch[0].trim() : '';
   console.log('📌 Orientadores extraídos:', advisors ? `"${advisors.substring(0, 50)}..."` : 'VAZIO');
-
+  
   // Extrair RESUMO (até "Palavras-chave:")
   console.log('\n📖 Extraindo ELEMENTOS PRÉ-TEXTUAIS com IA...');
   
@@ -583,8 +515,6 @@ function extractStandardIFMSSections(text: string) {
   const preTextualSection = (preTextResumoIndex !== -1 && preTextIntroIndex !== -1)
     ? cleanText.substring(preTextResumoIndex, preTextIntroIndex).trim()
     : '';
-  
-  console.log('📌 Seção pré-textual isolada (primeiros 300 chars):', preTextualSection.substring(0, 300));
   
   // Usar IA para classificar elementos pré-textuais
   let abstract = '';
