@@ -571,37 +571,17 @@ function extractStandardIFMSSections(text: string) {
   const advisors = advisorMatch ? advisorMatch[0].trim() : '';
   console.log('📌 Orientadores extraídos:', advisors ? `"${advisors.substring(0, 50)}..."` : 'VAZIO');
 
-  // === ESTRATÉGIA DE CHUNKING: Separar seções com REGEX antes de enviar para IA ===
-  console.log('\n📖 Extraindo seções com CHUNKING (Regex)...');
+  // Extrair RESUMO (até "Palavras-chave:")
+  console.log('\n📖 Extraindo ELEMENTOS PRÉ-TEXTUAIS com IA...');
   
-  // Regex para identificar títulos de seções principais (numerados, caixa alta)
-  const sectionPattern = /(?:^|\n)(\d+\.?\s*[A-ZÀÁÂÃÉÊÍÓÔÕÚÇ\s]+?)(?=\n)/g;
-  const sections: { title: string; content: string; startIndex: number }[] = [];
+  // Delimitar seção pré-textual: entre fim dos autores (incluindo footnotes) e introdução
+  const preTextAuthorsIndex = cleanText.indexOf(authors);
+  const preTextResumoIndex = cleanText.indexOf('RESUMO', preTextAuthorsIndex);
+  const preTextIntroIndex = cleanText.search(/1\.?\s*INTRODUÇÃO/i);
   
-  let match;
-  while ((match = sectionPattern.exec(cleanText)) !== null) {
-    sections.push({
-      title: match[1].trim(),
-      content: '',
-      startIndex: match.index
-    });
-  }
-  
-  // Extrair conteúdo entre seções
-  for (let i = 0; i < sections.length; i++) {
-    const currentSection = sections[i];
-    const nextSection = sections[i + 1];
-    const endIndex = nextSection ? nextSection.startIndex : cleanText.length;
-    currentSection.content = cleanText.substring(currentSection.startIndex, endIndex).trim();
-  }
-  
-  console.log('📌 Seções identificadas:', sections.map(s => s.title));
-  
-  // Identificar seção pré-textual (entre autores e primeira seção numerada)
-  const firstSectionIndex = sections.length > 0 ? sections[0].startIndex : -1;
-  const authorsEndIndex = cleanText.indexOf(authors) + authors.length;
-  const preTextualSection = firstSectionIndex > authorsEndIndex 
-    ? cleanText.substring(authorsEndIndex, firstSectionIndex).trim()
+  // Seção pré-textual = do RESUMO até antes da INTRODUÇÃO
+  const preTextualSection = (preTextResumoIndex !== -1 && preTextIntroIndex !== -1)
+    ? cleanText.substring(preTextResumoIndex, preTextIntroIndex).trim()
     : '';
   
   console.log('📌 Seção pré-textual isolada (primeiros 300 chars):', preTextualSection.substring(0, 300));
