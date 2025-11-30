@@ -256,7 +256,7 @@ async function extractArticleSectionsWithAI(text: string, images?: ExtractedImag
     console.log('🔍 ESTÁGIO 1: Extraindo seções padrão IFMS com código...');
     
     // ESTÁGIO 1: Extrair seções padrão com regex (rápido e preciso)
-    const standardSections = extractStandardIFMSSections(text);
+    const standardSections = await extractStandardIFMSSections(text);
     
     console.log('✅ Seções padrão extraídas:', {
       title: standardSections.title ? 'OK' : 'VAZIO',
@@ -427,7 +427,7 @@ FORMATO DE RESPOSTA:
 }
 
 // ESTÁGIO 1: Extração de seções padrão IFMS usando código (rápido e preciso)
-function extractStandardIFMSSections(text: string) {
+async function extractStandardIFMSSections(text: string) {
   const cleanText = text.replace(/\s+/g, ' ').trim();
 
   const extractBetween = (start: RegExp, end: RegExp): string => {
