@@ -334,6 +334,12 @@ export const useArticleContent = () => {
       } catch (error: any) {
         if (!mountedRef.current) return;
         
+        // Ignorar AbortError (cancelamento intencional durante unmount/refresh)
+        if (error.name === 'AbortError' || error.code === '20') {
+          console.log('[ArticleContent] Request cancelled (component unmounted)');
+          return;
+        }
+        
         console.error('[ArticleContent] Error loading article content:', error);
         const errorMessage = error.message || 'Erro desconhecido';
         setLoadError(errorMessage);
