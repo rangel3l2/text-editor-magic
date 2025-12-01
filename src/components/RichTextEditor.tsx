@@ -311,16 +311,16 @@ const RichTextEditor = ({
       )}
 
       {isValidationVisible && (
-        <ValidationFeedback 
-          validationResult={validationResult}
-          isValidating={isValidating}
-          errorMessage={errorMessage}
-          currentSection={currentSection}
-          onRetry={() => retryValidation(contentToValidate)}
-        />
-      )}
-    </div>
-  );
-};
-
-export default RichTextEditor;
+         <ValidationFeedback 
+           validationResult={validationResult}
+           isValidating={isValidating}
+           errorMessage={errorMessage}
+           currentSection={currentSection}
+           onRetry={() => retryValidation(value)}
+         />
+       )}
+     </div>
+   );
+ };
+ 
+ export default RichTextEditor;
