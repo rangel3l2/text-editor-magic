@@ -266,6 +266,8 @@ class ContentValidator {
         prompt = `
         Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
+        **CRÍTICO: RETORNE APENAS O JSON ABAIXO. NÃO ADICIONE TEXTO EXPLICATIVO ANTES OU DEPOIS DO JSON.**
+
         IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
         Referências: "${content.substring(0, 5000)}"
@@ -277,7 +279,7 @@ class ContentValidator {
         - "Você tem certeza que todos os autores citados no texto estão listados aqui?"
         - "A formatação está seguindo a ABNT?"
 
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
+        Retorne APENAS este JSON (sem texto adicional):
         {
           "isValid": boolean,
           "feedbacks": [
@@ -380,11 +382,22 @@ class ContentValidator {
         prompt = `
         Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
+        **CRÍTICO: RETORNE APENAS O JSON ABAIXO. NÃO ADICIONE TEXTO EXPLICATIVO ANTES OU DEPOIS DO JSON.**
+
         IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
         Objetivos: "${content.substring(0, 5000)}"
 
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
+        CONTEXTO IFMS: Os objetivos devem ser claros, mensuráveis e alcançáveis. 
+        O objetivo geral indica o propósito principal da pesquisa.
+        Os objetivos específicos são desdobramentos que detalham como o objetivo geral será alcançado.
+
+        Analise e faça perguntas como:
+        - "O objetivo geral está claro e alinhado com seu problema de pesquisa?"
+        - "Os objetivos específicos são mensuráveis?"
+        - "Eles realmente contribuem para alcançar o objetivo geral?"
+
+        Retorne APENAS este JSON (sem texto adicional):
         {
           "isValid": boolean,
           "feedbacks": [
@@ -401,6 +414,8 @@ class ContentValidator {
         prompt = `
         Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
+        **CRÍTICO: RETORNE APENAS O JSON ABAIXO. NÃO ADICIONE TEXTO EXPLICATIVO ANTES OU DEPOIS DO JSON.**
+
         IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
         Metodologia: "${content.substring(0, 5000)}"
@@ -414,7 +429,7 @@ class ContentValidator {
         - "Como você pretende coletar os dados?"
         - "Por que escolheu essa abordagem metodológica?"
 
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
+        Retorne APENAS este JSON (sem texto adicional):
         {
           "isValid": boolean,
           "feedbacks": [
@@ -495,14 +510,25 @@ class ContentValidator {
       
       console.log("Resposta da validação de conteúdo:", responseText.substring(0, 200) + "...");
       
-      // Encontrar e extrair o JSON da resposta
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      
-      if (!jsonMatch) {
-        throw new Error("Formato de resposta inválido");
+      // Tentar extrair JSON de diferentes formatos:
+      // 1. JSON dentro de blocos ```json
+      let jsonStr = '';
+      const jsonBlockMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonBlockMatch) {
+        jsonStr = jsonBlockMatch[1].trim();
+      } else {
+        // 2. JSON puro (sem blocos de código)
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          jsonStr = jsonMatch[0];
+        }
       }
       
-      const jsonStr = jsonMatch[0];
+      if (!jsonStr) {
+        console.error("Resposta completa do Gemini:", responseText);
+        throw new Error("Formato de resposta inválido - nenhum JSON encontrado na resposta");
+      }
+      
       const result = JSON.parse(jsonStr);
       
       // Garantir que o formato da resposta esteja correto com feedbacks estruturados
