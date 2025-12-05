@@ -181,12 +181,20 @@ class ContentValidator {
         prompt = `
         Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
+        **CRÍTICO: RETORNE APENAS O JSON ABAIXO. NÃO ADICIONE TEXTO EXPLICATIVO ANTES OU DEPOIS DO JSON.**
+
         IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
         Resumo/Abstract: "${content.substring(0, 5000)}"
 
         CONTEXTO IFMS: O resumo deve ser escrito POR ÚLTIMO, após o trabalho estar pronto.
-        Deve ter 100-250 palavras e seguir a estrutura ABNT 6028: Contextualização, Objetivo, Metodologia, Resultados, Conclusão.
+        
+        **ATENÇÃO: A contagem é de PALAVRAS, não caracteres!**
+        - Mínimo: 100 PALAVRAS
+        - Máximo: 250 PALAVRAS
+        - Conte as palavras separadas por espaço (ex: "Este artigo apresenta" = 3 palavras)
+        
+        Estrutura ABNT 6028: Contextualização, Objetivo, Metodologia, Resultados, Conclusão.
 
         Analise e faça perguntas como:
         - "Qual o objetivo principal do seu trabalho?"
@@ -194,7 +202,9 @@ class ContentValidator {
         - "Quais seus principais resultados?"
         - "Qual sua conclusão?"
 
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
+        Se o resumo tiver entre 100-250 PALAVRAS e cobrir todos os elementos, considere válido.
+
+        Retorne APENAS este JSON (sem texto adicional):
         {
           "isValid": boolean,
           "feedbacks": [
