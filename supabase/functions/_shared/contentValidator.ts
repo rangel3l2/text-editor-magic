@@ -221,19 +221,24 @@ class ContentValidator {
         prompt = `
         Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
+        **CRÍTICO: RETORNE APENAS O JSON ABAIXO. NÃO ADICIONE TEXTO EXPLICATIVO ANTES OU DEPOIS DO JSON.**
+
         IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
 
-        Palavras-chave: "${content.substring(0, 5000)}"
+        Palavras-chave/Keywords: "${content.substring(0, 5000)}"
 
         CONTEXTO IFMS: Devem ser 3-5 termos que representem a pesquisa (não muito genéricos).
 
-        Analise o resumo e título e faça perguntas como:
+        Analise as palavras-chave e faça perguntas como:
         - "Se você fosse pesquisar seu próprio artigo em uma base de dados, quais termos você usaria?"
         - "Esses termos são específicos suficiente para sua pesquisa?"
+        - "As palavras-chave refletem os principais conceitos do seu trabalho?"
 
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
+        Se houver 3-5 termos relevantes e específicos, considere válido.
+
+        Retorne APENAS este JSON (sem texto adicional):
         {
-          "isValid": boolean,
+          "isValid": true ou false,
           "feedbacks": [
             {
               "type": "success" | "tip" | "warning" | "excellent",
