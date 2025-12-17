@@ -33,6 +33,7 @@ interface RichTextEditorProps {
   onCustomImageUpload?: (file: File) => void;
   onEditorReady?: (editor: any) => void;
   onRequestAttachmentInsertion?: (payload: { type: 'figura' | 'grafico' | 'tabela'; selectionPath: number[]; placeholderId?: string }) => void;
+  showValidationFeedback?: boolean;
 }
 
 const RichTextEditor = ({ 
@@ -45,7 +46,8 @@ const RichTextEditor = ({
   sectionName = '',
   onCustomImageUpload,
   onEditorReady,
-  onRequestAttachmentInsertion
+  onRequestAttachmentInsertion,
+  showValidationFeedback = true
 }: RichTextEditorProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [editorInstance, setEditorInstance] = useState<any>(null);
@@ -310,7 +312,7 @@ const RichTextEditor = ({
         </Button>
       )}
 
-      {isValidationVisible && (
+      {showValidationFeedback && isValidationVisible && (
          <ValidationFeedback 
            validationResult={validationResult}
            isValidating={isValidating}

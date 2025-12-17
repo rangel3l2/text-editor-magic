@@ -300,6 +300,7 @@ const IntroductionEditor = ({
                     minLines={5}
                     sectionName="tema"
                     placeholder="Apresente o tema em linhas gerais, contextualizando o campo de estudo..."
+                    showValidationFeedback={false}
                   />
                   
                   {themePart.trim().length > 50 && (
@@ -330,6 +331,7 @@ const IntroductionEditor = ({
                     minLines={5}
                     sectionName="problema"
                     placeholder="Identifique a lacuna no conhecimento e a questão específica a ser estudada..."
+                    showValidationFeedback={false}
                   />
                   
                   {problemPart.trim().length > 50 && (
@@ -360,6 +362,7 @@ const IntroductionEditor = ({
                     minLines={5}
                     sectionName="objetivos"
                     placeholder="Defina os objetivos gerais e específicos e justifique a importância do estudo..."
+                    showValidationFeedback={false}
                   />
                   
                   {objectivesPart.trim().length > 50 && (
