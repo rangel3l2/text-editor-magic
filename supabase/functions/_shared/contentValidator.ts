@@ -559,14 +559,23 @@ class ContentValidator {
       };
     } catch (error) {
       console.error("Erro na validação do conteúdo:", error);
+
+      const err = error as (Error & { status?: number; retryDelaySeconds?: number | null; raw?: string });
+      const isRateLimited = err?.status === 429;
+      const wait = typeof err?.retryDelaySeconds === 'number' ? err.retryDelaySeconds : null;
+
       return {
         isValid: false,
         feedbacks: [{
           id: `error-${Date.now()}`,
           type: 'warning',
           title: '⚠️ Erro na validação',
-          explanation: `Não foi possível validar o conteúdo da seção ${sectionName}.`,
-          suggestion: 'Tente novamente mais tarde ou continue editando normalmente.'
+          explanation: isRateLimited
+            ? `A API de validação atingiu o limite de uso (Gemini). ${wait ? `Aguarde ~${wait}s` : 'Aguarde alguns segundos'} e tente novamente.`
+            : `Não foi possível validar o conteúdo da seção ${sectionName}.`,
+          suggestion: isRateLimited
+            ? 'Se o erro persistir, verifique a cota/plano da sua chave Gemini.'
+            : 'Tente novamente mais tarde ou continue editando normalmente.'
         }]
       };
     }
