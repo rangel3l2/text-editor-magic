@@ -6,6 +6,7 @@ import { ToastDescription } from './ToastDescription';
 import { cleanHtmlTags } from '@/utils/latexProcessor';
 import { getValidationCache, setValidationCache } from '@/utils/validationCache';
 import { useAISettings } from '@/hooks/useAISettings';
+import { processAndFilterFeedbacks } from '@/utils/feedbackHistory';
 
 export const useEditorValidation = (sectionName: string, isValidationEnabled: boolean = true) => {
   // Restaurar do cache no mount se existir validação prévia
@@ -263,7 +264,16 @@ export const useEditorValidation = (sectionName: string, isValidationEnabled: bo
         dataKeys: Object.keys(data || {})
       });
       
-      setValidationResult(data);
+      // Aplica a Teoria do Andaime: filtra feedbacks já corrigidos
+      const filteredFeedbacks = processAndFilterFeedbacks(sectionName, data?.feedbacks || []);
+      const filteredData = {
+        ...data,
+        feedbacks: filteredFeedbacks
+      };
+      
+      console.log(`📚 [Andaime] Feedbacks após filtro: ${filteredFeedbacks.length} de ${data?.feedbacks?.length || 0}`);
+      
+      setValidationResult(filteredData);
       setErrorMessage(null);
       lastValidationRef.current = now;
       retryAttemptsRef.current = 0;
