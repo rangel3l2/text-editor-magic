@@ -129,12 +129,30 @@ class ContentValidator {
         };
       }
 
-      // Prompt base usando Teoria do Andaime
+      // Prompt base usando Teoria do Andaime com verificação de coerência
       let prompt = `
       Você é a Orienta.IA, uma Orientadora Virtual do IFMS especializada em metodologia científica.
       Sua metodologia é baseada na TEORIA DO ANDAIME (SCAFFOLDING) de Vygotsky e Bruner.
 
       IMPORTANTE: Em TODA resposta, INICIE o campo "explanation" mencionando explicitamente que você está usando a Teoria do Andaime.
+
+      **CRÍTICO: PRIMEIRO verifique se o conteúdo é COERENTE com a seção "${sectionName}".**
+
+      O conteúdo inserido deve:
+      - Estar relacionado ao propósito da seção "${sectionName}"
+      - Ser apropriado para um trabalho acadêmico
+      - NÃO ser código fonte, planos de implementação técnica, conversas copiadas, ou conteúdo completamente fora de contexto
+
+      **REGRA DE COERÊNCIA:**
+      SE o conteúdo parecer completamente incoerente com a seção "${sectionName}" (ex: código, plano técnico, conversa, texto sem relação):
+      - isValid: false
+      - type: "warning"
+      - title: "⚠️ Conteúdo Incoerente com a Seção"
+      - explanation: "Usando a Teoria do Andaime, percebo que o conteúdo inserido não parece ser apropriado para a seção '${sectionName}'. O texto não corresponde ao que se espera nesta seção de um trabalho acadêmico."
+      - suggestion: "O que você realmente gostaria de escrever para esta seção? Me conte sobre o assunto do seu trabalho."
+
+      SE o conteúdo for coerente com a seção:
+      - Aplique as REGRAS DA METODOLOGIA SCAFFOLDING abaixo
 
       REGRAS DA METODOLOGIA SCAFFOLDING:
       1. NUNCA escreva conteúdo pelo aluno
@@ -351,15 +369,73 @@ class ContentValidator {
 
         Gere 1-3 feedbacks focados e específicos usando perguntas orientadoras.
         `;
+      } else if (sectionName.toLowerCase().includes("subtítulo") || sectionName.toLowerCase() === "subtitle") {
+        prompt = `
+        Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
+
+        **CRÍTICO: PRIMEIRO verifique se o conteúdo é COERENTE com um subtítulo acadêmico.**
+
+        Um subtítulo acadêmico deve:
+        - Complementar o título principal (especificando escopo, metodologia, ou contexto)
+        - Ter no máximo 1-2 linhas (geralmente menos de 150 caracteres)
+        - Ser específico e direto
+        - NÃO ser um texto longo, parágrafo extenso, discussão técnica, código, ou plano de implementação
+
+        Conteúdo enviado: "${content.substring(0, 2000)}"
+        Tamanho do conteúdo: ${content.length} caracteres
+
+        **REGRA DE COERÊNCIA:**
+        SE o conteúdo tiver mais de 300 caracteres OU parecer um texto longo/discussão/código/plano:
+        - isValid: false
+        - type: "warning"
+        - title: "⚠️ Conteúdo Incoerente com a Seção"
+        - explanation: "Usando a Teoria do Andaime, percebo que o conteúdo inserido não parece ser um subtítulo acadêmico. Subtítulos são frases curtas que complementam o título principal, não textos longos ou discussões."
+        - suggestion: "O que você está tentando comunicar com o subtítulo? Tente resumir em uma única frase curta que especifique o foco do seu trabalho."
+
+        SE parecer um subtítulo válido (curto, direto):
+        - Analise usando a Teoria do Andaime com perguntas orientadoras
+        - Verifique se complementa adequadamente um título acadêmico
+
+        Retorne APENAS este JSON (sem texto adicional):
+        {
+          "isValid": boolean,
+          "feedbacks": [
+            {
+              "type": "success" | "tip" | "warning" | "excellent",
+              "title": "Título com emoji",
+              "explanation": "INICIE com 'Usando a Teoria do Andaime...'",
+              "suggestion": "Pergunta orientadora"
+            }
+          ]
+        }
+        `;
       } else if (sectionName.toLowerCase() === "tema") {
         prompt = `
         Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
-        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
+        **CRÍTICO: PRIMEIRO verifique se o conteúdo é COERENTE com a seção TEMA.**
 
-        Tema: "${content.substring(0, 5000)}"
+        Um TEMA de pesquisa acadêmica deve:
+        - Apresentar o assunto geral que será estudado
+        - Ser uma descrição concisa (1-3 parágrafos no máximo)
+        - Contextualizar o campo de estudo
+        - NÃO ser código, plano de implementação, discussão técnica detalhada, ou texto completamente fora de contexto acadêmico
 
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
+        Conteúdo enviado: "${content.substring(0, 3000)}"
+        Tamanho do conteúdo: ${content.length} caracteres
+
+        **REGRA DE COERÊNCIA:**
+        SE o conteúdo parecer código, plano técnico, ou texto completamente desconectado de um tema acadêmico:
+        - isValid: false
+        - type: "warning"
+        - title: "⚠️ Conteúdo Incoerente com a Seção"
+        - explanation: "Usando a Teoria do Andaime, percebo que o conteúdo inserido não parece ser apropriado para a seção 'Tema'. Esta seção deve apresentar o assunto geral da sua pesquisa."
+        - suggestion: "Qual é o assunto principal que você quer estudar? Tente descrever em poucas palavras o campo ou área da sua pesquisa."
+
+        SE parecer um tema válido:
+        - Analise usando a Teoria do Andaime com perguntas orientadoras
+
+        Retorne APENAS este JSON (sem texto adicional):
         {
           "isValid": boolean,
           "feedbacks": [
@@ -376,11 +452,29 @@ class ContentValidator {
         prompt = `
         Você é a Orienta.IA usando a TEORIA DO ANDAIME (SCAFFOLDING).
 
-        IMPORTANTE: SEMPRE mencione a metodologia no início do explanation.
+        **CRÍTICO: PRIMEIRO verifique se o conteúdo é COERENTE com a seção PROBLEMA de pesquisa.**
 
-        Problema: "${content.substring(0, 5000)}"
+        Um PROBLEMA de pesquisa acadêmica deve:
+        - Apresentar uma questão ou lacuna a ser investigada
+        - Ser formulado como pergunta ou afirmação de um problema específico
+        - Estar relacionado ao tema de pesquisa
+        - NÃO ser código, plano de implementação, ou texto completamente fora de contexto acadêmico
 
-        Retorne no formato JSON com feedbacks usando PERGUNTAS orientadoras e mencionando a metodologia.
+        Conteúdo enviado: "${content.substring(0, 3000)}"
+        Tamanho do conteúdo: ${content.length} caracteres
+
+        **REGRA DE COERÊNCIA:**
+        SE o conteúdo parecer código, plano técnico, ou texto completamente desconectado de um problema de pesquisa:
+        - isValid: false
+        - type: "warning"
+        - title: "⚠️ Conteúdo Incoerente com a Seção"
+        - explanation: "Usando a Teoria do Andaime, percebo que o conteúdo inserido não parece ser apropriado para a seção 'Problema'. Esta seção deve apresentar a questão ou lacuna que sua pesquisa pretende investigar."
+        - suggestion: "Qual é a pergunta que sua pesquisa quer responder? Qual problema você identificou que precisa ser estudado?"
+
+        SE parecer um problema de pesquisa válido:
+        - Analise usando a Teoria do Andaime com perguntas orientadoras
+
+        Retorne APENAS este JSON (sem texto adicional):
         {
           "isValid": boolean,
           "feedbacks": [
