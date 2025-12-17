@@ -160,6 +160,8 @@
   text-align: justify !important;
   word-spacing: normal !important;
   hyphens: auto !important;
+  direction: ltr !important;
+  unicode-bidi: normal !important;
 }
 
 .ck-editor__editable p {
@@ -167,7 +169,7 @@
   margin-bottom: 0 !important;
   word-spacing: normal !important;
   hyphens: auto !important;
-  text-indent: 1.25cm !important;
+  /* text-indent removido - causava bug de texto invertido, aplicado apenas no preview */
 }
 
 /* Estilos específicos para banner científico */
