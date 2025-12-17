@@ -60,11 +60,15 @@ const EditorCore = ({
         onReady={(editor) => {
           editorRef.current = editor;
           if (onReady) onReady(editor);
-          
+
           // Adicionar classes personalizadas ao editor
           const editorElement = editor.ui.view.editable.element;
           if (editorElement) {
             editorElement.classList.add('prose', 'max-w-none', 'focus:outline-none', 'min-h-[200px]');
+            // Forçar LTR para evitar texto "invertido" (RTL) em alguns navegadores/configurações
+            editorElement.setAttribute('dir', 'ltr');
+            (editorElement.style as any).direction = 'ltr';
+            (editorElement.style as any).unicodeBidi = 'plaintext';
           }
         }}
         onChange={(event, editor) => {

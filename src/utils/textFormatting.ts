@@ -7,20 +7,27 @@
  */
 export const toUpperCasePreservingHTML = (text: string): string => {
   if (!text) return text;
-  
-  // Se não contém tags HTML, apenas converter para caixa alta
+
+  const upperPreservingEntities = (chunk: string) =>
+    chunk
+      // mantém entidades HTML (&nbsp;, &#160;, etc.) intactas
+      .split(/(&[a-zA-Z0-9#]+;)/g)
+      .map((part) => (part.startsWith('&') && part.endsWith(';') ? part : part.toUpperCase()))
+      .join('');
+
+  // Se não contém tags HTML, apenas converter para caixa alta preservando entidades
   if (!/<[^>]+>/.test(text)) {
-    return text.toUpperCase();
+    return upperPreservingEntities(text);
   }
-  
+
   // Se contém HTML, processar preservando as tags
   return text.replace(/(<[^>]+>|[^<]+)/g, (match) => {
     // Se é uma tag HTML, manter como está
     if (match.startsWith('<')) {
       return match;
     }
-    // Se é texto, converter para caixa alta
-    return match.toUpperCase();
+    // Se é texto, converter para caixa alta preservando entidades
+    return upperPreservingEntities(match);
   });
 };
 
