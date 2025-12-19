@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 
-type SoundType = "success" | "tip" | "warning" | "excellent";
+type SoundType = "success" | "tip" | "warning" | "excellent" | "corrected";
 
 // Sons usando a Web Audio API
 const playSound = (frequency: number, duration: number = 100) => {
@@ -30,6 +30,7 @@ const soundFrequencies = {
   tip: 600,     // Ré (D5)
   warning: 500, // Dó (C5)
   excellent: 900, // Lá (A5)
+  corrected: 850, // Som intermediário para correções
 };
 
 export const useFeedbackSound = () => {

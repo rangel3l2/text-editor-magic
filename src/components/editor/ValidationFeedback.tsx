@@ -4,6 +4,7 @@ import FeedbackPanel from "@/components/feedback/FeedbackPanel";
 import { useFeedbackSound } from "@/hooks/useFeedbackSound";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { getValidationProgress } from "@/utils/feedbackHistory";
 
 interface ValidationFeedbackProps {
   validationResult: any;
@@ -11,6 +12,7 @@ interface ValidationFeedbackProps {
   errorMessage?: string | null;
   currentSection: string;
   onRetry?: () => void;
+  onRevalidate?: () => void;
 }
 
 const ValidationFeedback = ({ 
@@ -18,10 +20,12 @@ const ValidationFeedback = ({
   isValidating, 
   errorMessage,
   currentSection,
-  onRetry
+  onRetry,
+  onRevalidate
 }: ValidationFeedbackProps) => {
   const { playFeedbackSound } = useFeedbackSound();
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [scaffoldingProgress, setScaffoldingProgress] = useState<ReturnType<typeof getValidationProgress> | undefined>();
 
   // Processar resultado de validação e tocar sons
   useEffect(() => {
@@ -35,6 +39,12 @@ const ValidationFeedback = ({
     if (validationResult?.feedbacks && Array.isArray(validationResult.feedbacks)) {
       console.log('✅ Processando feedbacks:', validationResult.feedbacks.length);
       setFeedbacks(validationResult.feedbacks);
+      
+      // Atualizar progresso do andaime
+      if (currentSection) {
+        const progress = getValidationProgress(currentSection);
+        setScaffoldingProgress(progress);
+      }
       
       // Tocar som baseado no tipo predominante
       const types = validationResult.feedbacks.map((f: any) => f.type);
@@ -50,7 +60,7 @@ const ValidationFeedback = ({
     } else {
       console.warn('⚠️ validationResult não tem feedbacks ou formato incorreto:', validationResult);
     }
-  }, [validationResult, playFeedbackSound]);
+  }, [validationResult, playFeedbackSound, currentSection]);
 
   // Se não está validando a seção atual ou não há resultado, não mostra nada
   if (!isValidating && !validationResult && !errorMessage) return null;
@@ -122,13 +132,14 @@ const ValidationFeedback = ({
     return null;
   }
 
-  
-  
-  // Mostrar FeedbackPanel com os feedbacks estruturados
+  // Mostrar FeedbackPanel com os feedbacks estruturados e opções de revalidação
   return (
     <FeedbackPanel
       feedbacks={feedbacks}
       progressLabel={`Orientação para: ${currentSection || "Conteúdo"}`}
+      onRevalidate={onRevalidate}
+      isRevalidating={isValidating}
+      scaffoldingProgress={scaffoldingProgress}
       className="animate-fade-in"
     />
   );
