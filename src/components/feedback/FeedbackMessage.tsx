@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
 
-export type FeedbackType = "success" | "tip" | "warning" | "excellent";
+export type FeedbackType = "success" | "tip" | "warning" | "excellent" | "corrected";
 
 interface FeedbackMessageProps {
   type: FeedbackType;
@@ -50,6 +50,15 @@ const feedbackConfig = {
     textColor: "text-purple-900 dark:text-purple-100",
     iconColor: "text-purple-600 dark:text-purple-400",
     accentColor: "bg-purple-500",
+  },
+  corrected: {
+    icon: CheckCircle2,
+    emoji: "🎯",
+    bgColor: "bg-emerald-50 dark:bg-emerald-950/30",
+    borderColor: "border-emerald-300 dark:border-emerald-700",
+    textColor: "text-emerald-900 dark:text-emerald-100",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    accentColor: "bg-emerald-500",
   },
 };
 

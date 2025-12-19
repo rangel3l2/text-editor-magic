@@ -294,26 +294,26 @@ const RichTextEditor = ({
         </div>
       )}
 
-      {/* Botão para validar manualmente com design atrativo */}
+      {/* Botão para validar manualmente com design atrativo e intuitivo */}
       {shouldShowButton && isValidationVisible && !isValidated && value?.trim() && (
         <Button
           onClick={handleManualValidation}
-          variant="outline"
+          variant="default"
           size="lg"
-          className="w-full gap-2 sm:gap-3 py-4 sm:py-6 border-2 border-primary/30 hover:border-primary hover:bg-primary/5 transition-all duration-300 group relative overflow-hidden"
+          className="w-full gap-2 sm:gap-3 py-5 sm:py-7 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden animate-pulse"
           disabled={isValidating}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
           <div className="relative flex items-center gap-2 sm:gap-3 pointer-events-none">
-            <div className="p-1.5 sm:p-2 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300">
-              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary animate-pulse" />
+            <div className="p-1.5 sm:p-2 rounded-full bg-white/20 group-hover:bg-white/30 transition-colors duration-300">
+              <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div className="flex flex-col items-start text-left">
-              <span className="font-semibold text-xs sm:text-sm">
-                {isValidating ? 'Orientando...' : 'Precisa de orientação?'}
+              <span className="font-bold text-sm sm:text-base">
+                {isValidating ? '⏳ Analisando...' : '✨ Clique aqui para orientação'}
               </span>
-              <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
-                Clique para receber feedback sobre este campo
+              <span className="text-[11px] sm:text-xs text-primary-foreground/80">
+                Receba feedback personalizado da IA sobre seu texto
               </span>
             </div>
           </div>
@@ -327,6 +327,7 @@ const RichTextEditor = ({
            errorMessage={errorMessage}
            currentSection={currentSection}
            onRetry={() => retryValidation(value)}
+           onRevalidate={() => validateContent(value)}
          />
        )}
      </div>

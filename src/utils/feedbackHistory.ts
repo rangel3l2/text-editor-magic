@@ -204,3 +204,64 @@ export function getFeedbackStats(sectionName: string): {
     activeFeedbacks: active
   };
 }
+
+/**
+ * Obtém o progresso de validação com mensagens motivacionais (Teoria do Andaime)
+ */
+export function getValidationProgress(sectionName: string): {
+  correctedCount: number;
+  pendingCount: number;
+  totalCount: number;
+  progressPercentage: number;
+  motivationalMessage: string;
+  correctedFeedbacks: string[];
+} {
+  const history = loadFeedbackHistory(sectionName);
+  
+  if (!history || history.feedbacks.length === 0) {
+    return {
+      correctedCount: 0,
+      pendingCount: 0,
+      totalCount: 0,
+      progressPercentage: 0,
+      motivationalMessage: '',
+      correctedFeedbacks: []
+    };
+  }
+
+  const corrected = history.feedbacks.filter(f => f.resolvedAt !== null);
+  const pending = history.feedbacks.filter(f => f.resolvedAt === null);
+  const total = history.feedbacks.length;
+  const correctedCount = corrected.length;
+  const pendingCount = pending.length;
+  const progressPercentage = total > 0 ? Math.round((correctedCount / total) * 100) : 0;
+
+  // Mensagens motivacionais baseadas no progresso
+  let motivationalMessage = '';
+  if (correctedCount === 0 && pendingCount > 0) {
+    motivationalMessage = `📝 Você tem ${pendingCount} ${pendingCount === 1 ? 'ponto' : 'pontos'} para melhorar. Vamos lá!`;
+  } else if (correctedCount > 0 && pendingCount > 0) {
+    motivationalMessage = `🎉 Excelente! Você corrigiu ${correctedCount} de ${total} ${total === 1 ? 'problema' : 'problemas'}! Continue assim!`;
+  } else if (correctedCount === total && total > 0) {
+    motivationalMessage = '🏆 Parabéns! Você corrigiu todos os problemas identificados! Seu texto está muito melhor!';
+  }
+
+  // Extrai os nomes dos feedbacks corrigidos
+  const correctedFeedbacks = corrected.map(f => {
+    // Reconstrói o título a partir da chave
+    const parts = f.feedbackKey.split('_');
+    if (parts.length > 1) {
+      return parts.slice(1).join(' ').replace(/_/g, ' ');
+    }
+    return f.feedbackKey;
+  });
+
+  return {
+    correctedCount,
+    pendingCount,
+    totalCount: total,
+    progressPercentage,
+    motivationalMessage,
+    correctedFeedbacks
+  };
+}
