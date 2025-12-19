@@ -34,6 +34,7 @@ interface RichTextEditorProps {
   onEditorReady?: (editor: any) => void;
   onRequestAttachmentInsertion?: (payload: { type: 'figura' | 'grafico' | 'tabela'; selectionPath: number[]; placeholderId?: string }) => void;
   showValidationFeedback?: boolean;
+  onCustomBlur?: () => void;
 }
 
 const RichTextEditor = ({ 
@@ -47,7 +48,8 @@ const RichTextEditor = ({
   onCustomImageUpload,
   onEditorReady,
   onRequestAttachmentInsertion,
-  showValidationFeedback = true
+  showValidationFeedback = true,
+  onCustomBlur
 }: RichTextEditorProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [editorInstance, setEditorInstance] = useState<any>(null);
@@ -118,6 +120,12 @@ const RichTextEditor = ({
   // Validar automaticamente apenas o primeiro campo quando o usuário sai dele
   const handleBlur = () => {
     setIsFocused(false);
+    
+    // Chamar callback customizado de blur (ex: para conversão de caixa alta)
+    if (onCustomBlur) {
+      onCustomBlur();
+    }
+    
     if (!isValidationVisible || !sectionName) return;
     
     // Se é o primeiro campo e deve auto-validar

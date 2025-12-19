@@ -80,15 +80,11 @@ export const useArticleContent = () => {
   const navigate = useNavigate();
 
   const handleChange = (field: keyof ArticleContent, value: string | TheoreticalTopic[]) => {
-    // Aplicar conversão para CAIXA ALTA em título e subtítulo (padrão IFMS)
-    let processedValue = value;
-    if ((field === 'title' || field === 'subtitle') && typeof value === 'string') {
-      processedValue = toUpperCasePreservingHTML(value);
-    }
-    
+    // NÃO aplicar conversão para CAIXA ALTA durante a digitação
+    // A conversão será aplicada no blur (handleTitleBlur)
     setContent(prev => ({
       ...prev,
-      [field]: processedValue
+      [field]: value
     }));
 
     // Só salvar se temos user, id e o componente está montado
@@ -98,7 +94,7 @@ export const useArticleContent = () => {
             const { error } = await supabase
             .from('work_in_progress')
             .update({ 
-              content: { ...content, [field]: processedValue } as any,
+              content: { ...content, [field]: value } as any,
               last_modified: new Date().toISOString()
             })
             .eq('id', id)
@@ -119,6 +115,42 @@ export const useArticleContent = () => {
       };
 
       saveContent();
+    }
+  };
+
+  // Aplicar conversão para CAIXA ALTA quando o usuário sai do campo
+  const handleTitleBlur = (field: 'title' | 'subtitle') => {
+    const currentValue = content[field];
+    if (currentValue && typeof currentValue === 'string') {
+      const uppercased = toUpperCasePreservingHTML(currentValue);
+      if (uppercased !== currentValue) {
+        // Atualizar estado local
+        setContent(prev => ({
+          ...prev,
+          [field]: uppercased
+        }));
+        
+        // Salvar no banco com valor convertido
+        if (user && id && mountedRef.current) {
+          const saveContent = async () => {
+            try {
+              const { error } = await supabase
+                .from('work_in_progress')
+                .update({ 
+                  content: { ...content, [field]: uppercased } as any,
+                  last_modified: new Date().toISOString()
+                })
+                .eq('id', id)
+                .eq('user_id', user.id);
+
+              if (error) throw error;
+            } catch (error) {
+              console.error('Error saving title/subtitle on blur:', error);
+            }
+          };
+          saveContent();
+        }
+      }
     }
   };
 
@@ -387,6 +419,7 @@ export const useArticleContent = () => {
     isLoading,
     loadError,
     handleChange,
+    handleTitleBlur,
     updateMultipleFields,
     addTheoreticalTopic,
     updateTheoreticalTopic,
