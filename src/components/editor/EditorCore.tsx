@@ -24,6 +24,8 @@ const EditorCore = ({
   config = {}
 }: EditorCoreProps) => {
   const editorRef = useRef<any>(null);
+  const isInternalChangeRef = useRef(false);
+  const lastExternalValueRef = useRef(value);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -43,6 +45,19 @@ const EditorCore = ({
     };
   }, [value]);
 
+  // Sincronizar valor externo com o editor apenas quando não for mudança interna
+  useEffect(() => {
+    if (editorRef.current && !isInternalChangeRef.current) {
+      const currentEditorData = editorRef.current.getData();
+      // Só atualizar se o valor realmente mudou de uma fonte externa
+      if (value !== currentEditorData && value !== lastExternalValueRef.current) {
+        lastExternalValueRef.current = value;
+        editorRef.current.setData(value);
+      }
+    }
+    isInternalChangeRef.current = false;
+  }, [value]);
+
   return (
     <div className="editor-core">
       <CKEditor
@@ -59,6 +74,7 @@ const EditorCore = ({
         }}
         onReady={(editor) => {
           editorRef.current = editor;
+          lastExternalValueRef.current = value;
           if (onReady) onReady(editor);
 
           // Adicionar classes personalizadas ao editor
@@ -73,6 +89,9 @@ const EditorCore = ({
         }}
         onChange={(event, editor) => {
           const data = editor.getData();
+          // Marcar como mudança interna para evitar loop de atualização
+          isInternalChangeRef.current = true;
+          lastExternalValueRef.current = data;
           onChange(data);
         }}
         onBlur={(event, editor) => {
