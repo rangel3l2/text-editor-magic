@@ -29,6 +29,7 @@ import GuidelinesViewer from "@/components/editor/GuidelinesViewer";
 import MainLayout from "@/components/layout/MainLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ManualValidationProvider } from "@/contexts/ManualValidationContext";
+import CreateWorkButton from "@/components/editor/CreateWorkButton";
 
 const BannerEditor = () => {
   const { user } = useAuth();
@@ -136,16 +137,6 @@ const BannerEditor = () => {
 
     handleChange(field, value);
     lastFieldValueRef.current = value;
-
-    if (createWorkTimeoutRef.current) {
-      clearTimeout(createWorkTimeoutRef.current);
-    }
-
-    if (user && !currentWorkId && isFieldComplete(value)) {
-      createWorkTimeoutRef.current = setTimeout(() => {
-        setShouldCreateWork(true);
-      }, 1500);
-    }
   };
 
   const canEdit = userPermission === 'owner' || userPermission === 'editor';
@@ -285,6 +276,20 @@ const BannerEditor = () => {
             <h1 className="text-xl md:text-2xl font-bold">
               {content.title ? content.title.replace(/<[^>]*>/g, '').trim() : "Novo Banner"}
             </h1>
+            
+            {/* Botão Criar Trabalho - aparece apenas quando não há trabalho salvo */}
+            {!currentWorkId && (
+              <div className="flex justify-center py-4">
+                <CreateWorkButton
+                  user={user}
+                  workType="banner"
+                  content={bannerContent}
+                  currentWorkId={currentWorkId}
+                  onLoginRequired={() => setShowLoginModal(true)}
+                />
+              </div>
+            )}
+            
             {/* Indicador de permissão */}
             {userPermission && userPermission !== 'owner' && (
               <div className="flex items-center justify-between p-4 bg-muted rounded-lg">

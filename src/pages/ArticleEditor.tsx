@@ -23,6 +23,7 @@ import EditorSidebar from "@/components/editor/EditorSidebar";
 import GuidelinesViewer from "@/components/editor/GuidelinesViewer";
 import { ManualValidationProvider } from "@/contexts/ManualValidationContext";
 import { useNavigate } from "react-router-dom";
+import CreateWorkButton from "@/components/editor/CreateWorkButton";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
@@ -426,6 +427,19 @@ const ArticleEditor = () => {
           <h1 className="text-xl md:text-2xl font-bold">
             {content.title ? content.title.replace(/<[^>]*>/g, '').trim() : "Novo Artigo Científico"}
           </h1>
+          
+          {/* Botão Criar Trabalho - aparece apenas quando não há trabalho salvo */}
+          {!workId && (
+            <div className="flex justify-center py-4">
+              <CreateWorkButton
+                user={user}
+                workType="article"
+                content={content}
+                currentWorkId={workId}
+              />
+            </div>
+          )}
+          
           <div className="flex items-center justify-end gap-2 md:gap-4">
             <ValidationToggleButton />
           </div>
