@@ -27,7 +27,7 @@ import { useNavigate } from "react-router-dom";
 const ArticleEditor = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { content, isLoading, loadError, handleChange, updateMultipleFields, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic, workId } = useArticleContent();
+  const { content, isLoading, loadError, handleChange, handleTitleBlur, updateMultipleFields, addTheoreticalTopic, updateTheoreticalTopic, removeTheoreticalTopic, workId } = useArticleContent();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"pre-textual" | "textual" | "post-textual">("pre-textual");
   const [guidelinesOpen, setGuidelinesOpen] = useState(false);
@@ -467,14 +467,16 @@ const ArticleEditor = () => {
                     minLines={1}
                     sectionName="título"
                     placeholder="Digite o título do artigo..."
+                    onCustomBlur={() => handleTitleBlur('title')}
                   />
                   <RichTextEditor
-                    value={content.subtitle}
+                    value={content.subtitle || ''}
                     onChange={(value) => handleChange('subtitle', value)}
                     maxLines={2}
                     minLines={0}
                     sectionName="subtítulo"
                     placeholder="Digite o subtítulo (se houver)..."
+                    onCustomBlur={() => handleTitleBlur('subtitle')}
                   />
                 </div>
 

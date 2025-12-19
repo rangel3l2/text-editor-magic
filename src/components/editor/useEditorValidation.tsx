@@ -9,27 +9,8 @@ import { useAISettings } from '@/hooks/useAISettings';
 import { processAndFilterFeedbacks } from '@/utils/feedbackHistory';
 
 export const useEditorValidation = (sectionName: string, isValidationEnabled: boolean = true) => {
-  // Restaurar do cache no mount se existir validação prévia
-  const getInitialValidation = () => {
-    if (!sectionName) return null;
-    try {
-      const cacheKey = `validation_cache_${sectionName}`;
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        // Verificar se o cache ainda é válido (24h)
-        if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-          console.log(`🔄 Restaurando validação do cache para "${sectionName}"`);
-          return parsed.result;
-        }
-      }
-    } catch (e) {
-      console.error('Erro ao restaurar cache:', e);
-    }
-    return null;
-  };
-
-  const [validationResult, setValidationResult] = useState<any>(getInitialValidation);
+  // NÃO restaurar cache automaticamente no mount - apenas validação manual
+  const [validationResult, setValidationResult] = useState<any>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [currentSection, setCurrentSection] = useState<string>('');
