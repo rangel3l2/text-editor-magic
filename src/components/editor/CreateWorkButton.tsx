@@ -139,14 +139,12 @@ export const CreateWorkButton = ({
         disabled={isCreating || isDisabled}
         className={cn(
           "group relative overflow-hidden",
-          isDisabled 
-            ? "bg-muted text-muted-foreground cursor-not-allowed"
-            : "bg-gradient-to-r from-primary via-primary/90 to-primary hover:from-primary/90 hover:via-primary hover:to-primary/90",
-          "text-primary-foreground font-semibold",
           "shadow-lg hover:shadow-xl",
           "transition-all duration-300 ease-out",
-          "border-0",
           "px-6 py-3 h-auto",
+          isDisabled 
+            ? "bg-muted/80 text-muted-foreground cursor-not-allowed border border-border"
+            : "bg-gradient-to-r from-primary via-primary/90 to-primary hover:from-primary/90 hover:via-primary hover:to-primary/90 text-primary-foreground font-semibold border-0",
           className
         )}
         size="lg"
