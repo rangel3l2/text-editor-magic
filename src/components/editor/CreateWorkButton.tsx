@@ -14,6 +14,7 @@ interface CreateWorkButtonProps {
   currentWorkId: string | null;
   onLoginRequired?: () => void;
   className?: string;
+  disabled?: boolean;
 }
 
 const workTypeRoutes: Record<string, string> = {
@@ -39,10 +40,16 @@ export const CreateWorkButton = ({
   currentWorkId,
   onLoginRequired,
   className,
+  disabled,
 }: CreateWorkButtonProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
+
+  // Verificar se o título está vazio
+  const titleText = content?.title?.replace(/<[^>]*>/g, '').trim() || '';
+  const isTitleEmpty = titleText.length === 0;
+  const isDisabled = disabled || isTitleEmpty;
 
   // Não mostrar se já existe um trabalho
   if (currentWorkId) {
@@ -126,40 +133,50 @@ export const CreateWorkButton = ({
   };
 
   return (
-    <Button
-      onClick={handleCreateWork}
-      disabled={isCreating}
-      className={cn(
-        "group relative overflow-hidden",
-        "bg-gradient-to-r from-primary via-primary/90 to-primary",
-        "hover:from-primary/90 hover:via-primary hover:to-primary/90",
-        "text-primary-foreground font-semibold",
-        "shadow-lg hover:shadow-xl",
-        "transition-all duration-300 ease-out",
-        "border-0",
-        "px-6 py-3 h-auto",
-        className
-      )}
-      size="lg"
-    >
-      {/* Efeito de brilho animado */}
-      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
-      
-      <span className="relative flex items-center gap-2">
-        {isCreating ? (
-          <>
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <span>Criando...</span>
-          </>
-        ) : (
-          <>
-            <Sparkles className="h-5 w-5 group-hover:animate-pulse" />
-            <FileText className="h-4 w-4" />
-            <span>Criar Trabalho</span>
-          </>
+    <div className="flex flex-col items-start gap-1">
+      <Button
+        onClick={handleCreateWork}
+        disabled={isCreating || isDisabled}
+        className={cn(
+          "group relative overflow-hidden",
+          isDisabled 
+            ? "bg-muted text-muted-foreground cursor-not-allowed"
+            : "bg-gradient-to-r from-primary via-primary/90 to-primary hover:from-primary/90 hover:via-primary hover:to-primary/90",
+          "text-primary-foreground font-semibold",
+          "shadow-lg hover:shadow-xl",
+          "transition-all duration-300 ease-out",
+          "border-0",
+          "px-6 py-3 h-auto",
+          className
         )}
-      </span>
-    </Button>
+        size="lg"
+      >
+        {/* Efeito de brilho animado */}
+        {!isDisabled && (
+          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
+        )}
+        
+        <span className="relative flex items-center gap-2">
+          {isCreating ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span>Criando...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-5 w-5 group-hover:animate-pulse" />
+              <FileText className="h-4 w-4" />
+              <span>Criar Trabalho</span>
+            </>
+          )}
+        </span>
+      </Button>
+      {isTitleEmpty && (
+        <span className="text-xs text-muted-foreground">
+          Digite um título para criar o trabalho
+        </span>
+      )}
+    </div>
   );
 };
 
