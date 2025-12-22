@@ -10,13 +10,13 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.generate-article-latex]
-verify_jwt = false
+verify_jwt = true
 
 [functions.update-work-content]
 verify_jwt = true
 
 [functions.generate-latex-pdf]
-verify_jwt = false
+verify_jwt = true
 
 [functions.parse-article]
 verify_jwt = true
