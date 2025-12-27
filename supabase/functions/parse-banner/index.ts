@@ -9,6 +9,23 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
+// Server-side file validation constants
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword'
+];
+
+// Magic bytes for file type verification
+const PDF_MAGIC = [0x25, 0x50, 0x44, 0x46]; // %PDF
+const DOCX_MAGIC = [0x50, 0x4B, 0x03, 0x04]; // PK (ZIP header for DOCX)
+
+function validateFileMagicBytes(buffer: ArrayBuffer, expectedMagic: number[]): boolean {
+  const bytes = new Uint8Array(buffer.slice(0, expectedMagic.length));
+  return expectedMagic.every((byte, index) => bytes[index] === byte);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -22,9 +39,37 @@ serve(async (req) => {
       throw new Error('Nenhum arquivo enviado');
     }
 
-    console.log('Processando banner:', file.name, 'Tipo:', file.type);
+    // Server-side file size validation
+    if (file.size > MAX_FILE_SIZE) {
+      console.error(`Arquivo muito grande: ${file.size} bytes (máximo: ${MAX_FILE_SIZE})`);
+      throw new Error('Arquivo muito grande. O tamanho máximo é 20MB.');
+    }
+
+    // Server-side MIME type validation
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      console.error(`Tipo de arquivo não permitido: ${file.type}`);
+      throw new Error('Tipo de arquivo inválido. Apenas PDF e DOCX são aceitos.');
+    }
 
     const fileBuffer = await file.arrayBuffer();
+
+    // Validate file content using magic bytes
+    const isPDF = file.type === 'application/pdf';
+    const isDOCX = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                   file.type === 'application/msword';
+
+    if (isPDF && !validateFileMagicBytes(fileBuffer, PDF_MAGIC)) {
+      console.error('Arquivo declarado como PDF mas magic bytes não correspondem');
+      throw new Error('Arquivo inválido. O conteúdo não corresponde a um PDF válido.');
+    }
+
+    if (isDOCX && !validateFileMagicBytes(fileBuffer, DOCX_MAGIC)) {
+      console.error('Arquivo declarado como DOCX mas magic bytes não correspondem');
+      throw new Error('Arquivo inválido. O conteúdo não corresponde a um DOCX válido.');
+    }
+
+    console.log('Processando banner:', file.name, 'Tipo:', file.type, 'Tamanho:', file.size);
+
     let fullText = '';
 
     // Processar baseado no tipo de arquivo
