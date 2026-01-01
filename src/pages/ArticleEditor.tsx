@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -7,7 +6,7 @@ import RichTextEditor from "@/components/RichTextEditor";
 import { useArticleContent, ArticleContent } from "@/hooks/useArticleContent";
 import { Separator } from "@/components/ui/separator";
 import ArticlePreviewPaginated from "@/components/article/ArticlePreviewPaginated";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import EditorHeader from "@/components/editor/EditorHeader";
 import { toast } from "@/components/ui/use-toast";
@@ -24,6 +23,10 @@ import GuidelinesViewer from "@/components/editor/GuidelinesViewer";
 import { ManualValidationProvider } from "@/contexts/ManualValidationContext";
 import { useNavigate } from "react-router-dom";
 import CreateWorkButton from "@/components/editor/CreateWorkButton";
+import ReferencesManager from "@/components/article/ReferencesManager";
+import CitationTool from "@/components/article/CitationTool";
+import { Reference } from "@/types/reference";
+import { validateCitationsAndReferences, sortReferencesAlphabetically, formatReferenceABNT } from "@/services/referenceFormatter";
 
 const ArticleEditor = () => {
   const { user } = useAuth();
@@ -664,17 +667,34 @@ const ArticleEditor = () => {
           <TabsContent value="post-textual">
             <Card>
               <CardContent className="space-y-6">
-                {/* Referências */}
+                {/* Gerenciador de Referências Estruturadas */}
                 <div id="article-references" className="space-y-4 scroll-mt-20">
-                  <h3 className="text-lg font-semibold">Referências</h3>
-                  <RichTextEditor
-                    value={content.references}
-                    onChange={(value) => handleChange('references', value)}
-                    maxLines={50}
-                    minLines={5}
-                    sectionName="referências"
-                    placeholder="Digite as referências do artigo..."
+                  <ReferencesManager
+                    references={content.structuredReferences || []}
+                    onReferencesChange={(refs) => {
+                      handleChange('structuredReferences', refs as any);
+                      // Atualiza também o campo texto para compatibilidade
+                      const formattedText = refs.map(r => r.formattedABNT).join('<br/><br/>');
+                      handleChange('references', formattedText);
+                    }}
                   />
+                  
+                  {/* Campo de texto para referências manuais (fallback) */}
+                  <details className="mt-4">
+                    <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
+                      Modo texto livre (avançado)
+                    </summary>
+                    <div className="mt-2">
+                      <RichTextEditor
+                        value={content.references}
+                        onChange={(value) => handleChange('references', value)}
+                        maxLines={50}
+                        minLines={5}
+                        sectionName="referências"
+                        placeholder="Digite as referências manualmente..."
+                      />
+                    </div>
+                  </details>
                 </div>
 
                 <Separator />
