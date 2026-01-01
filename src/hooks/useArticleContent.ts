@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { toUpperCasePreservingHTML } from '@/utils/textFormatting';
+import { Reference } from '@/types/reference';
 
 export interface TheoreticalTopic {
   id: string;
@@ -13,11 +14,11 @@ export interface TheoreticalTopic {
 }
 
 export interface ArticleImage {
-  url: string; // URL da imagem no ImgBB
-  type: string; // "figura" | "grafico" | "tabela" | outros
+  url: string;
+  type: string;
   caption: string;
   source: string;
-  section: string; // "introduction" | "methodology" | "results" | "conclusion" | etc.
+  section: string;
 }
 
 export interface ArticleContent {
@@ -33,9 +34,10 @@ export interface ArticleContent {
   introduction: string;
   theoreticalTopics: TheoreticalTopic[];
   methodology: string;
-  results: string; // Agora inclui Resultados e Discussão unificados (padrão IFMS)
+  results: string;
   conclusion: string;
   references: string;
+  structuredReferences?: Reference[];
   appendices?: string;
   attachments?: string;
   approvalDate?: string;
@@ -60,9 +62,10 @@ export const useArticleContent = () => {
     introduction: '',
     theoreticalTopics: [],
     methodology: '',
-    results: '', // Resultados e Discussão unificados
+    results: '',
     conclusion: '',
     references: '',
+    structuredReferences: [],
     appendices: '',
     attachments: '',
     approvalDate: '',
