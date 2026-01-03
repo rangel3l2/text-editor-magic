@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import CreateWorkButton from "@/components/editor/CreateWorkButton";
 import ReferencesManager from "@/components/article/ReferencesManager";
 import CitationTool from "@/components/article/CitationTool";
+import CitationGuide from "@/components/article/CitationGuide";
 import { Reference } from "@/types/reference";
 import { validateCitationsAndReferences, sortReferencesAlphabetically, formatReferenceABNT } from "@/services/referenceFormatter";
 
@@ -583,6 +584,7 @@ const ArticleEditor = () => {
                 {/* Introdução com editor guiado */}
                 <div id="article-introduction" className="space-y-4 scroll-mt-20">
                   <h3 className="text-lg font-semibold">1. Introdução</h3>
+                  <CitationGuide sectionName="Introdução" />
                   <IntroductionEditor
                     value={content.introduction}
                     onChange={(value) => handleChange('introduction', value)}
@@ -608,6 +610,7 @@ const ArticleEditor = () => {
                   <h3 className="text-lg font-semibold">
                     {2 + content.theoreticalTopics.length}. Metodologia
                   </h3>
+                  <CitationGuide sectionName="Metodologia" />
                   <RichTextEditor
                     value={content.methodology}
                     onChange={(value) => handleChange('methodology', value)}
@@ -630,6 +633,7 @@ const ArticleEditor = () => {
                     comparando com a literatura da Fundamentação Teórica. Use tabelas, 
                     gráficos ou quadros (formato ABNT).
                   </p>
+                  <CitationGuide sectionName="Resultados e Discussão" />
                   <RichTextEditor
                     value={content.results}
                     onChange={(value) => handleChange('results', value)}
@@ -651,6 +655,7 @@ const ArticleEditor = () => {
                     Retome os objetivos, sintetize os principais achados, 
                     indique limitações e sugira trabalhos futuros.
                   </p>
+                  <CitationGuide sectionName="Conclusão" />
                   <RichTextEditor
                     value={content.conclusion}
                     onChange={(value) => handleChange('conclusion', value)}
@@ -677,6 +682,7 @@ const ArticleEditor = () => {
                       const formattedText = refs.map(r => r.formattedABNT).join('<br/><br/>');
                       handleChange('references', formattedText);
                     }}
+                    allTextContent={`${content.introduction || ''} ${content.theoreticalTopics?.map(t => t.content).join(' ') || ''} ${content.methodology || ''} ${content.results || ''} ${content.conclusion || ''}`}
                   />
                   
                   {/* Campo de texto para referências manuais (fallback) */}
