@@ -22,6 +22,8 @@ interface ReferencesManagerProps {
   onReferencesChange: (references: Reference[]) => void;
   orphanCitations?: string[];
   uncitedReferences?: Reference[];
+  /** Todo o conteúdo textual do artigo para validar citações */
+  allTextContent?: string;
 }
 
 const referenceTypeLabels: Record<ReferenceType, { label: string; icon: React.ReactNode }> = {
@@ -48,11 +50,13 @@ export default function ReferencesManager({
   onReferencesChange,
   orphanCitations = [],
   uncitedReferences = [],
+  allTextContent = '',
 }: ReferencesManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReference, setEditingReference] = useState<Reference | null>(null);
   const [formData, setFormData] = useState<Omit<Reference, 'id' | 'formattedABNT'>>(emptyReference);
   const [authorsText, setAuthorsText] = useState('');
+  const [citationError, setCitationError] = useState<string | null>(null);
 
   const handleOpenDialog = (reference?: Reference) => {
     if (reference) {
@@ -82,6 +86,7 @@ export default function ReferencesManager({
       setFormData(emptyReference);
       setAuthorsText('');
     }
+    setCitationError(null);
     setDialogOpen(true);
   };
 
@@ -90,9 +95,71 @@ export default function ReferencesManager({
     setEditingReference(null);
     setFormData(emptyReference);
     setAuthorsText('');
+    setCitationError(null);
+  };
+
+  // Limpa erro de citação quando o usuário altera autor ou ano
+  const handleAuthorsTextChange = (value: string) => {
+    setAuthorsText(value);
+    if (citationError) setCitationError(null);
+  };
+
+  const handleYearChange = (value: string) => {
+    setFormData({ ...formData, year: value });
+    if (citationError) setCitationError(null);
+  };
+
+  // Verifica se o autor/ano está citado no texto
+  const checkIfCitedInText = (authors: string[], year: string): boolean => {
+    if (!allTextContent || allTextContent.trim().length === 0) {
+      // Se não há conteúdo textual, permite adicionar (usuário pode estar começando)
+      return true;
+    }
+    
+    const textLower = allTextContent.toLowerCase();
+    const textUpper = allTextContent.toUpperCase();
+    
+    // Extrai sobrenomes
+    const surnames = authors.map(a => {
+      const parts = a.split(',');
+      return parts[0].trim();
+    });
+    
+    // Verifica padrão parentético: (SOBRENOME, ANO)
+    for (const surname of surnames) {
+      const surnameUpper = surname.toUpperCase();
+      const surnameLower = surname.toLowerCase();
+      const surnameCapitalized = surname.charAt(0).toUpperCase() + surname.slice(1).toLowerCase();
+      
+      // Padrões de citação ABNT
+      const patterns = [
+        `(${surnameUpper}, ${year})`,
+        `(${surnameUpper},${year})`,
+        `(${surnameUpper} ${year})`,
+        `${surnameCapitalized} (${year})`,
+        `${surnameCapitalized}(${year})`,
+        // Com et al.
+        `(${surnameUpper} et al., ${year})`,
+        `${surnameCapitalized} et al. (${year})`,
+        // Com página
+        new RegExp(`\\(${surnameUpper}[^)]*,?\\s*${year}[^)]*\\)`, 'i'),
+      ];
+      
+      for (const pattern of patterns) {
+        if (pattern instanceof RegExp) {
+          if (pattern.test(allTextContent)) return true;
+        } else {
+          if (allTextContent.includes(pattern)) return true;
+        }
+      }
+    }
+    
+    return false;
   };
 
   const handleSaveReference = () => {
+    setCitationError(null);
+    
     // Valida campos obrigatórios
     if (!formData.title.trim()) {
       toast({
@@ -126,6 +193,22 @@ export default function ReferencesManager({
         variant: 'destructive',
       });
       return;
+    }
+
+    // ⚠️ VALIDAÇÃO PEDAGÓGICA: Verifica se a referência foi citada no texto
+    // Só aplica para novas referências (não edições)
+    if (!editingReference) {
+      const isCited = checkIfCitedInText(authors, formData.year);
+      
+      if (!isCited) {
+        const mainSurname = authors[0].split(',')[0].trim();
+        setCitationError(
+          `A referência "${mainSurname} (${formData.year})" ainda não foi citada em nenhuma seção do seu artigo. ` +
+          `Primeiro, vá até uma seção textual (Introdução, Fundamentação Teórica, Metodologia, etc.) e cite este autor usando o formato ABNT. ` +
+          `Depois, retorne aqui para adicionar a referência completa.`
+        );
+        return;
+      }
     }
 
     const referenceData: Reference = {
@@ -602,7 +685,7 @@ export default function ReferencesManager({
                     <Textarea
                       id="authors"
                       value={authorsText}
-                      onChange={e => setAuthorsText(e.target.value)}
+                      onChange={e => handleAuthorsTextChange(e.target.value)}
                       placeholder="João da Silva&#10;Maria Santos&#10;ou&#10;SILVA, João&#10;SANTOS, Maria"
                       rows={3}
                     />
@@ -631,7 +714,7 @@ export default function ReferencesManager({
                     <Input
                       id="year"
                       value={formData.year}
-                      onChange={e => setFormData({ ...formData, year: e.target.value })}
+                      onChange={e => handleYearChange(e.target.value)}
                       placeholder="2024"
                       maxLength={4}
                     />
@@ -675,13 +758,44 @@ export default function ReferencesManager({
                       </div>
                     </div>
                   )}
+
+                  {/* Alerta de erro: citação não encontrada */}
+                  {citationError && (
+                    <Alert variant="destructive" className="animate-in fade-in-0 slide-in-from-top-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>⚠️ Citação não encontrada no texto</AlertTitle>
+                      <AlertDescription className="space-y-3">
+                        <p>{citationError}</p>
+                        <Separator />
+                        <div className="p-3 bg-red-50 dark:bg-red-950/50 rounded border border-red-200 dark:border-red-800">
+                          <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
+                            📚 Como citar no texto (ABNT):
+                          </p>
+                          <div className="space-y-2 text-xs">
+                            <div className="p-2 bg-white dark:bg-red-900/30 rounded">
+                              <p className="font-medium text-red-700 dark:text-red-300">Citação Indireta (paráfrase):</p>
+                              <p className="font-mono mt-1">"Segundo Silva (2023), a educação..."</p>
+                              <p className="font-mono mt-1">"A educação é fundamental (SILVA, 2023)."</p>
+                            </div>
+                            <div className="p-2 bg-white dark:bg-red-900/30 rounded">
+                              <p className="font-medium text-red-700 dark:text-red-300">Citação Direta Curta (até 3 linhas):</p>
+                              <p className="font-mono mt-1">"Educação é a base" (SILVA, 2023, p. 45).</p>
+                            </div>
+                          </div>
+                          <p className="mt-2 text-xs text-red-600 dark:text-red-400 italic">
+                            Vá até uma seção textual, cite o autor, e depois retorne para adicionar a referência.
+                          </p>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
 
                 <DialogFooter>
                   <Button variant="outline" onClick={handleCloseDialog}>
                     Cancelar
                   </Button>
-                  <Button onClick={handleSaveReference}>
+                  <Button onClick={handleSaveReference} disabled={!!citationError}>
                     {editingReference ? 'Salvar Alterações' : 'Adicionar'}
                   </Button>
                 </DialogFooter>

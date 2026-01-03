@@ -6,6 +6,7 @@ import RichTextEditor from "@/components/RichTextEditor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import CitationGuide from "@/components/article/CitationGuide";
 
 interface TheoreticalFrameworkProps {
   topics: TheoreticalTopic[];
@@ -60,6 +61,7 @@ const TheoreticalFramework = ({
                   onChange={(e) => onUpdateTopic(topic.id, 'title', e.target.value)}
                   className="mb-2"
                 />
+                <CitationGuide sectionName={`Referencial Teórico - ${topic.title || 'Tópico ' + topic.order}`} />
                 <RichTextEditor
                   value={topic.content}
                   onChange={(value) => onUpdateTopic(topic.id, 'content', value)}
