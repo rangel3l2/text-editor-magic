@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Reference, CitationType, CitationFormat } from '@/types/reference';
 import { generateCitation } from '@/services/referenceFormatter';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Quote, Copy, Check, AlertCircle, BookOpen } from 'lucide-react';
+import { Quote, Copy, Check, AlertCircle, Lightbulb, GraduationCap, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface CitationToolProps {
   references: Reference[];
@@ -22,6 +22,54 @@ interface CitationToolProps {
   trigger?: React.ReactNode;
   disabled?: boolean;
 }
+
+// Dicas educativas baseadas na Teoria do Andaime
+const scaffoldingTips = {
+  indirect: {
+    title: '📚 Citação Indireta (Paráfrase)',
+    description: 'Você reescreve a ideia do autor com suas próprias palavras.',
+    rule: 'Não usa aspas, mas SEMPRE indica a fonte.',
+    examples: [
+      { format: 'parenthetical', text: 'Segundo estudos recentes, a leitura melhora a cognição (SILVA, 2023).' },
+      { format: 'narrative', text: 'Silva (2023) afirma que a leitura melhora a cognição.' },
+    ],
+    memorize: 'SOBRENOME em MAIÚSCULO + vírgula + ano. Dentro de parênteses ou com o ano entre parênteses.',
+  },
+  'direct-short': {
+    title: '📖 Citação Direta Curta (até 3 linhas)',
+    description: 'Você copia exatamente o que o autor escreveu, até 3 linhas.',
+    rule: 'Usa aspas duplas e indica página.',
+    examples: [
+      { format: 'parenthetical', text: '"A educação é a arma mais poderosa" (MANDELA, 2003, p. 45).' },
+      { format: 'narrative', text: 'Para Mandela (2003, p. 45), "a educação é a arma mais poderosa".' },
+    ],
+    memorize: 'Texto entre "aspas duplas" + (AUTOR, ano, p. XX). A página é OBRIGATÓRIA!',
+  },
+  'direct-long': {
+    title: '📜 Citação Direta Longa (mais de 3 linhas)',
+    description: 'Citações longas ficam em bloco separado, recuado 4cm da margem.',
+    rule: 'Sem aspas, fonte menor (tamanho 10), espaçamento simples.',
+    examples: [
+      { format: 'block', text: 'A aprendizagem significativa ocorre quando o aluno consegue relacionar novos conceitos com conhecimentos prévios, criando conexões mentais duradouras. (AUSUBEL, 1968, p. 78)' },
+    ],
+    memorize: 'Bloco recuado 4cm + sem aspas + fonte 10 + espaço simples + (AUTOR, ano, p. XX)',
+  },
+};
+
+const formatExplanation = {
+  parenthetical: {
+    name: 'Citação Parentética',
+    when: 'Use quando o foco está na informação, não no autor.',
+    pattern: '...afirmação do autor (SOBRENOME, ano).',
+    example: 'O cérebro processa imagens mais rápido que texto (SILVA, 2020).',
+  },
+  narrative: {
+    name: 'Citação Narrativa',
+    when: 'Use quando você quer destacar o autor na sua argumentação.',
+    pattern: 'Sobrenome (ano) afirma que...',
+    example: 'Segundo Silva (2020), o cérebro processa imagens mais rápido que texto.',
+  },
+};
 
 export default function CitationTool({
   references,
@@ -36,8 +84,35 @@ export default function CitationTool({
   const [page, setPage] = useState('');
   const [quotedText, setQuotedText] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showLearningTips, setShowLearningTips] = useState(true);
+  const [showFormatHelp, setShowFormatHelp] = useState(false);
 
   const selectedReference = references.find(r => r.id === selectedReferenceId);
+  const currentTip = scaffoldingTips[citationType];
+  const currentFormatTip = formatExplanation[citationFormat];
+
+  // Gera explicação de como memorizar o padrão atual
+  const howToMemorize = useMemo(() => {
+    if (!selectedReference) return '';
+    
+    const authorSurname = selectedReference.authors[0]?.split(',')[0]?.toUpperCase() || 'AUTOR';
+    const year = selectedReference.year || 'ano';
+    
+    if (citationType === 'indirect') {
+      if (citationFormat === 'parenthetical') {
+        return `Para citar ${authorSurname}, escreva sua ideia e adicione no final: (${authorSurname}, ${year})`;
+      } else {
+        return `Para citar ${authorSurname}, comece com: ${authorSurname.charAt(0) + authorSurname.slice(1).toLowerCase()} (${year}) afirma que...`;
+      }
+    } else {
+      const pageText = page || 'XX';
+      if (citationFormat === 'parenthetical') {
+        return `Copie o texto entre aspas e adicione: (${authorSurname}, ${year}, p. ${pageText})`;
+      } else {
+        return `Comece com: Segundo ${authorSurname.charAt(0) + authorSurname.slice(1).toLowerCase()} (${year}, p. ${pageText}), "texto citado".`;
+      }
+    }
+  }, [selectedReference, citationType, citationFormat, page]);
 
   const handleReset = () => {
     setSelectedReferenceId('');
@@ -78,8 +153,8 @@ export default function CitationTool({
     onInsertCitation(citation);
     
     toast({
-      title: 'Citação inserida',
-      description: 'A citação foi adicionada ao texto.',
+      title: 'Citação inserida! 📚',
+      description: howToMemorize,
     });
     
     handleClose();
@@ -110,14 +185,14 @@ export default function CitationTool({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Quote className="h-5 w-5" />
             Inserir Citação ABNT
           </DialogTitle>
           <DialogDescription>
-            Selecione uma referência e configure o formato da citação.
+            Aprenda a formatar citações corretamente enquanto cria seu trabalho.
           </DialogDescription>
         </DialogHeader>
 
@@ -131,9 +206,53 @@ export default function CitationTool({
             </Alert>
           ) : (
             <>
+              {/* Seção de Aprendizado - Collapsible */}
+              <Collapsible open={showLearningTips} onOpenChange={setShowLearningTips}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-between p-3 h-auto bg-primary/5 hover:bg-primary/10 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="h-5 w-5 text-primary" />
+                      <span className="font-medium text-primary">Aprenda: {currentTip.title}</span>
+                    </div>
+                    {showLearningTips ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2">
+                  <div className="p-4 bg-muted/50 rounded-lg space-y-3 border border-primary/20">
+                    <p className="text-sm text-muted-foreground">{currentTip.description}</p>
+                    
+                    <div className="flex items-start gap-2 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md">
+                      <Lightbulb className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Regra ABNT:</p>
+                        <p className="text-sm text-yellow-700 dark:text-yellow-300">{currentTip.rule}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Exemplos:</p>
+                      {currentTip.examples.map((ex, i) => (
+                        <div key={i} className="text-sm p-2 bg-background rounded border">
+                          <Badge variant="outline" className="text-xs mb-1">{ex.format}</Badge>
+                          <p className="italic">{ex.text}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-start gap-2 bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
+                      <BookOpen className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-green-800 dark:text-green-200">🧠 Memorize:</p>
+                        <p className="text-sm text-green-700 dark:text-green-300 font-mono">{currentTip.memorize}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
               {/* Seleção de referência */}
               <div className="space-y-2">
-                <Label>Selecione a referência</Label>
+                <Label>Selecione a referência que você está citando</Label>
                 <Select
                   value={selectedReferenceId}
                   onValueChange={setSelectedReferenceId}
@@ -146,11 +265,11 @@ export default function CitationTool({
                       {references.map(ref => (
                         <SelectItem key={ref.id} value={ref.id}>
                           <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">
+                            <span className="font-medium">
                               {ref.authors[0]?.split(',')[0]}
                             </span>
-                            <span>({ref.year})</span>
-                            <span className="truncate max-w-[200px]">
+                            <span className="text-muted-foreground">({ref.year})</span>
+                            <span className="truncate max-w-[200px] text-muted-foreground">
                               – {ref.title}
                             </span>
                           </div>
@@ -163,68 +282,110 @@ export default function CitationTool({
 
               {selectedReference && (
                 <>
-                  {/* Tipo de citação */}
+                  {/* Tipo de citação com explicações educativas */}
                   <div className="space-y-3">
-                    <Label>Tipo de citação</Label>
+                    <Label>Que tipo de citação você vai fazer?</Label>
                     <RadioGroup
                       value={citationType}
                       onValueChange={v => setCitationType(v as CitationType)}
                       className="grid grid-cols-1 gap-2"
                     >
-                      <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <div className={cn(
+                        "flex items-start space-x-3 p-3 border rounded-lg cursor-pointer transition-colors",
+                        citationType === 'indirect' ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+                      )}>
                         <RadioGroupItem value="indirect" id="indirect" />
                         <div className="flex-1">
                           <Label htmlFor="indirect" className="cursor-pointer font-medium">
-                            Citação Indireta
+                            Citação Indireta (paráfrase)
                           </Label>
                           <p className="text-sm text-muted-foreground">
-                            Paráfrase do autor, sem aspas. Ex: (SILVA, 2023) ou Silva (2023)
+                            Você reescreve a ideia do autor com suas palavras. <span className="text-primary font-medium">Não precisa de página.</span>
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <div className={cn(
+                        "flex items-start space-x-3 p-3 border rounded-lg cursor-pointer transition-colors",
+                        citationType === 'direct-short' ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+                      )}>
                         <RadioGroupItem value="direct-short" id="direct-short" />
                         <div className="flex-1">
                           <Label htmlFor="direct-short" className="cursor-pointer font-medium">
-                            Citação Direta Curta
+                            Citação Direta Curta (até 3 linhas)
                           </Label>
                           <p className="text-sm text-muted-foreground">
-                            Até 3 linhas, entre aspas no corpo do texto.
+                            Copia exatamente o texto, entre aspas. <span className="text-orange-600 font-medium">Página obrigatória!</span>
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <div className={cn(
+                        "flex items-start space-x-3 p-3 border rounded-lg cursor-pointer transition-colors",
+                        citationType === 'direct-long' ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+                      )}>
                         <RadioGroupItem value="direct-long" id="direct-long" />
                         <div className="flex-1">
                           <Label htmlFor="direct-long" className="cursor-pointer font-medium">
-                            Citação Direta Longa
+                            Citação Direta Longa (mais de 3 linhas)
                           </Label>
                           <p className="text-sm text-muted-foreground">
-                            Mais de 3 linhas, em bloco recuado, sem aspas.
+                            Bloco recuado, sem aspas, fonte menor. <span className="text-orange-600 font-medium">Página obrigatória!</span>
                           </p>
                         </div>
                       </div>
                     </RadioGroup>
                   </div>
 
-                  {/* Formato da citação */}
+                  {/* Formato da citação com explicação */}
                   <div className="space-y-3">
-                    <Label>Formato</Label>
+                    <div className="flex items-center justify-between">
+                      <Label>Como você quer posicionar a citação?</Label>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setShowFormatHelp(!showFormatHelp)}
+                        className="text-xs text-muted-foreground"
+                      >
+                        <Lightbulb className="h-3 w-3 mr-1" />
+                        {showFormatHelp ? 'Ocultar ajuda' : 'Ver explicação'}
+                      </Button>
+                    </div>
+                    
+                    {showFormatHelp && (
+                      <div className="grid grid-cols-2 gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
+                        <div>
+                          <p className="font-medium text-blue-800 dark:text-blue-200">Parentética</p>
+                          <p className="text-blue-600 dark:text-blue-300 text-xs">{formatExplanation.parenthetical.when}</p>
+                          <p className="italic text-xs mt-1">Ex: {formatExplanation.parenthetical.example}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-blue-800 dark:text-blue-200">Narrativa</p>
+                          <p className="text-blue-600 dark:text-blue-300 text-xs">{formatExplanation.narrative.when}</p>
+                          <p className="italic text-xs mt-1">Ex: {formatExplanation.narrative.example}</p>
+                        </div>
+                      </div>
+                    )}
+
                     <RadioGroup
                       value={citationFormat}
                       onValueChange={v => setCitationFormat(v as CitationFormat)}
                       className="flex gap-4"
                     >
-                      <div className="flex items-center space-x-2">
+                      <div className={cn(
+                        "flex items-center space-x-2 p-2 rounded-md",
+                        citationFormat === 'parenthetical' && "bg-primary/10"
+                      )}>
                         <RadioGroupItem value="parenthetical" id="parenthetical" />
                         <Label htmlFor="parenthetical" className="cursor-pointer">
-                          Parentética: (SILVA, 2023)
+                          (SOBRENOME, ano)
                         </Label>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className={cn(
+                        "flex items-center space-x-2 p-2 rounded-md",
+                        citationFormat === 'narrative' && "bg-primary/10"
+                      )}>
                         <RadioGroupItem value="narrative" id="narrative" />
                         <Label htmlFor="narrative" className="cursor-pointer">
-                          Narrativa: Silva (2023)
+                          Sobrenome (ano)
                         </Label>
                       </div>
                     </RadioGroup>
@@ -234,7 +395,10 @@ export default function CitationTool({
                   {(citationType === 'direct-short' || citationType === 'direct-long') && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="page">Página(s)</Label>
+                        <Label htmlFor="page" className="flex items-center gap-2">
+                          Página(s) 
+                          <Badge variant="destructive" className="text-xs">Obrigatório</Badge>
+                        </Label>
                         <Input
                           id="page"
                           value={page}
@@ -242,6 +406,9 @@ export default function CitationTool({
                           placeholder="Ex: 45 ou 45-50"
                           className="max-w-[150px]"
                         />
+                        <p className="text-xs text-muted-foreground">
+                          💡 Na ABNT, citações diretas SEMPRE precisam de página. Se for online, use "n.p." (não paginado).
+                        </p>
                       </div>
 
                       <div className="space-y-2">
@@ -250,27 +417,39 @@ export default function CitationTool({
                           id="quotedText"
                           value={quotedText}
                           onChange={e => setQuotedText(e.target.value)}
-                          placeholder="Cole ou digite o trecho a ser citado..."
+                          placeholder="Cole ou digite o trecho exato a ser citado..."
                           rows={3}
                         />
                         <p className="text-xs text-muted-foreground">
-                          Se preenchido, a citação será formatada com o texto.
+                          Se preenchido, o texto será formatado automaticamente com as aspas corretas.
                         </p>
                       </div>
                     </>
                   )}
 
-                  {/* Preview */}
+                  {/* Preview com explicação de como memorizar */}
                   {preview && (
-                    <div className="p-4 bg-muted rounded-lg space-y-2">
-                      <Label className="text-sm font-medium">Prévia da citação:</Label>
+                    <div className="p-4 bg-muted rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">Sua citação ficará assim:</Label>
+                        <Badge variant="secondary" className="text-xs">Prévia ABNT</Badge>
+                      </div>
                       <p 
                         className={cn(
-                          "text-sm",
+                          "text-sm p-3 bg-background rounded border",
                           citationType === 'direct-long' && "pl-8 text-[11px] leading-tight"
                         )}
                         dangerouslySetInnerHTML={{ __html: preview }}
                       />
+                      
+                      {/* Dica de memorização personalizada */}
+                      <div className="flex items-start gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded text-xs">
+                        <GraduationCap className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-green-800 dark:text-green-200">Para fazer sozinho(a): </span>
+                          <span className="text-green-700 dark:text-green-300">{howToMemorize}</span>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>
