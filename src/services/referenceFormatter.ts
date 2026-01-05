@@ -103,7 +103,7 @@ export function generateCitation(
     }
   }
   
-  // Citação direta longa: bloco recuado
+  // Citação direta longa: bloco recuado 4cm, fonte 10, espaço simples
   if (type === 'direct-long') {
     const surnames = authors.map(a => a.split(',')[0].trim().toUpperCase());
     const authorStr = surnames.length > 2 
@@ -111,8 +111,9 @@ export function generateCitation(
       : surnames.join('; ');
     const pageRef = page ? `, p. ${page}` : '';
     
+    // Usa classe citacao-longa para formatação ABNT
     return quotedText 
-      ? `<blockquote class="citation-block">${quotedText} (${authorStr}, ${year}${pageRef})</blockquote>`
+      ? `<div class="citacao-longa">${quotedText} (${authorStr}, ${year}${pageRef})</div>`
       : `(${authorStr}, ${year}${pageRef})`;
   }
   

@@ -11,6 +11,26 @@ const generateArticleLatex = (content: any): string => {
     if (!text) return '';
     
     return text
+      // Converter citações longas (div.citacao-longa ou blockquote.citation-block) para ambiente LaTeX
+      .replace(/<div\s+class=["']citacao-longa["'][^>]*>([\s\S]*?)<\/div>/gi, (_, content) => {
+        // Remove tags internas e limpa o conteúdo
+        const cleanContent = content
+          .replace(/<p>/gi, '')
+          .replace(/<\/p>/gi, '\n')
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/<[^>]+>/g, '')
+          .trim();
+        return `\n\n\\begin{citacao}\n${cleanContent}\n\\end{citacao}\n\n`;
+      })
+      .replace(/<blockquote\s+class=["']citation-block["'][^>]*>([\s\S]*?)<\/blockquote>/gi, (_, content) => {
+        const cleanContent = content
+          .replace(/<p>/gi, '')
+          .replace(/<\/p>/gi, '\n')
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/<[^>]+>/g, '')
+          .trim();
+        return `\n\n\\begin{citacao}\n${cleanContent}\n\\end{citacao}\n\n`;
+      })
       // Converter tags HTML de parágrafo em quebras de parágrafo LaTeX
       .replace(/<\/p>\s*<p>/gi, '\n\n')
       .replace(/<p>/gi, '')

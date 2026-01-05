@@ -40,6 +40,17 @@ const cleanFeedbackComments = (html: string): string => {
   return tempDiv.innerHTML;
 };
 
+// Função para processar citações longas no preview
+const processLongCitations = (html: string): string => {
+  if (!html) return '';
+  
+  // Converte div.citacao-longa para estilo visual correto
+  return html
+    .replace(/<div class=["']citacao-longa["']>/gi, '<div class="citacao-longa">')
+    .replace(/<blockquote class=["']citation-block["']>/gi, '<div class="citacao-longa">')
+    .replace(/<\/blockquote>/gi, '</div>');
+};
+
 const ArticlePreview = ({ content }: ArticlePreviewProps) => {
   return (
     <div className="academic-preview-container">
@@ -99,7 +110,7 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         {/* Introdução */}
         <div className="mb-8">
           <h2 className="section-title">1 INTRODUÇÃO</h2>
-          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(content.introduction)) }} />
+          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(processLongCitations(cleanFeedbackComments(content.introduction))) }} />
         </div>
 
       </div>
@@ -112,7 +123,7 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
         {content.theoreticalTopics.map((topic, index) => (
           <div key={topic.id} className="mb-8">
             <h2 className="section-title">{topic.order} {topic.title.toUpperCase()}</h2>
-            <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(topic.content)) }} />
+            <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(processLongCitations(cleanFeedbackComments(topic.content))) }} />
           </div>
         ))}
 
@@ -121,7 +132,7 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
           <h2 className="section-title">
             {2 + content.theoreticalTopics.length} METODOLOGIA
           </h2>
-          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(content.methodology)) }} />
+          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(processLongCitations(cleanFeedbackComments(content.methodology))) }} />
         </div>
 
         {/* Resultados e Discussão */}
@@ -129,13 +140,13 @@ const ArticlePreview = ({ content }: ArticlePreviewProps) => {
           <h2 className="section-title">
             {2 + content.theoreticalTopics.length + 1} RESULTADOS E DISCUSSÃO
           </h2>
-          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(content.results)) }} />
+          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(processLongCitations(cleanFeedbackComments(content.results))) }} />
         </div>
 
         {/* Conclusão */}
         <div className="mb-8">
           <h2 className="section-title">CONCLUSÃO</h2>
-          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanFeedbackComments(content.conclusion)) }} />
+          <div className="text-justify hyphens-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtml(processLongCitations(cleanFeedbackComments(content.conclusion))) }} />
         </div>
 
         {/* Referências */}

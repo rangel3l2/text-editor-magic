@@ -338,11 +338,72 @@
   font-weight: bold !important;
 }
 
-.academic-preview .citation-block {
-  font-size: 10pt;
-  line-height: 1;
-  margin-left: 4cm;
-  text-align: justify;
+/* Citação Direta Longa - ABNT/IFMS */
+.academic-preview .citation-block,
+.academic-preview .citacao-longa {
+  font-size: 10pt !important;
+  line-height: 1 !important;           /* Espaçamento simples */
+  margin-left: 4cm !important;         /* Recuo 4cm da margem esquerda */
+  margin-right: 0 !important;
+  margin-top: 0.5cm !important;
+  margin-bottom: 0.5cm !important;
+  text-align: justify !important;
+  text-indent: 0 !important;           /* Sem recuo de primeira linha */
+  font-family: 'Times New Roman', Times, serif !important;
+  display: block;
+  padding: 0;
+}
+
+.academic-preview .citacao-longa p,
+.academic-preview .citation-block p {
+  text-indent: 0 !important;
+  margin: 0 !important;
+  font-size: 10pt !important;
+  line-height: 1 !important;
+}
+
+/* Citação Direta Longa no CKEditor */
+.ck-content .citation-block,
+.ck-content .citacao-longa,
+.ck-content blockquote.citation-block,
+.ck-content div.citacao-longa {
+  font-size: 10pt !important;
+  line-height: 1 !important;
+  margin-left: 4cm !important;
+  margin-right: 0 !important;
+  margin-top: 0.5cm !important;
+  margin-bottom: 0.5cm !important;
+  text-indent: 0 !important;
+  border-left: 3px solid hsl(var(--primary) / 0.5);
+  padding-left: 0.5cm;
+  background: hsl(var(--muted) / 0.3);
+  display: block;
+}
+
+.ck-content .citacao-longa p,
+.ck-content .citation-block p {
+  text-indent: 0 !important;
+  margin: 0 !important;
+  font-size: 10pt !important;
+  line-height: 1 !important;
+}
+
+/* TipTap Editor - Citação Longa */
+.tiptap-editor-content .citacao-longa,
+.tiptap-editor-content .citation-block,
+.ProseMirror .citacao-longa,
+.ProseMirror .citation-block {
+  font-size: 10pt !important;
+  line-height: 1 !important;
+  margin-left: 4cm !important;
+  margin-right: 0 !important;
+  margin-top: 0.5cm !important;
+  margin-bottom: 0.5cm !important;
+  text-indent: 0 !important;
+  border-left: 3px solid hsl(var(--primary) / 0.5);
+  padding-left: 0.5cm;
+  background: hsl(var(--muted) / 0.3);
+  display: block;
 }
 
 .academic-preview .page-number {
