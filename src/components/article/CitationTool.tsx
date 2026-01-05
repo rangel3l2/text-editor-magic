@@ -47,12 +47,23 @@ const scaffoldingTips = {
   },
   'direct-long': {
     title: '📜 Citação Direta Longa (mais de 3 linhas)',
-    description: 'Citações longas ficam em bloco separado, recuado 4cm da margem.',
-    rule: 'Sem aspas, fonte menor (tamanho 10), espaçamento simples.',
+    description: 'Citações com mais de 3 linhas devem ficar em bloco separado, com formatação especial.',
+    rule: 'Recuo de 4cm da margem esquerda, fonte 10pt, espaçamento simples, sem aspas, sem recuo de primeira linha.',
     examples: [
-      { format: 'block', text: 'A aprendizagem significativa ocorre quando o aluno consegue relacionar novos conceitos com conhecimentos prévios, criando conexões mentais duradouras. (AUSUBEL, 1968, p. 78)' },
+      { format: 'block', text: `A aprendizagem significativa ocorre quando o aluno consegue relacionar 
+novos conceitos com conhecimentos prévios, criando conexões mentais 
+duradouras que permitem a transferência do conhecimento para novas 
+situações do cotidiano. (AUSUBEL, 1968, p. 78)` },
     ],
-    memorize: 'Bloco recuado 4cm + sem aspas + fonte 10 + espaço simples + (AUTOR, ano, p. XX)',
+    memorize: '🎯 5 regras: Recuo 4cm + Fonte 10pt + Espaço simples + SEM aspas + (AUTOR, ano, p. XX) no final',
+    formatting: {
+      indent: '4cm da margem esquerda',
+      font: 'Tamanho 10pt (menor que o texto normal de 12pt)',
+      spacing: 'Espaçamento simples entre linhas',
+      quotes: 'NÃO usar aspas',
+      firstLine: 'SEM recuo de primeira linha',
+      citation: '(SOBRENOME, ano, p. XX) no final do bloco'
+    }
   },
 };
 
@@ -328,8 +339,20 @@ export default function CitationTool({
                             Citação Direta Longa (mais de 3 linhas)
                           </Label>
                           <p className="text-sm text-muted-foreground">
-                            Bloco recuado, sem aspas, fonte menor. <span className="text-orange-600 font-medium">Página obrigatória!</span>
+                            Bloco recuado 4cm, fonte 10pt, espaço simples, sem aspas. <span className="text-orange-600 font-medium">Página obrigatória!</span>
                           </p>
+                          {citationType === 'direct-long' && (
+                            <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded text-xs space-y-1">
+                              <p className="font-medium text-amber-800 dark:text-amber-200">📐 Formatação ABNT/IFMS:</p>
+                              <ul className="text-amber-700 dark:text-amber-300 space-y-0.5 list-disc list-inside">
+                                <li>Recuo de 4cm da margem esquerda</li>
+                                <li>Fonte tamanho 10pt (menor que 12pt normal)</li>
+                                <li>Espaçamento simples entre linhas</li>
+                                <li>SEM aspas (diferente da citação curta)</li>
+                                <li>SEM recuo de primeira linha</li>
+                              </ul>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </RadioGroup>
@@ -434,22 +457,51 @@ export default function CitationTool({
                         <Label className="text-sm font-medium">Sua citação ficará assim:</Label>
                         <Badge variant="secondary" className="text-xs">Prévia ABNT</Badge>
                       </div>
-                      <p 
-                        className={cn(
-                          "text-sm p-3 bg-background rounded border",
-                          citationType === 'direct-long' && "pl-8 text-[11px] leading-tight"
-                        )}
-                        dangerouslySetInnerHTML={{ __html: preview }}
-                      />
+                      
+                      {/* Preview especial para citação longa */}
+                      {citationType === 'direct-long' ? (
+                        <div className="bg-background rounded border p-4">
+                          <p className="text-xs text-muted-foreground mb-2 italic">
+                            (Simulação visual - no documento real terá recuo de 4cm)
+                          </p>
+                          <div 
+                            className="ml-12 text-[10pt] leading-tight text-justify border-l-2 border-primary/30 pl-3"
+                            dangerouslySetInnerHTML={{ __html: preview.replace(/<div class="citacao-longa">|<\/div>/g, '') }}
+                          />
+                        </div>
+                      ) : (
+                        <p 
+                          className="text-sm p-3 bg-background rounded border"
+                          dangerouslySetInnerHTML={{ __html: preview }}
+                        />
+                      )}
                       
                       {/* Dica de memorização personalizada */}
                       <div className="flex items-start gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded text-xs">
                         <GraduationCap className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
                         <div>
                           <span className="font-medium text-green-800 dark:text-green-200">Para fazer sozinho(a): </span>
-                          <span className="text-green-700 dark:text-green-300">{howToMemorize}</span>
+                          <span className="text-green-700 dark:text-green-300">
+                            {citationType === 'direct-long' 
+                              ? `No Word: selecione o texto, aumente o recuo esquerdo para 4cm, mude fonte para 10pt, defina espaçamento simples.`
+                              : howToMemorize
+                            }
+                          </span>
                         </div>
                       </div>
+
+                      {/* Dica adicional para LaTeX/Overleaf */}
+                      {citationType === 'direct-long' && (
+                        <div className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                          <BookOpen className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-medium text-blue-800 dark:text-blue-200">No LaTeX/Overleaf: </span>
+                            <span className="text-blue-700 dark:text-blue-300 font-mono">
+                              \begin&#123;citacao&#125; ... \end&#123;citacao&#125;
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
