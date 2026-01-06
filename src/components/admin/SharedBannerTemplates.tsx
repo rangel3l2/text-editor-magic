@@ -7,6 +7,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Copy, ExternalLink, Eye, Plus, Trash2 } from 'lucide-react';
+import { z } from 'zod';
+
+// Validation schema for banner template
+const templateSchema = z.object({
+  title: z.string().trim().min(1, 'O título é obrigatório').max(200, 'O título deve ter no máximo 200 caracteres'),
+  institutionName: z.string().max(500, 'O nome da instituição deve ter no máximo 500 caracteres').optional().or(z.literal('')),
+  logoUrl: z.string().url('URL do logo inválida').optional().or(z.literal('')),
+  layoutConfig: z.object({
+    columnLayout: z.string(),
+    themeColor: z.string(),
+  }),
+});
 import {
   Dialog,
   DialogContent,
@@ -69,14 +81,20 @@ export const SharedBannerTemplates = () => {
   };
 
   const createTemplate = async () => {
-    if (!newTemplate.title.trim()) {
+    // Validate input with zod schema
+    const validationResult = templateSchema.safeParse(newTemplate);
+    
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
       toast({
-        title: 'Erro',
-        description: 'O título é obrigatório',
+        title: 'Erro de validação',
+        description: firstError.message,
         variant: 'destructive',
       });
       return;
     }
+    
+    const validatedData = validationResult.data;
 
     try {
       // Gerar token compartilhável
@@ -88,12 +106,12 @@ export const SharedBannerTemplates = () => {
       const { error } = await supabase
         .from('banner_templates')
         .insert({
-          title: newTemplate.title,
+          title: validatedData.title,
           is_public: true,
           share_token: tokenData,
-          default_logo_url: newTemplate.logoUrl || null,
-          default_institution_name: newTemplate.institutionName || null,
-          content: newTemplate.layoutConfig,
+          default_logo_url: validatedData.logoUrl || null,
+          default_institution_name: validatedData.institutionName || null,
+          content: validatedData.layoutConfig,
           latex_template: '',
         });
 
