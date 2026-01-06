@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { z } from 'zod';
+
+// Validation schemas
+const emailSchema = z.string().email('Email inválido').max(255, 'Email muito longo');
+const commentSchema = z.string().trim().min(1, 'Comentário não pode estar vazio').max(5000, 'Comentário muito longo (máximo 5000 caracteres)');
+const sectionNameSchema = z.string().trim().min(1, 'Nome da seção é obrigatório').max(100, 'Nome da seção muito longo');
 
 export type SharePermission = 'viewer' | 'editor' | 'commenter';
 
@@ -231,11 +237,22 @@ export const useWorkSharing = (workId: string | undefined, userId: string | unde
   const shareWork = async (email: string, permission: SharePermission) => {
     if (!workId || !userId) return;
 
+    // Validate email
+    const emailValidation = emailSchema.safeParse(email);
+    if (!emailValidation.success) {
+      toast({
+        title: 'Erro de validação',
+        description: emailValidation.error.errors[0].message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase.from('work_shares').insert({
         work_id: workId,
         shared_by: userId,
-        shared_with_email: email,
+        shared_with_email: emailValidation.data,
         permission,
       });
 
@@ -243,7 +260,7 @@ export const useWorkSharing = (workId: string | undefined, userId: string | unde
 
       toast({
         title: 'Sucesso',
-        description: `Trabalho compartilhado com ${email} como ${permission}`,
+        description: `Trabalho compartilhado com ${emailValidation.data} como ${permission}`,
       });
     } catch (error: any) {
       console.error('Erro ao compartilhar trabalho:', error);
@@ -301,6 +318,27 @@ export const useWorkSharing = (workId: string | undefined, userId: string | unde
   const addComment = async (sectionName: string, commentText: string) => {
     if (!workId || !userId) return;
 
+    // Validate inputs
+    const sectionValidation = sectionNameSchema.safeParse(sectionName);
+    if (!sectionValidation.success) {
+      toast({
+        title: 'Erro de validação',
+        description: sectionValidation.error.errors[0].message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const commentValidation = commentSchema.safeParse(commentText);
+    if (!commentValidation.success) {
+      toast({
+        title: 'Erro de validação',
+        description: commentValidation.error.errors[0].message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       const { data: profile } = await supabase
         .from('profiles')
@@ -312,10 +350,10 @@ export const useWorkSharing = (workId: string | undefined, userId: string | unde
 
       const { error } = await supabase.from('work_comments').insert({
         work_id: workId,
-        section_name: sectionName,
+        section_name: sectionValidation.data,
         user_id: userId,
         user_email: profile.email,
-        comment_text: commentText,
+        comment_text: commentValidation.data,
       });
 
       if (error) throw error;
@@ -335,10 +373,21 @@ export const useWorkSharing = (workId: string | undefined, userId: string | unde
   };
 
   const updateComment = async (commentId: string, commentText: string) => {
+    // Validate comment text
+    const commentValidation = commentSchema.safeParse(commentText);
+    if (!commentValidation.success) {
+      toast({
+        title: 'Erro de validação',
+        description: commentValidation.error.errors[0].message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('work_comments')
-        .update({ comment_text: commentText })
+        .update({ comment_text: commentValidation.data })
         .eq('id', commentId);
 
       if (error) throw error;
