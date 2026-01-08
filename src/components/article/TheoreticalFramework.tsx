@@ -1,4 +1,4 @@
-
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import { TheoreticalTopic } from "@/hooks/useArticleContent";
@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import CitationGuide from "@/components/article/CitationGuide";
+import DirectCitationButton from "@/components/article/DirectCitationButton";
 
 interface TheoreticalFrameworkProps {
   topics: TheoreticalTopic[];
@@ -21,6 +22,25 @@ const TheoreticalFramework = ({
   onUpdateTopic,
   onRemoveTopic,
 }: TheoreticalFrameworkProps) => {
+  // Armazena callbacks de inserção para cada tópico
+  const [insertCallbacks, setInsertCallbacks] = useState<Record<string, (html: string) => void>>({});
+
+  const handleInsertCitation = useCallback((topicId: string, html: string) => {
+    const callback = insertCallbacks[topicId];
+    if (callback) {
+      callback(html);
+    } else {
+      // Fallback: adicionar ao conteúdo existente
+      const topic = topics.find(t => t.id === topicId);
+      if (topic) {
+        onUpdateTopic(topicId, 'content', topic.content + html);
+      }
+    }
+  }, [insertCallbacks, topics, onUpdateTopic]);
+
+  const registerInsertCallback = useCallback((topicId: string, callback: (html: string) => void) => {
+    setInsertCallbacks(prev => ({ ...prev, [topicId]: callback }));
+  }, []);
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -61,7 +81,12 @@ const TheoreticalFramework = ({
                   onChange={(e) => onUpdateTopic(topic.id, 'title', e.target.value)}
                   className="mb-2"
                 />
-                <CitationGuide sectionName={`Referencial Teórico - ${topic.title || 'Tópico ' + topic.order}`} />
+                <div className="flex items-center gap-2 mb-2">
+                  <CitationGuide sectionName={`Referencial Teórico - ${topic.title || 'Tópico ' + topic.order}`} />
+                  <DirectCitationButton 
+                    onInsertCitation={(html) => handleInsertCitation(topic.id, html)}
+                  />
+                </div>
                 <RichTextEditor
                   value={topic.content}
                   onChange={(value) => onUpdateTopic(topic.id, 'content', value)}
@@ -69,6 +94,7 @@ const TheoreticalFramework = ({
                   minLines={10}
                   sectionName={`tópico ${topic.order}`}
                   placeholder="Digite o conteúdo do tópico..."
+                  onInsertContent={(callback) => registerInsertCallback(topic.id, callback)}
                 />
               </div>
             </CardContent>

@@ -26,6 +26,7 @@ import CreateWorkButton from "@/components/editor/CreateWorkButton";
 import ReferencesManager from "@/components/article/ReferencesManager";
 import CitationTool from "@/components/article/CitationTool";
 import CitationGuide from "@/components/article/CitationGuide";
+import DirectCitationButton from "@/components/article/DirectCitationButton";
 import { Reference } from "@/types/reference";
 import { validateCitationsAndReferences, sortReferencesAlphabetically, formatReferenceABNT } from "@/services/referenceFormatter";
 
@@ -38,6 +39,11 @@ const ArticleEditor = () => {
   const [guidelinesOpen, setGuidelinesOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  
+  // Callbacks para inserir conteúdo nos editores
+  const [insertMethodologyCallback, setInsertMethodologyCallback] = useState<((html: string) => void) | null>(null);
+  const [insertResultsCallback, setInsertResultsCallback] = useState<((html: string) => void) | null>(null);
+  const [insertConclusionCallback, setInsertConclusionCallback] = useState<((html: string) => void) | null>(null);
 
   const handleArticleParsed = async (parsedContent: Partial<ArticleContent>) => {
     console.log('📥 [ArticleEditor] Artigo parseado recebido:', {
@@ -610,7 +616,18 @@ const ArticleEditor = () => {
                   <h3 className="text-lg font-semibold">
                     {2 + content.theoreticalTopics.length}. Metodologia
                   </h3>
-                  <CitationGuide sectionName="Metodologia" />
+                  <div className="flex items-center gap-2">
+                    <CitationGuide sectionName="Metodologia" />
+                    <DirectCitationButton 
+                      onInsertCitation={(html) => {
+                        if (insertMethodologyCallback) {
+                          insertMethodologyCallback(html);
+                        } else {
+                          handleChange('methodology', content.methodology + html);
+                        }
+                      }}
+                    />
+                  </div>
                   <RichTextEditor
                     value={content.methodology}
                     onChange={(value) => handleChange('methodology', value)}
@@ -618,6 +635,7 @@ const ArticleEditor = () => {
                     minLines={10}
                     sectionName="metodologia"
                     placeholder="Digite a metodologia..."
+                    onInsertContent={setInsertMethodologyCallback}
                   />
                 </div>
 
@@ -633,7 +651,18 @@ const ArticleEditor = () => {
                     comparando com a literatura da Fundamentação Teórica. Use tabelas, 
                     gráficos ou quadros (formato ABNT).
                   </p>
-                  <CitationGuide sectionName="Resultados e Discussão" />
+                  <div className="flex items-center gap-2">
+                    <CitationGuide sectionName="Resultados e Discussão" />
+                    <DirectCitationButton 
+                      onInsertCitation={(html) => {
+                        if (insertResultsCallback) {
+                          insertResultsCallback(html);
+                        } else {
+                          handleChange('results', content.results + html);
+                        }
+                      }}
+                    />
+                  </div>
                   <RichTextEditor
                     value={content.results}
                     onChange={(value) => handleChange('results', value)}
@@ -641,6 +670,7 @@ const ArticleEditor = () => {
                     minLines={15}
                     sectionName="Resultados e Discussão"
                     placeholder="Apresente os resultados obtidos e discuta-os comparando com os autores da fundamentação teórica..."
+                    onInsertContent={setInsertResultsCallback}
                   />
                 </div>
 
@@ -655,7 +685,18 @@ const ArticleEditor = () => {
                     Retome os objetivos, sintetize os principais achados, 
                     indique limitações e sugira trabalhos futuros.
                   </p>
-                  <CitationGuide sectionName="Conclusão" />
+                  <div className="flex items-center gap-2">
+                    <CitationGuide sectionName="Conclusão" />
+                    <DirectCitationButton 
+                      onInsertCitation={(html) => {
+                        if (insertConclusionCallback) {
+                          insertConclusionCallback(html);
+                        } else {
+                          handleChange('conclusion', content.conclusion + html);
+                        }
+                      }}
+                    />
+                  </div>
                   <RichTextEditor
                     value={content.conclusion}
                     onChange={(value) => handleChange('conclusion', value)}
@@ -663,6 +704,7 @@ const ArticleEditor = () => {
                     minLines={5}
                     sectionName="Conclusão"
                     placeholder="Digite a conclusão do artigo..."
+                    onInsertContent={setInsertConclusionCallback}
                   />
                 </div>
               </CardContent>
