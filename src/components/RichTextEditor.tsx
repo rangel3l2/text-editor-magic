@@ -153,28 +153,36 @@ const RichTextEditor = ({
   useEffect(() => {
     if (onInsertContent && editorInstance) {
       onInsertContent((html: string) => {
+        if (!html || typeof html !== "string") return;
+
         try {
           const viewFragment = editorInstance.data.processor.toView(html);
           const modelFragment = editorInstance.data.toModel(viewFragment);
-          
+
           editorInstance.model.change((writer: any) => {
+            const selection = editorInstance.model.document.selection;
+            const position = selection?.getFirstPosition?.();
             const root = editorInstance.model.document.getRoot();
-            const position = writer.createPositionAt(root, 'end');
-            editorInstance.model.insertContent(modelFragment, position);
+
+            // Inserir na posição atual do cursor; se não houver, inserir no final
+            const insertPosition = position?.root ? position : writer.createPositionAt(root, "end");
+            editorInstance.model.insertContent(modelFragment, insertPosition);
           });
-          
+
           // Atualizar o valor
           const newValue = editorInstance.getData();
           onChange(newValue);
         } catch (error) {
-          console.error('Erro ao inserir conteúdo:', error);
+          console.error("Erro ao inserir conteúdo:", error);
           // Fallback: adicionar ao final do value
-          const newValue = value + html;
+          const safeHtml = typeof html === "string" ? html : "";
+          const newValue = (value || "") + safeHtml;
           onChange(newValue);
         }
       });
     }
   }, [onInsertContent, editorInstance, onChange, value]);
+
 
   return (
     <div className="editor-container relative space-y-2">

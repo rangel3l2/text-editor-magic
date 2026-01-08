@@ -33,25 +33,40 @@ const DirectCitationButton = ({ onInsertCitation, disabled }: DirectCitationButt
   const [page, setPage] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const lineCount = citationText.split('\n').filter(line => line.trim().length > 0).length;
-  const wordCount = citationText.trim().split(/\s+/).filter(w => w.length > 0).length;
+
+  const lineCount = citationText.split("\n").filter((line) => line.trim().length > 0).length;
+  const wordCount = citationText.trim().split(/\s+/).filter((w) => w.length > 0).length;
   const isLongCitation = lineCount > 3 || wordCount > 40;
+
+  const escapeHtml = (text: string) =>
+    text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
 
   const generateFormattedHtml = () => {
     if (!citationText.trim() || !author.trim() || !year.trim()) return "";
-    
-    const authorFormatted = author.toUpperCase();
-    const pageRef = page ? `, p. ${page}` : "";
-    const reference = `(${authorFormatted}, ${year}${pageRef})`;
-    
+
+    const authorFormatted = author.toUpperCase().trim();
+    const yearFormatted = year.trim();
+    const pageFormatted = page.trim();
+
+    const pageRef = pageFormatted ? `, p. ${escapeHtml(pageFormatted)}` : "";
+    const reference = `(${escapeHtml(authorFormatted)}, ${escapeHtml(yearFormatted)}${pageRef})`;
+
+    const safeCitationText = escapeHtml(citationText.trim()).replace(/\n+/g, "<br/>");
+
     // Citação longa: usa div.citacao-longa (4cm recuo, fonte 10pt, espaço simples)
     if (isLongCitation) {
-      return `<div class="citacao-longa">${citationText.trim()} ${reference}</div>`;
+      return `<div class="citacao-longa">${safeCitationText} ${reference}</div>`;
     }
-    
-    // Citação curta: usa aspas normais inline
-    return `"${citationText.trim()}" ${reference}`;
+
+    // Citação curta: inline (o LaTeX tratará como texto normal)
+    return `<span>“${safeCitationText}” ${reference}</span>`;
   };
+
 
   const handleInsert = () => {
     const html = generateFormattedHtml();
