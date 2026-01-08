@@ -35,6 +35,7 @@ interface RichTextEditorProps {
   onRequestAttachmentInsertion?: (payload: { type: 'figura' | 'grafico' | 'tabela'; selectionPath: number[]; placeholderId?: string }) => void;
   showValidationFeedback?: boolean;
   onCustomBlur?: () => void;
+  onInsertContent?: (callback: (html: string) => void) => void;
 }
 
 const RichTextEditor = ({ 
@@ -49,7 +50,8 @@ const RichTextEditor = ({
   onEditorReady,
   onRequestAttachmentInsertion,
   showValidationFeedback = true,
-  onCustomBlur
+  onCustomBlur,
+  onInsertContent
 }: RichTextEditorProps) => {
   const [isFocused, setIsFocused] = useState(false);
   const [editorInstance, setEditorInstance] = useState<any>(null);
@@ -146,6 +148,33 @@ const RichTextEditor = ({
       manualValidation.markFieldFocused(sectionName);
     }
   };
+
+  // Expor função para inserir conteúdo HTML no editor
+  useEffect(() => {
+    if (onInsertContent && editorInstance) {
+      onInsertContent((html: string) => {
+        try {
+          const viewFragment = editorInstance.data.processor.toView(html);
+          const modelFragment = editorInstance.data.toModel(viewFragment);
+          
+          editorInstance.model.change((writer: any) => {
+            const root = editorInstance.model.document.getRoot();
+            const position = writer.createPositionAt(root, 'end');
+            editorInstance.model.insertContent(modelFragment, position);
+          });
+          
+          // Atualizar o valor
+          const newValue = editorInstance.getData();
+          onChange(newValue);
+        } catch (error) {
+          console.error('Erro ao inserir conteúdo:', error);
+          // Fallback: adicionar ao final do value
+          const newValue = value + html;
+          onChange(newValue);
+        }
+      });
+    }
+  }, [onInsertContent, editorInstance, onChange, value]);
 
   return (
     <div className="editor-container relative space-y-2">
