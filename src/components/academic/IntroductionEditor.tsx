@@ -303,6 +303,22 @@ const IntroductionEditor = ({
                     showValidationFeedback={false}
                   />
                   
+                  {themePart.trim().length > 50 && !isThemeValidating && !themeValidationResult?.feedbacks?.length && (
+                    <Button
+                      onClick={() => validateTheme(themePart)}
+                      variant="default"
+                      size="lg"
+                      className="w-full gap-2 py-5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden animate-pulse mt-3"
+                    >
+                      <div className="relative flex items-center gap-2 pointer-events-none">
+                        <Sparkles className="h-5 w-5 text-primary-foreground" />
+                        <span className="font-bold text-sm sm:text-base">
+                          ✨ Clique aqui para orientação sobre o Tema
+                        </span>
+                      </div>
+                    </Button>
+                  )}
+                  
                   {themePart.trim().length > 50 && (
                     <div className="mt-4">
                       <ValidationFeedback 
@@ -310,6 +326,8 @@ const IntroductionEditor = ({
                         isValidating={isThemeValidating} 
                         errorMessage={themeErrorMessage} 
                         currentSection={themeCurrentSection || "Tema"}
+                        onRetry={() => validateTheme(themePart)}
+                        onRevalidate={() => validateTheme(themePart)}
                       />
                     </div>
                   )}
