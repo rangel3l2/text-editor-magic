@@ -99,24 +99,8 @@ const IntroductionEditor = ({
     }
   }, [isAllPartsCompleted, activeTab, themePart, problemPart, objectivesPart]);
   
-  // Validação individual dos subtópicos quando eles são alterados
-  useEffect(() => {
-    if (themePart.trim().length > 50) {
-      scheduleThemeValidation(themePart);
-    }
-  }, [themePart]);
-  
-  useEffect(() => {
-    if (problemPart.trim().length > 50) {
-      scheduleProblemValidation(problemPart);
-    }
-  }, [problemPart]);
-  
-  useEffect(() => {
-    if (objectivesPart.trim().length > 50) {
-      scheduleObjectivesValidation(objectivesPart);
-    }
-  }, [objectivesPart]);
+  // Validação individual removida do auto-schedule para evitar conflito
+  // A validação agora é disparada manualmente pelo botão ou pelo onRevalidate
 
   // Função para obter o texto combinado
   const getCombinedText = (): string => {
