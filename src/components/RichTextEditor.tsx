@@ -323,16 +323,16 @@ const RichTextEditor = ({
         />
       )}
 
-      {/* Indicador de campo validado */}
-      {isValidated && isValidationVisible && (
+      {/* Indicador de campo validado - só mostra se o feedback também é visível aqui */}
+      {showValidationFeedback && isValidated && isValidationVisible && (
         <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-md border border-green-200 dark:border-green-800">
           <CheckCircle2 className="h-4 w-4" />
           <span>Campo validado</span>
         </div>
       )}
 
-      {/* Botão para validar manualmente com design atrativo e intuitivo */}
-      {shouldShowButton && isValidationVisible && !isValidated && value?.trim() && (
+      {/* Botão para validar manualmente - só mostra quando showValidationFeedback é true */}
+      {showValidationFeedback && shouldShowButton && isValidationVisible && !isValidated && value?.trim() && (
         <Button
           onClick={handleManualValidation}
           variant="default"

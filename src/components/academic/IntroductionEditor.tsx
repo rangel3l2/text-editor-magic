@@ -4,6 +4,7 @@ import RichTextEditor from "@/components/RichTextEditor";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Sparkles } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import ValidationFeedback from "@/components/editor/ValidationFeedback";
@@ -98,24 +99,8 @@ const IntroductionEditor = ({
     }
   }, [isAllPartsCompleted, activeTab, themePart, problemPart, objectivesPart]);
   
-  // Validação individual dos subtópicos quando eles são alterados
-  useEffect(() => {
-    if (themePart.trim().length > 50) {
-      scheduleThemeValidation(themePart);
-    }
-  }, [themePart]);
-  
-  useEffect(() => {
-    if (problemPart.trim().length > 50) {
-      scheduleProblemValidation(problemPart);
-    }
-  }, [problemPart]);
-  
-  useEffect(() => {
-    if (objectivesPart.trim().length > 50) {
-      scheduleObjectivesValidation(objectivesPart);
-    }
-  }, [objectivesPart]);
+  // Validação individual removida do auto-schedule para evitar conflito
+  // A validação agora é disparada manualmente pelo botão ou pelo onRevalidate
 
   // Função para obter o texto combinado
   const getCombinedText = (): string => {
@@ -303,6 +288,22 @@ const IntroductionEditor = ({
                     showValidationFeedback={false}
                   />
                   
+                  {themePart.trim().length > 50 && !isThemeValidating && !themeValidationResult?.feedbacks?.length && (
+                    <Button
+                      onClick={() => validateTheme(themePart)}
+                      variant="default"
+                      size="lg"
+                      className="w-full gap-2 py-5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden animate-pulse mt-3"
+                    >
+                      <div className="relative flex items-center gap-2 pointer-events-none">
+                        <Sparkles className="h-5 w-5 text-primary-foreground" />
+                        <span className="font-bold text-sm sm:text-base">
+                          ✨ Clique aqui para orientação sobre o Tema
+                        </span>
+                      </div>
+                    </Button>
+                  )}
+                  
                   {themePart.trim().length > 50 && (
                     <div className="mt-4">
                       <ValidationFeedback 
@@ -310,6 +311,8 @@ const IntroductionEditor = ({
                         isValidating={isThemeValidating} 
                         errorMessage={themeErrorMessage} 
                         currentSection={themeCurrentSection || "Tema"}
+                        onRetry={() => validateTheme(themePart)}
+                        onRevalidate={() => validateTheme(themePart)}
                       />
                     </div>
                   )}
@@ -334,6 +337,22 @@ const IntroductionEditor = ({
                     showValidationFeedback={false}
                   />
                   
+                  {problemPart.trim().length > 50 && !isProblemValidating && !problemValidationResult?.feedbacks?.length && (
+                    <Button
+                      onClick={() => validateProblem(problemPart)}
+                      variant="default"
+                      size="lg"
+                      className="w-full gap-2 py-5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden animate-pulse mt-3"
+                    >
+                      <div className="relative flex items-center gap-2 pointer-events-none">
+                        <Sparkles className="h-5 w-5 text-primary-foreground" />
+                        <span className="font-bold text-sm sm:text-base">
+                          ✨ Clique aqui para orientação sobre o Problema
+                        </span>
+                      </div>
+                    </Button>
+                  )}
+                  
                   {problemPart.trim().length > 50 && (
                     <div className="mt-4">
                       <ValidationFeedback 
@@ -341,6 +360,8 @@ const IntroductionEditor = ({
                         isValidating={isProblemValidating} 
                         errorMessage={problemErrorMessage} 
                         currentSection={problemCurrentSection || "Problema"}
+                        onRetry={() => validateProblem(problemPart)}
+                        onRevalidate={() => validateProblem(problemPart)}
                       />
                     </div>
                   )}
@@ -365,6 +386,22 @@ const IntroductionEditor = ({
                     showValidationFeedback={false}
                   />
                   
+                  {objectivesPart.trim().length > 50 && !isObjectivesValidating && !objectivesValidationResult?.feedbacks?.length && (
+                    <Button
+                      onClick={() => validateObjectives(objectivesPart)}
+                      variant="default"
+                      size="lg"
+                      className="w-full gap-2 py-5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden animate-pulse mt-3"
+                    >
+                      <div className="relative flex items-center gap-2 pointer-events-none">
+                        <Sparkles className="h-5 w-5 text-primary-foreground" />
+                        <span className="font-bold text-sm sm:text-base">
+                          ✨ Clique aqui para orientação sobre os Objetivos
+                        </span>
+                      </div>
+                    </Button>
+                  )}
+                  
                   {objectivesPart.trim().length > 50 && (
                     <div className="mt-4">
                       <ValidationFeedback 
@@ -372,6 +409,8 @@ const IntroductionEditor = ({
                         isValidating={isObjectivesValidating} 
                         errorMessage={objectivesErrorMessage} 
                         currentSection={objectivesCurrentSection || "Objetivos"}
+                        onRetry={() => validateObjectives(objectivesPart)}
+                        onRevalidate={() => validateObjectives(objectivesPart)}
                       />
                     </div>
                   )}
