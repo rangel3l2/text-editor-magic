@@ -10,6 +10,7 @@ interface SegmentedIntroduction {
   theme: string;
   problem: string;
   objectives: string;
+  irrelevant: string;
 }
 
 serve(async (req) => {
@@ -45,19 +46,25 @@ serve(async (req) => {
 
     const model = await createGeminiClient();
 
-    const prompt = `Você é um especialista em análise de textos acadêmicos. Analise a introdução abaixo e segmente-a em três partes específicas:
+    const prompt = `Você é um especialista em análise de textos acadêmicos seguindo normas ABNT e IFMS. Analise a introdução abaixo e segmente-a em partes específicas.
 
-1. **Tema/Contextualização**: A parte que apresenta o tema geral, contextualiza o campo de estudo, traz informações da literatura e estatísticas relevantes.
+PARTES ESPERADAS EM UMA INTRODUÇÃO ACADÊMICA:
 
-2. **Problema/Problematização**: A parte que delimita o problema específico, mostra a lacuna no conhecimento atual e esclarece qual questão o estudo busca responder.
+1. **Tema/Contextualização (theme)**: Apresenta o tema geral, contextualiza o campo de estudo, traz informações da literatura e estatísticas relevantes. Situa o leitor no contexto geral do assunto.
 
-3. **Objetivos/Justificativa**: A parte que apresenta os objetivos do trabalho e justifica sua importância e relevância.
+2. **Problema/Problematização (problem)**: Delimita o problema específico, mostra a lacuna no conhecimento atual e esclarece qual questão o estudo busca responder. Afunila do contexto geral para o problema específico.
 
-IMPORTANTE:
-- Identifique e separe essas três partes da introdução fornecida
+3. **Objetivos/Justificativa (objectives)**: Apresenta os objetivos do trabalho (geral e específicos) e justifica sua importância e relevância para a área.
+
+4. **Conteúdo Irrelevante (irrelevant)**: Trechos que NÃO pertencem a uma introdução acadêmica. Exemplos: metodologia detalhada, resultados de pesquisa, código de programação, receitas, textos sobre assuntos totalmente desconectados do contexto acadêmico, conclusões finais, referências bibliográficas listadas, etc.
+
+REGRAS IMPORTANTES:
+- Identifique e separe as partes do texto fornecido
 - Mantenha o texto original de cada parte sem modificar
 - Se alguma parte não estiver claramente presente, retorne uma string vazia para ela
+- Se encontrar trechos que claramente NÃO pertencem a uma introdução acadêmica, coloque-os no campo "irrelevant"
 - Retorne APENAS um objeto JSON válido, sem explicações adicionais
+- NÃO use blocos markdown como \`\`\`json ou \`\`\` na resposta
 
 Introdução para segmentar:
 ${introduction}
@@ -66,7 +73,8 @@ Retorne no formato JSON:
 {
   "theme": "texto da parte de contextualização do tema",
   "problem": "texto da parte de problematização",
-  "objectives": "texto da parte de objetivos e justificativa"
+  "objectives": "texto da parte de objetivos e justificativa",
+  "irrelevant": "trechos que não pertencem a uma introdução acadêmica"
 }`;
 
     const result = await model.generateContent(prompt);
@@ -92,21 +100,23 @@ Retorne no formato JSON:
     }
 
     // Validate response structure
-    if (!segmented.theme && !segmented.problem && !segmented.objectives) {
+    if (!segmented.theme && !segmented.problem && !segmented.objectives && !segmented.irrelevant) {
       throw new Error("AI failed to segment introduction properly");
     }
 
     console.log("✅ Segmentação concluída:", {
       themeLength: segmented.theme?.length || 0,
       problemLength: segmented.problem?.length || 0,
-      objectivesLength: segmented.objectives?.length || 0
+      objectivesLength: segmented.objectives?.length || 0,
+      irrelevantLength: segmented.irrelevant?.length || 0
     });
 
     return new Response(
       JSON.stringify({
         theme: segmented.theme || "",
         problem: segmented.problem || "",
-        objectives: segmented.objectives || ""
+        objectives: segmented.objectives || "",
+        irrelevant: segmented.irrelevant || ""
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -121,7 +131,8 @@ Retorne no formato JSON:
         error: `Error during segmentation: ${error.message}`,
         theme: "",
         problem: "",
-        objectives: ""
+        objectives: "",
+        irrelevant: ""
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
